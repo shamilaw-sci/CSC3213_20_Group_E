@@ -1,75 +1,100 @@
+/**
+ * @file propertyController.js
+ * @description Controller responsible for handling property-related API requests including adding, fetching, and searching properties.
+ */
+
 const { createClient } = require('@supabase/supabase-js');
+
+// Initialize Supabase client using environment variables
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-// 1. Add new property listing
+/**
+ * Add a new property listing to the database.
+ * Processes uploaded images, formats property data, and saves it into Supabase.
+ */
 const addProperty = async (req, res) => {
     try {
-        const { title, description, price, boundary } = req.body;
-        const file = req.file; // Image file from multer middleware
+        const { type, title, description, price, address, bedrooms, bathrooms, landSize, latitude, longitude, boundary } = req.body;
+        
+        const files = req.files; 
 
         if (req.user.role !== 'SELLER') {
             return res.status(403).json({ message: "Only sellers can add properties." });
         }
 
-        let imageUrl = null;
+        let imageUrls = [];
 
-        // Upload image to Supabase Storage if provided
-        if (file) {
-            const fileName = `${Date.now()}-${file.originalname.replace(/\s/g, '_')}`; // Sanitize filename
-            
-            const { data: uploadData, error: uploadError } = await supabase.storage
-                .from('properties') // Storage bucket
-                .upload(fileName, file.buffer, {
-                    contentType: file.mimetype
-                });
+        // Upload images to Supabase Storage
+        if (files && files.length > 0) {
+            for (const file of files) {
+                const fileName = `${Date.now()}-${file.originalname.replace(/\s/g, '_')}`; 
+                
+                const { data: uploadData, error: uploadError } = await supabase.storage
+                    .from('properties') 
+                    .upload(`public/${fileName}`, file.buffer, { 
+                        contentType: file.mimetype
+                    });
 
-            if (uploadError) throw uploadError;
+                if (uploadError) throw uploadError;
 
-            // Get public URL for uploaded image
-            const { data: publicUrlData } = supabase.storage
-                .from('properties')
-                .getPublicUrl(fileName);
+                const { data: publicUrlData } = supabase.storage
+                    .from('properties')
+                    .getPublicUrl(`public/${fileName}`);
 
-            imageUrl = publicUrlData.publicUrl;
+                imageUrls.push(publicUrlData.publicUrl);
+            }
         }
 
-        // Insert property data into database
-        const { data, error } = await supabase
+        // Insert property data into Supabase properties table
+        const { data: propertyData, error: propertyError } = await supabase
             .from('properties')
             .insert([{
-                seller_id: req.user.id,
+                type,
                 title,
                 description,
                 price,
-                boundary,
-                image_url: imageUrl // New image URL column
+                address,
+                bedrooms: bedrooms || null, // Default to null if not provided
+                bathrooms: bathrooms || null,
+                land_size: landSize || null,
+                latitude,
+                longitude,
+                boundary: boundary, // Provided as a WKT String (POLYGON) directly from the frontend
+                images: imageUrls,
+                seller_id: req.user.id,
+                created_at: new Date()
             }])
             .select();
 
-        if (error) throw error;
+        if (propertyError) throw propertyError;
 
-        res.status(201).json({ message: "Property added successfully.", property: data[0] });
+        res.status(201).json({ 
+            message: "Property added successfully", 
+            property: propertyData[0] 
+        });
 
     } catch (error) {
-        console.error("Upload error:", error);
+        console.error("Backend Insert Error:", error);
         res.status(500).json({ error: error.message });
     }
 };
 
-// 2. Get all properties
+/**
+ * Retrieve all property listings from the database.
+ * Sorted in descending order based on the creation date.
+ */
 const getProperties = async (req, res) => {
     try {
-        // Fetch all properties from database
         const { data, error } = await supabase
             .from('properties')
             .select('*')
-            .order('created_at', { ascending: false }); // Most recent first
+            .order('created_at', { ascending: false }); 
 
         if (error) throw error;
 
         res.status(200).json({ 
             message: "Properties fetched successfully", 
-            count: data.length, // Include count of properties
+            count: data.length, 
             properties: data 
         });
 
@@ -78,28 +103,36 @@ const getProperties = async (req, res) => {
     }
 };
 
-// 3. Search properties within map polygon
+/**
+ * Search for properties within a specific geographical polygon.
+ * Utilizes a Supabase RPC call to perform PostGIS spatial queries.
+ */
 const searchProperties = async (req, res) => {
     try {
-        const { polygon } = req.body; // Polygon coordinates from frontend (WKT format)
+        const { polygon } = req.body; 
 
         if (!polygon) {
             return res.status(400).json({ message: "Polygon data is required." });
         }
 
-        // Call Supabase RPC function for spatial search
+        console.log("📍 Searching properties in polygon:", polygon);
+
         const { data, error } = await supabase
             .rpc('search_properties', { search_polygon: polygon });
 
-        if (error) throw error;
+        if (error) {
+            console.error("🔥 Supabase RPC Error:", error);
+            return res.status(500).json({ error: error.message, details: error.details, hint: error.hint });
+        }
 
         res.status(200).json({
             message: "Search successful",
-            count: data.length,
-            properties: data
+            count: data?.length || 0,
+            properties: data || []
         });
 
     } catch (error) {
+        console.error("🔥 Backend Catch Error:", error);
         res.status(500).json({ error: error.message });
     }
 };
