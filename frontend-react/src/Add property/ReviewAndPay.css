@@ -1,0 +1,62 @@
+.review-container {
+    animation: fadeIn 0.5s ease;
+}
+
+.review-grid {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 25px;
+}
+
+.summary-section, .billing-section {
+    flex: 1;
+}
+
+.summary-card {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.summary-card p {
+    margin: 10px 0;
+    font-size: 0.95rem;
+    border-bottom: 1px solid #edf2f7;
+    padding-bottom: 5px;
+}
+
+.billing-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.total-payable {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #1e293b;
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.total-payable .amount {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #fbbf24;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive adjust */
+@media (max-width: 768px) {
+    .review-grid {
+        flex-direction: column;
+    }
+}
