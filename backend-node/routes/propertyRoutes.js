@@ -13,7 +13,7 @@ router.get('/', getProperties);
 
 // 2. Add new property (Protected route - requires authentication)
 // Accepts single image file with field name 'image'
-router.post('/', protect, upload.single('image'), addProperty);
+router.post('/', protect, upload.array('images', 10), addProperty);
 
 // 3. Search properties within polygon (Public route)
 router.post('/search', searchProperties);
