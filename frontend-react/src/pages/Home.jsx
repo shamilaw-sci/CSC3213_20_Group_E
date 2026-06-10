@@ -34,6 +34,29 @@ const Home = () => {
         navigate('/login');
     };
 
+    const handleMessageSeller = async (propertyId) => {
+        if (!user) {
+            navigate('/login');
+            return;
+        }
+
+        if (user.role !== 'BUYER') {
+            navigate('/messages');
+            return;
+        }
+
+        try {
+            const response = await axios.post(
+                `http://localhost:5000/api/conversations/property/${propertyId}`,
+                {},
+                { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+            );
+            navigate(`/messages?conversation=${response.data.conversation.id}`);
+        } catch (error) {
+            console.error('Error starting conversation:', error.response?.data || error.message);
+        }
+    };
+
     /**
      * Filter logic to display properties matching the user's search input.
      * Matches against both the title and the description fields.
@@ -88,6 +111,10 @@ const Home = () => {
                                         </svg>
                                     </span>
                                     <div className="absolute top-16 right-0 w-48 bg-white border border-gray-200 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 rounded-lg py-2">
+                                        <button onClick={() => navigate('/messages')} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600">Messages</button>
+                                        {user.role === 'SELLER' && (
+                                            <button onClick={() => navigate('/my-properties')} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600">Pending Approvals</button>
+                                        )}
                                         <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-red-600">Sign Out</button>
                                     </div>
                                 </div>
@@ -221,6 +248,12 @@ const Home = () => {
                                         <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
                                         <span className="text-xs font-bold text-gray-400 uppercase tracking-wide">Thirasara Real Estate</span>
                                     </div>
+                                    <button
+                                        onClick={() => handleMessageSeller(prop.id)}
+                                        className="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg transition"
+                                    >
+                                        Message Seller
+                                    </button>
                                 </div>
                             </div>
                         ))}

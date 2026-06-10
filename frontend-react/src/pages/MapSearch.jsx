@@ -1,17 +1,15 @@
 /**
  * @file MapSearch.jsx
- * @description Map-based property search component allowing users to filter properties by drawing polygons or selecting districts.
+ * @description Map-based property search component allowing users to filter properties by drawing freehand polygons or selecting districts.
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { MapContainer, TileLayer, useMap, Marker, Popup, GeoJSON } from 'react-leaflet';
 import L from 'leaflet';
-import 'leaflet-draw';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import districtsData from '../assets/sri-lanka-districts.json';
 import 'leaflet/dist/leaflet.css';
-import 'leaflet-draw/dist/leaflet.draw.css';
 
 // Fix for default Leaflet icon missing issues in React
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -53,9 +51,6 @@ const createCustomIcon = (price, isActive) => {
 /**
  * Converts Leaflet bounds into a WKT (Well-Known Text) Polygon string.
  * PostGIS expects coordinates in 'Longitude Latitude' order.
- * 
- * @param {L.LatLngBounds} bounds - The bounds of the selected region.
- * @returns {string} WKT formatted Polygon string.
  */
 const getWKTFromBounds = (bounds) => {
     const nw = bounds.getNorthWest();
@@ -68,13 +63,11 @@ const getWKTFromBounds = (bounds) => {
 
 /**
  * Event handler component for tracking map movements and clicks.
- * Triggers debounced fetches when panning/zooming to dynamically update properties in the viewport.
  */
 const MapEvents = ({ onBoundsChange, onMapClick, searchMode }) => {
     const map = useMap();
     const searchModeRef = useRef(searchMode);
 
-    // Keep a fresh reference to avoid re-binding events unnecessarily
     useEffect(() => {
         searchModeRef.current = searchMode;
     }, [searchMode]);
@@ -86,7 +79,7 @@ const MapEvents = ({ onBoundsChange, onMapClick, searchMode }) => {
                 clearTimeout(timeoutId);
                 timeoutId = setTimeout(() => {
                     onBoundsChange(map.getBounds());
-                }, 600); // 600ms debounce to prevent API spam while dragging
+                }, 600);
             }
         };
 
@@ -104,62 +97,112 @@ const MapEvents = ({ onBoundsChange, onMapClick, searchMode }) => {
 };
 
 /**
- * Internal component to handle the initialization and event mapping for leaflet-draw controls.
- * Responsible for capturing user-drawn polygon areas.
+ * 🚀 අලුත් Freehand Draw Component එක 
+ * (අතින් අඳින හැඩය හසුරුවයි)
  */
-const DrawPolygonControl = ({ onPolygonComplete, onDrawDelete, controlRef }) => {
+const FreehandDrawControl = ({ onPolygonComplete, onDrawDelete, controlRef }) => {
     const map = useMap();
+    const [isDrawMode, setIsDrawMode] = useState(false);
+    const drawnItemsRef = useRef(new L.FeatureGroup());
 
     useEffect(() => {
-        const drawnItems = new L.FeatureGroup();
+        const drawnItems = drawnItemsRef.current;
         map.addLayer(drawnItems);
 
-        // Expose a clear function to the parent component
         if (controlRef) {
             controlRef.current = {
-                clear: () => drawnItems.clearLayers()
+                clear: () => {
+                    drawnItems.clearLayers();
+                    setIsDrawMode(false);
+                    if (onDrawDelete) onDrawDelete();
+                }
             };
         }
 
-        const drawControl = new L.Control.Draw({
-            draw: {
-                polygon: { shapeOptions: { color: '#006aff', weight: 3, fillOpacity: 0.2 } }, 
-                polyline: false, circle: false, rectangle: false, marker: false, circlemarker: false,
-            },
-            edit: { featureGroup: drawnItems }
-        });
-
-        map.addControl(drawControl);
-
-        const handleDrawCreated = (e) => {
-            drawnItems.clearLayers();
-            const layer = e.layer;
-            drawnItems.addLayer(layer);
-            onPolygonComplete(layer); 
-        };
-
-        const handleDrawDeleted = () => {
-            if (drawnItems.getLayers().length === 0 && onDrawDelete) {
-                onDrawDelete();
-            }
-        };
-
-        map.on(L.Draw.Event.CREATED, handleDrawCreated);
-        map.on(L.Draw.Event.DELETED, handleDrawDeleted);
         return () => {
-            map.removeControl(drawControl);
             map.removeLayer(drawnItems);
-            map.off(L.Draw.Event.CREATED, handleDrawCreated);
-            map.off(L.Draw.Event.DELETED, handleDrawDeleted);
         };
-    }, [map, onPolygonComplete, onDrawDelete, controlRef]);
+    }, [map, controlRef, onDrawDelete]);
 
-    return null;
+    useEffect(() => {
+        if (!isDrawMode) {
+            map.dragging.enable();
+            return;
+        }
+
+        map.dragging.disable(); // Draw Mode එකේදී Map එක එහා මෙහා යන්නේ නෑ
+        let isDrawing = false;
+        let points = [];
+        let polyline = null;
+        let polygon = null;
+        const drawnItems = drawnItemsRef.current;
+
+        const onMouseDown = (e) => {
+            isDrawing = true;
+            drawnItems.clearLayers();
+            points = [e.latlng];
+            polyline = L.polyline(points, { color: '#006aff', weight: 3, dashArray: '5, 5' }).addTo(drawnItems);
+        };
+
+        const onMouseMove = (e) => {
+            if (!isDrawing) return;
+            points.push(e.latlng);
+            polyline.setLatLngs(points);
+        };
+
+        const onMouseUp = () => {
+            if (!isDrawing) return;
+            isDrawing = false;
+            drawnItems.removeLayer(polyline);
+
+            if (points.length > 3) {
+                polygon = L.polygon(points, { color: '#006aff', weight: 3, fillOpacity: 0.2 }).addTo(drawnItems);
+                
+                // Lng Lat පිළිවෙලට WKT එක හදනවා
+                let wktPoints = points.map(pt => `${pt.lng} ${pt.lat}`).join(', ');
+                wktPoints += `, ${points[0].lng} ${points[0].lat}`; 
+                
+                onPolygonComplete(`POLYGON((${wktPoints}))`);
+            } else {
+                map.dragging.enable();
+            }
+            
+            setIsDrawMode(false); // ඇඳලා ඉවර වුණාම ආයේ සාමාන්‍ය විදිහට Map එක පාවිච්චි කරන්න දෙනවා
+            map.dragging.enable();
+        };
+
+        map.on('mousedown', onMouseDown);
+        map.on('mousemove', onMouseMove);
+        map.on('mouseup', onMouseUp);
+
+        return () => {
+            map.off('mousedown', onMouseDown);
+            map.off('mousemove', onMouseMove);
+            map.off('mouseup', onMouseUp);
+        };
+    }, [map, isDrawMode, onPolygonComplete]);
+
+    return (
+        <div style={{ position: 'absolute', top: 20, right: 20, zIndex: 1000 }}>
+            <button 
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setIsDrawMode(!isDrawMode);
+                }}
+                className={`px-4 py-2 font-bold rounded-lg shadow-lg transition-all border-2 ${
+                    isDrawMode 
+                        ? 'bg-red-50 text-red-600 border-red-500 animate-pulse' 
+                        : 'bg-white text-blue-600 border-blue-600 hover:bg-blue-50'
+                }`}
+            >
+                {isDrawMode ? '✏️ Drawing... (Click & Drag)' : '✏️ Draw Freehand Area'}
+            </button>
+        </div>
+    );
 };
 
 /**
  * Safely retrieves the primary image URL from the property object.
- * Handles inconsistencies in payload structure (array vs string).
  */
 const getSafeImageUrl = (prop) => {
     if (Array.isArray(prop.images) && prop.images.length > 0) return prop.images[0];
@@ -168,23 +211,19 @@ const getSafeImageUrl = (prop) => {
 };
 
 const MapSearch = () => {
-    // Component State
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(false);
     const [selectedDistrict, setSelectedDistrict] = useState(null); 
     const [activeMarkerId, setActiveMarkerId] = useState(null);
     const [hoveredPropId, setHoveredPropId] = useState(null);
-    const [searchMode, setSearchMode] = useState('bounds'); // 'bounds' | 'polygon'
+    const [searchMode, setSearchMode] = useState('bounds'); 
     const drawControlRef = useRef(null);
     const navigate = useNavigate();
 
-    /**
-     * Fetches properties from the Node.js backend based on the provided WKT polygon.
-     * @param {string} polygonWKT - Well-Known Text representation of the search area.
-     */
     const fetchProperties = useCallback(async (polygonWKT) => {
         setLoading(true);
         try {
+            // Note: Update this URL if you are using Go Backend (port 8080)
             const response = await axios.post('http://localhost:5000/api/properties/search', { polygon: polygonWKT });
             setProperties(response.data.properties || []);
         } catch (error) {
@@ -194,49 +233,26 @@ const MapSearch = () => {
         }
     }, []);
 
-    /**
-     * Triggers fetch whenever the map bounds change (user pan/zoom)
-     */
     const handleBoundsChange = useCallback((bounds) => {
         const boundsWKT = getWKTFromBounds(bounds);
         fetchProperties(boundsWKT);
     }, [fetchProperties]);
 
-    /**
-     * Handle clicking on an empty map area to deselect active items
-     */
     const handleMapClick = useCallback(() => {
         setActiveMarkerId(null);
     }, []);
 
-    /**
-     * Formats drawn layer coordinates into a WKT Polygon and triggers search.
-     * Ensures the polygon is closed by appending the first coordinate at the end.
-     * @param {L.Layer} layer - The drawn layer object.
-     */
-    const handlePolygonData = useCallback((layer) => {
+    // 🚀 Freehand WKT එක කෙලින්ම Fetch එකට යවනවා
+    const handleFreehandData = useCallback((polygonWKT) => {
         setSearchMode('polygon');
-        const latlngs = layer.getLatLngs()[0]; 
-        let wktPoints = latlngs.map(pt => `${pt.lng} ${pt.lat}`).join(', ');
-        wktPoints += `, ${latlngs[0].lng} ${latlngs[0].lat}`; 
-        fetchProperties(`POLYGON((${wktPoints}))`);
+        fetchProperties(polygonWKT);
     }, [fetchProperties]);
 
-    /**
-     * Clears user drawn boundary and returns to auto bounds-based searching
-     */
     const clearBoundary = useCallback(() => {
         setSearchMode('bounds');
         if (drawControlRef.current) {
             drawControlRef.current.clear();
         }
-        // Re-trigger bounds search immediately via a generic bounds reference, 
-        // or let MapEvents handle it automatically by mode switch
-    }, []);
-
-    // Execute an initial bounds fetch on component mount
-    useEffect(() => {
-        // This is a placeholder since MapEvents will handle the initial fetch natively via map context
     }, []);
 
     return (
@@ -253,7 +269,6 @@ const MapSearch = () => {
             <div className="flex flex-1 overflow-hidden">
                 <div className="flex-grow relative z-0">
                     
-                    {/* Custom Zillow floating "Remove Boundary" button */}
                     {searchMode === 'polygon' && (
                         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[1000] animate-fade-in">
                             <button
@@ -300,16 +315,20 @@ const MapSearch = () => {
                                     click: (e) => {
                                         L.DomEvent.stopPropagation(e);
                                         setSelectedDistrict(districtName);
-                                        clearBoundary(); // Automatically switch to bounds mode
+                                        clearBoundary(); 
                                         const bounds = e.target.getBounds();
                                         e.target._map.fitBounds(bounds);
-                                        // Notice: fitBounds triggers 'moveend' natively which will handle the fetching automatically!
                                     }
                                 });
                             }}
                         />
 
-                        <DrawPolygonControl onPolygonComplete={handlePolygonData} onDrawDelete={clearBoundary} controlRef={drawControlRef} />
+                        {/* 🚀 පරණ DrawPolygonControl එක වෙනුවට අලුත් Freehand Control එක */}
+                        <FreehandDrawControl 
+                            onPolygonComplete={handleFreehandData} 
+                            onDrawDelete={clearBoundary} 
+                            controlRef={drawControlRef} 
+                        />
 
                         {properties.map((prop) => {
                             const imageUrl = getSafeImageUrl(prop);
@@ -341,9 +360,7 @@ const MapSearch = () => {
                                                 {prop.price ? `Rs. ${prop.price.toLocaleString()}` : 'Price N/A'}
                                             </h3>
                                             <p className="text-sm font-bold text-gray-800 mt-1 truncate">{prop.title}</p>
-                                            <button
-                                                className="mt-3 w-full bg-blue-600 text-white text-xs font-bold py-2 rounded hover:bg-blue-700 transition"
-                                            >
+                                            <button className="mt-3 w-full bg-blue-600 text-white text-xs font-bold py-2 rounded hover:bg-blue-700 transition">
                                                 View Details
                                             </button>
                                         </div>
