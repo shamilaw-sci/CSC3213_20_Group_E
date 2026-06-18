@@ -1,0 +1,87 @@
+/* Container for the form fields */
+.form-grid {
+    display: flex;
+    grid-template-columns: 1fr 1fr; /* Two columns */
+    gap: 20px;
+    margin-top: 20px;
+    text-align: left;
+    flex-wrap: wrap;
+}
+
+/* Fields that need to span the full width of the card */
+.full-width {
+    grid-column: span 2;
+}
+
+/* Individual label and input wrapper */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: calc(50% - 10px);
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #444;
+    font-size: 0.9rem;
+}
+
+/* Input, Select, and Textarea styling */
+.form-control {
+    padding: 12px 15px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background-color: #fff;
+}
+
+.form-control:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+/* Flexbox for Land Size + Unit side-by-side */
+.flex-group {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    flex-direction: row;
+}
+
+.half-width {
+    flex: 1;
+}
+
+/* Description Area */
+textarea.form-control {
+    resize: vertical;
+    min-height: 120px;
+}
+
+/* Character Counter */
+.char-count-wrapper {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 4px;
+}
+
+.char-count {
+    font-size: 0.75rem;
+    color: #6c757d;
+    background: #f8f9fa;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+/* Responsive: Stack columns on mobile */
+@media (max-width: 600px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    .full-width {
+        grid-column: span 1;
+    }
+}
