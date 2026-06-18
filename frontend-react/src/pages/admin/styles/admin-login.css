@@ -1,0 +1,122 @@
+/* Admin Login Page Styles */
+.admin-login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f9fafb 0%, #ffffff 50%, #f3f4f6 100%);
+  font-family: 'DM Sans', sans-serif;
+  color: var(--admin-text-primary);
+}
+
+.admin-login-bg {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 20% 50%, rgba(0, 106, 255, 0.05) 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 20%, rgba(59, 130, 246, 0.04) 0%, transparent 50%);
+}
+
+.admin-login-bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(229, 231, 235, 0.3) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(229, 231, 235, 0.3) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+}
+
+.admin-login-card {
+  background: var(--admin-bg-card);
+  border: 1px solid var(--admin-border);
+  border-radius: 16px;
+  padding: 40px;
+  width: 100%;
+  max-width: 420px;
+  position: relative;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+  animation: adminSlideUp 0.3s ease;
+}
+
+.admin-login-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.admin-login-brand-icon {
+  width: 46px; height: 46px;
+  background: linear-gradient(135deg, var(--admin-gold) 0%, var(--admin-gold-light) 100%);
+  color: white;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.admin-login-brand-name {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.1rem;
+  color: var(--admin-text-primary);
+  line-height: 1.2;
+}
+
+.admin-login-brand-sub {
+  font-size: 0.75rem;
+  color: var(--admin-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.admin-login-divider {
+  height: 1px;
+  background: var(--admin-border);
+  margin-bottom: 24px;
+}
+
+.admin-login-heading {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.5rem;
+  color: var(--admin-text-primary);
+  margin-bottom: 6px;
+}
+
+.admin-login-desc {
+  font-size: 0.875rem;
+  color: var(--admin-text-secondary);
+  margin-bottom: 24px;
+}
+
+.admin-login-form { display: flex; flex-direction: column; gap: 4px; }
+
+.admin-login-error {
+  background: var(--admin-danger-dim);
+  border: 1px solid rgba(248, 81, 73, 0.3);
+  color: var(--admin-danger);
+  padding: 10px 14px;
+  border-radius: var(--admin-border-radius);
+  font-size: 0.85rem;
+  margin-bottom: 8px;
+}
+
+.admin-login-submit {
+  width: 100%;
+  justify-content: center;
+  margin-top: 8px;
+  padding: 12px;
+}
+
+.admin-login-note {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--admin-text-muted);
+  margin-top: 20px;
+}

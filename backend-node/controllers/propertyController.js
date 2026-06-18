@@ -1,6 +1,6 @@
 /**
  * @file propertyController.js
- * @description Controller responsible for handling property-related API requests including adding, fetching, and searching properties.
+ * @description Controller responsible for handling property-related API requests including adding, fetching, and updating properties.
  */
 
 const { createClient } = require('@supabase/supabase-js');
@@ -62,6 +62,7 @@ const addProperty = async (req, res) => {
                 boundary: boundary, // Provided as a WKT String (POLYGON) directly from the frontend
                 images: imageUrls,
                 seller_id: req.user.id,
+                status: 'pending',
                 created_at: new Date()
             }])
             .select();
@@ -88,6 +89,7 @@ const getProperties = async (req, res) => {
         const { data, error } = await supabase
             .from('properties')
             .select('*')
+            .eq('status', 'approved')
             .order('created_at', { ascending: false }); 
 
         if (error) throw error;
@@ -104,37 +106,106 @@ const getProperties = async (req, res) => {
 };
 
 /**
- * Search for properties within a specific geographical polygon.
- * Utilizes a Supabase RPC call to perform PostGIS spatial queries.
+ * Retrieve property submissions for the logged-in seller.
+ * This includes pending/rejected listings so sellers can track review progress.
  */
-const searchProperties = async (req, res) => {
+const getMyProperties = async (req, res) => {
     try {
-        const { polygon } = req.body; 
-
-        if (!polygon) {
-            return res.status(400).json({ message: "Polygon data is required." });
+        if (req.user.role !== 'SELLER') {
+            return res.status(403).json({ message: "Only sellers can view submitted properties." });
         }
-
-        console.log("📍 Searching properties in polygon:", polygon);
 
         const { data, error } = await supabase
-            .rpc('search_properties', { search_polygon: polygon });
+            .from('properties')
+            .select('*')
+            .eq('seller_id', req.user.id)
+            .order('created_at', { ascending: false });
 
-        if (error) {
-            console.error("🔥 Supabase RPC Error:", error);
-            return res.status(500).json({ error: error.message, details: error.details, hint: error.hint });
-        }
+        if (error) throw error;
 
         res.status(200).json({
-            message: "Search successful",
-            count: data?.length || 0,
-            properties: data || []
+            message: "Seller properties fetched successfully",
+            count: data.length,
+            properties: data
         });
 
     } catch (error) {
-        console.error("🔥 Backend Catch Error:", error);
         res.status(500).json({ error: error.message });
     }
 };
 
-module.exports = { addProperty, getProperties, searchProperties };
+/**
+ * Update a seller's own pending/rejected property submission.
+ * Saving edits resubmits the property for admin review.
+ */
+const updateMyProperty = async (req, res) => {
+    try {
+        if (req.user.role !== 'SELLER') {
+            return res.status(403).json({ message: "Only sellers can update submitted properties." });
+        }
+
+        const { data: existingProperty, error: fetchError } = await supabase
+            .from('properties')
+            .select('id, seller_id, status')
+            .eq('id', req.params.id)
+            .eq('seller_id', req.user.id)
+            .single();
+
+        if (fetchError || !existingProperty) {
+            return res.status(404).json({ message: "Property not found." });
+        }
+
+        if (existingProperty.status === 'approved') {
+            return res.status(400).json({ message: "Approved properties cannot be edited from this page." });
+        }
+
+        const { type, title, description, price, address, bedrooms, bathrooms, landSize } = req.body;
+        const updates = {
+            type,
+            title,
+            description,
+            price,
+            address,
+            bedrooms: bedrooms || null,
+            bathrooms: bathrooms || null,
+            land_size: landSize || null,
+            status: 'pending',
+            rejection_reason: null
+        };
+
+        Object.keys(updates).forEach((key) => updates[key] === undefined && delete updates[key]);
+
+        let { data: property, error: updateError } = await supabase
+            .from('properties')
+            .update(updates)
+            .eq('id', req.params.id)
+            .eq('seller_id', req.user.id)
+            .select()
+            .single();
+
+        if (updateError && updateError.message?.includes('rejection_reason')) {
+            const { rejection_reason, ...fallbackUpdates } = updates;
+            const fallback = await supabase
+                .from('properties')
+                .update(fallbackUpdates)
+                .eq('id', req.params.id)
+                .eq('seller_id', req.user.id)
+                .select()
+                .single();
+            property = fallback.data;
+            updateError = fallback.error;
+        }
+
+        if (updateError) throw updateError;
+
+        res.status(200).json({
+            message: "Property updated and sent to admin review.",
+            property
+        });
+
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+module.exports = { addProperty, getProperties, getMyProperties, updateMyProperty };

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 
-const { addProperty, getProperties, searchProperties } = require('../controllers/propertyController');
+const { addProperty, getProperties, getMyProperties, updateMyProperty } = require('../controllers/propertyController');
 const { protect } = require('../middleware/authMiddleware');
 
 // Configure multer for temporary image storage in memory
@@ -15,7 +15,9 @@ router.get('/', getProperties);
 // Accepts single image file with field name 'image'
 router.post('/', protect, upload.array('images', 10), addProperty);
 
-// 3. Search properties within polygon (Public route)
-router.post('/search', searchProperties);
+// 3. Get properties submitted by the logged-in seller
+router.get('/my-listings', protect, getMyProperties);
+
+router.patch('/my-listings/:id', protect, updateMyProperty);
 
 module.exports = router;
