@@ -1,6 +1,6 @@
 /**
  * @file propertyController.js
- * @description Controller responsible for handling property-related API requests including adding, fetching, and searching properties.
+ * @description Controller responsible for handling property-related API requests including adding, fetching, and updating properties.
  */
 
 const { createClient } = require('@supabase/supabase-js');
@@ -208,38 +208,4 @@ const updateMyProperty = async (req, res) => {
     }
 };
 
-/**
- * Search for properties within a specific geographical polygon.
- * Utilizes a Supabase RPC call to perform PostGIS spatial queries.
- */
-const searchProperties = async (req, res) => {
-    try {
-        const { polygon } = req.body; 
-
-        if (!polygon) {
-            return res.status(400).json({ message: "Polygon data is required." });
-        }
-
-        console.log("📍 Searching properties in polygon:", polygon);
-
-        const { data, error } = await supabase
-            .rpc('search_properties', { search_polygon: polygon });
-
-        if (error) {
-            console.error("🔥 Supabase RPC Error:", error);
-            return res.status(500).json({ error: error.message, details: error.details, hint: error.hint });
-        }
-
-        res.status(200).json({
-            message: "Search successful",
-            count: data?.filter((property) => property.status === 'approved').length || 0,
-            properties: data?.filter((property) => property.status === 'approved') || []
-        });
-
-    } catch (error) {
-        console.error("🔥 Backend Catch Error:", error);
-        res.status(500).json({ error: error.message });
-    }
-};
-
-module.exports = { addProperty, getProperties, getMyProperties, updateMyProperty, searchProperties };
+module.exports = { addProperty, getProperties, getMyProperties, updateMyProperty };

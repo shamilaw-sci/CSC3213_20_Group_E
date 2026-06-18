@@ -183,7 +183,7 @@ const FreehandDrawControl = ({ onPolygonComplete, onDrawDelete, controlRef }) =>
     }, [map, isDrawMode, onPolygonComplete]);
 
     return (
-        <div style={{ position: 'absolute', top: 20, right: 20, zIndex: 1000 }}>
+        <div className="leaflet-draw-control">
             <button 
                 onClick={(e) => {
                     e.stopPropagation();
@@ -210,6 +210,62 @@ const getSafeImageUrl = (prop) => {
     return null;
 };
 
+// New Component for the popup
+const MarkerPopup = ({ prop, imageUrl, onNavigate }) => (
+    <div className="w-52 p-1">
+        {imageUrl ? (
+            <img src={imageUrl} alt={prop.title} className="w-full h-32 object-cover rounded-md mb-2 shadow-sm" />
+        ) : (
+            <div className="w-full h-32 bg-gray-100 flex items-center justify-center text-gray-400 rounded-md mb-2 border">No Image</div>
+        )}
+        <h3 className="font-extrabold text-xl text-blue-600 leading-tight">
+            {prop.price ? `Rs. ${prop.price.toLocaleString()}` : 'Price N/A'}
+        </h3>
+        <p className="text-sm font-bold text-gray-800 mt-1 truncate">{prop.title}</p>
+        <button 
+            onClick={onNavigate}
+            className="mt-3 w-full bg-blue-600 text-white text-xs font-bold py-2 rounded hover:bg-blue-700 transition">
+            View Details
+        </button>
+    </div>
+);
+
+// New Component for the sidebar card
+const PropertyCard = ({ prop, isActive, onMouseEnter, onMouseLeave, onClick }) => {
+    const imageUrl = getSafeImageUrl(prop);
+    return (
+        <div 
+            key={prop.id} 
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
+            onClick={onClick}
+            className={`bg-white rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition cursor-pointer flex flex-col ${isActive ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-200'}`}
+        >
+            <div className="h-32 w-full bg-gray-200 relative">
+                {imageUrl ? (
+                    <img src={imageUrl} alt={prop.title} className="w-full h-full object-cover" />
+                ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No Image</div>
+                )}
+                <div className="absolute top-1 left-1 bg-white text-gray-800 text-[10px] font-extrabold px-1.5 py-0.5 rounded shadow-sm uppercase">
+                    {prop.type === 'Land' ? 'Land' : 'House'}
+                </div>
+                {isActive && <div className="absolute inset-0 bg-blue-500/10"></div>}
+            </div>
+            <div className="p-2">
+                <h4 className="font-extrabold text-lg text-gray-900">Rs. {prop.price?.toLocaleString()}</h4>
+                <div className="flex items-center text-gray-700 text-[11px] mt-0.5 mb-1 truncate">
+                    {prop.bedrooms && <span className="font-bold">{prop.bedrooms} <span className="font-normal text-gray-500">bds</span> <span className="text-gray-300 mx-1">|</span></span>}
+                    {prop.bathrooms && <span className="font-bold">{prop.bathrooms} <span className="font-normal text-gray-500">ba</span> <span className="text-gray-300 mx-1">|</span></span>}
+                    {prop.land_size && <span className="font-bold">{prop.land_size} <span className="font-normal text-gray-500">perches</span></span>}
+                    {!prop.bedrooms && !prop.bathrooms && <span className="font-semibold text-gray-600">{prop.type || 'Property'}</span>}
+                </div>
+                <p className="text-xs font-medium text-gray-600 truncate">{prop.address || prop.title}</p>
+            </div>
+        </div>
+    );
+};
+
 const MapSearch = () => {
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -223,8 +279,10 @@ const MapSearch = () => {
     const fetchProperties = useCallback(async (polygonWKT) => {
         setLoading(true);
         try {
-            // Note: Update this URL if you are using Go Backend (port 8080)
-            const response = await axios.post('http://localhost:5000/api/properties/search', { polygon: polygonWKT });
+            // Use environment variable for API URL
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/map/search';
+            // Using Go Backend (port 8080) for high performance map filtering
+            const response = await axios.post(apiUrl, { polygon: polygonWKT });
             setProperties(response.data.properties || []);
         } catch (error) {
             console.error("🔥 Search error:", error.response?.data || error.message);
@@ -350,20 +408,11 @@ const MapSearch = () => {
                                     }}
                                 >
                                     <Popup className="rounded-xl overflow-hidden min-w-[200px]">
-                                        <div className="w-52 p-1">
-                                            {imageUrl ? (
-                                                <img src={imageUrl} alt={prop.title} className="w-full h-32 object-cover rounded-md mb-2 shadow-sm" />
-                                            ) : (
-                                                <div className="w-full h-32 bg-gray-100 flex items-center justify-center text-gray-400 rounded-md mb-2 border">No Image</div>
-                                            )}
-                                            <h3 className="font-extrabold text-xl text-blue-600 leading-tight">
-                                                {prop.price ? `Rs. ${prop.price.toLocaleString()}` : 'Price N/A'}
-                                            </h3>
-                                            <p className="text-sm font-bold text-gray-800 mt-1 truncate">{prop.title}</p>
-                                            <button className="mt-3 w-full bg-blue-600 text-white text-xs font-bold py-2 rounded hover:bg-blue-700 transition">
-                                                View Details
-                                            </button>
-                                        </div>
+                                        <MarkerPopup 
+                                            prop={prop} 
+                                            imageUrl={imageUrl} 
+                                            onNavigate={() => navigate(`/property/${prop.id}`)} 
+                                        />
                                     </Popup>
                                 </Marker>
                             );
@@ -379,37 +428,15 @@ const MapSearch = () => {
                     <div className="p-4 grid grid-cols-2 gap-3 auto-rows-max">
                         {properties.map((prop) => {
                             const isActive = activeMarkerId === prop.id || hoveredPropId === prop.id;
-                            const imageUrl = getSafeImageUrl(prop);
                             return (
-                                <div 
-                                    key={prop.id} 
+                                <PropertyCard
+                                    key={prop.id}
+                                    prop={prop}
+                                    isActive={isActive}
                                     onMouseEnter={() => setHoveredPropId(prop.id)}
                                     onMouseLeave={() => setHoveredPropId(null)}
                                     onClick={() => setActiveMarkerId(prop.id)}
-                                    className={`bg-white rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition cursor-pointer flex flex-col ${isActive ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-200'}`}
-                                >
-                                    <div className="h-32 w-full bg-gray-200 relative">
-                                        {imageUrl ? (
-                                            <img src={imageUrl} alt={prop.title} className="w-full h-full object-cover" />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No Image</div>
-                                        )}
-                                        <div className="absolute top-1 left-1 bg-white text-gray-800 text-[10px] font-extrabold px-1.5 py-0.5 rounded shadow-sm uppercase">
-                                            {prop.type === 'Land' ? 'Land' : 'House'}
-                                        </div>
-                                        {isActive && <div className="absolute inset-0 bg-blue-500/10"></div>}
-                                    </div>
-                                    <div className="p-2">
-                                        <h4 className="font-extrabold text-lg text-gray-900">Rs. {prop.price?.toLocaleString()}</h4>
-                                        <div className="flex items-center text-gray-700 text-[11px] mt-0.5 mb-1 truncate">
-                                            {prop.bedrooms && <span className="font-bold">{prop.bedrooms} <span className="font-normal text-gray-500">bds</span> <span className="text-gray-300 mx-1">|</span></span>}
-                                            {prop.bathrooms && <span className="font-bold">{prop.bathrooms} <span className="font-normal text-gray-500">ba</span> <span className="text-gray-300 mx-1">|</span></span>}
-                                            {prop.land_size && <span className="font-bold">{prop.land_size} <span className="font-normal text-gray-500">perches</span></span>}
-                                            {!prop.bedrooms && !prop.bathrooms && <span className="font-semibold text-gray-600">{prop.type || 'Property'}</span>}
-                                        </div>
-                                        <p className="text-xs font-medium text-gray-600 truncate">{prop.address || prop.title}</p>
-                                    </div>
-                                </div>
+                                />
                             );
                         })}
                     </div>

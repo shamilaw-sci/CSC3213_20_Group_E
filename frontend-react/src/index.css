@@ -128,3 +128,9 @@
 .zillow-marker-container.active .zillow-marker-price {
     color: #064e3b;
 }
+
+/* Draw Control Button Position */
+.leaflet-draw-control {
+    position: absolute;
+    top: 20px; right: 20px; z-index: 1000;
+}
