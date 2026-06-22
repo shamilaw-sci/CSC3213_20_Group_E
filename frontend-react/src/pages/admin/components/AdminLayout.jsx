@@ -5,11 +5,11 @@ import Topbar from "./Topbar";
 import "../styles/admin-global.css";
 
 const AdminLayout = () => (
-  <div className="admin-layout">
+  <div className="flex min-h-screen bg-[#F8FAFC] font-sans text-gray-900">
     <Sidebar />
-    <div className="main-content">
+    <div className="flex-1 ml-64 flex flex-col min-h-screen overflow-x-hidden relative">
       <Topbar />
-      <main className="page-content">
+      <main className="p-8 max-w-7xl mx-auto w-full">
         <Outlet />
       </main>
     </div>

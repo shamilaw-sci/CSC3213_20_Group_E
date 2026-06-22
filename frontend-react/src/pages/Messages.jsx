@@ -1,8 +1,15 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '../context/UserAuthContext';
+import Navbar from '../components/Navbar';
+import { motion } from 'framer-motion';
+import { Send, Paperclip, X, Image as ImageIcon, FileText, User, MessageSquare, ShieldAlert } from 'lucide-react';
 
+// axios is globally configured with withCredentials = true
 const apiHeaders = () => ({
+    // Authorization header no longer strictly required for browser if relying on HttpOnly cookies,
+    // but kept here as fallback for any edge case or manual token storage.
     Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
 });
 
@@ -19,9 +26,7 @@ const getConversationSubtitle = (conversation) => {
 
 const formatMessageTime = (value) => {
     if (!value) return '';
-    return new Date(value).toLocaleString('en-LK', {
-        month: 'short',
-        day: 'numeric',
+    return new Date(value).toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit',
     });
@@ -35,10 +40,17 @@ const getSenderName = (message, conversation, user) => {
     return message.sender_role;
 };
 
+// Helper for generating Avatar initials
+const getInitials = (name) => {
+    if (!name) return '?';
+    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+};
+
 const Messages = () => {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
-    const user = JSON.parse(localStorage.getItem('user'));
+    const { user } = useAuth();
+    const messagesEndRef = useRef(null);
     const [conversations, setConversations] = useState([]);
     const [selectedId, setSelectedId] = useState(searchParams.get('conversation') || '');
     const [messages, setMessages] = useState([]);
@@ -93,6 +105,7 @@ const Messages = () => {
                     headers: apiHeaders(),
                 });
                 setMessages(response.data.messages || []);
+                scrollToBottom();
             } catch (err) {
                 setError(err.response?.data?.message || err.response?.data?.error || 'Failed to load messages.');
             } finally {
@@ -117,6 +130,12 @@ const Messages = () => {
 
         return () => clearInterval(interval);
     }, [selectedId]);
+
+    const scrollToBottom = () => {
+        setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+    };
 
     const startSupport = async () => {
         try {
@@ -150,7 +169,8 @@ const Messages = () => {
                 { headers: { ...apiHeaders(), 'Content-Type': 'multipart/form-data' } }
             );
             setMessages((prev) => [...prev, response.data.message]);
-            await loadConversations();
+            scrollToBottom();
+            await loadConversations({ silent: true });
         } catch (err) {
             setDraft(body);
             setAttachment(selectedFile);
@@ -159,158 +179,235 @@ const Messages = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 font-sans">
-            <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between h-20 items-center">
-                        <button onClick={() => navigate('/')} className="text-2xl font-extrabold text-blue-600">
-                            Thirasara
-                        </button>
-                        <div className="flex gap-3">
-                            <button onClick={startSupport} className="px-4 py-2 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700">
-                                Contact Support
-                            </button>
-                            <button onClick={() => navigate('/')} className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-bold hover:bg-gray-100">
-                                Home
-                            </button>
-                        </div>
+        <div className="flex flex-col h-screen bg-gray-50 font-sans">
+            <Navbar />
+
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-1 flex flex-col min-h-0">
+                <div className="mb-6 flex justify-between items-end">
+                    <div>
+                        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Messages</h1>
+                        <p className="text-gray-500 mt-1">Talk with sellers, buyers, and admin support.</p>
                     </div>
                 </div>
-            </nav>
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="mb-6">
-                    <h1 className="text-3xl font-extrabold text-gray-900">Messages</h1>
-                    <p className="text-gray-500 mt-1">Talk with sellers, buyers, and admin support.</p>
-                </div>
+                {error && (
+                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-4 bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm font-medium flex items-center justify-between">
+                        <span>{error}</span>
+                        <button onClick={() => setError('')}><X className="w-4 h-4" /></button>
+                    </motion.div>
+                )}
 
-                {error && <div className="mb-4 bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm font-medium">{error}</div>}
-
-                <div className="bg-white border border-gray-200 rounded-lg overflow-hidden grid grid-cols-1 md:grid-cols-[340px_1fr] min-h-[650px]">
-                    <aside className="border-r border-gray-200 bg-gray-50">
-                        {loading && <div className="p-4 text-gray-500">Loading conversations...</div>}
-                        {!loading && conversations.length === 0 && (
-                            <div className="p-6 text-center">
-                                <h2 className="font-bold text-gray-900 mb-2">No conversations yet</h2>
-                                <p className="text-sm text-gray-500 mb-4">Start from a property card or contact support.</p>
-                                <button onClick={startSupport} className="px-4 py-2 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700">
-                                    Contact Support
-                                </button>
-                            </div>
-                        )}
-                        {conversations.map((conversation) => (
-                            <button
-                                key={conversation.id}
-                                onClick={() => setSelectedId(conversation.id)}
-                                className={`w-full text-left p-4 border-b border-gray-200 hover:bg-white ${selectedId === conversation.id ? 'bg-white border-l-4 border-l-blue-600' : ''}`}
-                            >
-                                <div className="flex items-start justify-between gap-3">
-                                    <div>
-                                        <p className="font-bold text-gray-900">{getConversationTitle(conversation, user)}</p>
-                                        <p className="text-sm text-gray-500 truncate max-w-[230px]">{getConversationSubtitle(conversation)}</p>
+                <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden grid grid-cols-1 md:grid-cols-[360px_1fr] flex-1 shadow-sm min-h-[600px] max-h-[calc(100vh-200px)]">
+                    
+                    {/* Sidebar */}
+                    <aside className="border-r border-gray-100 bg-white flex flex-col">
+                        <div className="p-5 border-b border-gray-100 bg-gray-50/50">
+                            <h2 className="font-bold text-gray-900">Conversations</h2>
+                        </div>
+                        
+                        <div className="overflow-y-auto flex-1">
+                            {loading && <div className="p-8 text-center text-gray-400">Loading conversations...</div>}
+                            
+                            {!loading && conversations.length === 0 && (
+                                <div className="p-8 text-center flex flex-col items-center justify-center h-full">
+                                    <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4 text-blue-500">
+                                        <MessageSquare className="w-8 h-8" />
                                     </div>
-                                    <div className="flex flex-col items-end gap-2">
-                                        <span className="text-[11px] font-bold uppercase text-gray-400">{conversation.type}</span>
-                                        {conversation.unread_count > 0 && (
-                                            <span className="min-w-6 h-6 px-2 rounded-full bg-blue-600 text-white text-xs font-extrabold flex items-center justify-center">
-                                                {conversation.unread_count}
-                                            </span>
-                                        )}
-                                    </div>
+                                    <h2 className="font-bold text-gray-900 mb-2">No conversations yet</h2>
+                                    <p className="text-sm text-gray-500 mb-6">Start from a property card or contact support.</p>
+                                    <button onClick={startSupport} className="px-6 py-2.5 rounded-full bg-blue-600 text-white font-bold hover:bg-blue-700 transition-all shadow-sm">
+                                        Contact Support
+                                    </button>
                                 </div>
-                                <p className="text-xs text-gray-500 mt-2 truncate">
-                                    {conversation.last_message?.body || 'No messages yet'}
-                                </p>
-                                {conversation.last_message?.created_at && (
-                                    <p className="text-[11px] text-gray-400 mt-1">
-                                        {formatMessageTime(conversation.last_message.created_at)}
-                                    </p>
-                                )}
-                            </button>
-                        ))}
-                    </aside>
+                            )}
+                            
+                            {conversations.map((conversation) => {
+                                const isActive = selectedId === conversation.id;
+                                const title = getConversationTitle(conversation, user);
+                                const subtitle = getConversationSubtitle(conversation);
+                                const isSupport = conversation.type === 'support';
+                                
+                                return (
+                                    <button
+                                        key={conversation.id}
+                                        onClick={() => setSelectedId(conversation.id)}
+                                        className={`w-full text-left p-4 border-b border-gray-50 transition-all duration-200 flex items-start gap-4 ${isActive ? 'bg-blue-50/50 relative' : 'hover:bg-gray-50'}`}
+                                    >
+                                        {isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-600 rounded-r-full"></div>}
+                                        
+                                        {/* Avatar */}
+                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold ${isSupport ? 'bg-gradient-to-br from-indigo-500 to-purple-600' : 'bg-gradient-to-br from-blue-500 to-cyan-500'} shadow-sm`}>
+                                            {isSupport ? <ShieldAlert className="w-6 h-6" /> : getInitials(title)}
+                                        </div>
 
-                    <section className="flex flex-col min-h-[650px]">
-                        {selectedConversation ? (
-                            <>
-                                <div className="border-b border-gray-200 p-4">
-                                    <h2 className="font-extrabold text-xl text-gray-900">{getConversationTitle(selectedConversation, user)}</h2>
-                                    <p className="text-sm text-gray-500">{getConversationSubtitle(selectedConversation)}</p>
-                                </div>
-
-                                <div className="flex-1 p-5 overflow-y-auto bg-white">
-                                    {messagesLoading && <p className="text-gray-500">Loading messages...</p>}
-                                    {!messagesLoading && messages.length === 0 && (
-                                        <div className="h-full flex items-center justify-center text-center text-gray-500">
-                                            <div>
-                                                <p className="font-bold text-gray-900 mb-1">No messages yet</p>
-                                                <p>Send the first message to start the conversation.</p>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex justify-between items-center mb-0.5">
+                                                <h3 className={`font-bold truncate pr-2 ${isActive ? 'text-blue-900' : 'text-gray-900'}`}>{title}</h3>
+                                                {conversation.last_message?.created_at && (
+                                                    <span className="text-[10px] font-medium text-gray-400 whitespace-nowrap">
+                                                        {formatMessageTime(conversation.last_message.created_at)}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-xs text-gray-500 truncate mb-1.5 font-medium">{subtitle}</p>
+                                            
+                                            <div className="flex justify-between items-center">
+                                                <p className="text-xs text-gray-400 truncate pr-4">
+                                                    {conversation.last_message?.body || 'No messages yet'}
+                                                </p>
+                                                {conversation.unread_count > 0 && (
+                                                    <span className="min-w-5 h-5 px-1.5 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0 shadow-sm">
+                                                        {conversation.unread_count}
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </aside>
+
+                    {/* Chat Area */}
+                    <section className="flex flex-col bg-[#F8FAFC]">
+                        {selectedConversation ? (
+                            <>
+                                {/* Chat Header */}
+                                <div className="h-20 border-b border-gray-100 px-6 py-4 flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-10">
+                                    <div className="flex items-center gap-4">
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${selectedConversation.type === 'support' ? 'bg-gradient-to-br from-indigo-500 to-purple-600' : 'bg-gradient-to-br from-blue-500 to-cyan-500'}`}>
+                                            {selectedConversation.type === 'support' ? <ShieldAlert className="w-5 h-5" /> : getInitials(getConversationTitle(selectedConversation, user))}
+                                        </div>
+                                        <div>
+                                            <h2 className="font-extrabold text-lg text-gray-900 leading-tight">
+                                                {getConversationTitle(selectedConversation, user)}
+                                            </h2>
+                                            <p className="text-xs font-medium text-gray-500">
+                                                {getConversationSubtitle(selectedConversation)}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Messages View */}
+                                <div className="flex-1 p-6 overflow-y-auto space-y-6">
+                                    {messagesLoading && <div className="text-center text-gray-400 py-4">Loading messages...</div>}
+                                    {!messagesLoading && messages.length === 0 && (
+                                        <div className="h-full flex items-center justify-center text-center text-gray-500 flex-col">
+                                            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-gray-400">
+                                                <MessageSquare className="w-8 h-8" />
+                                            </div>
+                                            <p className="font-bold text-gray-900 mb-1">It's quiet here</p>
+                                            <p className="text-sm">Send the first message to start the conversation.</p>
+                                        </div>
                                     )}
-                                    <div className="space-y-3">
-                                        {messages.map((message) => {
-                                            const mine = message.sender_id === user?.id;
-                                            return (
-                                                <div key={message.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
-                                                    <div className={`max-w-[75%] rounded-lg px-4 py-3 shadow-sm ${mine ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-900'}`}>
-                                                        <div className={`text-[11px] font-bold mb-1 ${mine ? 'text-blue-100' : 'text-gray-500'}`}>
-                                                            {getSenderName(message, selectedConversation, user)}
-                                                        </div>
-                                                        {message.body && <p className="text-sm whitespace-pre-wrap">{message.body}</p>}
+                                    
+                                    {messages.map((message) => {
+                                        const mine = message.sender_id === user?.id;
+                                        return (
+                                            <motion.div 
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                key={message.id} 
+                                                className={`flex ${mine ? 'justify-end' : 'justify-start'}`}
+                                            >
+                                                <div className={`flex flex-col ${mine ? 'items-end' : 'items-start'} max-w-[75%]`}>
+                                                    <div className={`text-[10px] font-bold mb-1 px-1 ${mine ? 'text-gray-400' : 'text-gray-500'}`}>
+                                                        {getSenderName(message, selectedConversation, user)}
+                                                    </div>
+                                                    
+                                                    <div className={`px-5 py-3 shadow-sm ${
+                                                        mine 
+                                                            ? 'bg-gradient-to-br from-blue-600 to-blue-500 text-white rounded-2xl rounded-tr-sm' 
+                                                            : 'bg-white border border-gray-100 text-gray-800 rounded-2xl rounded-tl-sm'
+                                                    }`}>
+                                                        {message.body && <p className="text-[15px] whitespace-pre-wrap leading-relaxed">{message.body}</p>}
+                                                        
                                                         {message.attachment_url && (
                                                             <a
                                                                 href={message.attachment_url}
                                                                 target="_blank"
                                                                 rel="noreferrer"
-                                                                className={`block mt-3 rounded-lg overflow-hidden border ${mine ? 'border-blue-300 bg-blue-500' : 'border-gray-200 bg-white'}`}
+                                                                className={`block mt-3 rounded-xl overflow-hidden border ${mine ? 'border-blue-400/50 bg-blue-500/50' : 'border-gray-200 bg-gray-50'} hover:opacity-90 transition-opacity`}
                                                             >
                                                                 {message.attachment_type?.startsWith('image/') ? (
-                                                                    <img src={message.attachment_url} alt={message.attachment_name || 'Attachment'} className="max-h-56 w-full object-cover" />
+                                                                    <img src={message.attachment_url} alt="Attachment" className="max-h-60 w-auto object-cover" />
                                                                 ) : (
-                                                                    <span className={`block px-3 py-2 text-sm font-bold ${mine ? 'text-white' : 'text-blue-600'}`}>
-                                                                        {message.attachment_name || 'Download attachment'}
-                                                                    </span>
+                                                                    <div className={`flex items-center gap-3 px-4 py-3 ${mine ? 'text-white' : 'text-blue-600'}`}>
+                                                                        <FileText className="w-6 h-6" />
+                                                                        <span className="text-sm font-bold truncate max-w-[200px]">
+                                                                            {message.attachment_name || 'Download File'}
+                                                                        </span>
+                                                                    </div>
                                                                 )}
                                                             </a>
                                                         )}
-                                                        <p className={`text-[11px] mt-2 ${mine ? 'text-blue-100' : 'text-gray-500'}`}>
-                                                            {formatMessageTime(message.created_at)}
-                                                        </p>
                                                     </div>
+                                                    
+                                                    <p className="text-[10px] font-medium text-gray-400 mt-1 px-1">
+                                                        {formatMessageTime(message.created_at)}
+                                                    </p>
                                                 </div>
-                                            );
-                                        })}
-                                    </div>
+                                            </motion.div>
+                                        );
+                                    })}
+                                    <div ref={messagesEndRef} />
                                 </div>
 
-                                <form onSubmit={sendMessage} className="border-t border-gray-200 p-4">
+                                {/* Chat Input */}
+                                <div className="p-4 bg-white border-t border-gray-100">
                                     {attachment && (
-                                        <div className="mb-3 flex items-center justify-between rounded-lg bg-blue-50 border border-blue-100 px-3 py-2 text-sm text-blue-700">
-                                            <span className="truncate">{attachment.name}</span>
-                                            <button type="button" onClick={() => setAttachment(null)} className="font-bold">Remove</button>
+                                        <div className="mb-3 mx-4 flex items-center justify-between rounded-xl bg-blue-50 border border-blue-100 px-4 py-2 text-sm text-blue-700">
+                                            <div className="flex items-center gap-2 truncate">
+                                                {attachment.type.startsWith('image/') ? <ImageIcon className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
+                                                <span className="font-medium truncate">{attachment.name}</span>
+                                            </div>
+                                            <button type="button" onClick={() => setAttachment(null)} className="p-1 hover:bg-blue-100 rounded-full transition-colors">
+                                                <X className="w-4 h-4" />
+                                            </button>
                                         </div>
                                     )}
-                                    <div className="flex gap-3">
-                                        <label className="px-4 py-3 rounded-lg border border-gray-300 text-gray-700 font-bold hover:bg-gray-100 cursor-pointer">
-                                            Attach
+                                    
+                                    <form onSubmit={sendMessage} className="flex items-end gap-3 px-2">
+                                        <label className="p-3.5 rounded-full text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer flex-shrink-0 mb-1">
+                                            <Paperclip className="w-5 h-5" />
                                             <input type="file" className="hidden" onChange={(event) => setAttachment(event.target.files?.[0] || null)} />
                                         </label>
-                                        <input
-                                            value={draft}
-                                            onChange={(event) => setDraft(event.target.value)}
-                                            placeholder="Write a message..."
-                                            className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                                        />
-                                        <button type="submit" className="px-5 py-3 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700">
-                                            Send
+                                        
+                                        <div className="flex-1 bg-gray-50 border border-gray-200 rounded-3xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-300 transition-all">
+                                            <textarea
+                                                value={draft}
+                                                onChange={(event) => setDraft(event.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                                        e.preventDefault();
+                                                        sendMessage(e);
+                                                    }
+                                                }}
+                                                placeholder="Message..."
+                                                className="w-full max-h-32 bg-transparent px-5 py-3.5 focus:outline-none text-gray-700 resize-none overflow-y-auto"
+                                                rows="1"
+                                                style={{ minHeight: '52px' }}
+                                            />
+                                        </div>
+                                        
+                                        <button 
+                                            type="submit" 
+                                            disabled={!draft.trim() && !attachment}
+                                            className="p-3.5 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 mb-1 shadow-sm hover:shadow-md"
+                                        >
+                                            <Send className="w-5 h-5 ml-0.5" />
                                         </button>
+                                    </form>
+                                    <div className="text-center mt-2">
+                                        <span className="text-[10px] text-gray-400 font-medium">Press Enter to send, Shift+Enter for new line</span>
                                     </div>
-                                </form>
+                                </div>
                             </>
                         ) : (
-                            <div className="flex-1 flex items-center justify-center text-gray-500">
-                                Select a conversation
+                            <div className="flex-1 flex flex-col items-center justify-center text-gray-400 bg-gray-50">
+                                <MessageSquare className="w-16 h-16 mb-4 text-gray-300" />
+                                <p className="text-lg font-medium text-gray-500">Select a conversation to start chatting</p>
                             </div>
                         )}
                     </section>

@@ -10,9 +10,11 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY
 
 /**
  * Add a new property listing to the database.
- * Processes uploaded images, formats property data, and saves it into Supabase.
+ * Processes uploaded images concurrently, formats property data, and saves it into Supabase.
+ * Implements rollback if DB insert fails.
  */
-const addProperty = async (req, res) => {
+const addProperty = async (req, res, next) => {
+    let uploadedFiles = []; // Track uploaded file paths for rollback
     try {
         const { type, title, description, price, address, bedrooms, bathrooms, landSize, latitude, longitude, boundary } = req.body;
         
@@ -24,25 +26,30 @@ const addProperty = async (req, res) => {
 
         let imageUrls = [];
 
-        // Upload images to Supabase Storage
+        // Upload images to Supabase Storage concurrently
         if (files && files.length > 0) {
-            for (const file of files) {
+            const uploadPromises = files.map(async (file) => {
                 const fileName = `${Date.now()}-${file.originalname.replace(/\s/g, '_')}`; 
-                
+                const filePath = `public/${fileName}`;
+
                 const { data: uploadData, error: uploadError } = await supabase.storage
                     .from('properties') 
-                    .upload(`public/${fileName}`, file.buffer, { 
+                    .upload(filePath, file.buffer, { 
                         contentType: file.mimetype
                     });
 
                 if (uploadError) throw uploadError;
 
+                uploadedFiles.push(filePath); // Track for potential rollback
+
                 const { data: publicUrlData } = supabase.storage
                     .from('properties')
-                    .getPublicUrl(`public/${fileName}`);
+                    .getPublicUrl(filePath);
 
-                imageUrls.push(publicUrlData.publicUrl);
-            }
+                return publicUrlData.publicUrl;
+            });
+
+            imageUrls = await Promise.all(uploadPromises);
         }
 
         // Insert property data into Supabase properties table
@@ -67,7 +74,13 @@ const addProperty = async (req, res) => {
             }])
             .select();
 
-        if (propertyError) throw propertyError;
+        if (propertyError) {
+            // Rollback: Remove images if DB insertion failed
+            if (uploadedFiles.length > 0) {
+                await supabase.storage.from('properties').remove(uploadedFiles);
+            }
+            throw propertyError;
+        }
 
         res.status(201).json({ 
             message: "Property added successfully", 
@@ -75,62 +88,83 @@ const addProperty = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Backend Insert Error:", error);
-        res.status(500).json({ error: error.message });
+        // Rollback on any unexpected error during the process
+        if (uploadedFiles.length > 0) {
+            await supabase.storage.from('properties').remove(uploadedFiles).catch(e => console.error("Rollback failed:", e));
+        }
+        next(error);
     }
 };
 
 /**
- * Retrieve all property listings from the database.
+ * Retrieve all property listings from the database with pagination.
  * Sorted in descending order based on the creation date.
  */
-const getProperties = async (req, res) => {
+const getProperties = async (req, res, next) => {
     try {
-        const { data, error } = await supabase
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 50;
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
+
+        const { data, error, count } = await supabase
             .from('properties')
-            .select('*')
+            .select('*', { count: 'exact' })
             .eq('status', 'approved')
-            .order('created_at', { ascending: false }); 
+            .order('created_at', { ascending: false })
+            .range(from, to); 
 
         if (error) throw error;
 
         res.status(200).json({ 
             message: "Properties fetched successfully", 
-            count: data.length, 
+            count: data.length,
+            totalCount: count,
+            page,
+            totalPages: Math.ceil((count || 0) / limit),
             properties: data 
         });
 
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        next(error);
     }
 };
 
 /**
- * Retrieve property submissions for the logged-in seller.
+ * Retrieve property submissions for the logged-in seller with pagination.
  * This includes pending/rejected listings so sellers can track review progress.
  */
-const getMyProperties = async (req, res) => {
+const getMyProperties = async (req, res, next) => {
     try {
         if (req.user.role !== 'SELLER') {
             return res.status(403).json({ message: "Only sellers can view submitted properties." });
         }
 
-        const { data, error } = await supabase
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 50;
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
+
+        const { data, error, count } = await supabase
             .from('properties')
-            .select('*')
+            .select('*', { count: 'exact' })
             .eq('seller_id', req.user.id)
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false })
+            .range(from, to);
 
         if (error) throw error;
 
         res.status(200).json({
             message: "Seller properties fetched successfully",
             count: data.length,
+            totalCount: count,
+            page,
+            totalPages: Math.ceil((count || 0) / limit),
             properties: data
         });
 
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        next(error);
     }
 };
 
@@ -138,7 +172,7 @@ const getMyProperties = async (req, res) => {
  * Update a seller's own pending/rejected property submission.
  * Saving edits resubmits the property for admin review.
  */
-const updateMyProperty = async (req, res) => {
+const updateMyProperty = async (req, res, next) => {
     try {
         if (req.user.role !== 'SELLER') {
             return res.status(403).json({ message: "Only sellers can update submitted properties." });
@@ -204,7 +238,7 @@ const updateMyProperty = async (req, res) => {
         });
 
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        next(error);
     }
 };
 

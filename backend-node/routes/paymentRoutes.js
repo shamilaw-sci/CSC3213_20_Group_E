@@ -6,6 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
+const { sendPaymentReceipt } = require('../utils/emailService');
 
 // Initialize Supabase client
 const { createClient } = require('@supabase/supabase-js');
@@ -61,7 +62,15 @@ router.post('/notify', async (req, res) => {
     const local_md5sig = crypto.createHash('md5').update(hashString).digest('hex').toUpperCase();
 
     // Verify signature and check if payment is successful (status_code === '2')
+    // Security Fix: Hardcode the required payment amount to prevent malicious manipulation.
+    const REQUIRED_FEE = 2000.00;
+    
     if (local_md5sig === md5sig && status_code === '2') {
+        if (parseFloat(payhere_amount) !== REQUIRED_FEE) {
+            console.error(`🚨 [PayHere Webhook] Security Alert: Payment amount mismatch! Expected ${REQUIRED_FEE}, got ${payhere_amount} for Order ID: ${order_id}`);
+            return res.status(400).send("Invalid Amount");
+        }
+
         console.log(`✅ [PayHere Webhook] Payment verified for Order ID: ${order_id} | Amount: ${payhere_amount}`);
 
         try {
@@ -83,18 +92,28 @@ router.post('/notify', async (req, res) => {
             }
 
             // 2. Update the property's payment status and send for admin review
-            const { error: propError } = await supabase
+            const { data: property, error: propError } = await supabase
                 .from('properties')
                 .update({ 
                     payment_status: 'Paid', 
                     status: 'pending' // Or 'pending_approval' depending on your existing flow
                 }) 
-                .eq('id', order_id); // Assuming order_id is the actual property ID
+                .eq('id', order_id)
+                .select('seller_id, title')
+                .single();
 
             if (propError) {
                 console.error("[DB Error] Failed to update property status:", propError.message);
-            } else {
+            } else if (property) {
                 console.log(`[DB Success] Database successfully updated for Property ID: ${order_id}`);
+
+                // Send Email Notification
+                const { data: user } = await supabase.from('users').select('email').eq('id', property.seller_id).single();
+                if (user && user.email) {
+                    sendPaymentReceipt(user.email, property.title || 'Your Property', parseFloat(payhere_amount)).catch(console.error);
+                }
+
+                return res.status(200).send("OK");
             }
 
         } catch (dbError) {

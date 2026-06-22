@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { fetchDashboardStats } from "../api/adminApi";
-import "../styles/admin-topbar.css";
+import { Bell, Search } from "lucide-react";
 
 const PAGE_TITLES = {
   "/admin/dashboard": { title: "Dashboard", subtitle: "Welcome back, here's what's happening" },
@@ -18,6 +18,7 @@ const Topbar = () => {
   const { pathname } = useLocation();
   const [pendingCount, setPendingCount] = useState(0);
   const { title, subtitle } = PAGE_TITLES[pathname] || { title: "Admin Panel", subtitle: "" };
+  
   const now = new Date().toLocaleDateString("en-LK", {
     weekday: "long",
     year: "numeric",
@@ -32,23 +33,50 @@ const Topbar = () => {
   }, []);
 
   return (
-    <header className="admin-topbar">
-      <div className="admin-topbar-left">
-        <h2 className="admin-topbar-title">{title}</h2>
-        <p className="admin-topbar-sub">{subtitle}</p>
+    <header className="h-20 px-8 flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-gray-100">
+      
+      {/* Left: Title */}
+      <div>
+        <h2 className="text-xl font-black text-gray-900 tracking-tight">{title}</h2>
+        <p className="text-xs font-bold text-gray-500">{subtitle}</p>
       </div>
-      <div className="admin-topbar-right">
-        <span className="admin-topbar-date">{now}</span>
-        <div className="admin-topbar-divider" />
-        <div className="admin-system-badge">
-          <span className="admin-system-dot" />
-          System Online
+
+      {/* Right: Actions */}
+      <div className="flex items-center gap-6">
+        
+        {/* Search */}
+        <div className="hidden md:flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-full px-4 py-2 focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-300 transition-all">
+            <Search className="w-4 h-4 text-gray-400" />
+            <input 
+                type="text" 
+                placeholder="Search..." 
+                className="bg-transparent border-none outline-none text-sm text-gray-700 w-48"
+            />
         </div>
-        {pendingCount > 0 && (
-          <a href="/admin/listings" className="admin-system-badge" style={{ color: "var(--admin-warning)" }}>
-            {pendingCount} Property to approval
-          </a>
-        )}
+
+        <div className="h-6 w-px bg-gray-200"></div>
+
+        {/* Date & System Status */}
+        <div className="hidden lg:flex flex-col items-end">
+            <span className="text-xs font-bold text-gray-900">{now}</span>
+            <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                <span className="text-[10px] font-bold text-green-600 uppercase tracking-widest">System Online</span>
+            </div>
+        </div>
+
+        {/* Notifications */}
+        <div className="relative cursor-pointer">
+            <div className="p-2.5 bg-gray-50 text-gray-600 rounded-full hover:bg-gray-100 transition-colors">
+                <Bell className="w-5 h-5" />
+            </div>
+            {pendingCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full shadow-md border-2 border-white">
+                    {pendingCount}
+                </span>
+            )}
+        </div>
+
       </div>
     </header>
   );

@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import Navbar from '../components/Navbar';
+import { useAuth } from '../context/UserAuthContext';
 
 const STATUS_STYLES = {
     pending: 'bg-amber-100 text-amber-800 border-amber-200',
@@ -38,11 +40,10 @@ const EditPropertyModal = ({ property, onCancel, onSaved }) => {
         setError('');
 
         try {
-            const token = localStorage.getItem('token');
             const response = await axios.patch(
                 `http://localhost:5000/api/properties/my-listings/${property.id}`,
                 formData,
-                { headers: { Authorization: `Bearer ${token}` } }
+                { withCredentials: true }
             );
             onSaved(response.data.property);
         } catch (err) {
@@ -131,12 +132,14 @@ const EditPropertyModal = ({ property, onCancel, onSaved }) => {
 
 const MyProperties = () => {
     const navigate = useNavigate();
-    const user = JSON.parse(localStorage.getItem('user'));
+    const { user } = useAuth();
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [editTarget, setEditTarget] = useState(null);
     const [notice, setNotice] = useState('');
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
     useEffect(() => {
         if (!user || user.role !== 'SELLER') {
@@ -146,11 +149,15 @@ const MyProperties = () => {
 
         const fetchMyProperties = async () => {
             try {
-                const token = localStorage.getItem('token');
-                const response = await axios.get('http://localhost:5000/api/properties/my-listings', {
-                    headers: { Authorization: `Bearer ${token}` },
+                const response = await axios.get(`http://localhost:5000/api/properties/my-listings?page=${page}&limit=12`, {
+                    withCredentials: true
                 });
-                setProperties(response.data.properties || []);
+                if (page === 1) {
+                    setProperties(response.data.properties || []);
+                } else {
+                    setProperties(prev => [...prev, ...(response.data.properties || [])]);
+                }
+                setTotalPages(response.data.totalPages || 1);
             } catch (err) {
                 setError(err.response?.data?.message || err.response?.data?.error || 'Failed to load your properties.');
             } finally {
@@ -159,7 +166,7 @@ const MyProperties = () => {
         };
 
         fetchMyProperties();
-    }, [navigate, user]);
+    }, [navigate, user, page]);
 
     const counts = useMemo(() => {
         return properties.reduce(
@@ -181,26 +188,7 @@ const MyProperties = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans">
-            <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between h-20 items-center">
-                        <button onClick={() => navigate('/')} className="text-2xl font-extrabold text-blue-600">
-                            Thirasara
-                        </button>
-                        <div className="flex items-center gap-3">
-                            <button onClick={() => navigate('/add-property')} className="px-4 py-2 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700">
-                                Sell Property
-                            </button>
-                            <button onClick={() => navigate('/messages')} className="px-4 py-2 rounded-lg border border-blue-600 text-blue-600 font-bold hover:bg-blue-50">
-                                Messages
-                            </button>
-                            <button onClick={() => navigate('/')} className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-bold hover:bg-gray-100">
-                                Home
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </nav>
+            <Navbar />
 
             <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
                 <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
@@ -284,6 +272,18 @@ const MyProperties = () => {
                         );
                     })}
                 </div>
+
+                {/* Load More Button */}
+                {page < totalPages && properties.length > 0 && (
+                    <div className="text-center mt-12 mb-8">
+                        <button 
+                            onClick={() => setPage(prev => prev + 1)}
+                            className="bg-white border border-blue-600 text-blue-600 hover:bg-blue-50 font-bold py-3 px-8 rounded-lg transition duration-300"
+                        >
+                            Load More Properties
+                        </button>
+                    </div>
+                )}
             </main>
 
             {editTarget && (

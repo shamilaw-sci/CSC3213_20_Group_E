@@ -4,27 +4,43 @@ const jwt = require('jsonwebtoken');
 // Initialize Supabase client
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-// Admin login - Simple hardcoded admin for now
+const bcrypt = require('bcryptjs');
+const { sendListingStatusEmail } = require('../utils/emailService');
+
+// Admin login - Secure implementation against database
 const login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // TEMP TEST LOGIN - Replace with database query for production
-        if (email === "admin@gmail.com" && password === "admin123") {
-            const token = jwt.sign(
-                { id: 'admin-1', email: email, role: 'ADMIN' },
-                process.env.JWT_SECRET,
-                { expiresIn: '1d' }
-            );
+        // Fetch user from DB where role is ADMIN
+        const { data: adminUser, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('email', email)
+            .eq('role', 'ADMIN')
+            .single();
 
-            return res.status(200).json({
-                message: "Login successful",
-                token,
-                admin: { id: 'admin-1', email, name: 'Admin' }
-            });
+        if (error || !adminUser) {
+            return res.status(401).json({ message: "Invalid admin credentials" });
         }
 
-        return res.status(401).json({ message: "Invalid email or password" });
+        // Verify password
+        const isMatch = await bcrypt.compare(password, adminUser.password_hash);
+        if (!isMatch) {
+            return res.status(401).json({ message: "Invalid admin credentials" });
+        }
+
+        const token = jwt.sign(
+            { id: adminUser.id, email: email, role: 'ADMIN' },
+            process.env.JWT_SECRET,
+            { expiresIn: '1d' }
+        );
+
+        return res.status(200).json({
+            message: "Login successful",
+            token,
+            admin: { id: adminUser.id, email, name: adminUser.name }
+        });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -160,10 +176,14 @@ const approveListing = async (req, res) => {
             .from('properties')
             .update({ status: 'approved' })
             .eq('id', req.params.id)
-            .select()
+            .select('title, seller_id, users(email)')
             .single();
 
         if (error) throw error;
+
+        if (listing && listing.users && listing.users.email) {
+            sendListingStatusEmail(listing.users.email, listing.title, 'Active').catch(console.error);
+        }
 
         res.status(200).json({ message: "Listing approved", listing });
     } catch (error) {
@@ -180,7 +200,7 @@ const rejectListing = async (req, res) => {
             .from('properties')
             .update({ status: 'rejected', rejection_reason: reason || null })
             .eq('id', req.params.id)
-            .select()
+            .select('title, seller_id, users(email)')
             .single();
 
         if (error && error.message?.includes('rejection_reason')) {
@@ -188,13 +208,17 @@ const rejectListing = async (req, res) => {
                 .from('properties')
                 .update({ status: 'rejected' })
                 .eq('id', req.params.id)
-                .select()
+                .select('title, seller_id, users(email)')
                 .single();
             listing = fallback.data;
             error = fallback.error;
         }
 
         if (error) throw error;
+
+        if (listing && listing.users && listing.users.email) {
+            sendListingStatusEmail(listing.users.email, listing.title, 'Rejected', reason).catch(console.error);
+        }
 
         res.status(200).json({ message: "Listing rejected", listing });
     } catch (error) {
@@ -212,7 +236,7 @@ const deleteListing = async (req, res) => {
 
         if (error) throw error;
 
-        res.status(200).json({ message: "Listing deleted" });
+        res.status(200).json({ message: "Listing deleted successfully" });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -251,19 +275,31 @@ const getUserById = async (req, res) => {
     }
 };
 
-// Ban user
+// Ban user (Requires a 'status' or 'is_banned' column in DB, assuming we use a generic update for now, or just reject their login by changing role to BANNED)
 const banUser = async (req, res) => {
     try {
-        res.status(200).json({ message: "User banned" });
+        const { error } = await supabase
+            .from('users')
+            .update({ role: 'BANNED' })
+            .eq('id', req.params.id);
+
+        if (error) throw error;
+        res.status(200).json({ message: "User banned successfully" });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
 
-// Unban user
+// Unban user (Restore to BUYER or SELLER, defaulting to BUYER here)
 const unbanUser = async (req, res) => {
     try {
-        res.status(200).json({ message: "User unbanned" });
+        const { error } = await supabase
+            .from('users')
+            .update({ role: 'BUYER' })
+            .eq('id', req.params.id);
+
+        if (error) throw error;
+        res.status(200).json({ message: "User unbanned successfully" });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -272,7 +308,19 @@ const unbanUser = async (req, res) => {
 // Update user role
 const updateUserRole = async (req, res) => {
     try {
-        res.status(200).json({ message: "User role updated" });
+        const { role } = req.body;
+        // Strict role checking
+        if (!['BUYER', 'SELLER', 'ADMIN', 'BANNED'].includes(role)) {
+            return res.status(400).json({ message: "Invalid role specified" });
+        }
+
+        const { error } = await supabase
+            .from('users')
+            .update({ role })
+            .eq('id', req.params.id);
+
+        if (error) throw error;
+        res.status(200).json({ message: `User role updated to ${role}` });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

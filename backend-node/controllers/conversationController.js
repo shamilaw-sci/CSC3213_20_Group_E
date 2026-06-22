@@ -35,8 +35,9 @@ const getConversationOr403 = async (req, res) => {
 
 const startPropertyConversation = async (req, res) => {
     try {
-        if (!isBuyer(req.user)) {
-            return res.status(403).json({ message: "Only buyers can message sellers about a property." });
+        // Fix: Allow anyone (Buyer or Seller) to inquire about a property
+        if (!req.user || !['BUYER', 'SELLER'].includes(req.user.role)) {
+            return res.status(403).json({ message: "Only registered users can message sellers about a property." });
         }
 
         const { data: property, error: propertyError } = await supabase
@@ -135,8 +136,8 @@ const getConversations = async (req, res) => {
             .select('*')
             .order('updated_at', { ascending: false });
 
-        if (isBuyer(req.user)) query = query.eq('buyer_id', req.user.id);
-        if (isSeller(req.user)) query = query.eq('seller_id', req.user.id);
+        // Fix: A user can be either the buyer (initiator) OR the seller in a conversation.
+        query = query.or(`buyer_id.eq.${req.user.id},seller_id.eq.${req.user.id}`);
 
         const { data: conversations, error } = await query;
         if (error) throw error;
