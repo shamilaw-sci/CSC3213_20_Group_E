@@ -8,6 +8,9 @@ import { MapContainer, TileLayer, useMap, Marker, Popup, GeoJSON } from 'react-l
 import L from 'leaflet';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { Heart, Calculator } from 'lucide-react';
+import api from '../context/api';
+import FeasibilityCalculator from './FeasibilityCalculator';
 import districtsData from '../assets/sri-lanka-districts.json';
 import 'leaflet/dist/leaflet.css';
 
@@ -97,8 +100,8 @@ const MapEvents = ({ onBoundsChange, onMapClick, searchMode }) => {
 };
 
 /**
- * 🚀 අලුත් Freehand Draw Component එක 
- * (අතින් අඳින හැඩය හසුරුවයි)
+ * 🚀 Freehand Draw Component
+ * (Handles freehand drawing logic)
  */
 const FreehandDrawControl = ({ onPolygonComplete, onDrawDelete, controlRef }) => {
     const map = useMap();
@@ -114,7 +117,6 @@ const FreehandDrawControl = ({ onPolygonComplete, onDrawDelete, controlRef }) =>
                 clear: () => {
                     drawnItems.clearLayers();
                     setIsDrawMode(false);
-                    if (onDrawDelete) onDrawDelete();
                 }
             };
         }
@@ -130,7 +132,7 @@ const FreehandDrawControl = ({ onPolygonComplete, onDrawDelete, controlRef }) =>
             return;
         }
 
-        map.dragging.disable(); // Draw Mode එකේදී Map එක එහා මෙහා යන්නේ නෑ
+        map.dragging.disable(); // Disable map dragging during draw mode
         let isDrawing = false;
         let points = [];
         let polyline = null;
@@ -158,7 +160,7 @@ const FreehandDrawControl = ({ onPolygonComplete, onDrawDelete, controlRef }) =>
             if (points.length > 3) {
                 polygon = L.polygon(points, { color: '#006aff', weight: 3, fillOpacity: 0.2 }).addTo(drawnItems);
                 
-                // Lng Lat පිළිවෙලට WKT එක හදනවා
+                // Construct WKT in Lng Lat order
                 let wktPoints = points.map(pt => `${pt.lng} ${pt.lat}`).join(', ');
                 wktPoints += `, ${points[0].lng} ${points[0].lat}`; 
                 
@@ -167,7 +169,7 @@ const FreehandDrawControl = ({ onPolygonComplete, onDrawDelete, controlRef }) =>
                 map.dragging.enable();
             }
             
-            setIsDrawMode(false); // ඇඳලා ඉවර වුණාම ආයේ සාමාන්‍ය විදිහට Map එක පාවිච්චි කරන්න දෙනවා
+            setIsDrawMode(false); // Disable draw mode after drawing is complete
             map.dragging.enable();
         };
 
@@ -233,6 +235,21 @@ const MarkerPopup = ({ prop, imageUrl, onNavigate }) => (
 // New Component for the sidebar card
 const PropertyCard = ({ prop, isActive, onMouseEnter, onMouseLeave, onClick }) => {
     const imageUrl = getSafeImageUrl(prop);
+    const [isFavorite, setIsFavorite] = useState(false); // Initially false, ideally should be fetched from backend per property
+    
+    const handleFavoriteClick = async (e) => {
+        e.stopPropagation();
+        try {
+            await api.post(`/api/favorites/${prop.id}`);
+            setIsFavorite(!isFavorite);
+        } catch (error) {
+            console.error("Error toggling favorite", error);
+            if (error.response?.status === 401) {
+                alert("Please log in to save properties.");
+            }
+        }
+    };
+
     return (
         <div 
             key={prop.id} 
@@ -250,6 +267,12 @@ const PropertyCard = ({ prop, isActive, onMouseEnter, onMouseLeave, onClick }) =
                 <div className="absolute top-1 left-1 bg-white text-gray-800 text-[10px] font-extrabold px-1.5 py-0.5 rounded shadow-sm uppercase">
                     {prop.type === 'Land' ? 'Land' : 'House'}
                 </div>
+                <button 
+                    onClick={handleFavoriteClick}
+                    className="absolute top-1 right-1 p-1.5 bg-white/80 hover:bg-white rounded-full shadow-sm transition"
+                >
+                    <Heart className={`h-4 w-4 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
+                </button>
                 {isActive && <div className="absolute inset-0 bg-blue-500/10"></div>}
             </div>
             <div className="p-2">
@@ -273,14 +296,16 @@ const MapSearch = () => {
     const [activeMarkerId, setActiveMarkerId] = useState(null);
     const [hoveredPropId, setHoveredPropId] = useState(null);
     const [searchMode, setSearchMode] = useState('bounds'); 
+    const [isFeasibilityOpen, setIsFeasibilityOpen] = useState(false);
+    const [maxPriceFilter, setMaxPriceFilter] = useState(null);
     const drawControlRef = useRef(null);
     const navigate = useNavigate();
 
     const fetchProperties = useCallback(async (polygonWKT) => {
         setLoading(true);
         try {
-            // Use environment variable for API URL
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/map/search';
+            // Default to Go microservice if environment variable is not explicitly set
+            const apiUrl = import.meta.env.VITE_MAP_API_URL || 'http://localhost:8080/api/map/search';
             // Using Go Backend (port 8080) for high performance map filtering
             const response = await axios.post(apiUrl, { polygon: polygonWKT });
             setProperties(response.data.properties || []);
@@ -300,7 +325,7 @@ const MapSearch = () => {
         setActiveMarkerId(null);
     }, []);
 
-    // 🚀 Freehand WKT එක කෙලින්ම Fetch එකට යවනවා
+    // 🚀 Send the Freehand WKT directly to the API
     const handleFreehandData = useCallback((polygonWKT) => {
         setSearchMode('polygon');
         fetchProperties(polygonWKT);
@@ -319,11 +344,26 @@ const MapSearch = () => {
                 <h2 className="text-2xl font-extrabold text-blue-600 tracking-tight cursor-pointer" onClick={() => navigate('/')}>
                     Thirasara Map Search
                 </h2>
-                <button onClick={() => navigate('/')} className="text-gray-600 hover:text-blue-600 font-bold">
-                    Close Map ✕
-                </button>
+                <div className="flex gap-4">
+                    <button 
+                        onClick={() => setIsFeasibilityOpen(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 font-bold rounded-lg hover:bg-blue-100 transition"
+                    >
+                        <Calculator className="h-5 w-5" />
+                        Feasibility Engine
+                    </button>
+                    <button onClick={() => navigate('/')} className="text-gray-600 hover:text-blue-600 font-bold px-4 py-2">
+                        Close Map ✕
+                    </button>
+                </div>
             </div>
             
+            <FeasibilityCalculator 
+                isOpen={isFeasibilityOpen} 
+                onClose={() => setIsFeasibilityOpen(false)} 
+                onFilterApply={(maxPrice) => setMaxPriceFilter(maxPrice)} 
+            />
+
             <div className="flex flex-1 overflow-hidden">
                 <div className="flex-grow relative z-0">
                     
@@ -381,14 +421,16 @@ const MapSearch = () => {
                             }}
                         />
 
-                        {/* 🚀 පරණ DrawPolygonControl එක වෙනුවට අලුත් Freehand Control එක */}
+                        {/* 🚀 New Freehand Control Component */ }
                         <FreehandDrawControl 
                             onPolygonComplete={handleFreehandData} 
                             onDrawDelete={clearBoundary} 
                             controlRef={drawControlRef} 
                         />
 
-                        {properties.map((prop) => {
+                        {properties
+                            .filter(prop => maxPriceFilter === null || prop.price <= maxPriceFilter)
+                            .map((prop) => {
                             const imageUrl = getSafeImageUrl(prop);
                             const isActive = activeMarkerId === prop.id || hoveredPropId === prop.id;
                             
@@ -426,7 +468,9 @@ const MapSearch = () => {
                         <p className="text-sm text-gray-500">{properties.length} results found</p>
                     </div>
                     <div className="p-4 grid grid-cols-2 gap-3 auto-rows-max">
-                        {properties.map((prop) => {
+                        {properties
+                            .filter(prop => maxPriceFilter === null || prop.price <= maxPriceFilter)
+                            .map((prop) => {
                             const isActive = activeMarkerId === prop.id || hoveredPropId === prop.id;
                             return (
                                 <PropertyCard

@@ -10,6 +10,8 @@ import imageCompression from 'browser-image-compression';
 import { MapContainer, TileLayer, Marker, Polygon, CircleMarker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { useAuth } from '../context/UserAuthContext';
+import Navbar from '../components/Navbar';
 
 // Leaflet custom icon definition
 const customIcon = new L.Icon({
@@ -21,7 +23,7 @@ const customIcon = new L.Icon({
 
 const AddProperty = () => {
     const navigate = useNavigate();
-    const user = JSON.parse(localStorage.getItem('user'));
+    const { user } = useAuth();
 
     // Route protection: Only 'SELLER' roles can access this page
     useEffect(() => {
@@ -208,7 +210,6 @@ const AddProperty = () => {
         setMessage({ type: 'success', text: 'Saving property details... Please do not close this window.' });
 
         try {
-            const token = localStorage.getItem('token');
             const submitData = new FormData();
             
             // Construct WKT String
@@ -258,8 +259,8 @@ const AddProperty = () => {
 
             // 1. Dispatch API request to backend to save property
             const response = await axios.post('http://localhost:5000/api/properties', submitData, {
+                withCredentials: true,
                 headers: { 
-                    Authorization: `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data' 
                 }
             });
@@ -283,26 +284,7 @@ const AddProperty = () => {
     return (
         <div className="min-h-screen bg-gray-50 font-sans pb-12">
             
-            <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between h-20 items-center">
-                        <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500 hover:text-blue-600 transition mr-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                            </svg>
-                            <h1 className="text-2xl font-extrabold text-blue-600 tracking-tight flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-1 -rotate-12" viewBox="0 0 20 20" fill="currentColor">
-                                  <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-                                </svg>
-                                Thirasara
-                            </h1>
-                        </div>
-                        <div className="text-sm font-medium text-gray-500">
-                            Listing as <span className="text-gray-900">{user?.name}</span>
-                        </div>
-                    </div>
-                </div>
-            </nav>
+            <Navbar />
 
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">

@@ -6,6 +6,14 @@ import AddProperty from './pages/AddProperty';
 import Register from './pages/Register';
 import MyProperties from './pages/MyProperties';
 import Messages from './pages/Messages';
+import ProfileSettings from './pages/ProfileSettings';
+import MyFavorites from './pages/MyFavorites';
+
+import axios from 'axios';
+import { UserAuthProvider } from './context/UserAuthContext';
+
+// Set global axios configuration to always send HttpOnly cookies with every request
+axios.defaults.withCredentials = true;
 
 
 
@@ -24,8 +32,9 @@ import AdminMessages from './pages/admin/pages/MessagesPage';
 
 function App() {
   return (
-    <Router>
-      <Routes>
+    <UserAuthProvider>
+      <Router>
+        <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
@@ -33,6 +42,8 @@ function App() {
         <Route path="/add-property" element={<AddProperty />} />
         <Route path="/my-properties" element={<MyProperties />} />
         <Route path="/messages" element={<Messages />} />
+        <Route path="/profile" element={<ProfileSettings />} />
+        <Route path="/favorites" element={<MyFavorites />} />
         <Route path="/register" element={<Register />} />
 
         
@@ -58,6 +69,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
+    </UserAuthProvider>
   );
 }
 

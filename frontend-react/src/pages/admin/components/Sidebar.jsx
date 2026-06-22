@@ -1,17 +1,27 @@
 import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAdminAuth } from "../context/AdminAuthContext";
-import "../styles/admin-sidebar.css";
+import { 
+  LayoutDashboard, 
+  List, 
+  Users, 
+  BarChart3, 
+  MessageSquare, 
+  FileText, 
+  ShieldAlert, 
+  Settings,
+  LogOut
+} from "lucide-react";
 
 const NAV_ITEMS = [
-  { path: "/admin/dashboard", icon: "DB", label: "Dashboard" },
-  { path: "/admin/listings", icon: "LS", label: "Listings" },
-  { path: "/admin/users", icon: "US", label: "Users" },
-  { path: "/admin/analytics", icon: "AN", label: "Analytics" },
-  { path: "/admin/messages", icon: "MSG", label: "Messages" },
-  { path: "/admin/reports", icon: "RP", label: "Reports" },
-  { path: "/admin/audit-logs", icon: "AL", label: "Audit Logs" },
-  { path: "/admin/settings", icon: "ST", label: "Settings" },
+  { path: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+  { path: "/admin/listings", icon: List, label: "Listings" },
+  { path: "/admin/users", icon: Users, label: "Users" },
+  { path: "/admin/analytics", icon: BarChart3, label: "Analytics" },
+  { path: "/admin/messages", icon: MessageSquare, label: "Messages" },
+  { path: "/admin/reports", icon: FileText, label: "Reports" },
+  { path: "/admin/audit-logs", icon: ShieldAlert, label: "Audit Logs" },
+  { path: "/admin/settings", icon: Settings, label: "Settings" },
 ];
 
 const Sidebar = () => {
@@ -24,43 +34,64 @@ const Sidebar = () => {
   };
 
   return (
-    <aside className="admin-sidebar">
-      <div className="admin-sidebar-brand">
-        <div className="admin-brand-icon">T</div>
-        <div className="admin-brand-text">
-          <span className="admin-brand-name">Thirasara</span>
-          <span className="admin-brand-sub">Admin Panel</span>
+    <aside className="w-64 bg-white border-r border-gray-100 flex flex-col h-screen fixed top-0 left-0 z-50">
+      
+      {/* Brand */}
+      <div className="h-20 px-6 flex items-center border-b border-gray-100">
+        <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-500 rounded-xl flex items-center justify-center text-white font-black text-xl shadow-md mr-3">
+          T
+        </div>
+        <div className="flex flex-col">
+          <span className="font-black text-gray-900 tracking-tight leading-tight">Thirasara</span>
+          <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Admin Panel</span>
         </div>
       </div>
 
-      <nav className="admin-sidebar-nav">
-        <span className="admin-nav-section-label">Main Menu</span>
-        {NAV_ITEMS.map(({ path, icon, label }) => (
+      {/* Nav */}
+      <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1">
+        <span className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-4 px-2">Main Menu</span>
+        {NAV_ITEMS.map(({ path, icon: Icon, label }) => (
           <NavLink
             key={path}
             to={path}
-            className={({ isActive }) => `admin-nav-item${isActive ? " active" : ""}`}
+            className={({ isActive }) => `
+              flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-bold text-sm
+              ${isActive 
+                ? "bg-blue-50 text-blue-700" 
+                : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+              }
+            `}
           >
-            <span className="admin-nav-icon">{icon}</span>
-            <span className="admin-nav-label">{label}</span>
+            {({ isActive }) => (
+              <>
+                <Icon className={`w-5 h-5 ${isActive ? "text-blue-600" : "text-gray-400"}`} />
+                <span>{label}</span>
+              </>
+            )}
           </NavLink>
         ))}
       </nav>
 
-      <div className="admin-sidebar-footer">
-        <div className="admin-profile">
-          <div className="admin-avatar">
+      {/* Footer Profile */}
+      <div className="p-4 border-t border-gray-100 bg-gray-50/50">
+        <div className="flex items-center gap-3 bg-white p-3 rounded-2xl border border-gray-100 shadow-sm">
+          <div className="w-10 h-10 bg-gradient-to-br from-gray-800 to-gray-700 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-inner">
             {admin?.name?.[0]?.toUpperCase() || "A"}
           </div>
-          <div className="admin-info">
-            <span className="admin-name">{admin?.name || "Administrator"}</span>
-            <span className="admin-role">Super Admin</span>
+          <div className="flex-1 min-w-0">
+            <span className="block font-bold text-gray-900 text-sm truncate">{admin?.name || "Administrator"}</span>
+            <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Super Admin</span>
           </div>
+          <button 
+            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors" 
+            onClick={handleLogout} 
+            title="Logout"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
         </div>
-        <button className="admin-logout-btn" onClick={handleLogout} title="Logout">
-          Out
-        </button>
       </div>
+
     </aside>
   );
 };

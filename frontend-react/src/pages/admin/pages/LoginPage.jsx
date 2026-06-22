@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAdminAuth } from "../context/AdminAuthContext";
 import { adminLogin } from "../api/adminApi";
-import "../styles/admin-global.css";
-import "../styles/admin-login.css";
+import { motion } from "framer-motion";
+import { ShieldAlert, ArrowRight, Loader2 } from "lucide-react";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -29,65 +29,83 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="admin-login-page">
-      <div className="admin-login-bg">
-        <div className="admin-login-bg-grid" />
-      </div>
+    <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center font-sans p-4 relative overflow-hidden">
+      
+      {/* Background Decor */}
+      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-500/10 blur-3xl rounded-full mix-blend-multiply pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-cyan-500/10 blur-3xl rounded-full mix-blend-multiply pointer-events-none" />
 
-      <div className="admin-login-card">
-        {/* Brand */}
-        <div className="admin-login-brand">
-          <div className="admin-login-brand-icon">T</div>
-          <div>
-            <h1 className="admin-login-brand-name">Thirasara Property</h1>
-            <p className="admin-login-brand-sub">Admin Control Panel</p>
-          </div>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-white/20 relative z-10"
+      >
+        <div className="p-8 sm:p-10">
+            
+            <div className="flex justify-center mb-8">
+                <div className="w-16 h-16 bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl flex items-center justify-center shadow-lg transform rotate-3">
+                    <ShieldAlert className="w-8 h-8 text-white -rotate-3" />
+                </div>
+            </div>
+
+            <div className="text-center mb-8">
+                <h1 className="text-3xl font-black text-gray-900 tracking-tight">Admin Portal</h1>
+                <p className="text-sm font-bold text-gray-500 uppercase tracking-widest mt-2">Thirasara Property</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+                <div>
+                    <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Email Address</label>
+                    <input
+                        type="email"
+                        className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium"
+                        placeholder="admin@thirasara.lk"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Password</label>
+                    <input
+                        type="password"
+                        className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium"
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                    />
+                </div>
+
+                {error && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-red-50 text-red-600 text-xs font-bold p-3 rounded-lg text-center border border-red-100">
+                        {error}
+                    </motion.div>
+                )}
+
+                <button 
+                    type="submit" 
+                    disabled={loading}
+                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-gray-900 to-gray-800 hover:from-black hover:to-gray-900 text-white font-bold py-4 rounded-xl transition-all shadow-md mt-4 disabled:opacity-70"
+                >
+                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                        <>
+                            <span>Secure Sign In</span>
+                            <ArrowRight className="w-4 h-4" />
+                        </>
+                    )}
+                </button>
+            </form>
+
+            <div className="mt-8 text-center border-t border-gray-100 pt-6">
+                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                    Authorized Personnel Only
+                </p>
+            </div>
         </div>
-
-        <div className="admin-login-divider" />
-
-        <h2 className="admin-login-heading">Sign In</h2>
-        <p className="admin-login-desc">Enter your administrator credentials to continue.</p>
-
-        <form onSubmit={handleSubmit} className="admin-login-form">
-          <div className="admin-form-group">
-            <label className="admin-form-label">Email Address</label>
-            <input
-              type="email"
-              className="admin-form-control"
-              placeholder="admin@thirasara.lk"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-            />
-          </div>
-
-          <div className="admin-form-group">
-            <label className="admin-form-label">Password</label>
-            <input
-              type="password"
-              className="admin-form-control"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-            />
-          </div>
-
-          {error && <div className="admin-login-error">{error}</div>}
-
-          <button type="submit" className="admin-btn admin-btn-primary admin-btn-lg admin-login-submit" disabled={loading}>
-            {loading ? <span className="admin-spinner" /> : null}
-            {loading ? "Signing in…" : "Sign In"}
-          </button>
-        </form>
-
-        <p className="admin-login-note">
-          Administrator access only. Unauthorized access is prohibited.
-        </p>
-      </div>
+      </motion.div>
     </div>
   );
 };

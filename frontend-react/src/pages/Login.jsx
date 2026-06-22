@@ -6,9 +6,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../context/UserAuthContext';
 
 const Login = () => {
     const navigate = useNavigate();
+    const { login } = useAuth();
     
     // UI State Management
     const [step, setStep] = useState(1); // 1 = Email Input, 2 = Password Input, 3 = Forgot Password
@@ -62,8 +64,7 @@ const Login = () => {
                 password: password
             });
 
-            localStorage.setItem('token', response.data.token);
-            localStorage.setItem('user', JSON.stringify(response.data.user));
+            login(response.data.user);
             navigate('/');
 
         } catch (err) {
