@@ -84,8 +84,10 @@ func main() {
 		log.Println("🔍 Searching in Polygon:", req.Polygon)
 
 		// Execute the stored RPC function search_properties in Supabase
-		query := `SELECT id, title, description, price, latitude, longitude, images 
-				  FROM search_properties($1)`
+		query := `SELECT sp.id, sp.title, sp.description, sp.price, sp.latitude, sp.longitude, sp.images 
+				  FROM search_properties($1) sp
+				  JOIN properties p ON sp.id = p.id
+				  WHERE p.status = 'approved'`
 
 		rows, err := pool.Query(context.Background(), query, req.Polygon)
 		if err != nil {
