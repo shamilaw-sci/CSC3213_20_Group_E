@@ -1,7 +1,12 @@
 // Base API configuration for Thirasara Property Admin Panel
 // Backend: Node.js + Express on port 5000; Go microservice on port 8080
 
+<<<<<<< Updated upstream
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+=======
+const envUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const BASE_URL = envUrl.endsWith('/api') ? envUrl : `${envUrl}/api`;
+>>>>>>> Stashed changes
 
 const getHeaders = () => ({
   "Content-Type": "application/json",

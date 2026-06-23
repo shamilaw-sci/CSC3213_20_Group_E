@@ -3,11 +3,19 @@ import { useNavigate } from "react-router-dom";
 import { useAdminAuth } from "../context/AdminAuthContext";
 import { adminLogin } from "../api/adminApi";
 import { motion } from "framer-motion";
+<<<<<<< Updated upstream
 import { ShieldAlert, ArrowRight, Loader2 } from "lucide-react";
+=======
+import { ShieldAlert, ArrowRight, Loader2, Eye, EyeOff } from "lucide-react";
+>>>>>>> Stashed changes
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+<<<<<<< Updated upstream
+=======
+  const [showPassword, setShowPassword] = useState(false);
+>>>>>>> Stashed changes
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAdminAuth();
@@ -67,6 +75,7 @@ const LoginPage = () => {
                     />
                 </div>
 
+<<<<<<< Updated upstream
                 <div>
                     <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Password</label>
                     <input
@@ -77,6 +86,27 @@ const LoginPage = () => {
                         onChange={(e) => setPassword(e.target.value)}
                         required
                     />
+=======
+                <div className="relative">
+                    <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Password</label>
+                    <div className="relative">
+                        <input
+                            type={showPassword ? "text" : "password"}
+                            className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium pr-12"
+                            placeholder="••••••••"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
+                        >
+                            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                    </div>
+>>>>>>> Stashed changes
                 </div>
 
                 {error && (
