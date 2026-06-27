@@ -8,10 +8,7 @@ import "../styles/Login.css";
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-<<<<<<< Updated upstream
-=======
   const [showPassword, setShowPassword] = useState(false);
->>>>>>> Stashed changes
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -69,17 +66,6 @@ const LoginPage = () => {
 
           <div className="form-group">
             <label className="form-label">Password</label>
-<<<<<<< Updated upstream
-            <input
-              type="password"
-              className="form-control"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-            />
-=======
             <div style={{ position: "relative" }}>
               <input
                 type={showPassword ? "text" : "password"}
@@ -112,7 +98,6 @@ const LoginPage = () => {
                 )}
               </button>
             </div>
->>>>>>> Stashed changes
           </div>
 
           {error && <div className="login-error">{error}</div>}

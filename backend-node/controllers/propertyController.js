@@ -242,4 +242,31 @@ const updateMyProperty = async (req, res, next) => {
     }
 };
 
-module.exports = { addProperty, getProperties, getMyProperties, updateMyProperty };
+/**
+ * Retrieve a specific property by its ID.
+ */
+const getPropertyById = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        const { data, error } = await supabase
+            .from('properties')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (error || !data) {
+            return res.status(404).json({ message: "Property not found." });
+        }
+
+        res.status(200).json({
+            message: "Property fetched successfully",
+            property: data
+        });
+
+    } catch (error) {
+        next(error);
+    }
+};
+
+module.exports = { addProperty, getProperties, getMyProperties, updateMyProperty, getPropertyById };

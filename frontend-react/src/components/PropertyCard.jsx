@@ -1,9 +1,44 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bed, Bath, Maximize, Heart, MessageCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useAuth } from '../context/UserAuthContext';
+import { motion } from 'framer-motion';
 
 const PropertyCard = ({ prop, handleMessageSeller }) => {
+    const navigate = useNavigate();
+    const { user } = useAuth();
+    const [isFavorite, setIsFavorite] = useState(false);
+
+    useEffect(() => {
+        // Since we are rendering multiple cards, ideally favorites should be fetched globally.
+        // For now, we will assume it's fetched or we just let them toggle it and it updates visually.
+    }, []);
+
+    const toggleFavorite = async (e) => {
+        e.stopPropagation();
+        if (!user) {
+            navigate('/login');
+            return;
+        }
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.post(`http://localhost:5000/api/favorites/${prop.id}`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setIsFavorite(res.data.action === 'added');
+        } catch (err) {
+            console.error('Error toggling favorite:', err);
+        }
+    };
+
     return (
-        <div className="bg-white rounded-3xl overflow-hidden hover:shadow-2xl transition-all duration-500 group cursor-pointer flex flex-col border border-gray-100 relative">
+        <motion.div 
+            whileHover={{ y: -10, rotateX: 2, rotateY: -2, z: 50 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            onClick={() => navigate(`/property/${prop.id}`)}
+            className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 group cursor-pointer flex flex-col border border-gray-100 relative perspective-1000"
+        >
             <div className="h-64 w-full bg-gray-200 relative overflow-hidden">
                 {prop.images && prop.images.length > 0 ? (
                     <img 
@@ -20,8 +55,11 @@ const PropertyCard = ({ prop, handleMessageSeller }) => {
                     <span className="bg-white/90 backdrop-blur-sm text-blue-900 text-[11px] font-black px-3 py-1.5 rounded-full shadow-sm uppercase tracking-widest">
                         {prop.type === 'Land' ? 'Land for sale' : 'House for sale'}
                     </span>
-                    <button className="text-white hover:text-red-500 transition-colors drop-shadow-md bg-black/20 p-2 rounded-full backdrop-blur-sm hover:bg-white" onClick={(e) => e.stopPropagation()}>
-                        <Heart className="w-5 h-5 transition-colors" />
+                    <button 
+                        onClick={toggleFavorite}
+                        className={`transition-colors drop-shadow-md p-2 rounded-full backdrop-blur-sm ${isFavorite ? 'bg-white text-red-500' : 'bg-black/20 text-white hover:bg-white hover:text-red-500'}`}
+                    >
+                        <Heart className={`w-5 h-5 transition-colors ${isFavorite ? 'fill-current' : ''}`} />
                     </button>
                 </div>
             </div>
@@ -74,7 +112,7 @@ const PropertyCard = ({ prop, handleMessageSeller }) => {
                     </button>
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 };
 

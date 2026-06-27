@@ -81,14 +81,22 @@ const AddProperty = () => {
         const newCompressedImages = [];
         const newPreviewUrls = [];
 
-        for (let i = 0; i < files.length; i++) {
-            try {
-                const compressedFile = await imageCompression(files[i], options);
-                newCompressedImages.push(compressedFile);
-                newPreviewUrls.push(URL.createObjectURL(compressedFile));
-            } catch (error) {
-                console.error("Error compressing image:", error);
-            }
+        try {
+            const compressedResults = await Promise.all(
+                files.map(async (file) => {
+                    const compressedFile = await imageCompression(file, options);
+                    return {
+                        file: compressedFile,
+                        url: URL.createObjectURL(compressedFile)
+                    };
+                })
+            );
+            
+            newCompressedImages.push(...compressedResults.map(res => res.file));
+            newPreviewUrls.push(...compressedResults.map(res => res.url));
+        } catch (error) {
+            console.error("Error compressing images:", error);
+            setMessage({ type: 'error', text: 'Failed to compress some images.' });
         }
 
         setImages([...images, ...newCompressedImages]);
