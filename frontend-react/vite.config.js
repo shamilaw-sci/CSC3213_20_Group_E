@@ -8,4 +8,9 @@ export default defineConfig({
     react(),
     tailwindcss(), // Tailwind Vite plugin integration
   ],
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './setupTests.js',
+  }
 })

@@ -1,7 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { sendWelcomeEmail } = require('../utils/emailService');
+const { sendWelcomeEmail, sendPasswordResetEmail } = require('../utils/emailService');
 
 const setTokenCookie = (res, token) => {
     res.cookie('token', token, {
@@ -131,7 +131,6 @@ const checkEmail = async (req, res, next) => {
 };
 
 // Handle forgot password requests
-const nodemailer = require('nodemailer');
 
 const forgotPassword = async (req, res, next) => {
     try {
@@ -152,32 +151,8 @@ const forgotPassword = async (req, res, next) => {
         const resetToken = jwt.sign({ id: data.id }, process.env.JWT_SECRET, { expiresIn: '15m' });
         const resetLink = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}`;
 
-        // 3. Send actual email with reset link using NodeMailer
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
-            }
-        });
-
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject: 'Password Reset - Thirasara Property',
-            html: `
-                <div style="font-family: Arial, sans-serif; padding: 20px; text-align: center;">
-                    <h2>Password Reset Request</h2>
-                    <p>Hi ${data.name},</p>
-                    <p>We received a request to reset your password. Click the button below to choose a new one:</p>
-                    <a href="${resetLink}" style="display: inline-block; padding: 10px 20px; background-color: #006aff; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0;">Reset Password</a>
-                    <p>This link will expire in 15 minutes. If you didn't request this, you can safely ignore this email.</p>
-                </div>
-            `
-        };
-
-        await transporter.sendMail(mailOptions);
-        console.log(`Password reset link sent to: ${email}`);
+        // 3. Send email using refactored service (non-blocking)
+        sendPasswordResetEmail(email, data.name, resetLink).catch(console.error);
 
         // 4. Return success response
         res.status(200).json({ message: "Password reset link sent to your email!" });

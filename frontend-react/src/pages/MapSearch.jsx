@@ -298,28 +298,49 @@ const MapSearch = () => {
     const [searchMode, setSearchMode] = useState('bounds'); 
     const [isFeasibilityOpen, setIsFeasibilityOpen] = useState(false);
     const [maxPriceFilter, setMaxPriceFilter] = useState(null);
+    
+    // New States for Phase 1 Filters
+    const [currentPolygon, setCurrentPolygon] = useState(null);
+    const [bedsFilter, setBedsFilter] = useState('');
+    const [bathsFilter, setBathsFilter] = useState('');
+    const [typeFilter, setTypeFilter] = useState('');
+
     const drawControlRef = useRef(null);
     const navigate = useNavigate();
 
-    const fetchProperties = useCallback(async (polygonWKT) => {
-        setLoading(true);
-        try {
-            // Default to Go microservice if environment variable is not explicitly set
-            const apiUrl = import.meta.env.VITE_MAP_API_URL || 'http://localhost:8080/api/map/search';
-            // Using Go Backend (port 8080) for high performance map filtering
-            const response = await axios.post(apiUrl, { polygon: polygonWKT });
-            setProperties(response.data.properties || []);
-        } catch (error) {
-            console.error("🔥 Search error:", error.response?.data || error.message);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
+    // Fetch properties whenever polygon or filters change
+    useEffect(() => {
+        const fetchProps = async () => {
+            if (!currentPolygon) return;
+            setLoading(true);
+            try {
+                const apiUrl = import.meta.env.VITE_MAP_API_URL || 'http://localhost:8080/api/map/search';
+                
+                const payload = { polygon: currentPolygon };
+                if (bedsFilter) payload.beds = parseInt(bedsFilter);
+                if (bathsFilter) payload.baths = parseInt(bathsFilter);
+                if (typeFilter) payload.type = typeFilter;
+
+                const response = await axios.post(apiUrl, payload);
+                setProperties(response.data.properties || []);
+            } catch (error) {
+                console.error("🔥 Search error:", error.response?.data || error.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+        
+        // Debounce fetching slightly
+        const timeoutId = setTimeout(() => {
+            fetchProps();
+        }, 300);
+        return () => clearTimeout(timeoutId);
+    }, [currentPolygon, bedsFilter, bathsFilter, typeFilter]);
 
     const handleBoundsChange = useCallback((bounds) => {
         const boundsWKT = getWKTFromBounds(bounds);
-        fetchProperties(boundsWKT);
-    }, [fetchProperties]);
+        setCurrentPolygon(boundsWKT);
+    }, []);
 
     const handleMapClick = useCallback(() => {
         setActiveMarkerId(null);
@@ -328,8 +349,8 @@ const MapSearch = () => {
     // 🚀 Send the Freehand WKT directly to the API
     const handleFreehandData = useCallback((polygonWKT) => {
         setSearchMode('polygon');
-        fetchProperties(polygonWKT);
-    }, [fetchProperties]);
+        setCurrentPolygon(polygonWKT);
+    }, []);
 
     const clearBoundary = useCallback(() => {
         setSearchMode('bounds');
@@ -341,10 +362,81 @@ const MapSearch = () => {
     return (
         <div className="flex flex-col h-screen bg-white">
             <div className="flex justify-between items-center p-4 border-b shadow-sm z-10 relative bg-white">
-                <h2 className="text-2xl font-extrabold text-blue-600 tracking-tight cursor-pointer" onClick={() => navigate('/')}>
-                    Thirasara Map Search
-                </h2>
+                <div className="flex items-center gap-6">
+                    <h2 className="text-2xl font-extrabold text-blue-600 tracking-tight cursor-pointer" onClick={() => navigate('/')}>
+                        Thirasara Map Search
+                    </h2>
+                    
+                    {/* Zillow-Style Filter Bar */}
+                    <div className="hidden md:flex gap-3 ml-4">
+                        <select 
+                            value={typeFilter} 
+                            onChange={(e) => setTypeFilter(e.target.value)}
+                            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 font-bold cursor-pointer"
+                        >
+                            <option value="">Any Type</option>
+                            <option value="House">Houses</option>
+                            <option value="Land">Lands</option>
+                            <option value="Apartment">Apartments</option>
+                        </select>
+
+                        <select 
+                            value={bedsFilter} 
+                            onChange={(e) => setBedsFilter(e.target.value)}
+                            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 font-bold cursor-pointer"
+                        >
+                            <option value="">Any Beds</option>
+                            <option value="1">1+ bd</option>
+                            <option value="2">2+ bd</option>
+                            <option value="3">3+ bd</option>
+                            <option value="4">4+ bd</option>
+                        </select>
+
+                        <select 
+                            value={bathsFilter} 
+                            onChange={(e) => setBathsFilter(e.target.value)}
+                            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 font-bold cursor-pointer"
+                        >
+                            <option value="">Any Baths</option>
+                            <option value="1">1+ ba</option>
+                            <option value="2">2+ ba</option>
+                            <option value="3">3+ ba</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div className="flex gap-4">
+                    <button 
+                        onClick={async () => {
+                            if (!currentPolygon) {
+                                alert("Please draw a boundary on the map first to save your search.");
+                                return;
+                            }
+                            const searchTitle = prompt("Enter a name for this search:", "My Dream Home Search");
+                            if (!searchTitle) return;
+                            
+                            try {
+                                await api.post('/api/saved-searches', {
+                                    title: searchTitle,
+                                    polygon: currentPolygon,
+                                    beds: bedsFilter ? parseInt(bedsFilter) : null,
+                                    baths: bathsFilter ? parseInt(bathsFilter) : null,
+                                    property_type: typeFilter || null
+                                });
+                                alert("Search saved successfully!");
+                            } catch (error) {
+                                console.error("Error saving search", error);
+                                if (error.response?.status === 401) {
+                                    alert("Please log in to save searches.");
+                                } else {
+                                    alert(error.response?.data?.message || "Failed to save search.");
+                                }
+                            }
+                        }}
+                        className="hidden lg:flex items-center gap-2 px-4 py-2 bg-white text-blue-600 border border-blue-600 font-bold rounded-lg hover:bg-blue-50 transition"
+                    >
+                        Save Search
+                    </button>
                     <button 
                         onClick={() => setIsFeasibilityOpen(true)}
                         className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 font-bold rounded-lg hover:bg-blue-100 transition"

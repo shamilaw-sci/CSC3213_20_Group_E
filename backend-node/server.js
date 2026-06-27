@@ -55,6 +55,11 @@ app.use('/api/favorites', favoritesRoutes);
 // Routes: /api/favorites
 // ----------------------------------------
 
+// --- Saved Searches Routes ---
+const savedSearchRoutes = require('./routes/savedSearchRoutes');
+app.use('/api/saved-searches', savedSearchRoutes);
+// ----------------------------------------
+
 // --- Payment Routes ---
 const paymentRoutes = require('./routes/paymentRoutes');
 app.use('/api/payment', paymentRoutes);

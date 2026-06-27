@@ -1,6 +1,21 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { fetchListings, fetchListingById, approveListing, rejectListing, deleteListing } from "../api/adminApi";
+import { MapContainer, TileLayer, Marker, Polygon, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 import "../styles/admin-global.css";
+
+import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png';
+import iconUrl from 'leaflet/dist/images/marker-icon.png';
+import shadowUrl from 'leaflet/dist/images/marker-shadow.png';
+
+// Fix for default Leaflet markers
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl,
+    iconUrl,
+    shadowUrl
+});
 
 // ── Reject Modal ─────────────────────────────────────────────────────────────
 const RejectModal = ({ listing, onConfirm, onCancel }) => {
@@ -88,7 +103,7 @@ const ListingDetailsModal = ({ listing, onApprove, onReject, onClose, loading })
 
   return (
     <div className="admin-modal-overlay">
-      <div className="admin-modal" style={{ maxWidth: 760 }}>
+      <div className="admin-modal" style={{ maxWidth: 800, maxHeight: '90vh', overflowY: 'auto' }}>
         <div className="admin-modal-header">
           <div>
             <h3 className="admin-card-title">Property Review</h3>
@@ -106,11 +121,63 @@ const ListingDetailsModal = ({ listing, onApprove, onReject, onClose, loading })
             <div><strong>Price:</strong> LKR {Number(listing.price || 0).toLocaleString("en-LK")}</div>
             <div><strong>Type:</strong> {listing.type || "-"}</div>
             <div><strong>Address:</strong> {listing.address || "-"}</div>
-            <div><strong>Land Size:</strong> {listing.land_size || "-"} perches</div>
+            <div><strong>Land Size:</strong> {listing.area || "-"}</div>
             <div><strong>Bedrooms:</strong> {listing.bedrooms || "-"}</div>
             <div><strong>Bathrooms:</strong> {listing.bathrooms || "-"}</div>
+            {listing.transactions && listing.transactions.length > 0 ? (
+                <div style={{ marginTop: 12, padding: 12, backgroundColor: "#f8fafc", borderRadius: 8, border: "2px dashed #cbd5e1" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, borderBottom: "1px solid #e2e8f0", paddingBottom: 8 }}>
+                        <strong style={{ color: "#0f172a", fontSize: "0.95rem" }}>🧾 Payment Receipt</strong>
+                        <span style={{ backgroundColor: "#dcfce7", color: "#166534", padding: "2px 8px", borderRadius: 12, fontSize: "0.75rem", fontWeight: "bold" }}>VERIFIED</span>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 8px", fontSize: "0.8rem", color: "#475569" }}>
+                        <div><strong>Txn ID:</strong></div>
+                        <div style={{ fontFamily: "monospace", color: "#0f172a" }}>{listing.transactions[0].transaction_id || "-"}</div>
+                        
+                        <div><strong>Amount:</strong></div>
+                        <div style={{ color: "#0f172a", fontWeight: "bold" }}>{listing.transactions[0].currency} {Number(listing.transactions[0].amount).toLocaleString()}</div>
+                        
+                        <div><strong>Method:</strong></div>
+                        <div>{listing.transactions[0].payment_method}</div>
+                        
+                        <div><strong>Date:</strong></div>
+                        <div>{new Date(listing.transactions[0].created_at).toLocaleString()}</div>
+                    </div>
+                </div>
+            ) : (
+                <div style={{ marginTop: 12, padding: 8, backgroundColor: "#fef2f2", borderRadius: 4, border: "1px solid #fecaca", color: "#991b1b", fontSize: "0.85rem" }}>
+                    <strong>Payment Status:</strong> Pending / Not Paid
+                </div>
+            )}
           </div>
         </div>
+
+        {listing.latitude && listing.longitude && (
+            <div style={{ marginBottom: 16 }}>
+                <strong style={{ display: "block", marginBottom: 6, fontSize: "0.875rem" }}>Map Location</strong>
+                <div style={{ height: 250, width: '100%', borderRadius: 8, overflow: 'hidden', border: '1px solid var(--admin-border)' }}>
+                    <MapContainer
+                        center={[listing.latitude, listing.longitude]}
+                        zoom={14}
+                        style={{ height: '100%', width: '100%' }}
+                    >
+                        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                        <Marker position={[listing.latitude, listing.longitude]}>
+                            <Popup>{listing.title}</Popup>
+                        </Marker>
+                        
+                        {listing.boundary && listing.boundary.coordinates && listing.boundary.coordinates.length > 0 && (
+                            <Polygon 
+                                positions={listing.boundary.coordinates[0].map(coord => [coord[1], coord[0]])} 
+                                color="#2563eb" 
+                                fillColor="#3b82f6" 
+                                fillOpacity={0.4} 
+                            />
+                        )}
+                    </MapContainer>
+                </div>
+            </div>
+        )}
 
         {listing.imageUrls?.length > 0 && (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 16 }}>

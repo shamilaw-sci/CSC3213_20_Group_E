@@ -1,8 +1,8 @@
 import React, { useState, useContext } from 'react';
 import { useAuth } from '../context/UserAuthContext';
-import { User, Lock, Phone, Save, Loader } from 'lucide-react';
+import { User, Lock, Phone, Save, Loader, Search, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import api from '../context/api'; // Assuming you have an axios instance setup
+import api from '../context/api';
 
 const ProfileSettings = () => {
     const { user, login } = useAuth();
@@ -14,6 +14,22 @@ const ProfileSettings = () => {
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState(null);
     const [error, setError] = useState(null);
+    const [savedSearches, setSavedSearches] = useState([]);
+    const [loadingSearches, setLoadingSearches] = useState(true);
+
+    useEffect(() => {
+        const fetchSavedSearches = async () => {
+            try {
+                const res = await api.get('/api/saved-searches');
+                setSavedSearches(res.data.savedSearches || []);
+            } catch (err) {
+                console.error("Failed to load saved searches");
+            } finally {
+                setLoadingSearches(false);
+            }
+        };
+        fetchSavedSearches();
+    }, []);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -37,8 +53,18 @@ const ProfileSettings = () => {
         }
     };
 
+    const handleDeleteSearch = async (id) => {
+        try {
+            await api.delete(`/api/saved-searches/${id}`);
+            setSavedSearches(savedSearches.filter(s => s.id !== id));
+        } catch (err) {
+            console.error("Failed to delete search");
+        }
+    };
+
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 font-outfit">
+        <div className="min-h-screen bg-gray-50 flex items-start justify-center py-12 px-4 sm:px-6 lg:px-8 font-outfit gap-8">
+            {/* Profile Settings Column */}
             <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -123,6 +149,50 @@ const ProfileSettings = () => {
                         {loading ? <Loader className="animate-spin h-5 w-5" /> : <><Save className="h-5 w-5" /> Save Changes</>}
                     </motion.button>
                 </form>
+            </motion.div>
+
+            {/* Saved Searches Column */}
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8"
+            >
+                <div className="flex items-center gap-3 mb-6">
+                    <Search className="h-6 w-6 text-blue-600" />
+                    <h2 className="text-2xl font-bold text-gray-900">Saved Searches</h2>
+                </div>
+
+                {loadingSearches ? (
+                    <div className="flex justify-center py-8"><Loader className="animate-spin h-6 w-6 text-blue-600" /></div>
+                ) : savedSearches.length === 0 ? (
+                    <div className="text-center py-8 bg-gray-50 rounded-xl border border-gray-200">
+                        <p className="text-gray-500 font-medium">You haven't saved any searches yet.</p>
+                        <p className="text-sm text-gray-400 mt-1">Go to the map to save a search area!</p>
+                    </div>
+                ) : (
+                    <div className="space-y-4">
+                        {savedSearches.map(search => (
+                            <div key={search.id} className="p-4 bg-gray-50 border border-gray-200 rounded-xl flex justify-between items-center group hover:border-blue-300 transition-colors">
+                                <div>
+                                    <h4 className="font-bold text-gray-900">{search.title}</h4>
+                                    <div className="flex gap-2 text-xs font-medium text-gray-500 mt-1">
+                                        {search.property_type && <span className="bg-white px-2 py-0.5 rounded border shadow-sm">{search.property_type}</span>}
+                                        {search.beds && <span className="bg-white px-2 py-0.5 rounded border shadow-sm">{search.beds}+ Beds</span>}
+                                        {search.baths && <span className="bg-white px-2 py-0.5 rounded border shadow-sm">{search.baths}+ Baths</span>}
+                                        {!search.property_type && !search.beds && !search.baths && <span>Any filters</span>}
+                                    </div>
+                                </div>
+                                <button 
+                                    onClick={() => handleDeleteSearch(search.id)}
+                                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                >
+                                    <Trash2 className="h-5 w-5" />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </motion.div>
         </div>
     );

@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import PropertyCard from '../components/PropertyCard';
 import { useAuth } from '../context/UserAuthContext';
 import { motion } from 'framer-motion';
@@ -208,9 +209,10 @@ const Home = () => {
                     {/* Empty State UI for search results */}
                     {filteredProperties.length === 0 && (
                         <motion.div 
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="text-center py-32 bg-gray-50 rounded-3xl border border-dashed border-gray-300"
+                            initial={{ opacity: 0, scale: 0.9, rotateX: 20 }}
+                            animate={{ opacity: 1, scale: 1, rotateX: 0 }}
+                            transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                            className="text-center py-32 bg-gray-50 rounded-3xl border border-dashed border-gray-300 shadow-inner"
                         >
                             <Search className="w-16 h-16 mx-auto text-gray-300 mb-4" />
                             <h3 className="text-xl font-bold text-gray-900">No properties found</h3>
@@ -231,6 +233,8 @@ const Home = () => {
                     )}
                 </div>
             </div>
+            
+            <Footer />
         </div>
     );
 };

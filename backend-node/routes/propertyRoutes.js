@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 
-const { addProperty, getProperties, getMyProperties, updateMyProperty } = require('../controllers/propertyController');
+const { addProperty, getProperties, getMyProperties, updateMyProperty, getPropertyById } = require('../controllers/propertyController');
 const { protect } = require('../middleware/authMiddleware');
 const validate = require('../middleware/validate');
 const { addPropertySchema, updatePropertySchema, getPropertiesSchema } = require('../validators/propertyValidator');
@@ -21,5 +21,9 @@ router.post('/', protect, upload.array('images', 10), validate(addPropertySchema
 router.get('/my-listings', protect, validate(getPropertiesSchema), getMyProperties);
 
 router.patch('/my-listings/:id', protect, validate(updatePropertySchema), updateMyProperty);
+
+// 1.5 Get specific property by ID
+// Must be after /my-listings to prevent overriding
+router.get('/:id', getPropertyById);
 
 module.exports = router;

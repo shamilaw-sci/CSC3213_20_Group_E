@@ -8,6 +8,7 @@ import MyProperties from './pages/MyProperties';
 import Messages from './pages/Messages';
 import ProfileSettings from './pages/ProfileSettings';
 import MyFavorites from './pages/MyFavorites';
+import PropertyDetails from './pages/PropertyDetails';
 
 import axios from 'axios';
 import { UserAuthProvider } from './context/UserAuthContext';
@@ -37,6 +38,7 @@ function App() {
         <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Home />} />
+        <Route path="/property/:id" element={<PropertyDetails />} />
         <Route path="/login" element={<Login />} />
         <Route path="/map" element={<MapSearch />} />
         <Route path="/add-property" element={<AddProperty />} />

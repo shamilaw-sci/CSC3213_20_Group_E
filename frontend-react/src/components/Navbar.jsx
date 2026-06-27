@@ -46,9 +46,11 @@ const Navbar = () => {
                                     </svg>
                                 </span>
                                 <div className="absolute top-16 right-0 w-48 bg-white border border-gray-200 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 rounded-lg py-2">
+                                    <button onClick={() => navigate('/profile')} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600">Profile & Settings</button>
+                                    <button onClick={() => navigate('/favorites')} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600">My Favorites</button>
                                     <button onClick={() => navigate('/messages')} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600">Messages</button>
                                     {user.role === 'SELLER' && (
-                                        <button onClick={() => navigate('/my-properties')} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600">Pending Approvals</button>
+                                        <button onClick={() => navigate('/my-properties')} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600">My Properties</button>
                                     )}
                                     <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-red-600">Sign Out</button>
                                 </div>

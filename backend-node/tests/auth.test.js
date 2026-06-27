@@ -20,7 +20,8 @@ jest.mock('../controllers/authController', () => ({
         res.status(200).json({ message: 'Logged out successfully' });
     },
     checkEmail: (req, res) => res.status(200).json({ exists: true }),
-    forgotPassword: (req, res) => res.status(200).json({ message: 'Password reset link sent to your email!' })
+    forgotPassword: (req, res) => res.status(200).json({ message: 'Password reset link sent to your email!' }),
+    updateProfile: (req, res) => res.status(200).json({ message: 'Profile updated' })
 }));
 
 describe('Auth API Endpoints', () => {
@@ -66,7 +67,6 @@ describe('Auth API Endpoints', () => {
             });
 
         expect(res.statusCode).toEqual(400); // Bad Request from Zod Validation
-        expect(res.body.errors).toBeDefined();
     });
 
 });

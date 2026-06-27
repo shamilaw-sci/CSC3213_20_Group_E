@@ -7,11 +7,11 @@ name: Frontend CI
 on:
   # Triggers the workflow on push or pull request events for the 'developer' branch
   push:
-    branches: [ developer ]
+    branches: [ developer, dgpiumal_dev ]
     paths:
       - 'frontend-react/**' # Only run if files in the frontend folder change
   pull_request:
-    branches: [ developer ]
+    branches: [ developer, dgpiumal_dev ]
     paths:
       - 'frontend-react/**'
 
@@ -49,6 +49,6 @@ jobs:
       - name: Build project
         run: npm run build
 
-      # 5. (Optional but Recommended) Runs tests. You need a "test" script in your package.json for this.
-      # - name: Run tests
-      #   run: npm test
+      # 5. Runs tests using Vitest.
+      - name: Run tests
+        run: npm test
