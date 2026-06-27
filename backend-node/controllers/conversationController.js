@@ -323,6 +323,5 @@ module.exports = {
     getConversations,
     getMessages,
     sendMessage,
-    deleteMessage,
     requestSupport
 };
