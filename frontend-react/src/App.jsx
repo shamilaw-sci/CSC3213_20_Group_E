@@ -33,11 +33,14 @@ import AdminSettings from './pages/admin/pages/SettingsPage';
 import AdminAuditLogs from './pages/admin/pages/AuditLogsPage';
 import AdminMessages from './pages/admin/pages/MessagesPage';
 
+import FloatingAIChat from './components/FloatingAIChat';
+
 function App() {
   return (
     <UserAuthProvider>
       <ThemeProvider>
         <Router>
+          <FloatingAIChat />
           <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
