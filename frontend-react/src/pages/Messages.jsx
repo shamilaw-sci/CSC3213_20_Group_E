@@ -150,6 +150,25 @@ const Messages = () => {
         }
     };
 
+    const requestSupportForCurrent = async () => {
+        if (!selectedId) return;
+        try {
+            await axios.patch(`http://localhost:5000/api/conversations/${selectedId}/request-support`, {}, {
+                headers: apiHeaders(),
+            });
+            await loadConversations({ silent: true });
+            
+            const response = await axios.get(`http://localhost:5000/api/conversations/${selectedId}/messages`, {
+                headers: apiHeaders(),
+            });
+            setMessages(response.data.messages || []);
+            scrollToBottom();
+            
+        } catch (err) {
+            setError(err.response?.data?.message || err.response?.data?.error || 'Failed to request support.');
+        }
+    };
+
     const sendMessage = async (event) => {
         event.preventDefault();
         if ((!draft.trim() && !attachment) || !selectedId) return;
@@ -287,6 +306,23 @@ const Messages = () => {
                                             </p>
                                         </div>
                                     </div>
+                                    
+                                    {selectedConversation.type !== 'support' && !selectedConversation.support_requested && (
+                                        <button 
+                                            onClick={requestSupportForCurrent}
+                                            className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-red-50 text-gray-600 hover:text-red-600 border border-gray-200 hover:border-red-200 rounded-full font-bold text-sm transition-colors shadow-sm"
+                                            title="Report or Request Admin Support"
+                                        >
+                                            <ShieldAlert className="w-4 h-4" />
+                                            <span>Request Support</span>
+                                        </button>
+                                    )}
+                                    {selectedConversation.support_requested && (
+                                        <div className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 border border-red-100 rounded-full font-bold text-sm">
+                                            <ShieldAlert className="w-4 h-4" />
+                                            <span>Support Requested</span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Messages View */}
