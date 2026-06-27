@@ -1,4 +1,4 @@
-const { GoogleGenAI } = require('@google/genai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { createClient } = require('@supabase/supabase-js');
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
@@ -11,7 +11,7 @@ const chatWithAI = async (req, res) => {
             return res.status(500).json({ error: "GEMINI_API_KEY is not configured in the backend." });
         }
 
-        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+        const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
         // 1. Fetch properties to provide context to Gemini
         const { data: properties, error } = await supabase
@@ -57,15 +57,14 @@ If no properties match, apologize and tell them we don't currently have exactly 
             parts: [{ text: message }]
         });
 
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: contents,
-            config: {
-                systemInstruction: systemInstruction,
-            }
+        const model = ai.getGenerativeModel({ 
+            model: "gemini-2.5-flash",
+            systemInstruction: systemInstruction 
         });
 
-        res.status(200).json({ response: response.text });
+        const response = await model.generateContent({ contents });
+
+        res.status(200).json({ response: response.response.text() });
     } catch (error) {
         console.error("AI Error:", error);
         res.status(500).json({ error: error.message || "Failed to communicate with AI Assistant." });
