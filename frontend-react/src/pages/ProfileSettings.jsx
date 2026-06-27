@@ -18,6 +18,7 @@ const ProfileSettings = () => {
         name: user?.name || '',
         phone: user?.phone || '',
         password: '',
+        confirmPassword: '',
         email_notifications: user?.email_notifications ?? true
     });
     const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || '');
@@ -67,6 +68,12 @@ const ProfileSettings = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        if (formData.password && formData.password !== formData.confirmPassword) {
+            setError("Passwords do not match");
+            return;
+        }
+
         setLoading(true);
         setMessage(null);
         setError(null);
@@ -87,7 +94,7 @@ const ProfileSettings = () => {
             const res = await api.put('/api/auth/profile', updatePayload);
             login(res.data.user);
             setMessage("Profile updated successfully!");
-            setFormData(prev => ({ ...prev, password: '' }));
+            setFormData(prev => ({ ...prev, password: '', confirmPassword: '' }));
         } catch (err) {
             setError(err.response?.data?.message || "Failed to update profile");
         } finally {
@@ -197,11 +204,20 @@ const ProfileSettings = () => {
 
                                         <div className="pt-6 border-t border-gray-100 dark:border-gray-700">
                                             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Change Password</h3>
-                                            <div>
-                                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">New Password</label>
-                                                <div className="relative">
-                                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Lock className="h-5 w-5 text-gray-400" /></div>
-                                                    <input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="Leave blank to keep current password" className="pl-10 w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all outline-none font-medium" />
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div>
+                                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">New Password</label>
+                                                    <div className="relative">
+                                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Lock className="h-5 w-5 text-gray-400" /></div>
+                                                        <input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="Leave blank to keep current" className="pl-10 w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all outline-none font-medium" />
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Confirm Password</label>
+                                                    <div className="relative">
+                                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Lock className="h-5 w-5 text-gray-400" /></div>
+                                                        <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder="Confirm new password" className="pl-10 w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all outline-none font-medium" />
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
