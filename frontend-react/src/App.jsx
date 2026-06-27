@@ -18,6 +18,8 @@ axios.defaults.withCredentials = true;
 
 
 
+import { ThemeProvider } from './context/ThemeProvider';
+
 import { AdminAuthProvider } from './pages/admin/context/AdminAuthContext';
 import AdminProtectedRoute from './pages/admin/components/AdminProtectedRoute';
 import AdminLayout from './pages/admin/components/AdminLayout';
@@ -34,43 +36,45 @@ import AdminMessages from './pages/admin/pages/MessagesPage';
 function App() {
   return (
     <UserAuthProvider>
-      <Router>
-        <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<Home />} />
-        <Route path="/property/:id" element={<PropertyDetails />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/map" element={<MapSearch />} />
-        <Route path="/add-property" element={<AddProperty />} />
-        <Route path="/my-properties" element={<MyProperties />} />
-        <Route path="/messages" element={<Messages />} />
-        <Route path="/profile" element={<ProfileSettings />} />
-        <Route path="/favorites" element={<MyFavorites />} />
-        <Route path="/register" element={<Register />} />
+      <ThemeProvider>
+        <Router>
+          <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/property/:id" element={<PropertyDetails />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/map" element={<MapSearch />} />
+          <Route path="/add-property" element={<AddProperty />} />
+          <Route path="/my-properties" element={<MyProperties />} />
+          <Route path="/messages" element={<Messages />} />
+          <Route path="/profile" element={<ProfileSettings />} />
+          <Route path="/favorites" element={<MyFavorites />} />
+          <Route path="/register" element={<Register />} />
 
-        
+          
 
-        {/* Admin Routes */}
-        <Route path="/admin" element={<AdminAuthProvider />}>
-          <Route path="login" element={<AdminLogin />} />
-          <Route element={<AdminProtectedRoute />}>
-            <Route element={<AdminLayout />}>
-              <Route index element={<Navigate to="dashboard" replace />} />
-              <Route path="dashboard" element={<AdminDashboard />} />
-              <Route path="listings" element={<AdminListings />} />
-              <Route path="users" element={<AdminUsers />} />
-              <Route path="analytics" element={<AdminAnalytics />} />
-              <Route path="messages" element={<AdminMessages />} />
-              <Route path="reports" element={<AdminReports />} />
-              <Route path="settings" element={<AdminSettings />} />
-              <Route path="audit-logs" element={<AdminAuditLogs />} />
+          {/* Admin Routes */}
+          <Route path="/admin" element={<AdminAuthProvider />}>
+            <Route path="login" element={<AdminLogin />} />
+            <Route element={<AdminProtectedRoute />}>
+              <Route element={<AdminLayout />}>
+                <Route index element={<Navigate to="dashboard" replace />} />
+                <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="listings" element={<AdminListings />} />
+                <Route path="users" element={<AdminUsers />} />
+                <Route path="analytics" element={<AdminAnalytics />} />
+                <Route path="messages" element={<AdminMessages />} />
+                <Route path="reports" element={<AdminReports />} />
+                <Route path="settings" element={<AdminSettings />} />
+                <Route path="audit-logs" element={<AdminAuditLogs />} />
+              </Route>
             </Route>
           </Route>
-        </Route>
 
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+      </ThemeProvider>
     </UserAuthProvider>
   );
 }
