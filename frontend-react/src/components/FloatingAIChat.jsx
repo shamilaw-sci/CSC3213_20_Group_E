@@ -16,8 +16,6 @@ const FloatingAIChat = () => {
     const [loading, setLoading] = useState(false);
     const messagesEndRef = useRef(null);
 
-    // Only show if user is logged in
-    if (!user) return null;
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -86,6 +84,9 @@ const FloatingAIChat = () => {
             );
         });
     };
+
+    // Only show if user is logged in
+    if (!user) return null;
 
     return (
         <div className="fixed bottom-6 right-6 z-[9999] font-outfit">
