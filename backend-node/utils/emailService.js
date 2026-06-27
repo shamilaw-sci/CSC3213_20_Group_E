@@ -1,7 +1,9 @@
 const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+    port: process.env.EMAIL_PORT || 465,
+    secure: process.env.EMAIL_PORT == 465, // true for 465, false for other ports
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
@@ -74,9 +76,24 @@ const sendListingStatusEmail = (email, propertyTitle, status, reason = '') => {
     return sendEmail(email, subject, html);
 };
 
+const sendPasswordResetEmail = (email, name, resetLink) => {
+    const subject = 'Password Reset - Thirasara Property';
+    const html = `
+        <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto; text-align: center;">
+            <h2 style="color: #006aff;">Password Reset Request</h2>
+            <p>Hi ${name},</p>
+            <p>We received a request to reset your password. Click the button below to choose a new one:</p>
+            <a href="${resetLink}" style="display: inline-block; padding: 12px 24px; background-color: #006aff; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: bold;">Reset Password</a>
+            <p style="color: #666; font-size: 14px;">This link will expire in 15 minutes. If you didn't request this, you can safely ignore this email.</p>
+        </div>
+    `;
+    return sendEmail(email, subject, html);
+};
+
 module.exports = {
     sendEmail,
     sendWelcomeEmail,
     sendPaymentReceipt,
-    sendListingStatusEmail
+    sendListingStatusEmail,
+    sendPasswordResetEmail
 };
