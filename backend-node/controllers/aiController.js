@@ -16,14 +16,14 @@ const chatWithAI = async (req, res) => {
         // 1. Fetch properties to provide context to Gemini
         const { data: properties, error } = await supabase
             .from('properties')
-            .select('id, title, description, price, property_type, bedrooms, bathrooms, land_size, address, images, features')
+            .select('id, title, description, price, type, bedrooms, bathrooms, land_size, address, images')
             .eq('status', 'approved');
 
         if (error) throw error;
 
         // Create a compact context
         const propertyContext = properties.map(p => 
-            `[ID: ${p.id}] ${p.title} - ${p.property_type} in ${p.address}. Price: LKR ${p.price}. ${p.bedrooms || 0} Beds, ${p.bathrooms || 0} Baths, ${p.land_size || 0} perches. Features: ${(p.features||[]).join(', ')}. Image: ${p.images?.[0]}`
+            `[ID: ${p.id}] ${p.title} - ${p.type} in ${p.address}. Price: LKR ${p.price}. ${p.bedrooms || 0} Beds, ${p.bathrooms || 0} Baths, ${p.land_size || 0} perches. Image: ${p.images?.[0]}`
         ).join('\n');
 
         const systemInstruction = `You are a helpful and friendly real estate assistant for Thirasara Properties in Sri Lanka. 
