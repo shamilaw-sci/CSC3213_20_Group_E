@@ -374,7 +374,23 @@ const getAuditLogs = async (req, res) => {
 // Get settings
 const getSettings = async (req, res) => {
     try {
-        res.status(200).json({ settings: {} });
+        const { data, error } = await supabase
+            .from('platform_settings')
+            .select('*');
+
+        if (error) throw error;
+        
+        // Convert array of {key, value} to an object
+        const settings = {};
+        if (data) {
+            data.forEach(item => {
+                settings[item.setting_key] = item.setting_value;
+            });
+        }
+        // Fallback for UI if DB is empty
+        if (!settings['listing_fee']) settings['listing_fee'] = '500';
+
+        res.status(200).json({ settings });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -383,7 +399,19 @@ const getSettings = async (req, res) => {
 // Update settings
 const updateSettings = async (req, res) => {
     try {
-        res.status(200).json({ message: "Settings updated" });
+        const { listing_fee } = req.body;
+        
+        if (listing_fee) {
+            const { error } = await supabase
+                .from('platform_settings')
+                .upsert(
+                    { setting_key: 'listing_fee', setting_value: String(listing_fee) },
+                    { onConflict: 'setting_key' }
+                );
+            if (error) throw error;
+        }
+
+        res.status(200).json({ message: "Settings updated successfully" });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

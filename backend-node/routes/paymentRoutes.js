@@ -13,6 +13,33 @@ const { createClient } = require('@supabase/supabase-js');
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
 /**
+ * Route: GET /api/payment/config
+ * Description: Retrieves dynamic payment configuration for the frontend
+ */
+router.get('/config', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('platform_settings')
+            .select('setting_value')
+            .eq('setting_key', 'listing_fee')
+            .single();
+
+        let listingFee = "500.00"; // Fallback
+        if (!error && data) {
+            listingFee = parseFloat(data.setting_value).toFixed(2);
+        }
+
+        res.json({
+            listing_fee: listingFee,
+            merchant_id: process.env.PAYHERE_MERCHANT_ID,
+            currency: 'LKR'
+        });
+    } catch (err) {
+        res.status(500).json({ error: "Failed to fetch payment config" });
+    }
+});
+
+/**
  * Route: POST /api/payment/generate-hash
  * Description: Generates the MD5 hash required by PayHere for initiating a secure payment.
  */
@@ -62,8 +89,20 @@ router.post('/notify', async (req, res) => {
     const local_md5sig = crypto.createHash('md5').update(hashString).digest('hex').toUpperCase();
 
     // Verify signature and check if payment is successful (status_code === '2')
-    // Security Fix: Hardcode the required payment amount to prevent malicious manipulation.
-    const REQUIRED_FEE = 2000.00;
+    // Dynamic Security Fix: Fetch the required payment amount from DB to prevent malicious manipulation.
+    let REQUIRED_FEE = 500.00;
+    try {
+        const { data, error } = await supabase
+            .from('platform_settings')
+            .select('setting_value')
+            .eq('setting_key', 'listing_fee')
+            .single();
+        if (!error && data) {
+            REQUIRED_FEE = parseFloat(data.setting_value);
+        }
+    } catch (e) {
+        console.error("Failed to fetch required fee for webhook validation", e);
+    }
     
     if (local_md5sig === md5sig && status_code === '2') {
         if (parseFloat(payhere_amount) !== REQUIRED_FEE) {

@@ -52,6 +52,26 @@ const AddProperty = () => {
     const [previewUrls, setPreviewUrls] = useState([]);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
+    
+    // Dynamic Payment Configuration
+    const [paymentConfig, setPaymentConfig] = useState({
+        listingFee: "500.00",
+        merchantId: "1236024" // Fallback sandbox ID
+    });
+
+    useEffect(() => {
+        // Fetch dynamic payment configuration from backend
+        axios.get('http://localhost:5000/api/payment/config')
+            .then(res => {
+                if (res.data) {
+                    setPaymentConfig({
+                        listingFee: res.data.listing_fee || "500.00",
+                        merchantId: res.data.merchant_id || "1236024"
+                    });
+                }
+            })
+            .catch(err => console.error("Failed to fetch payment config:", err));
+    }, []);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -140,7 +160,7 @@ const AddProperty = () => {
 
     // Function to trigger PayHere after the property is successfully saved
     const triggerPayment = async (propertyId) => {
-        const amount = "3500.00"; // Listing Fee
+        const amount = paymentConfig.listingFee; // Dynamic Listing Fee
 
         try {
             // Get the security hash from the backend
@@ -154,7 +174,7 @@ const AddProperty = () => {
             // Configure PayHere payment object
             const payment = {
                 sandbox: true,
-                merchant_id: "1236024", 
+                merchant_id: paymentConfig.merchantId, 
                 return_url: "http://localhost:5173/my-properties", // Redirect after success
                 cancel_url: "http://localhost:5173/my-properties", // Redirect after cancellation
                 notify_url: "https://strep-reenact-rocket.ngrok-free.dev/api/payment/notify", 
@@ -299,7 +319,7 @@ const AddProperty = () => {
                     
                     <div className="bg-blue-600 px-8 py-10 text-white">
                         <h2 className="text-3xl font-bold mb-2">Post a Property for Sale</h2>
-                        <p className="text-blue-100">Fill in the details below to list your property on Thirasara. A listing fee of Rs. 3,500 applies.</p>
+                        <p className="text-blue-100">Fill in the details below to list your property on Thirasara. A listing fee of Rs. {parseFloat(paymentConfig.listingFee).toLocaleString()} applies.</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="p-8">
@@ -466,7 +486,7 @@ const AddProperty = () => {
                                 Cancel
                             </button>
                             <button type="submit" disabled={loading} className={`px-8 py-3 text-white font-bold rounded-lg transition shadow-md flex items-center ${loading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}>
-                                {loading ? 'Processing...' : 'Pay Rs. 3,500 & Publish'}
+                                {loading ? 'Processing...' : `Pay Rs. ${parseFloat(paymentConfig.listingFee).toLocaleString()} & Publish`}
                             </button>
                         </div>
 

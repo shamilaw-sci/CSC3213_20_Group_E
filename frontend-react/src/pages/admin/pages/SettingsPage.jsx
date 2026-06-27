@@ -25,7 +25,11 @@ const SettingsPage = () => {
 
   useEffect(() => {
     fetchSettings()
-      .then((d) => { if (d) setSettings(d); })
+      .then((d) => { 
+          if (d) {
+              setSettings({ ...DEFAULT_SETTINGS, ...d, listingFee: d.listing_fee || 500 });
+          }
+      })
       .catch(() => {});
   }, []);
 
@@ -42,7 +46,7 @@ const SettingsPage = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await updateSettings(settings);
+      await updateSettings({ ...settings, listing_fee: settings.listingFee });
       setDirty(false);
       showToast("Settings saved and logged to audit trail.");
     } catch {
