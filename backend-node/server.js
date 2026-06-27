@@ -50,6 +50,12 @@ app.use('/api/conversations', conversationRoutes);
 // Routes: /api/conversations, /api/conversations/:id/messages, etc.
 // ----------------------------------------
 
+// --- AI Chat Routes ---
+const aiRoutes = require('./routes/aiRoutes');
+app.use('/api/ai', aiRoutes);
+// Routes: /api/ai/chat
+// ----------------------------------------
+
 // --- Favorites Routes ---
 app.use('/api/favorites', favoritesRoutes);
 // Routes: /api/favorites
