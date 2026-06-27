@@ -124,9 +124,31 @@ const ListingDetailsModal = ({ listing, onApprove, onReject, onClose, loading })
             <div><strong>Land Size:</strong> {listing.area || "-"}</div>
             <div><strong>Bedrooms:</strong> {listing.bedrooms || "-"}</div>
             <div><strong>Bathrooms:</strong> {listing.bathrooms || "-"}</div>
-            <div style={{ marginTop: 8, padding: 8, backgroundColor: "#f0fdf4", borderRadius: 4, border: "1px solid #bbf7d0", color: "#166534" }}>
-                <strong>Payment Status:</strong> Paid (Verified via PayHere)
-            </div>
+            {listing.transactions && listing.transactions.length > 0 ? (
+                <div style={{ marginTop: 12, padding: 12, backgroundColor: "#f8fafc", borderRadius: 8, border: "2px dashed #cbd5e1" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, borderBottom: "1px solid #e2e8f0", paddingBottom: 8 }}>
+                        <strong style={{ color: "#0f172a", fontSize: "0.95rem" }}>🧾 Payment Receipt</strong>
+                        <span style={{ backgroundColor: "#dcfce7", color: "#166534", padding: "2px 8px", borderRadius: 12, fontSize: "0.75rem", fontWeight: "bold" }}>VERIFIED</span>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 8px", fontSize: "0.8rem", color: "#475569" }}>
+                        <div><strong>Txn ID:</strong></div>
+                        <div style={{ fontFamily: "monospace", color: "#0f172a" }}>{listing.transactions[0].transaction_id || "-"}</div>
+                        
+                        <div><strong>Amount:</strong></div>
+                        <div style={{ color: "#0f172a", fontWeight: "bold" }}>{listing.transactions[0].currency} {Number(listing.transactions[0].amount).toLocaleString()}</div>
+                        
+                        <div><strong>Method:</strong></div>
+                        <div>{listing.transactions[0].payment_method}</div>
+                        
+                        <div><strong>Date:</strong></div>
+                        <div>{new Date(listing.transactions[0].created_at).toLocaleString()}</div>
+                    </div>
+                </div>
+            ) : (
+                <div style={{ marginTop: 12, padding: 8, backgroundColor: "#fef2f2", borderRadius: 4, border: "1px solid #fecaca", color: "#991b1b", fontSize: "0.85rem" }}>
+                    <strong>Payment Status:</strong> Pending / Not Paid
+                </div>
+            )}
           </div>
         </div>
 

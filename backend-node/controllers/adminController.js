@@ -157,7 +157,7 @@ const getListingById = async (req, res) => {
     try {
         const { data: listing, error } = await supabase
             .from('properties')
-            .select('*')
+            .select('*, transactions(*)')
             .eq('id', req.params.id)
             .single();
 
