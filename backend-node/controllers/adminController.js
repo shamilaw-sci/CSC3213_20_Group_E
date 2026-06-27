@@ -155,16 +155,25 @@ const getListings = async (req, res) => {
 // Get listing by ID
 const getListingById = async (req, res) => {
     try {
-        const { data: listing, error } = await supabase
+        const { data: listing, error: listingError } = await supabase
             .from('properties')
-            .select('*, transactions(*)')
+            .select('*')
             .eq('id', req.params.id)
             .single();
 
-        if (error) throw error;
+        if (listingError) throw listingError;
+
+        // Manually fetch transactions since a foreign key join might not be configured
+        const { data: txData } = await supabase
+            .from('transactions')
+            .select('*')
+            .eq('property_id', req.params.id);
+            
+        listing.transactions = txData || [];
 
         res.status(200).json({ listing });
     } catch (error) {
+        console.error("Failed to get listing by ID:", error.message);
         res.status(500).json({ error: error.message });
     }
 };
