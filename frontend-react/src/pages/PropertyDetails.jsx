@@ -34,6 +34,7 @@ const PropertyDetails = () => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [isFavorite, setIsFavorite] = useState(false);
     const [isFavLoading, setIsFavLoading] = useState(false);
+    const [showAnimation, setShowAnimation] = useState(false);
 
     useEffect(() => {
         const fetchProperty = async () => {
@@ -73,7 +74,15 @@ const PropertyDetails = () => {
             const res = await axios.post(`http://localhost:5000/api/favorites/${id}`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            setIsFavorite(res.data.action === 'added');
+            
+            // The backend returns { isFavorite: boolean }
+            setIsFavorite(res.data.isFavorite);
+
+            // Trigger animation only if it was added
+            if (res.data.isFavorite) {
+                setShowAnimation(true);
+                setTimeout(() => setShowAnimation(false), 1000);
+            }
         } catch (err) {
             console.error('Error toggling favorite:', err);
         } finally {
@@ -98,74 +107,101 @@ const PropertyDetails = () => {
             );
             navigate(`/messages?conversation=${response.data.conversation.id}`);
         } catch (error) {
-            console.error('Error starting conversation:', error);
+            console.error("Error creating/fetching conversation:", error);
+            alert("Failed to start conversation");
         }
     };
 
     const nextImage = () => {
-        setCurrentImageIndex((prev) => (prev + 1) % (property.images?.length || 1));
+        if (property?.images) {
+            setCurrentImageIndex((prev) => (prev + 1) % property.images.length);
+        }
     };
 
     const prevImage = () => {
-        setCurrentImageIndex((prev) => (prev - 1 + (property.images?.length || 1)) % (property.images?.length || 1));
+        if (property?.images) {
+            setCurrentImageIndex((prev) => (prev === 0 ? property.images.length - 1 : prev - 1));
+        }
     };
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="flex flex-col items-center">
+                    <Loader2 className="w-12 h-12 text-blue-600 animate-spin mb-4" />
+                    <p className="text-gray-500 font-medium">Loading property details...</p>
+                </div>
             </div>
         );
     }
 
     if (error || !property) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="text-center">
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="bg-white p-8 rounded-2xl shadow-sm text-center max-w-md">
+                    <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span className="text-2xl">!</span>
+                    </div>
                     <h2 className="text-2xl font-bold text-gray-900 mb-2">Property Not Found</h2>
-                    <p className="text-gray-500 mb-6">{error || "The property you're looking for doesn't exist or was removed."}</p>
-                    <button onClick={() => navigate('/')} className="text-blue-600 font-bold hover:underline">
-                        Return to Home
+                    <p className="text-gray-500 mb-6">{error || "The property you're looking for doesn't exist or has been removed."}</p>
+                    <button onClick={() => navigate('/properties')} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all">
+                        Browse Properties
                     </button>
                 </div>
             </div>
         );
     }
 
-    const images = property.images || [];
+    const images = property.images?.length > 0 ? property.images : ['/placeholder.jpg'];
 
     return (
-        <div className="min-h-screen bg-gray-50 font-sans flex flex-col">
+        <div className="min-h-screen bg-gray-50 flex flex-col font-sans selection:bg-blue-200">
             <Navbar />
+            
+            <main className="flex-grow pt-24 pb-20 px-4 md:px-8 max-w-7xl mx-auto w-full">
+                
+                {/* Back Button */}
+                <button 
+                    onClick={() => navigate(-1)} 
+                    className="flex items-center text-gray-500 hover:text-blue-600 font-medium mb-6 transition-colors"
+                >
+                    <ChevronLeft className="w-5 h-5 mr-1" />
+                    Back to results
+                </button>
 
-            <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 mt-20">
                 {/* Image Gallery */}
-                <div className="relative h-[60vh] md:h-[70vh] rounded-3xl overflow-hidden bg-black mb-10 shadow-2xl group">
-                    <AnimatePresence mode="wait">
-                        {images.length > 0 ? (
-                            <motion.img
-                                key={currentImageIndex}
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ duration: 0.5 }}
-                                src={images[currentImageIndex]}
-                                alt={`Property ${currentImageIndex + 1}`}
-                                className="w-full h-full object-cover"
-                            />
-                        ) : (
-                            <div className="flex items-center justify-center h-full bg-gray-200 text-gray-500">
-                                No Images Available
-                            </div>
+                <div className="relative h-[50vh] md:h-[60vh] lg:h-[70vh] rounded-3xl overflow-hidden mb-10 shadow-lg group flex items-center justify-center bg-gray-900">
+                    
+                    {/* Center Heart Animation */}
+                    <AnimatePresence>
+                        {showAnimation && (
+                            <motion.div
+                                initial={{ scale: 0, opacity: 0 }}
+                                animate={{ scale: [0, 1.5, 1.2], opacity: 1 }}
+                                exit={{ scale: 0, opacity: 0 }}
+                                transition={{ duration: 0.5, ease: "easeOut" }}
+                                className="absolute z-50 flex items-center justify-center drop-shadow-2xl"
+                                style={{ pointerEvents: 'none' }}
+                            >
+                                <Heart className="w-40 h-40 text-red-500 fill-red-500 drop-shadow-lg" />
+                            </motion.div>
                         )}
                     </AnimatePresence>
 
+                    <img 
+                        src={images[currentImageIndex]} 
+                        alt={property.title} 
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                    
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10 pointer-events-none" />
+
                     {images.length > 1 && (
                         <>
-                            <button onClick={prevImage} className="absolute left-6 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/90 text-white hover:text-black p-3 rounded-full backdrop-blur-md transition-all opacity-0 group-hover:opacity-100 shadow-lg">
+                            <button onClick={prevImage} className="absolute left-6 top-1/2 -translate-y-1/2 p-3 bg-white/20 hover:bg-white text-white hover:text-gray-900 backdrop-blur-md rounded-full transition-all shadow-lg">
                                 <ChevronLeft className="w-6 h-6" />
                             </button>
-                            <button onClick={nextImage} className="absolute right-6 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/90 text-white hover:text-black p-3 rounded-full backdrop-blur-md transition-all opacity-0 group-hover:opacity-100 shadow-lg">
+                            <button onClick={nextImage} className="absolute right-6 top-1/2 -translate-y-1/2 p-3 bg-white/20 hover:bg-white text-white hover:text-gray-900 backdrop-blur-md rounded-full transition-all shadow-lg">
                                 <ChevronRight className="w-6 h-6" />
                             </button>
                             
@@ -177,7 +213,7 @@ const PropertyDetails = () => {
                         </>
                     )}
 
-                    <div className="absolute top-6 right-6 flex gap-3">
+                    <div className="absolute top-6 right-6 flex gap-3 z-10">
                         <button 
                             onClick={handleToggleFavorite}
                             disabled={isFavLoading}
