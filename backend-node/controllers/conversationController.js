@@ -7,7 +7,7 @@ const isBuyer = (user) => user.role === 'BUYER';
 const isSeller = (user) => user.role === 'SELLER';
 
 const canAccessConversation = (user, conversation) => {
-    if (isAdmin(user)) return true;
+    if (isAdmin(user)) return conversation.support_requested === true || conversation.type === 'support';
     if (isBuyer(user)) return conversation.buyer_id === user.id;
     if (isSeller(user)) return conversation.seller_id === user.id;
     return false;
@@ -136,8 +136,11 @@ const getConversations = async (req, res) => {
             .select('*')
             .order('updated_at', { ascending: false });
 
-        // Fix: A user can be either the buyer (initiator) OR the seller in a conversation.
-        query = query.or(`buyer_id.eq.${req.user.id},seller_id.eq.${req.user.id}`);
+        if (req.user.role === 'ADMIN') {
+            query = query.or('support_requested.eq.true,type.eq.support');
+        } else {
+            query = query.or(`buyer_id.eq.${req.user.id},seller_id.eq.${req.user.id}`);
+        }
 
         const { data: conversations, error } = await query;
         if (error) throw error;
@@ -285,10 +288,41 @@ const sendMessage = async (req, res) => {
     }
 };
 
+const requestSupport = async (req, res) => {
+    try {
+        const conversation = await getConversationOr403(req, res);
+        if (!conversation) return;
+
+        const { error } = await supabase
+            .from('conversations')
+            .update({ support_requested: true, updated_at: new Date() })
+            .eq('id', conversation.id);
+
+        if (error) throw error;
+
+        // Also add a system message so both parties know support was requested
+        await supabase
+            .from('messages')
+            .insert([{
+                conversation_id: conversation.id,
+                sender_id: req.user.id,
+                sender_role: 'SYSTEM',
+                body: `${req.user.name || 'A user'} has requested Admin support. An admin will join the chat shortly.`,
+                created_at: new Date()
+            }]);
+
+        res.status(200).json({ message: "Support requested successfully." });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
 module.exports = {
     startPropertyConversation,
     startSupportConversation,
     getConversations,
     getMessages,
-    sendMessage
+    sendMessage,
+    deleteMessage,
+    requestSupport
 };

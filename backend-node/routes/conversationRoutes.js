@@ -13,5 +13,6 @@ router.post('/support', conversationController.startSupportConversation);
 router.get('/', conversationController.getConversations);
 router.get('/:id/messages', conversationController.getMessages);
 router.post('/:id/messages', upload.single('attachment'), conversationController.sendMessage);
+router.patch('/:id/request-support', conversationController.requestSupport);
 
 module.exports = router;
