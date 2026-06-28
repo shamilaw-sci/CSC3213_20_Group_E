@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# Sensitive and Secret Files
+DBPwd.txt
+Payment Mock details
+*.pem
+*.key
+
+# Large Code Dumps / Submissions
+project_code.txt
+Submissions/
+
+# OS/IDE generated files
+.DS_Store
+.vscode/
+.idea/

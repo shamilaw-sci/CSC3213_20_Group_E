@@ -6,9 +6,11 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../context/UserAuthContext';
 
 const Register = () => {
     const navigate = useNavigate();
+    const { login } = useAuth();
     
     // UI State Management
     const [name, setName] = useState('');
@@ -38,8 +40,7 @@ const Register = () => {
             });
 
             // Persist authentication token and user data to local storage on successful registration
-            localStorage.setItem('token', response.data.token);
-            localStorage.setItem('user', JSON.stringify(response.data.user));
+            login(response.data.user);
             navigate('/');
             
         } catch (err) {

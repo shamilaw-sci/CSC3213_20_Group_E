@@ -1,5 +1,24 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: 'Outfit', sans-serif;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+body {
+  font-family: 'Outfit', sans-serif;
+}
+
+@layer utilities {
+  .glass-effect {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+}
+
 @layer utilities {
   .animate-fade-in {
     animation: fadeIn 0.3s ease-in-out;
@@ -127,4 +146,10 @@
 
 .zillow-marker-container.active .zillow-marker-price {
     color: #064e3b;
+}
+
+/* Draw Control Button Position */
+.leaflet-draw-control {
+    position: absolute;
+    top: 20px; right: 20px; z-index: 1000;
 }

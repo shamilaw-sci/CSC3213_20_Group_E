@@ -1,6 +1,6 @@
 /**
  * @file AddProperty.jsx
- * @description Form component allowing sellers to add new property listings, including map boundary selection and image uploads.
+ * @description Form component allowing sellers to add new property listings, including map boundary selection, image uploads, and PayHere payment integration.
  */
 
 import { useState, useEffect } from 'react';
@@ -10,6 +10,8 @@ import imageCompression from 'browser-image-compression';
 import { MapContainer, TileLayer, Marker, Polygon, CircleMarker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { useAuth } from '../context/UserAuthContext';
+import Navbar from '../components/Navbar';
 
 // Leaflet custom icon definition
 const customIcon = new L.Icon({
@@ -21,7 +23,7 @@ const customIcon = new L.Icon({
 
 const AddProperty = () => {
     const navigate = useNavigate();
-    const user = JSON.parse(localStorage.getItem('user'));
+    const { user } = useAuth();
 
     // Route protection: Only 'SELLER' roles can access this page
     useEffect(() => {
@@ -50,6 +52,26 @@ const AddProperty = () => {
     const [previewUrls, setPreviewUrls] = useState([]);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
+    
+    // Dynamic Payment Configuration
+    const [paymentConfig, setPaymentConfig] = useState({
+        listingFee: "500.00",
+        merchantId: "1236024" // Fallback sandbox ID
+    });
+
+    useEffect(() => {
+        // Fetch dynamic payment configuration from backend
+        axios.get('http://localhost:5000/api/payment/config')
+            .then(res => {
+                if (res.data) {
+                    setPaymentConfig({
+                        listingFee: res.data.listing_fee || "500.00",
+                        merchantId: res.data.merchant_id || "1236024"
+                    });
+                }
+            })
+            .catch(err => console.error("Failed to fetch payment config:", err));
+    }, []);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -60,7 +82,6 @@ const AddProperty = () => {
         setFormData({ 
             ...formData, 
             type: type,
-            // Clear specific fields if the type does not require them
             bedrooms: type === 'Land' ? '' : formData.bedrooms,
             bathrooms: type === 'Land' ? '' : formData.bathrooms
         });
@@ -80,14 +101,22 @@ const AddProperty = () => {
         const newCompressedImages = [];
         const newPreviewUrls = [];
 
-        for (let i = 0; i < files.length; i++) {
-            try {
-                const compressedFile = await imageCompression(files[i], options);
-                newCompressedImages.push(compressedFile);
-                newPreviewUrls.push(URL.createObjectURL(compressedFile));
-            } catch (error) {
-                console.error("Error compressing image:", error);
-            }
+        try {
+            const compressedResults = await Promise.all(
+                files.map(async (file) => {
+                    const compressedFile = await imageCompression(file, options);
+                    return {
+                        file: compressedFile,
+                        url: URL.createObjectURL(compressedFile)
+                    };
+                })
+            );
+            
+            newCompressedImages.push(...compressedResults.map(res => res.file));
+            newPreviewUrls.push(...compressedResults.map(res => res.url));
+        } catch (error) {
+            console.error("Error compressing images:", error);
+            setMessage({ type: 'error', text: 'Failed to compress some images.' });
         }
 
         setImages([...images, ...newCompressedImages]);
@@ -129,6 +158,68 @@ const AddProperty = () => {
         );
     };
 
+    // Function to trigger PayHere after the property is successfully saved
+    const triggerPayment = async (propertyId) => {
+        const amount = paymentConfig.listingFee; // Dynamic Listing Fee
+
+        try {
+            // Get the security hash from the backend
+            const response = await axios.post('http://localhost:5000/api/payment/generate-hash', {
+                order_id: propertyId,
+                amount: amount
+            });
+
+            const hash = response.data.hash;
+
+            // Configure PayHere payment object
+            const payment = {
+                sandbox: true,
+                merchant_id: paymentConfig.merchantId, 
+                return_url: "http://localhost:5173/my-properties", // Redirect after success
+                cancel_url: "http://localhost:5173/my-properties", // Redirect after cancellation
+                notify_url: "https://strep-reenact-rocket.ngrok-free.dev/api/payment/notify", 
+                order_id: propertyId,
+                items: "Thirasara Property Listing Fee",
+                amount: amount,
+                currency: "LKR",
+                hash: hash,
+                
+                // User Details
+                first_name: user?.name?.split(' ')[0] || "Seller",
+                last_name: user?.name?.split(' ')[1] || "Name",
+                email: user?.email || "seller@gmail.com",
+                phone: "0700000000",
+                address: "N/A",
+                city: "N/A",
+                country: "Sri Lanka",
+            };
+
+            // Setup PayHere Callbacks
+            window.payhere.onCompleted = function onCompleted(orderId) {
+                setMessage({ type: 'success', text: `Payment successful for Property: ${orderId}. Sent for admin review.` });
+                setTimeout(() => navigate('/my-properties'), 2000);
+            };
+
+            window.payhere.onDismissed = function onDismissed() {
+                setMessage({ type: 'error', text: "Payment cancelled. You can pay later from your dashboard." });
+                setTimeout(() => navigate('/my-properties'), 2000);
+            };
+
+            window.payhere.onError = function onError(error) {
+                setMessage({ type: 'error', text: `Payment Error: ${error}` });
+                setTimeout(() => navigate('/my-properties'), 2000);
+            };
+
+            // Start Payment
+            window.payhere.startPayment(payment);
+
+        } catch (error) {
+            console.error("Payment Initialization Error:", error);
+            setMessage({ type: 'error', text: "Property saved, but failed to start payment. Please try paying from the dashboard." });
+            setTimeout(() => navigate('/my-properties'), 2000);
+        }
+    };
+
     // Handle complete form submission to the backend API
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -144,13 +235,12 @@ const AddProperty = () => {
         }
 
         setLoading(true);
-        setMessage({ type: '', text: '' });
+        setMessage({ type: 'success', text: 'Saving property details... Please do not close this window.' });
 
         try {
-            const token = localStorage.getItem('token');
             const submitData = new FormData();
             
-            // Construct WKT (Well-Known Text) String for PostGIS compatibility
+            // Construct WKT String
             let finalBoundaryWKT = "";
             let centerLat = formData.latitude;
             let centerLng = formData.longitude;
@@ -160,19 +250,16 @@ const AddProperty = () => {
                 const first = coords[0];
                 const last = coords[coords.length - 1];
                 
-                // Ensure polygon is closed by repeating the first coordinate
                 if (first[0] !== last[0] || first[1] !== last[1]) {
                     coords.push(first);
                 }
                 
-                // Format requires Longitude followed by Latitude
                 const wktPoints = coords.map(c => `${c[1]} ${c[0]}`).join(', ');
                 finalBoundaryWKT = `POLYGON((${wktPoints}))`;
                 
                 centerLat = boundaryCoordinates[0][0];
                 centerLng = boundaryCoordinates[0][1];
             } else {
-                // If a single point is selected, generate a small bounding box (~10m radius) around it
                 const lat = parseFloat(formData.latitude);
                 const lng = parseFloat(formData.longitude);
                 const offset = 0.0001; 
@@ -198,21 +285,26 @@ const AddProperty = () => {
                 submitData.append('images', image);
             });
 
-            // Dispatch API request to backend service on Port 5000
-            await axios.post('http://localhost:5000/api/properties', submitData, {
+            // 1. Dispatch API request to backend to save property
+            const response = await axios.post('http://localhost:5000/api/properties', submitData, {
+                withCredentials: true,
                 headers: { 
-                    Authorization: `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data' 
                 }
             });
             
-            setMessage({ type: 'success', text: 'Property listed successfully! 🎉' });
-            setTimeout(() => navigate('/'), 2000);
+            // Assuming your backend returns the created property object containing the 'id'
+            const newPropertyId = response.data.property.id; 
+
+            setMessage({ type: 'success', text: 'Property saved! Initiating payment gateway...' });
+
+            // 2. Trigger the PayHere payment popup using the new Property ID
+            await triggerPayment(newPropertyId);
+
         } catch (error) {
             console.error("Add Property Error:", error.response || error.message);
             const backendError = error.response?.data?.error || error.response?.data?.message || "Unknown Error";
             setMessage({ type: 'error', text: `Failed: ${backendError}` });
-        } finally {
             setLoading(false);
         }
     };
@@ -220,33 +312,14 @@ const AddProperty = () => {
     return (
         <div className="min-h-screen bg-gray-50 font-sans pb-12">
             
-            <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between h-20 items-center">
-                        <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500 hover:text-blue-600 transition mr-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                            </svg>
-                            <h1 className="text-2xl font-extrabold text-blue-600 tracking-tight flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-1 -rotate-12" viewBox="0 0 20 20" fill="currentColor">
-                                  <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-                                </svg>
-                                Thirasara
-                            </h1>
-                        </div>
-                        <div className="text-sm font-medium text-gray-500">
-                            Listing as <span className="text-gray-900">{user?.name}</span>
-                        </div>
-                    </div>
-                </div>
-            </nav>
+            <Navbar />
 
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                     
                     <div className="bg-blue-600 px-8 py-10 text-white">
                         <h2 className="text-3xl font-bold mb-2">Post a Property for Sale</h2>
-                        <p className="text-blue-100">Fill in the details below to list your property on Thirasara.</p>
+                        <p className="text-blue-100">Fill in the details below to list your property on Thirasara. A listing fee of Rs. {parseFloat(paymentConfig.listingFee).toLocaleString()} applies.</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="p-8">
@@ -387,7 +460,7 @@ const AddProperty = () => {
                             </svg>
                             <p className="text-sm font-bold text-blue-600 mb-1">Click to upload or drag and drop</p>
                             <p className="text-xs text-gray-500">JPG, PNG up to 10 images (Min 1)</p>
-                            {loading && <p className="text-blue-600 text-sm font-bold mt-4 animate-pulse">Compressing images...</p>}
+                            {loading && <p className="text-blue-600 text-sm font-bold mt-4 animate-pulse">Processing...</p>}
                         </div>
 
                         {previewUrls.length > 0 && (
@@ -412,8 +485,8 @@ const AddProperty = () => {
                             <button type="button" onClick={() => navigate('/')} className="px-6 py-3 border border-gray-300 text-gray-700 font-bold rounded-lg mr-4 hover:bg-gray-50 transition">
                                 Cancel
                             </button>
-                            <button type="submit" disabled={loading} className={`px-8 py-3 text-white font-bold rounded-lg transition shadow-md ${loading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}>
-                                {loading ? 'Processing...' : 'Post Property'}
+                            <button type="submit" disabled={loading} className={`px-8 py-3 text-white font-bold rounded-lg transition shadow-md flex items-center ${loading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}>
+                                {loading ? 'Processing...' : `Pay Rs. ${parseFloat(paymentConfig.listingFee).toLocaleString()} & Publish`}
                             </button>
                         </div>
 

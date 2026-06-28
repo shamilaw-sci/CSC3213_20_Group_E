@@ -2,10 +2,10 @@ const jwt = require('jsonwebtoken');
 
 // Middleware to protect routes by verifying JWT token
 const protect = (req, res, next) => {
-    let token;
+    let token = req.cookies?.token; // Extract token from HttpOnly cookie
 
-    // Extract token from Authorization header (Bearer token format)
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    // Fallback: Extract token from Authorization header (Bearer token format)
+    if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         token = req.headers.authorization.split(' ')[1];
     }
 

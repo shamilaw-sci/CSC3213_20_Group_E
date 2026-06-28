@@ -11,6 +11,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -20,7 +23,10 @@ import (
 // SearchRequest represents the incoming JSON payload for a map search.
 // It expects a WKT (Well-Known Text) Polygon string.
 type SearchRequest struct {
-	Polygon string `json:"polygon" binding:"required"`
+	Polygon string  `json:"polygon" binding:"required"`
+	Beds    *int    `json:"beds"`
+	Baths   *int    `json:"baths"`
+	Type    *string `json:"type"`
 }
 
 // main initializes the environment, connects to the database,
@@ -46,10 +52,24 @@ func main() {
 	r := gin.Default()
 
 	// CORS Setup
+	allowedOrigin := os.Getenv("ALLOWED_ORIGIN")
+	if allowedOrigin == "" {
+		allowedOrigin = "*" // Default fallback, should be restricted in production
+	}
+
 	r.Use(func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		origin := c.Request.Header.Get("Origin")
+		if origin == "" {
+			origin = allowedOrigin
+		}
+		if origin == "*" {
+			origin = "http://localhost:5173" // Wildcard not allowed with credentials
+		}
+		
+		c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(204)
 			return
@@ -66,11 +86,31 @@ func main() {
 
 		log.Println("🔍 Searching in Polygon:", req.Polygon)
 
-		// Execute the stored RPC function search_properties in Supabase
-		query := `SELECT id, title, description, price, latitude, longitude, images 
-				  FROM search_properties($1)`
+		query := `SELECT p.id, p.title, p.description, p.price, p.latitude, p.longitude, p.images, p.bedrooms, p.bathrooms, p.land_size, p.type, p.address 
+				  FROM search_properties($1) sp
+				  JOIN properties p ON sp.id = p.id
+				  WHERE p.status = 'approved'`
+		
+		args := []interface{}{req.Polygon}
+		paramCount := 1
 
-		rows, err := pool.Query(context.Background(), query, req.Polygon)
+		if req.Beds != nil {
+			paramCount++
+			query += fmt.Sprintf(" AND p.bedrooms >= $%d", paramCount)
+			args = append(args, *req.Beds)
+		}
+		if req.Baths != nil {
+			paramCount++
+			query += fmt.Sprintf(" AND p.bathrooms >= $%d", paramCount)
+			args = append(args, *req.Baths)
+		}
+		if req.Type != nil && *req.Type != "" {
+			paramCount++
+			query += fmt.Sprintf(" AND p.type = $%d", paramCount)
+			args = append(args, *req.Type)
+		}
+
+		rows, err := pool.Query(context.Background(), query, args...)
 		if err != nil {
 			log.Println("❌ DB Query Error:", err.Error())
 			c.JSON(http.StatusInternalServerError, gin.H{"message": "Database query failed", "error": err.Error()})
@@ -81,36 +121,27 @@ func main() {
 		var properties []map[string]interface{}
 		for rows.Next() {
 			var id string
-			var title, description *string
-			var price, lat, lng *float64
-
-			// Use a pointer to a slice to safely handle potential NULL values from the database array
+			var title, description, propType, address *string
+			var price, lat, lng, landSize *float64
+			var beds, baths *int
 			var images *[]string
 
-			err := rows.Scan(&id, &title, &description, &price, &lat, &lng, &images)
+			err := rows.Scan(&id, &title, &description, &price, &lat, &lng, &images, &beds, &baths, &landSize, &propType, &address)
 			if err != nil {
 				log.Println("⚠️ Row Scan Error (Skipping property):", err.Error())
 				continue
 			}
 
-			// Safely dereference pointers with fallback default values
 			safeTitle := "Untitled Property"
-			if title != nil {
-				safeTitle = *title
-			}
+			if title != nil { safeTitle = *title }
 
 			safePrice := float64(0)
-			if price != nil {
-				safePrice = *price
-			}
+			if price != nil { safePrice = *price }
 
-			// Ensure images is always an initialized array, avoiding null reference issues on the frontend
 			safeImages := []string{}
-			if images != nil {
-				safeImages = *images
-			}
+			if images != nil { safeImages = *images }
 
-			properties = append(properties, gin.H{
+			propData := gin.H{
 				"id":          id,
 				"title":       safeTitle,
 				"description": description,
@@ -118,7 +149,14 @@ func main() {
 				"latitude":    lat,
 				"longitude":   lng,
 				"images":      safeImages,
-			})
+				"bedrooms":    beds,
+				"bathrooms":   baths,
+				"land_size":   landSize,
+				"type":        propType,
+				"address":     address,
+			}
+
+			properties = append(properties, propData)
 		}
 
 		log.Println("✅ Found Properties:", len(properties))
@@ -130,6 +168,30 @@ func main() {
 		port = "8080"
 	}
 
-	log.Println("🚀 Go Microservice running on port", port)
-	r.Run(":" + port)
+	srv := &http.Server{
+		Addr:    ":" + port,
+		Handler: r,
+	}
+
+	go func() {
+		log.Println("🚀 Go Microservice running on port", port)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("❌ Listen failed: %s\n", err)
+		}
+	}()
+
+	// Wait for interrupt signal to gracefully shutdown the server
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("⚠️ Shutting down server...")
+
+	ctxShutdown, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctxShutdown); err != nil {
+		log.Fatal("❌ Server forced to shutdown:", err)
+	}
+
+	log.Println("✅ Server exiting gracefully")
 }
