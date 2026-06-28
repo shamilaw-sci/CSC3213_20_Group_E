@@ -116,16 +116,9 @@ const ListingDetailsModal = ({ listing, onApprove, onReject, onClose, loading })
           <div>
             <strong style={{ display: "block", marginBottom: 6 }}>{listing.title}</strong>
             <p style={{ color: "var(--admin-text-secondary)", fontSize: "0.875rem", lineHeight: 1.6 }}>{listing.description || "No description provided."}</p>
-          </div>
-          <div style={{ fontSize: "0.875rem", lineHeight: 1.8 }}>
-            <div><strong>Price:</strong> LKR {Number(listing.price || 0).toLocaleString("en-LK")}</div>
-            <div><strong>Type:</strong> {listing.type || "-"}</div>
-            <div><strong>Address:</strong> {listing.address || "-"}</div>
-            <div><strong>Land Size:</strong> {listing.area || "-"}</div>
-            <div><strong>Bedrooms:</strong> {listing.bedrooms || "-"}</div>
-            <div><strong>Bathrooms:</strong> {listing.bathrooms || "-"}</div>
+            
             {listing.transactions && listing.transactions.length > 0 ? (
-                <div style={{ marginTop: 12, padding: 12, backgroundColor: "#f8fafc", borderRadius: 8, border: "2px dashed #cbd5e1" }}>
+                <div style={{ marginTop: 16, padding: 12, backgroundColor: "#f8fafc", borderRadius: 8, border: "2px dashed #cbd5e1" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, borderBottom: "1px solid #e2e8f0", paddingBottom: 8 }}>
                         <strong style={{ color: "#0f172a", fontSize: "0.95rem" }}>🧾 Payment Receipt</strong>
                         <span style={{ backgroundColor: "#dcfce7", color: "#166534", padding: "2px 8px", borderRadius: 12, fontSize: "0.75rem", fontWeight: "bold" }}>VERIFIED</span>
@@ -145,10 +138,18 @@ const ListingDetailsModal = ({ listing, onApprove, onReject, onClose, loading })
                     </div>
                 </div>
             ) : (
-                <div style={{ marginTop: 12, padding: 8, backgroundColor: "#fef2f2", borderRadius: 4, border: "1px solid #fecaca", color: "#991b1b", fontSize: "0.85rem" }}>
+                <div style={{ marginTop: 16, padding: 8, backgroundColor: "#fef2f2", borderRadius: 4, border: "1px solid #fecaca", color: "#991b1b", fontSize: "0.85rem" }}>
                     <strong>Payment Status:</strong> Pending / Not Paid
                 </div>
             )}
+          </div>
+          <div style={{ fontSize: "0.875rem", lineHeight: 1.8 }}>
+            <div><strong>Price:</strong> LKR {Number(listing.price || 0).toLocaleString("en-LK")}</div>
+            <div><strong>Type:</strong> {listing.type || "-"}</div>
+            <div><strong>Address:</strong> {listing.address || "-"}</div>
+            <div><strong>Land Size:</strong> {listing.area || "-"}</div>
+            <div><strong>Bedrooms:</strong> {listing.bedrooms || "-"}</div>
+            <div><strong>Bathrooms:</strong> {listing.bathrooms || "-"}</div>
           </div>
         </div>
 
