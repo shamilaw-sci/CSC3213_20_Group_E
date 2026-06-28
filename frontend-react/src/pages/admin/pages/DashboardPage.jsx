@@ -16,7 +16,7 @@ const BarChart = ({ data = [], colorClass = "bg-blue-500" }) => {
               initial={{ height: 0 }}
               animate={{ height: `${(d.value / max) * 100}%` }}
               transition={{ duration: 1, ease: "easeOut", delay: i * 0.1 }}
-              className={`w-full ${colorClass} rounded-t-md opacity-80 group-hover:opacity-100 transition-opacity`}
+              className={`w-full ${colorClass} rounded-t-md opacity-80 group-hover:opacity-100 transition-opacity min-h-[4px]`}
             />
             {/* Tooltip on hover */}
             <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-[10px] py-1 px-2 rounded font-bold whitespace-nowrap z-10 pointer-events-none">
@@ -85,10 +85,10 @@ const DashboardPage = () => {
   const fmtCur = (n) => `LKR ${new Intl.NumberFormat("en-LK").format(n)}`;
 
   const statCards = [
-    { title: "Total Listings", value: fmt(stats.totalListings), icon: Home, trend: "up", desc: "8 this month", color: "blue" },
-    { title: "Pending Approval", value: fmt(stats.pendingApproval), icon: Clock, trend: "neutral", desc: "Requires action", color: "orange" },
-    { title: "Total Users", value: fmt(stats.totalUsers), icon: Users, trend: "up", desc: "38 this month", color: "indigo" },
-    { title: "Monthly Revenue", value: fmtCur(stats.monthRevenue), icon: DollarSign, trend: "up", desc: "2.4% vs last month", color: "emerald" }
+    { title: "Total Listings", value: fmt(stats.totalListings || 0), icon: Home, trend: "up", desc: "Active & Pending", color: "blue" },
+    { title: "Pending Approval", value: fmt(stats.pendingApproval || 0), icon: Clock, trend: "neutral", desc: "Requires action", color: "orange" },
+    { title: "Total Users", value: fmt(stats.totalUsers || 0), icon: Users, trend: "up", desc: "Buyers & Sellers", color: "indigo" },
+    { title: "Total Revenue", value: fmtCur(stats.revenue || 0), icon: DollarSign, trend: "up", desc: "Overall Income", color: "emerald" }
   ];
 
   const getColorClasses = (color) => {
