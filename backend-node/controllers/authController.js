@@ -99,7 +99,11 @@ const loginUser = async (req, res, next) => {
 
         res.status(200).json({
             message: "Login successful.",
-            user: { id: user.id, name: user.name, email: user.email, role: user.role }
+            user: { 
+                id: user.id, name: user.name, email: user.email, role: user.role,
+                phone: user.phone, avatar_url: user.avatar_url,
+                theme_preference: user.theme_preference, email_notifications: user.email_notifications
+            }
         });
 
     } catch (error) {
@@ -176,7 +180,7 @@ const getMe = async (req, res, next) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const { data: user, error } = await supabase
             .from('users')
-            .select('id, name, email, role')
+            .select('id, name, email, role, phone, avatar_url, theme_preference, email_notifications')
             .eq('id', decoded.id)
             .single();
 
@@ -190,7 +194,7 @@ const getMe = async (req, res, next) => {
 
 const updateProfile = async (req, res, next) => {
     try {
-        const { name, phone, password } = req.body;
+        const { name, phone, password, avatar_url, theme_preference, email_notifications } = req.body;
         
         // 1. Find user to update
         const { data: user, error: fetchError } = await supabase
@@ -205,7 +209,41 @@ const updateProfile = async (req, res, next) => {
 
         const updates = {};
         if (name) updates.name = name;
-        if (phone) updates.phone = phone; // Assuming we want to support phone numbers
+        if (phone !== undefined) updates.phone = phone; // Allow clearing phone
+        if (avatar_url !== undefined) {
+            if (avatar_url.startsWith('data:image')) {
+                try {
+                    const matches = avatar_url.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+                    if (matches && matches.length === 3) {
+                        const mimeType = matches[1];
+                        const buffer = Buffer.from(matches[2], 'base64');
+                        const ext = mimeType.split('/')[1] || 'png';
+                        const fileName = `${req.user.id}_${Date.now()}.${ext}`;
+
+                        const { error: uploadError } = await supabase.storage
+                            .from('avatars')
+                            .upload(fileName, buffer, {
+                                contentType: mimeType,
+                                upsert: true
+                            });
+
+                        if (uploadError) throw uploadError;
+
+                        const { data: publicUrlData } = supabase.storage
+                            .from('avatars')
+                            .getPublicUrl(fileName);
+
+                        updates.avatar_url = publicUrlData.publicUrl;
+                    }
+                } catch (err) {
+                    console.error("Avatar upload error:", err);
+                }
+            } else {
+                updates.avatar_url = avatar_url;
+            }
+        }
+        if (theme_preference !== undefined) updates.theme_preference = theme_preference;
+        if (email_notifications !== undefined) updates.email_notifications = email_notifications;
         
         if (password) {
             // Hash new password
@@ -217,22 +255,26 @@ const updateProfile = async (req, res, next) => {
             .from('users')
             .update(updates)
             .eq('id', req.user.id)
-            .select('id, name, email, role')
+            .select('id, name, email, role, phone, avatar_url, theme_preference, email_notifications')
             .single();
 
         if (updateError) {
              // Fallback if 'phone' column doesn't exist yet, try updating without it
              if (updateError.message.includes('column') && updateError.message.includes('does not exist')) {
                  delete updates.phone;
+                 delete updates.avatar_url;
+                 delete updates.theme_preference;
+                 delete updates.email_notifications;
+                 
                  const { data: fallbackUser, error: fallbackError } = await supabase
                     .from('users')
                     .update(updates)
                     .eq('id', req.user.id)
-                    .select('id, name, email, role')
+                    .select('id, name, email, role, phone')
                     .single();
                     
                  if (fallbackError) throw fallbackError;
-                 return res.status(200).json({ message: "Profile updated (without phone)", user: fallbackUser });
+                 return res.status(200).json({ message: "Profile updated (without new columns, please run SQL script)", user: fallbackUser });
              }
              throw updateError;
         }

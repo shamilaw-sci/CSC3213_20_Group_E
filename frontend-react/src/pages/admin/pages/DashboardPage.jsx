@@ -16,7 +16,7 @@ const BarChart = ({ data = [], colorClass = "bg-blue-500" }) => {
               initial={{ height: 0 }}
               animate={{ height: `${(d.value / max) * 100}%` }}
               transition={{ duration: 1, ease: "easeOut", delay: i * 0.1 }}
-              className={`w-full ${colorClass} rounded-t-md opacity-80 group-hover:opacity-100 transition-opacity`}
+              className={`w-full ${colorClass} rounded-t-md opacity-80 group-hover:opacity-100 transition-opacity min-h-[4px]`}
             />
             {/* Tooltip on hover */}
             <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-[10px] py-1 px-2 rounded font-bold whitespace-nowrap z-10 pointer-events-none">
@@ -30,42 +30,23 @@ const BarChart = ({ data = [], colorClass = "bg-blue-500" }) => {
   );
 };
 
-const MOCK_STATS = {
-  totalListings: 148,
-  pendingApproval: 12,
-  activeListings: 124,
-  totalUsers: 893,
-  buyerCount: 741,
-  sellerCount: 152,
-  totalRevenue: 287500,
-  monthRevenue: 42000,
-  rejectedListings: 12,
-};
-
-const MOCK_REVENUE = [
-  { label: "Nov", value: 28000 }, { label: "Dec", value: 35000 },
-  { label: "Jan", value: 31000 }, { label: "Feb", value: 38000 },
-  { label: "Mar", value: 41000 }, { label: "Apr", value: 42000 },
-];
-
-const MOCK_USER_GROWTH = [
-  { label: "Nov", value: 640 }, { label: "Dec", value: 710 },
-  { label: "Jan", value: 740 }, { label: "Feb", value: 800 },
-  { label: "Mar", value: 855 }, { label: "Apr", value: 893 },
-];
-
-const MOCK_PENDING = [
-  { id: "LST-1041", title: "3.5 Perches Land, Kandy", seller: "Chaminda Perera", date: "2026-04-25", price: "LKR 4.2M" },
-  { id: "LST-1042", title: "10 Acres Farm, Nuwara Eliya", seller: "Nimal Silva", date: "2026-04-26", price: "LKR 18M" },
-  { id: "LST-1043", title: "Commercial Plot, Colombo 7", seller: "Yasith Fernando", date: "2026-04-27", price: "LKR 28M" },
-];
+// Removed mock data
 
 const DashboardPage = () => {
-  const [stats, setStats] = useState(MOCK_STATS);
-  const [revenue, setRevenue] = useState(MOCK_REVENUE);
-  const [userGrowth, setUserGrowth] = useState(MOCK_USER_GROWTH);
-  const [pendingListings, setPendingListings] = useState(MOCK_PENDING);
-  const [loading, setLoading] = useState(false);
+  const [stats, setStats] = useState({
+    totalListings: 0,
+    pendingApproval: 0,
+    activeListings: 0,
+    totalUsers: 0,
+    buyerCount: 0,
+    sellerCount: 0,
+    revenue: 0,
+    rejectedListings: 0,
+  });
+  const [revenue, setRevenue] = useState([]);
+  const [userGrowth, setUserGrowth] = useState([]);
+  const [pendingListings, setPendingListings] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
@@ -91,8 +72,8 @@ const DashboardPage = () => {
             }))
           );
         }
-      } catch {
-        // use mock data silently
+      } catch (err) {
+        console.error("Failed to load dashboard data:", err);
       } finally {
         setLoading(false);
       }
@@ -104,10 +85,10 @@ const DashboardPage = () => {
   const fmtCur = (n) => `LKR ${new Intl.NumberFormat("en-LK").format(n)}`;
 
   const statCards = [
-    { title: "Total Listings", value: fmt(stats.totalListings), icon: Home, trend: "up", desc: "8 this month", color: "blue" },
-    { title: "Pending Approval", value: fmt(stats.pendingApproval), icon: Clock, trend: "neutral", desc: "Requires action", color: "orange" },
-    { title: "Total Users", value: fmt(stats.totalUsers), icon: Users, trend: "up", desc: "38 this month", color: "indigo" },
-    { title: "Monthly Revenue", value: fmtCur(stats.monthRevenue), icon: DollarSign, trend: "up", desc: "2.4% vs last month", color: "emerald" }
+    { title: "Total Listings", value: fmt(stats.totalListings || 0), icon: Home, trend: "up", desc: "Active & Pending", color: "blue" },
+    { title: "Pending Approval", value: fmt(stats.pendingApproval || 0), icon: Clock, trend: "neutral", desc: "Requires action", color: "orange" },
+    { title: "Total Users", value: fmt(stats.totalUsers || 0), icon: Users, trend: "up", desc: "Buyers & Sellers", color: "indigo" },
+    { title: "Total Revenue", value: fmtCur(stats.revenue || 0), icon: DollarSign, trend: "up", desc: "Overall Income", color: "emerald" }
   ];
 
   const getColorClasses = (color) => {

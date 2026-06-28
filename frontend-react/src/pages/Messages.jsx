@@ -24,6 +24,12 @@ const getConversationSubtitle = (conversation) => {
     return conversation.property?.title || 'Property inquiry';
 };
 
+const getParticipant = (conversation, user) => {
+    if (conversation.type === 'support') return { role: 'ADMIN', name: 'Admin Support', avatar_url: null };
+    if (user?.role === 'BUYER') return conversation.seller || { role: 'SELLER', name: 'Seller' };
+    return conversation.buyer || { role: 'BUYER', name: 'Buyer' };
+};
+
 const formatMessageTime = (value) => {
     if (!value) return '';
     return new Date(value).toLocaleTimeString('en-US', {
@@ -150,6 +156,25 @@ const Messages = () => {
         }
     };
 
+    const requestSupportForCurrent = async () => {
+        if (!selectedId) return;
+        try {
+            await axios.patch(`http://localhost:5000/api/conversations/${selectedId}/request-support`, {}, {
+                headers: apiHeaders(),
+            });
+            await loadConversations({ silent: true });
+            
+            const response = await axios.get(`http://localhost:5000/api/conversations/${selectedId}/messages`, {
+                headers: apiHeaders(),
+            });
+            setMessages(response.data.messages || []);
+            scrollToBottom();
+            
+        } catch (err) {
+            setError(err.response?.data?.message || err.response?.data?.error || 'Failed to request support.');
+        }
+    };
+
     const sendMessage = async (event) => {
         event.preventDefault();
         if ((!draft.trim() && !attachment) || !selectedId) return;
@@ -200,7 +225,7 @@ const Messages = () => {
                 <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden grid grid-cols-1 md:grid-cols-[360px_1fr] flex-1 shadow-sm min-h-[600px] max-h-[calc(100vh-200px)]">
                     
                     {/* Sidebar */}
-                    <aside className="border-r border-gray-100 bg-white flex flex-col">
+                    <aside className="border-r border-gray-100 bg-white flex flex-col min-h-0">
                         <div className="p-5 border-b border-gray-100 bg-gray-50/50">
                             <h2 className="font-bold text-gray-900">Conversations</h2>
                         </div>
@@ -236,8 +261,14 @@ const Messages = () => {
                                         {isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-600 rounded-r-full"></div>}
                                         
                                         {/* Avatar */}
-                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold ${isSupport ? 'bg-gradient-to-br from-indigo-500 to-purple-600' : 'bg-gradient-to-br from-blue-500 to-cyan-500'} shadow-sm`}>
-                                            {isSupport ? <ShieldAlert className="w-6 h-6" /> : getInitials(title)}
+                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold overflow-hidden ${isSupport ? 'bg-gradient-to-br from-indigo-500 to-purple-600' : 'bg-gradient-to-br from-blue-500 to-cyan-500'} shadow-sm`}>
+                                            {isSupport ? <ShieldAlert className="w-6 h-6" /> : (
+                                                getParticipant(conversation, user)?.avatar_url ? (
+                                                    <img src={getParticipant(conversation, user).avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    getInitials(title)
+                                                )
+                                            )}
                                         </div>
 
                                         <div className="flex-1 min-w-0">
@@ -269,24 +300,56 @@ const Messages = () => {
                     </aside>
 
                     {/* Chat Area */}
-                    <section className="flex flex-col bg-[#F8FAFC]">
+                    <section className="flex flex-col bg-[#F8FAFC] min-h-0 relative">
                         {selectedConversation ? (
                             <>
                                 {/* Chat Header */}
                                 <div className="h-20 border-b border-gray-100 px-6 py-4 flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-10">
                                     <div className="flex items-center gap-4">
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${selectedConversation.type === 'support' ? 'bg-gradient-to-br from-indigo-500 to-purple-600' : 'bg-gradient-to-br from-blue-500 to-cyan-500'}`}>
-                                            {selectedConversation.type === 'support' ? <ShieldAlert className="w-5 h-5" /> : getInitials(getConversationTitle(selectedConversation, user))}
+                                        <div className={`w-11 h-11 rounded-full flex items-center justify-center text-white font-bold overflow-hidden ${selectedConversation.type === 'support' ? 'bg-gradient-to-br from-indigo-500 to-purple-600' : 'bg-gradient-to-br from-blue-500 to-cyan-500'} shadow-sm border-2 border-white ring-2 ${getParticipant(selectedConversation, user)?.role === 'SELLER' ? 'ring-orange-400' : 'ring-blue-400'}`}>
+                                            {selectedConversation.type === 'support' ? <ShieldAlert className="w-6 h-6" /> : (
+                                                getParticipant(selectedConversation, user)?.avatar_url ? (
+                                                    <img src={getParticipant(selectedConversation, user).avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    getInitials(getConversationTitle(selectedConversation, user))
+                                                )
+                                            )}
                                         </div>
                                         <div>
-                                            <h2 className="font-extrabold text-lg text-gray-900 leading-tight">
-                                                {getConversationTitle(selectedConversation, user)}
-                                            </h2>
-                                            <p className="text-xs font-medium text-gray-500">
+                                            <div className="flex items-center gap-2">
+                                                <h2 className="font-extrabold text-lg text-gray-900 leading-tight">
+                                                    {getConversationTitle(selectedConversation, user)}
+                                                </h2>
+                                                {selectedConversation.type !== 'support' && (
+                                                    <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                                                        getParticipant(selectedConversation, user)?.role === 'SELLER' ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'
+                                                    }`}>
+                                                        {getParticipant(selectedConversation, user)?.role}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-xs font-medium text-gray-500 mt-0.5">
                                                 {getConversationSubtitle(selectedConversation)}
                                             </p>
                                         </div>
                                     </div>
+                                    
+                                    {selectedConversation.type !== 'support' && !selectedConversation.support_requested && (
+                                        <button 
+                                            onClick={requestSupportForCurrent}
+                                            className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-red-50 text-gray-600 hover:text-red-600 border border-gray-200 hover:border-red-200 rounded-full font-bold text-sm transition-colors shadow-sm"
+                                            title="Report or Request Admin Support"
+                                        >
+                                            <ShieldAlert className="w-4 h-4" />
+                                            <span>Request Support</span>
+                                        </button>
+                                    )}
+                                    {selectedConversation.support_requested && (
+                                        <div className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 border border-red-100 rounded-full font-bold text-sm">
+                                            <ShieldAlert className="w-4 h-4" />
+                                            <span>Support Requested</span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Messages View */}
@@ -371,7 +434,7 @@ const Messages = () => {
                                     <form onSubmit={sendMessage} className="flex items-end gap-3 px-2">
                                         <label className="p-3.5 rounded-full text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer flex-shrink-0 mb-1">
                                             <Paperclip className="w-5 h-5" />
-                                            <input type="file" className="hidden" onChange={(event) => setAttachment(event.target.files?.[0] || null)} />
+                                            <input type="file" accept="image/*,.pdf" className="hidden" onChange={(event) => setAttachment(event.target.files?.[0] || null)} />
                                         </label>
                                         
                                         <div className="flex-1 bg-gray-50 border border-gray-200 rounded-3xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-300 transition-all">

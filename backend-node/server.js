@@ -15,8 +15,8 @@ app.use(cors({
 }));
 
 app.use(cookieParser());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Rate Limiting for Auth Routes
 const authLimiter = rateLimit({
@@ -48,6 +48,12 @@ app.use('/api/admin', adminRoutes);
 const conversationRoutes = require('./routes/conversationRoutes');
 app.use('/api/conversations', conversationRoutes);
 // Routes: /api/conversations, /api/conversations/:id/messages, etc.
+// ----------------------------------------
+
+// --- AI Chat Routes ---
+const aiRoutes = require('./routes/aiRoutes');
+app.use('/api/ai', aiRoutes);
+// Routes: /api/ai/chat
 // ----------------------------------------
 
 // --- Favorites Routes ---

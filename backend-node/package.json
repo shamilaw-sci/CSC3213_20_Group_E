@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/CSC3213-Project-in-Computer-Science-1/backend-node#readme",
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@supabase/supabase-js": "^2.103.0",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",

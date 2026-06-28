@@ -70,6 +70,7 @@ const PropertyCard = ({ prop, handleMessageSeller }) => {
                     <img 
                         src={prop.images[0]} 
                         alt={prop.title} 
+                        loading="lazy"
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out" 
                     />
                 ) : (
