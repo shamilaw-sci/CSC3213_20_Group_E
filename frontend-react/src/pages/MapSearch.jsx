@@ -12,6 +12,7 @@ import { Heart, Calculator } from 'lucide-react';
 import api from '../context/api';
 import FeasibilityCalculator from './FeasibilityCalculator';
 import districtsData from '../assets/sri-lanka-districts.json';
+import MarkerClusterGroup from 'react-leaflet-cluster';
 import 'leaflet/dist/leaflet.css';
 
 // Fix for default Leaflet icon missing issues in React
@@ -233,7 +234,7 @@ const MarkerPopup = ({ prop, imageUrl, onNavigate }) => (
 );
 
 // New Component for the sidebar card
-const PropertyCard = ({ prop, isActive, onMouseEnter, onMouseLeave, onClick }) => {
+const PropertyCard = React.memo(({ prop, isActive, onMouseEnter, onMouseLeave, onClick }) => {
     const imageUrl = getSafeImageUrl(prop);
     const [isFavorite, setIsFavorite] = useState(false); // Initially false, ideally should be fetched from backend per property
     
@@ -287,7 +288,7 @@ const PropertyCard = ({ prop, isActive, onMouseEnter, onMouseLeave, onClick }) =
             </div>
         </div>
     );
-};
+});
 
 const MapSearch = () => {
     const [properties, setProperties] = useState([]);
@@ -520,37 +521,43 @@ const MapSearch = () => {
                             controlRef={drawControlRef} 
                         />
 
-                        {properties
-                            .filter(prop => maxPriceFilter === null || prop.price <= maxPriceFilter)
-                            .map((prop) => {
-                            const imageUrl = getSafeImageUrl(prop);
-                            const isActive = activeMarkerId === prop.id || hoveredPropId === prop.id;
-                            
-                            return (
-                                <Marker 
-                                    key={prop.id} 
-                                    position={[prop.latitude, prop.longitude]} 
-                                    icon={createCustomIcon(prop.price, isActive)}
-                                    eventHandlers={{
-                                        click: (e) => {
-                                            L.DomEvent.stopPropagation(e);
-                                            setActiveMarkerId(prop.id);
-                                        },
-                                        mouseover: () => setHoveredPropId(prop.id),
-                                        mouseout: () => setHoveredPropId(null),
-                                        popupclose: () => setActiveMarkerId(null)
-                                    }}
-                                >
-                                    <Popup className="rounded-xl overflow-hidden min-w-[200px]">
-                                        <MarkerPopup 
-                                            prop={prop} 
-                                            imageUrl={imageUrl} 
-                                            onNavigate={() => navigate(`/property/${prop.id}`)} 
-                                        />
-                                    </Popup>
-                                </Marker>
-                            );
-                        })}
+                        <MarkerClusterGroup
+                            chunkedLoading
+                            maxClusterRadius={50}
+                            showCoverageOnHover={false}
+                        >
+                            {properties
+                                .filter(prop => maxPriceFilter === null || prop.price <= maxPriceFilter)
+                                .map((prop) => {
+                                const imageUrl = getSafeImageUrl(prop);
+                                const isActive = activeMarkerId === prop.id || hoveredPropId === prop.id;
+                                
+                                return (
+                                    <Marker 
+                                        key={prop.id} 
+                                        position={[prop.latitude, prop.longitude]} 
+                                        icon={createCustomIcon(prop.price, isActive)}
+                                        eventHandlers={{
+                                            click: (e) => {
+                                                L.DomEvent.stopPropagation(e);
+                                                setActiveMarkerId(prop.id);
+                                            },
+                                            mouseover: () => setHoveredPropId(prop.id),
+                                            mouseout: () => setHoveredPropId(null),
+                                            popupclose: () => setActiveMarkerId(null)
+                                        }}
+                                    >
+                                        <Popup className="rounded-xl overflow-hidden min-w-[200px]">
+                                            <MarkerPopup 
+                                                prop={prop} 
+                                                imageUrl={imageUrl} 
+                                                onNavigate={() => navigate(`/property/${prop.id}`)} 
+                                            />
+                                        </Popup>
+                                    </Marker>
+                                );
+                            })}
+                        </MarkerClusterGroup>
                     </MapContainer>
                 </div>
 
