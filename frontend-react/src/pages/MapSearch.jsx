@@ -3,7 +3,7 @@
  * @description Map-based property search component allowing users to filter properties by drawing freehand polygons or selecting districts.
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { MapContainer, TileLayer, useMap, Marker, Popup, GeoJSON } from 'react-leaflet';
 import L from 'leaflet';
 import axios from 'axios';
