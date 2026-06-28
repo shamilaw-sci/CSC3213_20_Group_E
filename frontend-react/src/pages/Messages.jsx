@@ -79,7 +79,7 @@ const Messages = () => {
 
     const loadConversations = async ({ silent = false } = {}) => {
         try {
-            const response = await axios.get('http://localhost:5000/api/conversations', {
+            const response = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/conversations`, {
                 headers: apiHeaders(),
             });
             const nextConversations = response.data.conversations || [];
@@ -107,7 +107,7 @@ const Messages = () => {
         const loadMessages = async () => {
             setMessagesLoading(true);
             try {
-                const response = await axios.get(`http://localhost:5000/api/conversations/${selectedId}/messages`, {
+                const response = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/conversations/${selectedId}/messages`, {
                     headers: apiHeaders(),
                 });
                 setMessages(response.data.messages || []);
@@ -126,7 +126,7 @@ const Messages = () => {
         const interval = setInterval(() => {
             loadConversations({ silent: true });
             if (selectedId) {
-                axios.get(`http://localhost:5000/api/conversations/${selectedId}/messages`, {
+                axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/conversations/${selectedId}/messages`, {
                     headers: apiHeaders(),
                 })
                     .then((response) => setMessages(response.data.messages || []))
@@ -145,7 +145,7 @@ const Messages = () => {
 
     const startSupport = async () => {
         try {
-            const response = await axios.post('http://localhost:5000/api/conversations/support', {}, {
+            const response = await axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/conversations/support`, {}, {
                 headers: apiHeaders(),
             });
             const conversation = response.data.conversation;
@@ -159,12 +159,12 @@ const Messages = () => {
     const requestSupportForCurrent = async () => {
         if (!selectedId) return;
         try {
-            await axios.patch(`http://localhost:5000/api/conversations/${selectedId}/request-support`, {}, {
+            await axios.patch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/conversations/${selectedId}/request-support`, {}, {
                 headers: apiHeaders(),
             });
             await loadConversations({ silent: true });
             
-            const response = await axios.get(`http://localhost:5000/api/conversations/${selectedId}/messages`, {
+            const response = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/conversations/${selectedId}/messages`, {
                 headers: apiHeaders(),
             });
             setMessages(response.data.messages || []);
@@ -189,7 +189,7 @@ const Messages = () => {
             if (selectedFile) formData.append('attachment', selectedFile);
 
             const response = await axios.post(
-                `http://localhost:5000/api/conversations/${selectedId}/messages`,
+                `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/conversations/${selectedId}/messages`,
                 formData,
                 { headers: { ...apiHeaders(), 'Content-Type': 'multipart/form-data' } }
             );

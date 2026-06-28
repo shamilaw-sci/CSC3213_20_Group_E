@@ -27,7 +27,7 @@ const Home = () => {
     useEffect(() => {
         const fetchProperties = async () => {
             try {
-                const response = await axios.get(`http://localhost:5000/api/properties?page=${page}&limit=12`);
+                const response = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/properties?page=${page}&limit=12`);
                 if (page === 1) {
                     setProperties(response.data.properties);
                 } else {
@@ -54,7 +54,7 @@ const Home = () => {
 
         try {
             const response = await axios.post(
-                `http://localhost:5000/api/conversations/property/${propertyId}`
+                `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/conversations/property/${propertyId}`
             );
             navigate(`/messages?conversation=${response.data.conversation.id}`);
         } catch (error) {
