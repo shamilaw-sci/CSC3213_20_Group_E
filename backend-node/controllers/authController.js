@@ -176,7 +176,7 @@ const getMe = async (req, res, next) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const { data: user, error } = await supabase
             .from('users')
-            .select('id, name, email, role, avatar_url, theme_preference, email_notifications')
+            .select('id, name, email, role, phone, avatar_url, theme_preference, email_notifications')
             .eq('id', decoded.id)
             .single();
 
@@ -220,7 +220,7 @@ const updateProfile = async (req, res, next) => {
             .from('users')
             .update(updates)
             .eq('id', req.user.id)
-            .select('id, name, email, role, avatar_url, theme_preference, email_notifications')
+            .select('id, name, email, role, phone, avatar_url, theme_preference, email_notifications')
             .single();
 
         if (updateError) {
@@ -235,7 +235,7 @@ const updateProfile = async (req, res, next) => {
                     .from('users')
                     .update(updates)
                     .eq('id', req.user.id)
-                    .select('id, name, email, role')
+                    .select('id, name, email, role, phone')
                     .single();
                     
                  if (fallbackError) throw fallbackError;

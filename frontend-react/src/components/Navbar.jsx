@@ -39,12 +39,38 @@ const Navbar = () => {
                         <button onClick={() => navigate('/map')} className="text-gray-800 hover:text-blue-600 font-medium transition hidden md:block">Map Search</button>
                         {user ? (
                             <div className="group h-full flex items-center relative cursor-pointer">
-                                <span className="text-gray-800 hover:text-blue-600 font-medium transition flex items-center gap-1">
-                                    Hi, {user.name}
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                </span>
+                                <div className="flex items-center gap-3">
+                                    {/* Avatar with Role Glow */}
+                                    <div className={`relative w-10 h-10 rounded-full p-[2px] ${
+                                        user.role === 'SELLER' 
+                                            ? 'bg-gradient-to-tr from-orange-400 to-pink-500 shadow-[0_0_10px_rgba(249,115,22,0.5)]' 
+                                            : 'bg-gradient-to-tr from-blue-400 to-cyan-500 shadow-[0_0_10px_rgba(56,189,248,0.5)]'
+                                    }`}>
+                                        <div className="w-full h-full rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+                                            {user.avatar_url ? (
+                                                <img src={user.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <span className="text-gray-500 font-bold text-sm">
+                                                    {user.name.charAt(0).toUpperCase()}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="flex flex-col">
+                                        <span className="text-gray-800 hover:text-blue-600 font-medium transition flex items-center gap-1">
+                                            Hi, {user.name.split(' ')[0]}
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </span>
+                                        <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                                            user.role === 'SELLER' ? 'text-orange-500' : 'text-blue-500'
+                                        }`}>
+                                            {user.role}
+                                        </span>
+                                    </div>
+                                </div>
                                 <div className="absolute top-16 right-0 w-48 bg-white border border-gray-200 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 rounded-lg py-2">
                                     <button onClick={() => navigate('/profile')} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600">Profile & Settings</button>
                                     <button onClick={() => navigate('/favorites')} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600">My Favorites</button>

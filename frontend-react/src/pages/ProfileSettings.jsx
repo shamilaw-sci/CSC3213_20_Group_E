@@ -62,7 +62,12 @@ const ProfileSettings = () => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
             setAvatarFile(file);
-            setAvatarUrl(URL.createObjectURL(file));
+            // Convert to base64 to send to backend
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setAvatarUrl(reader.result);
+            };
+            reader.readAsDataURL(file);
         }
     };
 
@@ -88,7 +93,7 @@ const ProfileSettings = () => {
 
             const updatePayload = { 
                 ...formData,
-                avatar_url: avatarUrl // keeping local object URL for demo, in prod upload first.
+                avatar_url: avatarUrl
             };
 
             const res = await api.put('/api/auth/profile', updatePayload);
