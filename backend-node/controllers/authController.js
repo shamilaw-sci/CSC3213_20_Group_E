@@ -6,8 +6,8 @@ const { sendWelcomeEmail, sendPasswordResetEmail } = require('../utils/emailServ
 const setTokenCookie = (res, token) => {
     res.cookie('token', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production', // true if in production
-        sameSite: 'strict',
+        secure: true, // Always true for cross-domain
+        sameSite: 'none', // Must be 'none' for cross-domain
         maxAge: 24 * 60 * 60 * 1000 // 1 day
     });
 };
