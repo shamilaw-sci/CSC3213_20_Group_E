@@ -435,7 +435,17 @@ const getSearchHeatmap = async (req, res) => {
 // Get transactions
 const getTransactions = async (req, res) => {
     try {
-        res.status(200).json({ transactions: [] });
+        const { data: transactions, error } = await supabase
+            .from('transactions')
+            .select(`
+                id, amount, currency, status, created_at, transaction_id, payment_method, property_id,
+                properties(title, users(name))
+            `)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        res.status(200).json({ transactions });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

@@ -2,17 +2,8 @@ import React, { useState, useEffect } from "react";
 import { fetchTransactionHistory, exportReport } from "../api/adminApi";
 import "../styles/admin-global.css";
 
-const MOCK_TRANSACTIONS = [
-  { id: "TXN-9001", listing: "3.5 Perches Land, Kandy", seller: "Chaminda Perera", amount: 3500, type: "Listing Fee", status: "Completed", date: "2026-04-25", paymentId: "PH-88001" },
-  { id: "TXN-9002", listing: "Commercial Plot, Colombo 7", seller: "Yasith Fernando", amount: 5000, type: "Boost Fee", status: "Completed", date: "2026-04-23", paymentId: "PH-88002" },
-  { id: "TXN-9003", listing: "10 Acres Farm, Nuwara Eliya", seller: "Nimal Silva", amount: 3500, type: "Listing Fee", status: "Completed", date: "2026-04-20", paymentId: "PH-88003" },
-  { id: "TXN-9004", listing: "Residential Land, Gampaha", seller: "Priya Kumari", amount: 3500, type: "Listing Fee", status: "Refunded", date: "2026-04-18", paymentId: "PH-88004" },
-  { id: "TXN-9005", listing: "Paddy Field, Anuradhapura", seller: "Bandula Ratne", amount: 3500, type: "Listing Fee", status: "Completed", date: "2026-04-15", paymentId: "PH-88005" },
-  { id: "TXN-9006", listing: "Highland Land, Badulla", seller: "Saman Herath", amount: 5000, type: "Boost Fee", status: "Pending", date: "2026-04-28", paymentId: "PH-88006" },
-];
-
 const ReportsPage = () => {
-  const [transactions, setTransactions] = useState(MOCK_TRANSACTIONS);
+  const [transactions, setTransactions] = useState([]);
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
@@ -21,8 +12,22 @@ const ReportsPage = () => {
 
   useEffect(() => {
     fetchTransactionHistory()
-      .then((d) => { if (d?.transactions?.length) setTransactions(d.transactions); })
-      .catch(() => {});
+      .then((d) => { 
+        if (d?.transactions) {
+          const mapped = d.transactions.map((t) => ({
+            id: `TXN-${t.id}`,
+            listing: t.properties?.title || "Unknown Property",
+            seller: t.properties?.users?.name || "Unknown Seller",
+            amount: Number(t.amount || 0),
+            type: "Listing Fee", // Future enhancement: differentiate fees
+            status: t.status === "SUCCESS" ? "Completed" : t.status,
+            date: t.created_at?.slice(0, 10) || "Unknown",
+            paymentId: t.transaction_id || "N/A",
+          }));
+          setTransactions(mapped);
+        }
+      })
+      .catch((err) => console.error("Failed to load transactions", err));
   }, []);
 
   const handleExport = async (type) => {
@@ -142,12 +147,12 @@ const ReportsPage = () => {
                   </td>
                   <td style={{ fontWeight: 600, fontSize: "0.875rem" }}>{fmtCur(t.amount)}</td>
                   <td>
-                    <span className={`admin-badge ${
-                      t.status === "Completed" ? "admin-badge-approved" :
-                      t.status === "Pending" ? "admin-badge-pending" : "admin-badge-rejected"
-                    }`}>
+                    <div className="admin-status-badge" style={{
+                      color: t.status.toLowerCase() === "completed" ? "var(--admin-success)" : t.status.toLowerCase() === "pending" ? "var(--admin-warning)" : "var(--admin-error)",
+                      background: t.status.toLowerCase() === "completed" ? "var(--admin-bg-success)" : t.status.toLowerCase() === "pending" ? "var(--admin-bg-warning)" : "var(--admin-bg-error)"
+                    }}>
                       {t.status}
-                    </span>
+                    </div>
                   </td>
                   <td style={{ fontSize: "0.8rem", color: "var(--admin-text-secondary)" }}>{t.date}</td>
                   <td><code style={{ fontSize: "0.75rem", color: "var(--admin-text-secondary)" }}>{t.paymentId}</code></td>
