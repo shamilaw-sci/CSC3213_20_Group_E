@@ -69,30 +69,36 @@ const requireAdmin = (req, res, next) => {
 // Dashboard stats
 const getDashboardStats = async (req, res) => {
     try {
-        // Get total users count
-        const { count: usersCount } = await supabase
-            .from('users')
-            .select('*', { count: 'exact', head: true });
+        const [
+            { count: usersCount },
+            { count: propertiesCount },
+            { count: activeListingsCount },
+            { count: pendingListingsCount },
+            { count: rejectedListingsCount },
+            { count: buyerCount },
+            { count: sellerCount },
+            { data: transactions },
+            { data: propertiesData }
+        ] = await Promise.all([
+            supabase.from('users').select('*', { count: 'exact', head: true }),
+            supabase.from('properties').select('*', { count: 'exact', head: true }),
+            supabase.from('properties').select('*', { count: 'exact', head: true }).eq('status', 'approved'),
+            supabase.from('properties').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+            supabase.from('properties').select('*', { count: 'exact', head: true }).eq('status', 'rejected'),
+            supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'BUYER'),
+            supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'SELLER'),
+            supabase.from('transactions').select('amount').eq('status', 'SUCCESS'),
+            supabase.from('properties').select('type')
+        ]);
 
-        // Get total properties
-        const { count: propertiesCount } = await supabase
-            .from('properties')
-            .select('*', { count: 'exact', head: true });
+        const totalRevenue = (transactions || []).reduce((sum, tx) => sum + Number(tx.amount || 0), 0);
 
-        const { count: activeListingsCount } = await supabase
-            .from('properties')
-            .select('*', { count: 'exact', head: true })
-            .eq('status', 'approved');
-
-        const { count: pendingListingsCount } = await supabase
-            .from('properties')
-            .select('*', { count: 'exact', head: true })
-            .eq('status', 'pending');
-
-        const { count: rejectedListingsCount } = await supabase
-            .from('properties')
-            .select('*', { count: 'exact', head: true })
-            .eq('status', 'rejected');
+        const typesMap = {};
+        (propertiesData || []).forEach(p => {
+            const t = p.type || 'Other';
+            typesMap[t] = (typesMap[t] || 0) + 1;
+        });
+        const listingTypes = Object.entries(typesMap).map(([label, value]) => ({ label, value }));
 
         res.status(200).json({
             totalListings: propertiesCount || 0,
@@ -101,7 +107,10 @@ const getDashboardStats = async (req, res) => {
             activeListings: activeListingsCount || 0,
             pendingApproval: pendingListingsCount || 0,
             rejectedListings: rejectedListingsCount || 0,
-            revenue: 0
+            buyerCount: buyerCount || 0,
+            sellerCount: sellerCount || 0,
+            revenue: totalRevenue,
+            listingTypes
         });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -111,9 +120,39 @@ const getDashboardStats = async (req, res) => {
 // Get revenue data
 const getRevenueData = async (req, res) => {
     try {
+        const { data: transactions, error } = await supabase
+            .from('transactions')
+            .select('amount, created_at')
+            .eq('status', 'SUCCESS')
+            .order('created_at', { ascending: true });
+
+        if (error) throw error;
+
+        // Group by month (e.g. 'Nov', 'Dec')
+        const grouped = {};
+        (transactions || []).forEach(tx => {
+            if (!tx.created_at) return;
+            const date = new Date(tx.created_at);
+            const month = date.toLocaleString('default', { month: 'short' });
+            grouped[month] = (grouped[month] || 0) + Number(tx.amount || 0);
+        });
+
+        // Ensure we show at least the last 6 months even if empty
+        const months = [];
+        const d = new Date();
+        d.setMonth(d.getMonth() - 5);
+        for (let i = 0; i < 6; i++) {
+            const m = d.toLocaleString('default', { month: 'short' });
+            months.push(m);
+            if (!grouped[m]) grouped[m] = 0;
+            d.setMonth(d.getMonth() + 1);
+        }
+
+        const formattedData = months.map(m => ({ label: m, value: grouped[m] }));
+
         res.status(200).json({
             period: req.query.period || 'monthly',
-            data: []
+            data: formattedData
         });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -123,7 +162,47 @@ const getRevenueData = async (req, res) => {
 // Get user growth
 const getUserGrowth = async (req, res) => {
     try {
-        res.status(200).json({ data: [] });
+        const { data: users, error } = await supabase
+            .from('users')
+            .select('created_at')
+            .order('created_at', { ascending: true });
+
+        if (error) throw error;
+
+        // Cumulative sum by month
+        const grouped = {};
+        let cumulative = 0;
+        
+        // Count users per month first
+        const countsPerMonth = {};
+        (users || []).forEach(u => {
+            if (!u.created_at) return;
+            const monthYear = new Date(u.created_at).toLocaleString('default', { month: 'short', year: 'numeric' });
+            countsPerMonth[monthYear] = (countsPerMonth[monthYear] || 0) + 1;
+        });
+
+        // Generate last 6 months
+        const months = [];
+        const d = new Date();
+        d.setMonth(d.getMonth() - 5);
+        
+        // Calculate cumulative up to 6 months ago
+        (users || []).forEach(u => {
+            if (!u.created_at) return;
+            if (new Date(u.created_at) < d) {
+                cumulative++;
+            }
+        });
+
+        for (let i = 0; i < 6; i++) {
+            const monthStr = d.toLocaleString('default', { month: 'short' });
+            const monthYear = d.toLocaleString('default', { month: 'short', year: 'numeric' });
+            cumulative += (countsPerMonth[monthYear] || 0);
+            months.push({ label: monthStr, value: cumulative });
+            d.setMonth(d.getMonth() + 1);
+        }
+
+        res.status(200).json({ data: months });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
