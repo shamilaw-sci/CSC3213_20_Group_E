@@ -42,6 +42,11 @@ const MessagesPage = () => {
   const [loading, setLoading] = useState(true);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [toast, setToast] = useState(null);
+  const messagesEndRef = React.useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   const selected = useMemo(
     () => conversations.find((conversation) => conversation.id === selectedId),
@@ -82,6 +87,7 @@ const MessagesPage = () => {
         showToast("Failed to load messages.", "error");
       } finally {
         setMessagesLoading(false);
+        setTimeout(scrollToBottom, 100);
       }
     };
 
@@ -112,7 +118,8 @@ const MessagesPage = () => {
     try {
       const data = await sendConversationMessage(selectedId, body, selectedFile);
       setMessages((prev) => [...prev, data.message]);
-      await loadConversations();
+      setTimeout(scrollToBottom, 50);
+      await loadConversations({ silent: true });
     } catch {
       setDraft(body);
       setAttachment(selectedFile);
@@ -183,7 +190,7 @@ const MessagesPage = () => {
             ))}
           </aside>
 
-          <section style={{ display: "flex", flexDirection: "column", minHeight: 620 }}>
+          <section style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, minWidth: 0 }}>
             {selected ? (
               <>
                 <div style={{ padding: 18, borderBottom: "1px solid var(--admin-border)" }}>
@@ -247,6 +254,7 @@ const MessagesPage = () => {
                         </div>
                       );
                     })}
+                    <div ref={messagesEndRef} />
                   </div>
                 </div>
 
@@ -260,7 +268,7 @@ const MessagesPage = () => {
                   <div style={{ display: "flex", gap: 10 }}>
                     <label className="admin-btn admin-btn-secondary" style={{ cursor: "pointer" }}>
                       Attach
-                      <input type="file" style={{ display: "none" }} onChange={(event) => setAttachment(event.target.files?.[0] || null)} />
+                      <input type="file" accept="image/*,.pdf" style={{ display: "none" }} onChange={(event) => setAttachment(event.target.files?.[0] || null)} />
                     </label>
                     <input
                       className="admin-form-control"
