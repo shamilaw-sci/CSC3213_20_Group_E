@@ -41,7 +41,7 @@ const EditPropertyModal = ({ property, onCancel, onSaved }) => {
 
         try {
             const response = await axios.patch(
-                `http://localhost:5000/api/properties/my-listings/${property.id}`,
+                `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/properties/my-listings/${property.id}`,
                 formData,
                 { withCredentials: true }
             );
@@ -149,7 +149,7 @@ const MyProperties = () => {
 
         const fetchMyProperties = async () => {
             try {
-                const response = await axios.get(`http://localhost:5000/api/properties/my-listings?page=${page}&limit=12`, {
+                const response = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/properties/my-listings?page=${page}&limit=12`, {
                     withCredentials: true
                 });
                 if (page === 1) {

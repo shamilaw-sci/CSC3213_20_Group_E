@@ -40,13 +40,13 @@ const PropertyDetails = () => {
         const fetchProperty = async () => {
             try {
                 // Fetch property details
-                const res = await axios.get(`http://localhost:5000/api/properties/${id}`);
+                const res = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/properties/${id}`);
                 setProperty(res.data.property);
                 
                 // If user is logged in, check if it's a favorite
                 if (user) {
                     const token = localStorage.getItem('token');
-                    const favRes = await axios.get('http://localhost:5000/api/favorites', {
+                    const favRes = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/favorites`, {
                         headers: { Authorization: `Bearer ${token}` }
                     });
                     const favList = favRes.data.favorites;
@@ -71,7 +71,7 @@ const PropertyDetails = () => {
         setIsFavLoading(true);
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.post(`http://localhost:5000/api/favorites/${id}`, {}, {
+            const res = await axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/favorites/${id}`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             
@@ -101,7 +101,7 @@ const PropertyDetails = () => {
         }
         try {
             const response = await axios.post(
-                `http://localhost:5000/api/conversations/property/${id}`,
+                `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/conversations/property/${id}`,
                 {},
                 { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
             );
