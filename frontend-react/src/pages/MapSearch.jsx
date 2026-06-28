@@ -217,7 +217,7 @@ const getSafeImageUrl = (prop) => {
 const MarkerPopup = ({ prop, imageUrl, onNavigate }) => (
     <div className="w-52 p-1">
         {imageUrl ? (
-            <img src={imageUrl} alt={prop.title} className="w-full h-32 object-cover rounded-md mb-2 shadow-sm" />
+            <img src={imageUrl} alt={prop.title} loading="lazy" className="w-full h-32 object-cover rounded-md mb-2 shadow-sm" />
         ) : (
             <div className="w-full h-32 bg-gray-100 flex items-center justify-center text-gray-400 rounded-md mb-2 border">No Image</div>
         )}
@@ -261,7 +261,7 @@ const PropertyCard = React.memo(({ prop, isActive, onMouseEnter, onMouseLeave, o
         >
             <div className="h-32 w-full bg-gray-200 relative">
                 {imageUrl ? (
-                    <img src={imageUrl} alt={prop.title} className="w-full h-full object-cover" />
+                    <img src={imageUrl} alt={prop.title} loading="lazy" className="w-full h-full object-cover" />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No Image</div>
                 )}
