@@ -7,6 +7,7 @@ import { AdminAuthProvider } from './pages/admin/context/AdminAuthContext';
 
 // Components that should load immediately
 import FloatingAIChat from './components/FloatingAIChat';
+import ProtectedRoute from './components/ProtectedRoute';
 import AdminProtectedRoute from './pages/admin/components/AdminProtectedRoute';
 import AdminLayout from './pages/admin/components/AdminLayout';
 
@@ -22,6 +23,8 @@ const Login = lazy(() => import('./pages/Login'));
 const MyProperties = lazy(() => import('./pages/MyProperties'));
 const Messages = lazy(() => import('./pages/Messages'));
 const ProfileSettings = lazy(() => import('./pages/ProfileSettings'));
+const AgentProfile = lazy(() => import('./pages/AgentProfile'));
+const AgentDashboard = lazy(() => import('./pages/agent/Dashboard'));
 const MyFavorites = lazy(() => import('./pages/MyFavorites'));
 const PropertyDetails = lazy(() => import('./pages/PropertyDetails'));
 
@@ -30,6 +33,7 @@ const AdminLogin = lazy(() => import('./pages/admin/pages/LoginPage'));
 const AdminDashboard = lazy(() => import('./pages/admin/pages/DashboardPage'));
 const AdminListings = lazy(() => import('./pages/admin/pages/ListingsPage'));
 const AdminUsers = lazy(() => import('./pages/admin/pages/UsersPage'));
+const AdminAgentApprovals = lazy(() => import('./pages/admin/pages/AgentApprovalsPage'));
 const AdminAnalytics = lazy(() => import('./pages/admin/pages/AnalyticsPage'));
 const AdminReports = lazy(() => import('./pages/admin/pages/ReportsPage'));
 const AdminSettings = lazy(() => import('./pages/admin/pages/SettingsPage'));
@@ -54,6 +58,12 @@ function App() {
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
             <Route path="/property/:id" element={<PropertyDetails />} />
+            <Route path="/agent/:id" element={<AgentProfile />} />
+            <Route path="/agent-dashboard" element={
+              <ProtectedRoute allowedRoles={['AGENT', 'PENDING_AGENT']}>
+                <AgentDashboard />
+              </ProtectedRoute>
+            } />
             <Route path="/login" element={<Login />} />
             <Route path="/map" element={<MapSearch />} />
             <Route path="/add-property" element={<AddProperty />} />
@@ -74,6 +84,7 @@ function App() {
                   <Route path="dashboard" element={<AdminDashboard />} />
                   <Route path="listings" element={<AdminListings />} />
                   <Route path="users" element={<AdminUsers />} />
+                  <Route path="agent-approvals" element={<AdminAgentApprovals />} />
                   <Route path="analytics" element={<AdminAnalytics />} />
                   <Route path="messages" element={<AdminMessages />} />
                   <Route path="reports" element={<AdminReports />} />

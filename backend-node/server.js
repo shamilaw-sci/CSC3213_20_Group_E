@@ -35,6 +35,9 @@ app.use('/api/auth', authLimiter, authRoutes);
 const propertyRoutes = require('./routes/propertyRoutes');
 app.use('/api/properties', propertyRoutes);
 // Routes: /api/properties (GET all, POST add), /api/properties/search
+// --- Agent Routes ---
+const agentRoutes = require('./routes/agentRoutes');
+app.use('/api/agents', agentRoutes);
 // ----------------------------------------
 
 // --- Admin Routes ---

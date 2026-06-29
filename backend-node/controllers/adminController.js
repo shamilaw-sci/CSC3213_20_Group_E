@@ -335,12 +335,48 @@ const getUsers = async (req, res) => {
     try {
         const { data: users, error } = await supabase
             .from('users')
-            .select('id, name, email, role, created_at')
-            .limit(50);
+            .select(`
+                id, name, email, role, created_at,
+                properties(id)
+            `)
+            .limit(50)
+            .order('created_at', { ascending: false });
 
         if (error) throw error;
 
-        res.status(200).json({ users });
+        // Map to what frontend expects
+        const mappedUsers = users.map(u => ({
+            id: u.id,
+            name: u.name,
+            email: u.email,
+            role: u.role,
+            joinDate: new Date(u.created_at).toISOString().split('T')[0],
+            listings: u.properties ? u.properties.length : 0,
+            location: 'N/A', // Assuming we don't have user location in DB yet
+            status: u.role === 'BANNED' ? 'Banned' : 'Active'
+        }));
+
+        res.status(200).json({ users: mappedUsers });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Get pending agents
+const getPendingAgents = async (req, res) => {
+    try {
+        const { data: agents, error } = await supabase
+            .from('users')
+            .select(`
+                id, name, email, role, created_at,
+                agent_profiles (agency_name, license_number, bio)
+            `)
+            .eq('role', 'PENDING_AGENT')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        res.status(200).json({ agents });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -398,7 +434,7 @@ const updateUserRole = async (req, res) => {
     try {
         const { role } = req.body;
         // Strict role checking
-        if (!['BUYER', 'SELLER', 'ADMIN', 'BANNED'].includes(role)) {
+        if (!['BUYER', 'SELLER', 'ADMIN', 'BANNED', 'AGENT', 'PENDING_AGENT'].includes(role)) {
             return res.status(400).json({ message: "Invalid role specified" });
         }
 
@@ -563,6 +599,7 @@ module.exports = {
     rejectListing,
     deleteListing,
     getUsers,
+    getPendingAgents,
     getUserById,
     banUser,
     unbanUser,
