@@ -23,6 +23,7 @@ router.delete("/listings/:id", adminController.deleteListing);
 
 // ─── Users Management ────────────────────────────────────────
 router.get("/users", adminController.getUsers);
+router.get("/pending-agents", adminController.getPendingAgents);
 router.get("/users/:id", adminController.getUserById);
 router.patch("/users/:id/ban", adminController.banUser);
 router.patch("/users/:id/unban", adminController.unbanUser);

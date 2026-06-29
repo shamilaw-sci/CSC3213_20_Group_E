@@ -346,6 +346,26 @@ const getUsers = async (req, res) => {
     }
 };
 
+// Get pending agents
+const getPendingAgents = async (req, res) => {
+    try {
+        const { data: agents, error } = await supabase
+            .from('users')
+            .select(`
+                id, name, email, role, created_at,
+                agent_profiles (agency_name, license_number, phone_number, bio)
+            `)
+            .eq('role', 'PENDING_AGENT')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        res.status(200).json({ agents });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
 // Get user by ID
 const getUserById = async (req, res) => {
     try {
@@ -563,6 +583,7 @@ module.exports = {
     rejectListing,
     deleteListing,
     getUsers,
+    getPendingAgents,
     getUserById,
     banUser,
     unbanUser,

@@ -17,6 +17,7 @@ const NAV_ITEMS = [
   { path: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { path: "/admin/listings", icon: List, label: "Listings" },
   { path: "/admin/users", icon: Users, label: "Users" },
+  { path: "/admin/agent-approvals", icon: Users, label: "Agent Approvals" },
   { path: "/admin/analytics", icon: BarChart3, label: "Analytics" },
   { path: "/admin/messages", icon: MessageSquare, label: "Messages" },
   { path: "/admin/reports", icon: FileText, label: "Reports" },
