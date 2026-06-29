@@ -23,6 +23,7 @@ const MyProperties = lazy(() => import('./pages/MyProperties'));
 const Messages = lazy(() => import('./pages/Messages'));
 const ProfileSettings = lazy(() => import('./pages/ProfileSettings'));
 const AgentProfile = lazy(() => import('./pages/AgentProfile'));
+const AgentDashboard = lazy(() => import('./pages/agent/Dashboard'));
 const MyFavorites = lazy(() => import('./pages/MyFavorites'));
 const PropertyDetails = lazy(() => import('./pages/PropertyDetails'));
 
@@ -56,6 +57,11 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/property/:id" element={<PropertyDetails />} />
             <Route path="/agent/:id" element={<AgentProfile />} />
+            <Route path="/agent-dashboard" element={
+              <ProtectedRoute allowedRoles={['AGENT']}>
+                <AgentDashboard />
+              </ProtectedRoute>
+            } />
             <Route path="/login" element={<Login />} />
             <Route path="/map" element={<MapSearch />} />
             <Route path="/add-property" element={<AddProperty />} />
