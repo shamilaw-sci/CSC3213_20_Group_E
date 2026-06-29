@@ -398,7 +398,7 @@ const updateUserRole = async (req, res) => {
     try {
         const { role } = req.body;
         // Strict role checking
-        if (!['BUYER', 'SELLER', 'ADMIN', 'BANNED'].includes(role)) {
+        if (!['BUYER', 'SELLER', 'ADMIN', 'BANNED', 'AGENT', 'PENDING_AGENT'].includes(role)) {
             return res.status(400).json({ message: "Invalid role specified" });
         }
 
