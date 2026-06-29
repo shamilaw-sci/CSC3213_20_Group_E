@@ -353,7 +353,7 @@ const getPendingAgents = async (req, res) => {
             .from('users')
             .select(`
                 id, name, email, role, created_at,
-                agent_profiles (agency_name, license_number, phone_number, bio)
+                agent_profiles (agency_name, license_number, bio)
             `)
             .eq('role', 'PENDING_AGENT')
             .order('created_at', { ascending: false });

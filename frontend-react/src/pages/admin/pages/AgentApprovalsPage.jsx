@@ -96,11 +96,6 @@ const AgentApprovalsPage = () => {
                                             <span className="font-medium">License:</span> 
                                             <span>{profile.license_number || 'N/A'}</span>
                                         </div>
-                                        <div className="flex items-center text-gray-700 gap-2">
-                                            <Phone className="w-4 h-4 text-gray-400" />
-                                            <span className="font-medium">Phone:</span> 
-                                            <span>{profile.phone_number || 'N/A'}</span>
-                                        </div>
                                     </div>
                                     
                                     {profile.bio && (
