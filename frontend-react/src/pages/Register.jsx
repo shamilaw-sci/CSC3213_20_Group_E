@@ -17,6 +17,8 @@ const Register = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [role, setRole] = useState('BUYER'); // Default role
+    const [agencyName, setAgencyName] = useState('');
+    const [licenseNumber, setLicenseNumber] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -36,7 +38,9 @@ const Register = () => {
                 name: name,
                 email: email, 
                 password: password,
-                role: role
+                role: role,
+                agency_name: agencyName,
+                license_number: licenseNumber
             });
 
             // Persist authentication token and user data to local storage on successful registration
@@ -100,9 +104,16 @@ const Register = () => {
                                 <button
                                     type="button"
                                     onClick={() => setRole('SELLER')}
-                                    className={`flex-1 py-3 px-4 border rounded-lg font-bold text-sm transition ${role === 'SELLER' ? 'bg-green-50 border-green-500 text-green-700' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'}`}
+                                    className={`flex-1 py-3 px-2 border rounded-lg font-bold text-xs sm:text-sm transition ${role === 'SELLER' ? 'bg-green-50 border-green-500 text-green-700' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'}`}
                                 >
                                     Sell Property
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setRole('AGENT')}
+                                    className={`flex-1 py-3 px-2 border rounded-lg font-bold text-xs sm:text-sm transition ${role === 'AGENT' ? 'bg-purple-50 border-purple-500 text-purple-700' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'}`}
+                                >
+                                    I'm an Agent
                                 </button>
                             </div>
                         </div>
@@ -132,6 +143,33 @@ const Register = () => {
                                 placeholder="name@example.com"
                             />
                         </div>
+
+                        {/* Extra fields for Agent */}
+                        {role === 'AGENT' && (
+                            <div className="bg-purple-50 p-4 rounded-lg mb-4 border border-purple-100">
+                                <h3 className="text-purple-800 font-semibold mb-3 text-sm">Agent Details</h3>
+                                <div className="mb-3">
+                                    <label className="block text-gray-700 text-xs font-medium mb-1">Agency Name (Optional)</label>
+                                    <input
+                                        type="text"
+                                        value={agencyName}
+                                        onChange={(e) => setAgencyName(e.target.value)}
+                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition"
+                                        placeholder="e.g. Zillow Premier, Independent"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-gray-700 text-xs font-medium mb-1">License Number (Optional)</label>
+                                    <input
+                                        type="text"
+                                        value={licenseNumber}
+                                        onChange={(e) => setLicenseNumber(e.target.value)}
+                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition"
+                                        placeholder="e.g. RE-123456"
+                                    />
+                                </div>
+                            </div>
+                        )}
 
                         {/* Password Input */}
                         <div className="mb-6">
