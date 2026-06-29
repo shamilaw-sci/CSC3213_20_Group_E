@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { getAgents, getAgentProfile, postReview } = require('../controllers/agentController');
-const { verifyToken } = require('../middleware/authMiddleware');
+const { protect } = require('../middleware/authMiddleware');
 
 // Get all approved agents
 router.get('/', getAgents);
@@ -10,6 +10,6 @@ router.get('/', getAgents);
 router.get('/:id', getAgentProfile);
 
 // Post a review for an agent (must be logged in)
-router.post('/:id/reviews', verifyToken, postReview);
+router.post('/:id/reviews', protect, postReview);
 
 module.exports = router;
