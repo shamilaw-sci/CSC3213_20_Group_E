@@ -7,6 +7,7 @@ import { AdminAuthProvider } from './pages/admin/context/AdminAuthContext';
 
 // Components that should load immediately
 import FloatingAIChat from './components/FloatingAIChat';
+import ProtectedRoute from './components/ProtectedRoute';
 import AdminProtectedRoute from './pages/admin/components/AdminProtectedRoute';
 import AdminLayout from './pages/admin/components/AdminLayout';
 
