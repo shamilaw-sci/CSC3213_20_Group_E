@@ -7,7 +7,8 @@ const AgentApprovalsPage = () => {
     const [agents, setAgents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const { token } = useAdminAuth();
+    const { isAuthenticated } = useAdminAuth();
+    const token = localStorage.getItem("admin_token");
 
     const fetchPendingAgents = async () => {
         try {
@@ -74,7 +75,7 @@ const AgentApprovalsPage = () => {
                     {agents.map(agent => {
                         const profile = agent.agent_profiles && agent.agent_profiles[0] ? agent.agent_profiles[0] : {};
                         return (
-                            <div key={agent.id} className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition overflow-hidden flex flex-col">
+                            <div key={agent.id || agent._id} className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition overflow-hidden flex flex-col">
                                 <div className="p-5 border-b border-gray-100 flex-1">
                                     <div className="flex justify-between items-start mb-4">
                                         <div>

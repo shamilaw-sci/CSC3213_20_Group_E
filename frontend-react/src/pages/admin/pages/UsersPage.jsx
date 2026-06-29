@@ -189,7 +189,7 @@ const UsersPage = () => {
                 </tr>
               )}
               {filtered.map((u) => (
-                <tr key={u._id}>
+                <tr key={u.id || u._id}>
                   <td>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                       <div style={{
