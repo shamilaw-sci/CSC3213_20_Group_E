@@ -46,12 +46,32 @@ const AgentDashboard = () => {
 
     // Redirect if not an agent
     useEffect(() => {
-        if (user && user.role !== 'AGENT') {
+        if (user && user.role !== 'AGENT' && user.role !== 'PENDING_AGENT') {
             navigate('/');
         }
     }, [user, navigate]);
 
     if (!user) return null;
+
+    if (user.role === 'PENDING_AGENT') {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+                <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center border border-gray-100">
+                    <div className="w-20 h-20 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <CheckCircle className="w-10 h-10" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Account Under Review</h2>
+                    <p className="text-gray-600 mb-6">
+                        Thank you for registering as an Agent! Your profile is currently being reviewed by our administrators. 
+                        You will gain access to the CRM dashboard once approved.
+                    </p>
+                    <button onClick={() => navigate('/')} className="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 w-full">
+                        Return to Homepage
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row font-sans">
