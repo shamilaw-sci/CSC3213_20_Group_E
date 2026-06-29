@@ -104,7 +104,7 @@ const UsersPage = () => {
   };
 
   const filtered = users.filter((u) => {
-    const matchRole = roleFilter === "all" || u.role.toLowerCase() === roleFilter;
+    const matchRole = roleFilter === "all" || (u.role && u.role.toLowerCase() === roleFilter);
     const matchStatus = statusFilter === "all" || u.status.toLowerCase() === statusFilter;
     const matchSearch = !search ||
       u.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -136,6 +136,9 @@ const UsersPage = () => {
           <option value="all">All Roles</option>
           <option value="buyer">Buyer</option>
           <option value="seller">Seller</option>
+          <option value="agent">Agent</option>
+          <option value="pending_agent">Pending Agent</option>
+          <option value="admin">Admin</option>
         </select>
         <select className="admin-filter-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
           <option value="all">All Status</option>
@@ -152,7 +155,7 @@ const UsersPage = () => {
         <div className="admin-stat-card">
           <div className="admin-stat-label">Sellers</div>
           <div className="admin-stat-value" style={{ color: "var(--admin-gold)" }}>
-            {users.filter((u) => u.role === "Seller").length}
+            {users.filter((u) => u.role?.toUpperCase() === "SELLER").length}
           </div>
         </div>
         <div className="admin-stat-card">

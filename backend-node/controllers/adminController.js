@@ -335,12 +335,28 @@ const getUsers = async (req, res) => {
     try {
         const { data: users, error } = await supabase
             .from('users')
-            .select('id, name, email, role, created_at')
-            .limit(50);
+            .select(`
+                id, name, email, role, created_at,
+                properties(id)
+            `)
+            .limit(50)
+            .order('created_at', { ascending: false });
 
         if (error) throw error;
 
-        res.status(200).json({ users });
+        // Map to what frontend expects
+        const mappedUsers = users.map(u => ({
+            id: u.id,
+            name: u.name,
+            email: u.email,
+            role: u.role,
+            joinDate: new Date(u.created_at).toISOString().split('T')[0],
+            listings: u.properties ? u.properties.length : 0,
+            location: 'N/A', // Assuming we don't have user location in DB yet
+            status: u.role === 'BANNED' ? 'Banned' : 'Active'
+        }));
+
+        res.status(200).json({ users: mappedUsers });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
