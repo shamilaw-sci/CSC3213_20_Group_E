@@ -70,10 +70,10 @@ const UsersPage = () => {
   }, [roleFilter]);
 
   const handleBan = async (reason) => {
-    const id = banTarget._id;
+    const id = banTarget.id || banTarget._id;
     try {
       await banUser(id, reason);
-      setUsers((p) => p.map((u) => (u._id === id ? { ...u, status: "Banned" } : u)));
+      setUsers((p) => p.map((u) => ((u.id || u._id) === id ? { ...u, status: "Banned" } : u)));
       showToast(`${banTarget.name} has been banned.`);
     } catch {
       showToast("Failed to ban user.", "error");
@@ -84,8 +84,9 @@ const UsersPage = () => {
 
   const handleUnban = async (user) => {
     try {
-      await unbanUser(user._id);
-      setUsers((p) => p.map((u) => (u._id === user._id ? { ...u, status: "Active" } : u)));
+      const id = user.id || user._id;
+      await unbanUser(id);
+      setUsers((p) => p.map((u) => ((u.id || u._id) === id ? { ...u, status: "Active" } : u)));
       showToast(`${user.name} has been unbanned.`);
     } catch {
       showToast("Failed to unban user.", "error");
@@ -95,7 +96,7 @@ const UsersPage = () => {
   const handleRoleChange = async (userId, newRole) => {
     try {
       await updateUserRole(userId, newRole);
-      setUsers((p) => p.map((u) => (u._id === userId ? { ...u, role: newRole } : u)));
+      setUsers((p) => p.map((u) => ((u.id || u._id) === userId ? { ...u, role: newRole } : u)));
       showToast("Role updated.");
     } catch {
       showToast("Failed to update role.", "error");
@@ -210,12 +211,15 @@ const UsersPage = () => {
                   <td>
                     <select
                       className="admin-filter-select"
-                      value={u.role}
-                      onChange={(e) => handleRoleChange(u._id, e.target.value)}
+                      value={u.role?.toUpperCase()}
+                      onChange={(e) => handleRoleChange(u.id || u._id, e.target.value)}
                       style={{ padding: "4px 8px", fontSize: "0.8rem" }}
                     >
-                      <option>Buyer</option>
-                      <option>Seller</option>
+                      <option value="BUYER">Buyer</option>
+                      <option value="SELLER">Seller</option>
+                      <option value="AGENT">Agent</option>
+                      <option value="PENDING_AGENT">Pending Agent</option>
+                      <option value="ADMIN">Admin</option>
                     </select>
                   </td>
                   <td style={{ fontSize: "0.875rem" }}>{u.location}</td>
