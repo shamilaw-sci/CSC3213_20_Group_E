@@ -73,7 +73,9 @@ const AgentApprovalsPage = () => {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {agents.map(agent => {
-                        const profile = agent.agent_profiles && agent.agent_profiles[0] ? agent.agent_profiles[0] : {};
+                        const profile = Array.isArray(agent.agent_profiles) 
+                            ? (agent.agent_profiles[0] || {}) 
+                            : (agent.agent_profiles || {});
                         return (
                             <div key={agent.id || agent._id} className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition overflow-hidden flex flex-col">
                                 <div className="p-5 border-b border-gray-100 flex-1">
