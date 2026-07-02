@@ -331,7 +331,7 @@ const AddProperty = () => {
                         )}
 
                         <div className="mb-8 border-b pb-8">
-                            <label htmlFor="303i42" htmlFor="h88x5b" className="block text-gray-900 text-lg font-bold mb-4">What are you listing?</label>
+                            <label htmlFor="a11y" className="block text-gray-900 text-lg font-bold mb-4">What are you listing?</label>
                             <div className="flex space-x-4">
                                 <div onClick={() => handleTypeChange('House')} className={`flex-1 flex flex-col items-center justify-center p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 ${formData.type === 'House' ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-sm' : 'border-gray-200 hover:border-blue-300 text-gray-600 hover:bg-gray-50'}`}>
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>

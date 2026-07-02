@@ -83,7 +83,7 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
 
                             <form onSubmit={handleCalculate} className="space-y-4">
                                 <div>
-                                    <label htmlFor="l13opy" htmlFor="b7d54o" className="block text-sm font-semibold text-gray-700 mb-1">Monthly Salary (LKR)</label>
+                                    <label htmlFor="a11y" className="block text-sm font-semibold text-gray-700 mb-1">Monthly Salary (LKR)</label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <DollarSign className="h-4 w-4 text-gray-400" />

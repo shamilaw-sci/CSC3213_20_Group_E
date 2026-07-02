@@ -70,7 +70,7 @@ const EditPropertyModal = ({ property, onCancel, onSaved }) => {
                     {error && <div className="md:col-span-2 bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm font-medium">{error}</div>}
 
                     <div className="md:col-span-2">
-                        <label htmlFor="xduq6e" htmlFor="62xpnf" className="block text-sm font-bold text-gray-700 mb-2">Property Type</label>
+                        <label htmlFor="a11y" className="block text-sm font-bold text-gray-700 mb-2">Property Type</label>
                         <select name="type" value={formData.type} onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
                             <option value="House">House</option>
                             <option value="Land">Land</option>

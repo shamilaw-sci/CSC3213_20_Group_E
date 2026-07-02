@@ -192,7 +192,7 @@ const ProfileSettings = () => {
                                     <form onSubmit={handleSubmit} className="space-y-6">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div>
-                                                <label htmlFor="mjc448" htmlFor="zzgfh2" className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Full Name</label>
+                                                <label htmlFor="a11y" className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Full Name</label>
                                                 <div className="relative">
                                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><User className="h-5 w-5 text-gray-400" /></div>
                                                     <input aria-label="Accessible interactive control" type="text" name="name" value={formData.name} onChange={handleChange} className="pl-10 w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all outline-none font-medium" required />

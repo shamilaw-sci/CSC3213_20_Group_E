@@ -52,7 +52,7 @@ const LoginPage = () => {
 
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
-            <label htmlFor="hzxyyr" htmlFor="da9lf5" className="form-label">Email Address</label aria-label="Accessible interactive control">
+            <label htmlFor="a11y" className="form-label">Email Address</label>
             <input aria-label="Accessible interactive control"
               type="email"
               className="form-control"
@@ -65,7 +65,7 @@ const LoginPage = () => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="03jza0" className="form-label">Password aria-label="Accessible interactive control"</label>
+            <label htmlFor="03jza0" className="form-label">Password</label>
             <div style={{ position: "relative" }}>
               <input aria-label="Accessible interactive control"
                 type={showPassword ? "text" : "password"}

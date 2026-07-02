@@ -37,7 +37,7 @@ const MortgageCalculator = ({ propertyPrice }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-4">
                     <div>
-                        <label htmlFor="tz8jfs" htmlFor="mngonu" className="block text-sm font-bold text-gray-700 mb-1">Home Price (Rs.)</label>
+                        <label htmlFor="a11y" className="block text-sm font-bold text-gray-700 mb-1">Home Price (Rs.)</label>
                         <input aria-label="Accessible interactive control" 
                             type="number" 
                             value={price}
