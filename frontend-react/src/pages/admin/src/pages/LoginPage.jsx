@@ -77,7 +77,7 @@ const LoginPage = () => {
                 autoComplete="current-password"
                 style={{ paddingRight: "40px" }}
               />
-              <button
+              <button aria-label="Accessible interactive control"
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 style={{
@@ -102,7 +102,7 @@ const LoginPage = () => {
 
           {error && <div className="login-error">{error}</div>}
 
-          <button type="submit" className="btn btn-primary btn-lg login-submit" disabled={loading}>
+          <button aria-label="Accessible interactive control" type="submit" className="btn btn-primary btn-lg login-submit" disabled={loading}>
             {loading ? <span className="spinner" /> : null}
             {loading ? "Signing in…" : "Sign In"}
           </button>

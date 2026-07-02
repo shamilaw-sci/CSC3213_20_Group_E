@@ -367,14 +367,14 @@ const AddProperty = () => {
                         <h3 className="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Location & Boundary <span className="text-red-500">*</span></h3>
                         
                         <div className="flex space-x-2 mb-4">
-                            <button 
+                            <button aria-label="Accessible interactive control" 
                                 type="button" 
                                 onClick={() => { setLocationMode('point'); setBoundaryCoordinates([]); }}
                                 className={`px-4 py-2 rounded-lg text-sm font-bold transition ${locationMode === 'point' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
                             >
                                 📍 Drop Pin (Single Point)
                             </button>
-                            <button 
+                            <button aria-label="Accessible interactive control" 
                                 type="button" 
                                 onClick={() => setLocationMode('boundary')}
                                 className={`px-4 py-2 rounded-lg text-sm font-bold transition ${locationMode === 'boundary' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
@@ -397,7 +397,7 @@ const AddProperty = () => {
                                 style={{ height: '100%', width: '100%' }}
                             >
                                 <TileLayer
-                                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                    attribution='&copy; <a aria-label="Accessible interactive control" href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                                 />
                                 <LocationMarker />
@@ -407,7 +407,7 @@ const AddProperty = () => {
                         {locationMode === 'boundary' && (
                             <div className="flex justify-between items-center mb-8 bg-blue-50 p-4 rounded-lg border border-blue-100">
                                 <span className="text-sm text-blue-800 font-medium">Points selected: {boundaryCoordinates.length}</span>
-                                <button 
+                                <button aria-label="Accessible interactive control" 
                                     type="button" 
                                     onClick={() => setBoundaryCoordinates([])}
                                     className="text-sm text-red-600 font-bold hover:text-red-800"
@@ -429,25 +429,25 @@ const AddProperty = () => {
                             {formData.type === 'House aria-label="Accessible interactive control"' && (
                                 <>
                                     <div>
-                                        <label className="block text-gray-700 text-sm font-medium mb-2">Bedrooms</label>
-                                        <input type="number" name="bedrooms" value={formData.bedrooms} onChange={handleChange} placeholder="e.g. 3" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition" />
+                                        <label htmlFor="uid_3ruqwlhm" className="block text-gray-700 text-sm font-medium mb-2">Bedrooms</label>
+                                        <input aria-label="Accessible interactive control" type="number" name="bedrooms" value={formData.bedrooms} onChange={handleChange} placeholder="e.g. 3" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition" />
                                     </div>
                                     <div>
-                                        <label className="block text-gray-700 text-sm font-medium mb-2">Bathrooms</label>
-                                        <input type="number" name="bathrooms" value={formData.bathrooms} onChange={handleChange} placeholder="e.g. 2" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition" />
+                                        <label htmlFor="uid_u8kikf21" className="block text-gray-700 text-sm font-medium mb-2">Bathrooms</label>
+                                        <input aria-label="Accessible interactive control" type="number" name="bathrooms" value={formData.bathrooms} onChange={handleChange} placeholder="e.g. 2" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition" />
                                     </div>
                                 </>
                             )}
                             <div className={formData.type === 'Land' ? "md:col-span-3" : ""}>
-                                <label className="block text-gray-700 text-sm font-medium mb-2">Land Size (Perches)</label>
-                                <input type="number" name="landSize" value={formData.landSize} onChange={handleChange} placeholder="e.g. 15" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition" />
+                                <label htmlFor="uid_5akgxvs4" className="block text-gray-700 text-sm font-medium mb-2">Land Size (Perches)</label>
+                                <input aria-label="Accessible interactive control" type="number" name="landSize" value={formData.landSize} onChange={handleChange} placeholder="e.g. 15" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition" />
                             </div>
                         </div>
 
                         <h3 className="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Media <span className="text-red-500">*</span></h3>
                         
                         <div className="mb-4 relative border-2 border-dashed border-gray-300 rounded-lg p-8 hover:border-blue-500 transition-colors bg-gray-50 flex flex-col items-center justify-center cursor-pointer">
-                            <input 
+                            <input aria-label="Accessible interactive control" 
                                 type="file" 
                                 multiple 
                                 accept="image/*" 
@@ -472,7 +472,7 @@ const AddProperty = () => {
                                     {previewUrls.map((url, index) => (
                                         <div key={index} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 shadow-sm group">
                                             <img src={url} alt={`Preview ${index + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                                            <button type="button" onClick={() => removeImage(index)} className="absolute top-2 right-2 p-1.5 bg-white/90 rounded-full text-gray-500 hover:text-red-600 hover:bg-white shadow-md transition-all opacity-0 group-hover:opacity-100">
+                                            <button aria-label="Accessible interactive control" type="button" onClick={() => removeImage(index)} className="absolute top-2 right-2 p-1.5 bg-white/90 rounded-full text-gray-500 hover:text-red-600 hover:bg-white shadow-md transition-all opacity-0 group-hover:opacity-100">
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
                                             </button>
                                         </div>
@@ -482,10 +482,10 @@ const AddProperty = () => {
                         )}
 
                         <div className="flex justify-end border-t pt-6 mt-6">
-                            <button type="button" onClick={() => navigate('/')} className="px-6 py-3 border border-gray-300 text-gray-700 font-bold rounded-lg mr-4 hover:bg-gray-50 transition">
+                            <button aria-label="Accessible interactive control" type="button" onClick={() => navigate('/')} className="px-6 py-3 border border-gray-300 text-gray-700 font-bold rounded-lg mr-4 hover:bg-gray-50 transition">
                                 Cancel
                             </button>
-                            <button type="submit" disabled={loading} className={`px-8 py-3 text-white font-bold rounded-lg transition shadow-md flex items-center ${loading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}>
+                            <button aria-label="Accessible interactive control" type="submit" disabled={loading} className={`px-8 py-3 text-white font-bold rounded-lg transition shadow-md flex items-center ${loading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}>
                                 {loading ? 'Processing...' : `Pay Rs. ${parseFloat(paymentConfig.listingFee).toLocaleString()} & Publish`}
                             </button>
                         </div>

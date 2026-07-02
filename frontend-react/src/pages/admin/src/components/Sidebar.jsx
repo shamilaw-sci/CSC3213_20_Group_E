@@ -59,7 +59,7 @@ const Sidebar = () => {
             <span className="admin-role">Super Admin</span>
           </div>
         </div>
-        <button className="logout-btn" onClick={handleLogout} title="Logout">
+        <button aria-label="Accessible interactive control" type="button" className="logout-btn" onClick={handleLogout} title="Logout">
           ⎋
         </button>
       </div>

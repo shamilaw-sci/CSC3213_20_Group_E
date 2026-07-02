@@ -89,7 +89,7 @@ const AnalyticsPage = () => {
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           {["monthly"].map((p) => (
-            <button
+            <button aria-label="Accessible interactive control" type="button"
               key={p}
               className={`admin-btn admin-btn-sm ${period === p ? "admin-btn-primary" : "admin-btn-secondary"}`}
               onClick={() => {

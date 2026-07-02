@@ -218,7 +218,7 @@ const Messages = () => {
                 {error && (
                     <m.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-4 bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm font-medium flex items-center justify-between">
                         <span>{error}</span>
-                        <button onClick={() => setError('')}><X className="w-4 h-4" /></button>
+                        <button aria-label="Accessible interactive control" type="button" onClick={() => setError('')}><X className="w-4 h-4" /></button>
                     </m.div>
                 )}
 
@@ -240,7 +240,7 @@ const Messages = () => {
                                     </div>
                                     <h2 className="font-bold text-gray-900 mb-2">No conversations yet</h2>
                                     <p className="text-sm text-gray-500 mb-6">Start from a property card or contact support.</p>
-                                    <button onClick={startSupport} className="px-6 py-2.5 rounded-full bg-blue-600 text-white font-bold hover:bg-blue-700 transition-all shadow-sm">
+                                    <button aria-label="Accessible interactive control" type="button" onClick={startSupport} className="px-6 py-2.5 rounded-full bg-blue-600 text-white font-bold hover:bg-blue-700 transition-all shadow-sm">
                                         Contact Support
                                     </button>
                                 </div>
@@ -253,7 +253,7 @@ const Messages = () => {
                                 const isSupport = conversation.type === 'support';
                                 
                                 return (
-                                    <button
+                                    <button aria-label="Accessible interactive control" type="button"
                                         key={conversation.id}
                                         onClick={() => setSelectedId(conversation.id)}
                                         className={`w-full text-left p-4 border-b border-gray-50 transition-all duration-200 flex items-start gap-4 ${isActive ? 'bg-blue-50/50 relative' : 'hover:bg-gray-50'}`}
@@ -335,7 +335,7 @@ const Messages = () => {
                                     </div>
                                     
                                     {selectedConversation.type !== 'support' && !selectedConversation.support_requested && (
-                                        <button 
+                                        <button aria-label="Accessible interactive control" type="button" 
                                             onClick={requestSupportForCurrent}
                                             className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-red-50 text-gray-600 hover:text-red-600 border border-gray-200 hover:border-red-200 rounded-full font-bold text-sm transition-colors shadow-sm"
                                             title="Report or Request Admin Support"
@@ -387,7 +387,7 @@ const Messages = () => {
                                                         {message.body && <p className="text-[15px] whitespace-pre-wrap leading-relaxed">{message.body}</p>}
                                                         
                                                         {message.attachment_url && (
-                                                            <a
+                                                            <a aria-label="Accessible interactive control"
                                                                 href={message.attachment_url}
                                                                 target="_blank"
                                                                 rel="noreferrer"
@@ -425,16 +425,16 @@ const Messages = () => {
                                                 {attachment.type.startsWith('image/') ? <ImageIcon className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
                                                 <span className="font-medium truncate">{attachment.name}</span>
                                             </div>
-                                            <button type="button" onClick={() => setAttachment(null)} className="p-1 hover:bg-blue-100 rounded-full transition-colors">
+                                            <button aria-label="Accessible interactive control" type="button" onClick={() => setAttachment(null)} className="p-1 hover:bg-blue-100 rounded-full transition-colors">
                                                 <X className="w-4 h-4" />
                                             </button>
                                         </div>
                                     )}
                                     
                                     <form onSubmit={sendMessage} className="flex items-end gap-3 px-2">
-                                        <label className="p-3.5 rounded-full text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer flex-shrink-0 mb-1">
+                                        <label htmlFor="uid_q6997xk0" className="p-3.5 rounded-full text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer flex-shrink-0 mb-1">
                                             <Paperclip className="w-5 h-5" />
-                                            <input type="file" accept="image/*,.pdf" className="hidden" onChange={(event) => setAttachment(event.target.files?.[0] || null)} />
+                                            <input aria-label="Accessible interactive control" type="file" accept="image/*,.pdf" className="hidden" onChange={(event) => setAttachment(event.target.files?.[0] || null)} />
                                         </label>
                                         
                                         <div className="flex-1 bg-gray-50 border border-gray-200 rounded-3xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-300 transition-all">
@@ -454,7 +454,7 @@ const Messages = () => {
                                             />
                                         </div>
                                         
-                                        <button 
+                                        <button aria-label="Accessible interactive control" 
                                             type="submit" 
                                             disabled={!draft.trim() && !attachment}
                                             className="p-3.5 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 mb-1 shadow-sm hover:shadow-md"

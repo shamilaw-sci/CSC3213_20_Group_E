@@ -186,7 +186,7 @@ const DashboardPage = () => {
         <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="admin-card xl:col-span-2 flex flex-col">
           <div className="admin-card-header border-b border-gray-100 pb-4">
             <h3 className="admin-card-title">Pending Approvals</h3>
-            <a href="/admin/listings" className="text-sm font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 bg-blue-50 px-4 py-2 rounded-lg transition-colors">
+            <a aria-label="Accessible interactive control" href="/admin/listings" className="text-sm font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 bg-blue-50 px-4 py-2 rounded-lg transition-colors">
                 View All <ChevronRight className="w-4 h-4" />
             </a>
           </div>

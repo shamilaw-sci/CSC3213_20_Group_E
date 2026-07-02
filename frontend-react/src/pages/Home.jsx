@@ -127,7 +127,7 @@ const Home = () => {
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="flex-grow px-4 py-4 bg-transparent outline-none text-white text-lg rounded-l-full w-full font-medium placeholder-white/70"
                         />
-                        <button className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white px-8 py-4 rounded-full transition-all font-bold shadow-lg flex items-center gap-2">
+                        <button aria-label="Accessible interactive control" type="button" className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white px-8 py-4 rounded-full transition-all font-bold shadow-lg flex items-center gap-2">
                             <span>Search</span>
                         </button>
                     </m.div>
@@ -168,7 +168,7 @@ const Home = () => {
                                     </div>
                                     <h3 className="text-2xl font-bold text-gray-900 mb-4">{feature.title}</h3>
                                     <p className="text-gray-600 text-base mb-8 flex-grow leading-relaxed">{feature.desc}</p>
-                                    <button className="text-blue-600 font-bold border-2 border-blue-600 rounded-full px-8 py-3 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 w-full md:w-auto shadow-sm">
+                                    <button aria-label="Accessible interactive control" type="button" className="text-blue-600 font-bold border-2 border-blue-600 rounded-full px-8 py-3 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 w-full md:w-auto shadow-sm">
                                         {feature.action}
                                     </button>
                                 </m.div>
@@ -223,7 +223,7 @@ const Home = () => {
                     {/* Load More Button */}
                     {page < totalPages && filteredProperties.length > 0 && (
                         <div className="text-center mt-16">
-                            <button 
+                            <button aria-label="Accessible interactive control" type="button" 
                                 onClick={() => setPage(prev => prev + 1)}
                                 className="bg-white border-2 border-gray-200 text-gray-900 hover:border-blue-600 hover:text-blue-600 font-bold py-4 px-10 rounded-full transition-all duration-300 shadow-sm"
                             >

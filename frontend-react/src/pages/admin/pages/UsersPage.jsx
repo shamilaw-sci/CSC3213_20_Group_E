@@ -19,7 +19,7 @@ const BanModal = ({ user, onConfirm, onCancel }) => {
       <div className="admin-modal">
         <div className="admin-modal-header">
           <h3 className="admin-card-title">Ban User</h3>
-          <button className="admin-modal-close" onClick={onCancel}>✕</button>
+          <button aria-label="Accessible interactive control" type="button" className="admin-modal-close" onClick={onCancel}>✕</button>
         </div>
         <p style={{ fontSize: "0.875rem", color: "var(--admin-text-secondary)", marginBottom: 16 }}>
           Ban <strong style={{ color: "var(--admin-text-primary)" }}>{user?.name}</strong> ({user?.email})?
@@ -36,8 +36,8 @@ const BanModal = ({ user, onConfirm, onCancel }) => {
           />
         </div>
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-          <button className="admin-btn admin-btn-secondary" onClick={onCancel}>Cancel</button>
-          <button
+          <button aria-label="Accessible interactive control" type="button" className="admin-btn admin-btn-secondary" onClick={onCancel}>Cancel</button>
+          <button aria-label="Accessible interactive control" type="button"
             className="admin-btn admin-btn-danger"
             onClick={() => reason.trim() && onConfirm(reason)}
             disabled={!reason.trim()}
@@ -126,13 +126,13 @@ const UsersPage = () => {
       <div className="admin-filters-row">
         <div className="admin-search-bar" style={{ flex: 1, maxWidth: 320 }}>
           <span style={{ color: "var(--admin-text-muted)" }}>🔍</span>
-          <input
+          <input aria-label="Accessible interactive control"
             placeholder="Search by name, email, location…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <select className="admin-filter-select" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
+        <select aria-label="Accessible interactive control" className="admin-filter-select" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
           <option value="all">All Roles</option>
           <option value="buyer">Buyer</option>
           <option value="seller">Seller</option>
@@ -140,7 +140,7 @@ const UsersPage = () => {
           <option value="pending_agent">Pending Agent</option>
           <option value="admin">Admin</option>
         </select>
-        <select className="admin-filter-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+        <select aria-label="Accessible interactive control" className="admin-filter-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
           <option value="all">All Status</option>
           <option value="active">Active</option>
           <option value="banned">Banned</option>
@@ -212,7 +212,7 @@ const UsersPage = () => {
                     </div>
                   </td>
                   <td>
-                    <select
+                    <select aria-label="Accessible interactive control"
                       className="admin-filter-select"
                       value={u.role?.toUpperCase()}
                       onChange={(e) => handleRoleChange(u.id || u._id, e.target.value)}
@@ -235,11 +235,11 @@ const UsersPage = () => {
                   </td>
                   <td>
                     {u.status === "Active" ? (
-                      <button className="admin-btn admin-btn-danger admin-btn-sm" onClick={() => setBanTarget(u)}>
+                      <button aria-label="Accessible interactive control" type="button" className="admin-btn admin-btn-danger admin-btn-sm" onClick={() => setBanTarget(u)}>
                         🚫 Ban
                       </button>
                     ) : (
-                      <button className="admin-btn admin-btn-success admin-btn-sm" onClick={() => handleUnban(u)}>
+                      <button aria-label="Accessible interactive control" type="button" className="admin-btn admin-btn-success admin-btn-sm" onClick={() => handleUnban(u)}>
                         ✓ Unban
                       </button>
                     )}

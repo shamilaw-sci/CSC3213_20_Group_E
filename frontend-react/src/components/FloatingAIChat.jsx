@@ -61,7 +61,7 @@ const FloatingAIChat = () => {
             if (match) {
                 const propertyId = match[1];
                 return (
-                    <button 
+                    <button aria-label="Accessible interactive control" type="button" 
                         key={index} 
                         onClick={() => navigate(`/property/${propertyId}`)}
                         className="inline-block mt-2 px-3 py-1 bg-blue-100 text-blue-700 hover:bg-blue-200 hover:text-blue-800 rounded-lg text-xs font-bold transition-colors cursor-pointer"
@@ -111,7 +111,7 @@ const FloatingAIChat = () => {
                                     <p className="text-[10px] text-blue-100 opacity-90">Powered by Gemini</p>
                                 </div>
                             </div>
-                            <button onClick={() => setIsOpen(false)} className="p-1 hover:bg-white/20 rounded-full transition-colors">
+                            <button aria-label="Accessible interactive control" type="button" onClick={() => setIsOpen(false)} className="p-1 hover:bg-white/20 rounded-full transition-colors">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
@@ -155,7 +155,7 @@ const FloatingAIChat = () => {
                                     placeholder="Ask about properties..."
                                     className="flex-1 bg-gray-100 dark:bg-gray-900 border-none rounded-full px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                 />
-                                <button
+                                <button aria-label="Accessible interactive control"
                                     type="submit"
                                     disabled={!input.trim() || loading}
                                     className="p-2.5 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"

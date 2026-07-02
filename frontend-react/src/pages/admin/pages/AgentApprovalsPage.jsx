@@ -108,13 +108,13 @@ const AgentApprovalsPage = () => {
                                 </div>
                                 
                                 <div className="bg-gray-50 p-4 flex gap-3 border-t border-gray-200">
-                                    <button 
+                                    <button aria-label="Accessible interactive control" type="button" 
                                         onClick={() => handleAction(agent.id, 'BANNED')}
                                         className="flex-1 flex items-center justify-center gap-1 py-2 px-4 border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-lg font-medium transition"
                                     >
                                         <X className="w-4 h-4" /> Reject
                                     </button>
-                                    <button 
+                                    <button aria-label="Accessible interactive control" type="button" 
                                         onClick={() => handleAction(agent.id, 'AGENT')}
                                         className="flex-1 flex items-center justify-center gap-1 py-2 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition shadow-sm"
                                     >

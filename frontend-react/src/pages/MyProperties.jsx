@@ -61,7 +61,7 @@ const EditPropertyModal = ({ property, onCancel, onSaved }) => {
                         <h2 className="text-xl font-extrabold text-gray-900">Edit Property</h2>
                         <p className="text-sm text-gray-500">Saving changes will send this back to admin review.</p>
                     </div>
-                    <button type="button" onClick={onCancel} className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 font-bold hover:bg-gray-100">
+                    <button aria-label="Accessible interactive control" type="button" onClick={onCancel} className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 font-bold hover:bg-gray-100">
                         Close
                     </button>
                 </div>
@@ -71,7 +71,7 @@ const EditPropertyModal = ({ property, onCancel, onSaved }) => {
 
                     <div className="md:col-span-2">
                         <label htmlFor="a11y" className="block text-sm font-bold text-gray-700 mb-2">Property Type</label>
-                        <select name="type" value={formData.type} onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                        <select aria-label="Accessible interactive control" name="type" value={formData.type} onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
                             <option value="House">House</option>
                             <option value="Land">Land</option>
                         </select>
@@ -118,10 +118,10 @@ const EditPropertyModal = ({ property, onCancel, onSaved }) => {
                 </div>
 
                 <div className="border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
-                    <button type="button" onClick={onCancel} className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-bold hover:bg-gray-100">
+                    <button aria-label="Accessible interactive control" type="button" onClick={onCancel} className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-bold hover:bg-gray-100">
                         Cancel
                     </button>
-                    <button type="submit" disabled={saving} className="px-5 py-2.5 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 disabled:bg-blue-300">
+                    <button aria-label="Accessible interactive control" type="submit" disabled={saving} className="px-5 py-2.5 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 disabled:bg-blue-300">
                         {saving ? 'Sending...' : 'Save & Send to Review'}
                     </button>
                 </div>
@@ -220,7 +220,7 @@ const MyProperties = () => {
                     <div className="bg-white border border-gray-200 rounded-lg p-10 text-center">
                         <h2 className="text-xl font-bold text-gray-900 mb-2">No submitted properties yet</h2>
                         <p className="text-gray-500 mb-5">Publish a property and it will appear here while admins review it.</p>
-                        <button onClick={() => navigate('/add-property')} className="px-5 py-2 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700">
+                        <button aria-label="Accessible interactive control" type="button" onClick={() => navigate('/add-property')} className="px-5 py-2 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700">
                             Add Property
                         </button>
                     </div>
@@ -260,7 +260,7 @@ const MyProperties = () => {
                                         </div>
                                     )}
                                     {status !== 'approved' && (
-                                        <button
+                                        <button aria-label="Accessible interactive control" type="button"
                                             onClick={() => setEditTarget(property)}
                                             className="mt-4 w-full px-4 py-2.5 rounded-lg border border-blue-600 text-blue-600 font-bold hover:bg-blue-50"
                                         >
@@ -276,7 +276,7 @@ const MyProperties = () => {
                 {/* Load More Button */}
                 {page < totalPages && properties.length > 0 && (
                     <div className="text-center mt-12 mb-8">
-                        <button 
+                        <button aria-label="Accessible interactive control" type="button" 
                             onClick={() => setPage(prev => prev + 1)}
                             className="bg-white border border-blue-600 text-blue-600 hover:bg-blue-50 font-bold py-3 px-8 rounded-lg transition duration-300"
                         >

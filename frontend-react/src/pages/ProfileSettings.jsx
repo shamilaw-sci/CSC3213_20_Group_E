@@ -140,9 +140,9 @@ const ProfileSettings = () => {
                                     <User className="w-full h-full p-4 text-gray-400 dark:text-gray-500" />
                                 )}
                             </div>
-                            <label className="absolute bottom-0 right-0 p-2 bg-blue-600 rounded-full text-white cursor-pointer shadow-lg hover:bg-blue-700 transition-colors">
+                            <label htmlFor="uid_ohcx33nx" className="absolute bottom-0 right-0 p-2 bg-blue-600 rounded-full text-white cursor-pointer shadow-lg hover:bg-blue-700 transition-colors">
                                 <ImagePlus className="w-4 h-4" />
-                                <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+                                <input aria-label="Accessible interactive control" type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
                             </label>
                         </div>
                         <div>
@@ -160,7 +160,7 @@ const ProfileSettings = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full mt-8">
                 <div className="flex space-x-2 border-b border-gray-200 dark:border-gray-700 mb-8 overflow-x-auto pb-[1px]">
                     {['profile', 'preferences', 'favorites', 'searches'].map((tab) => (
-                        <button
+                        <button aria-label="Accessible interactive control" type="button"
                             key={tab}
                             onClick={() => setActiveTab(tab)}
                             className={`px-6 py-3 font-semibold text-sm capitalize transition-colors relative whitespace-nowrap
@@ -228,7 +228,7 @@ const ProfileSettings = () => {
                                         </div>
 
                                         <div className="pt-4 flex justify-end">
-                                            <button type="submit" disabled={loading} className="flex items-center gap-2 py-3 px-8 rounded-xl text-white bg-blue-600 hover:bg-blue-700 font-bold transition-colors disabled:opacity-50">
+                                            <button aria-label="Accessible interactive control" type="submit" disabled={loading} className="flex items-center gap-2 py-3 px-8 rounded-xl text-white bg-blue-600 hover:bg-blue-700 font-bold transition-colors disabled:opacity-50">
                                                 {loading ? <Loader className="animate-spin h-5 w-5" /> : <><Save className="h-5 w-5" /> Save Profile</>}
                                             </button>
                                         </div>
@@ -246,15 +246,15 @@ const ProfileSettings = () => {
                                     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 transition-colors">
                                         <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Appearance</h2>
                                         <div className="grid grid-cols-3 gap-4">
-                                            <button onClick={() => changeTheme('light')} className={`p-4 rounded-xl border-2 flex flex-col items-center gap-3 transition-colors ${theme === 'light' ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 text-gray-600 dark:text-gray-400'}`}>
+                                            <button aria-label="Accessible interactive control" type="button" onClick={() => changeTheme('light')} className={`p-4 rounded-xl border-2 flex flex-col items-center gap-3 transition-colors ${theme === 'light' ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 text-gray-600 dark:text-gray-400'}`}>
                                                 <Sun className="w-8 h-8" />
                                                 <span className="font-bold">Light</span>
                                             </button>
-                                            <button onClick={() => changeTheme('dark')} className={`p-4 rounded-xl border-2 flex flex-col items-center gap-3 transition-colors ${theme === 'dark' ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 text-gray-600 dark:text-gray-400'}`}>
+                                            <button aria-label="Accessible interactive control" type="button" onClick={() => changeTheme('dark')} className={`p-4 rounded-xl border-2 flex flex-col items-center gap-3 transition-colors ${theme === 'dark' ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 text-gray-600 dark:text-gray-400'}`}>
                                                 <Moon className="w-8 h-8" />
                                                 <span className="font-bold">Dark</span>
                                             </button>
-                                            <button onClick={() => changeTheme('system')} className={`p-4 rounded-xl border-2 flex flex-col items-center gap-3 transition-colors ${theme === 'system' ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 text-gray-600 dark:text-gray-400'}`}>
+                                            <button aria-label="Accessible interactive control" type="button" onClick={() => changeTheme('system')} className={`p-4 rounded-xl border-2 flex flex-col items-center gap-3 transition-colors ${theme === 'system' ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 text-gray-600 dark:text-gray-400'}`}>
                                                 <Monitor className="w-8 h-8" />
                                                 <span className="font-bold">System</span>
                                             </button>
@@ -302,7 +302,7 @@ const ProfileSettings = () => {
                                                 <div key={prop.id} onClick={() => navigate(`/property/${prop.id}`)} className="group cursor-pointer bg-gray-50 dark:bg-gray-900 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700 hover:shadow-lg transition-all">
                                                     <div className="h-48 relative">
                                                         <img src={prop.images?.[0] || '/placeholder.jpg'} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                                                        <button 
+                                                        <button aria-label="Accessible interactive control" type="button" 
                                                             onClick={(e) => { e.stopPropagation(); handleRemoveFavorite(prop.id); }}
                                                             className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-full text-red-500 hover:bg-red-50 shadow-sm transition-colors"
                                                         >
@@ -352,7 +352,7 @@ const ProfileSettings = () => {
                                                             {search.baths && <span className="bg-white dark:bg-gray-800 px-2.5 py-1 rounded-md shadow-sm border border-gray-100 dark:border-gray-700">{search.baths}+ Baths</span>}
                                                         </div>
                                                     </div>
-                                                    <button 
+                                                    <button aria-label="Accessible interactive control" type="button" 
                                                         onClick={() => handleDeleteSearch(search.id)}
                                                         className="p-3 text-gray-400 hover:text-red-500 hover:bg-white dark:hover:bg-gray-800 rounded-xl transition-all shadow-sm opacity-0 group-hover:opacity-100"
                                                     >

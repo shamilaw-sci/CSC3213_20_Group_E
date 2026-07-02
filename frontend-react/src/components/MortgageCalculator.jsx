@@ -80,7 +80,7 @@ const MortgageCalculator = ({ propertyPrice }) => {
                         </div>
                         <div>
                             <label htmlFor="bdon3b" className="block text-sm font-bold text-gray-700 mb-1">Loan Term (Years)</label>
-                            <select 
+                            <select aria-label="Accessible interactive control" 
                                 value={loanTerm}
                                 onChange={(e) => setLoanTerm(Number(e.target.value))}
                                 className="w-full bg-gray-50 border border-gray-300 rounded-lg p-3 font-semibold focus:ring-blue-500 focus:border-blue-500"

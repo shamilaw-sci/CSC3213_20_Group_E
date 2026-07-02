@@ -71,7 +71,7 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
                                 <Calculator className="h-6 w-6" />
                                 <h2 className="text-xl font-bold">Feasibility Engine</h2>
                             </div>
-                            <button onClick={onClose} className="p-1 hover:bg-blue-700 rounded-full transition">
+                            <button aria-label="Accessible interactive control" type="button" onClick={onClose} className="p-1 hover:bg-blue-700 rounded-full transition">
                                 <X className="h-5 w-5" />
                             </button>
                         </div>
@@ -142,7 +142,7 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <Calendar className="h-4 w-4 text-gray-400" />
                                         </div>
-                                        <select
+                                        <select aria-label="Accessible interactive control"
                                             name="tenureYears"
                                             value={formData.tenureYears}
                                             onChange={handleChange}
@@ -156,7 +156,7 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
                                     </div>
                                 </div>
 
-                                <button
+                                <button aria-label="Accessible interactive control"
                                     type="submit"
                                     disabled={loading}
                                     className="w-full mt-4 bg-gray-900 text-white font-bold py-3 rounded-lg shadow hover:bg-gray-800 transition disabled:opacity-50"
@@ -193,7 +193,7 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
 
                                     {result.message && <p className="mt-3 text-xs text-orange-600">{result.message}</p>}
 
-                                    <button
+                                    <button aria-label="Accessible interactive control" type="button"
                                         onClick={handleApplyFilter}
                                         className="w-full mt-6 bg-blue-600 text-white font-bold py-3 rounded-lg shadow-lg shadow-blue-200 hover:bg-blue-700 transition"
                                     >

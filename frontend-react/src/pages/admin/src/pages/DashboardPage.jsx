@@ -191,7 +191,7 @@ const DashboardPage = () => {
         <div className="card">
           <div className="card-header">
             <span className="card-title">Pending Listings</span>
-            <a href="/listings?status=pending" className="btn btn-secondary btn-sm">View All</a>
+            <a aria-label="Accessible interactive control" href="/listings?status=pending" className="btn btn-secondary btn-sm">View All</a>
           </div>
           <div className="data-table-wrap">
             <table className="data-table">

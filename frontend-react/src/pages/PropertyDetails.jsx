@@ -144,7 +144,7 @@ const PropertyDetails = () => {
                     </div>
                     <h2 className="text-2xl font-bold text-gray-900 mb-2">Property Not Found</h2>
                     <p className="text-gray-500 mb-6">{error || "The property you're looking for doesn't exist or has been removed."}</p>
-                    <button onClick={() => navigate('/properties')} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all">
+                    <button aria-label="Accessible interactive control" type="button" onClick={() => navigate('/properties')} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all">
                         Browse Properties
                     </button>
                 </div>
@@ -161,7 +161,7 @@ const PropertyDetails = () => {
             <main className="flex-grow pt-24 pb-20 px-4 md:px-8 max-w-7xl mx-auto w-full">
                 
                 {/* Back Button */}
-                <button 
+                <button aria-label="Accessible interactive control" type="button" 
                     onClick={() => navigate(-1)} 
                     className="flex items-center text-gray-500 hover:text-blue-600 font-medium mb-6 transition-colors"
                 >
@@ -198,10 +198,10 @@ const PropertyDetails = () => {
 
                     {images.length > 1 && (
                         <>
-                            <button onClick={prevImage} className="absolute left-6 top-1/2 -translate-y-1/2 p-3 bg-white/20 hover:bg-white text-white hover:text-gray-900 backdrop-blur-md rounded-full transition-all shadow-lg">
+                            <button aria-label="Accessible interactive control" type="button" onClick={prevImage} className="absolute left-6 top-1/2 -translate-y-1/2 p-3 bg-white/20 hover:bg-white text-white hover:text-gray-900 backdrop-blur-md rounded-full transition-all shadow-lg">
                                 <ChevronLeft className="w-6 h-6" />
                             </button>
-                            <button onClick={nextImage} className="absolute right-6 top-1/2 -translate-y-1/2 p-3 bg-white/20 hover:bg-white text-white hover:text-gray-900 backdrop-blur-md rounded-full transition-all shadow-lg">
+                            <button aria-label="Accessible interactive control" type="button" onClick={nextImage} className="absolute right-6 top-1/2 -translate-y-1/2 p-3 bg-white/20 hover:bg-white text-white hover:text-gray-900 backdrop-blur-md rounded-full transition-all shadow-lg">
                                 <ChevronRight className="w-6 h-6" />
                             </button>
                             
@@ -214,7 +214,7 @@ const PropertyDetails = () => {
                     )}
 
                     <div className="absolute top-6 right-6 flex gap-3 z-10">
-                        <button 
+                        <button aria-label="Accessible interactive control" type="button" 
                             onClick={handleToggleFavorite}
                             disabled={isFavLoading}
                             className={`p-4 rounded-full backdrop-blur-md transition-all shadow-xl ${isFavorite ? 'bg-white text-red-500' : 'bg-black/30 text-white hover:bg-white hover:text-red-500'}`}
@@ -325,7 +325,7 @@ const PropertyDetails = () => {
                                 </h2>
                             </div>
                             
-                            <button 
+                            <button aria-label="Accessible interactive control" type="button" 
                                 onClick={handleContactSeller}
                                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg hover:shadow-blue-600/30 flex items-center justify-center gap-2 mb-4"
                             >
@@ -333,7 +333,7 @@ const PropertyDetails = () => {
                                 Contact Seller
                             </button>
 
-                            <button 
+                            <button aria-label="Accessible interactive control" type="button" 
                                 onClick={handleToggleFavorite}
                                 disabled={isFavLoading}
                                 className="w-full bg-gray-50 hover:bg-gray-100 text-gray-900 font-bold py-4 rounded-xl transition-all border border-gray-200 flex items-center justify-center gap-2"

@@ -50,9 +50,9 @@ const Footer = () => {
                         <h4 className="text-white font-bold mb-6 text-lg tracking-tight">Services</h4>
                         <ul className="space-y-3 text-sm">
                             <li><Link to="/add-property" className="hover:text-blue-400 transition-colors">Sell a Home</Link></li>
-                            <li><a href="#" className="hover:text-blue-400 transition-colors">Rentals</a></li>
-                            <li><a href="#" className="hover:text-blue-400 transition-colors">Mortgage Calculator</a></li>
-                            <li><a href="#" className="hover:text-blue-400 transition-colors">Real Estate Agents</a></li>
+                            <li><a aria-label="Accessible interactive control" href="#" className="hover:text-blue-400 transition-colors">Rentals</a></li>
+                            <li><a aria-label="Accessible interactive control" href="#" className="hover:text-blue-400 transition-colors">Mortgage Calculator</a></li>
+                            <li><a aria-label="Accessible interactive control" href="#" className="hover:text-blue-400 transition-colors">Real Estate Agents</a></li>
                         </ul>
                     </div>
 
@@ -79,9 +79,9 @@ const Footer = () => {
                 <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500">
                     <p>&copy; {new Date().getFullYear()} Thirasara Property Group. All rights reserved.</p>
                     <div className="flex gap-6">
-                        <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-                        <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-                        <a href="#" className="hover:text-white transition-colors">Cookie Settings</a>
+                        <a aria-label="Accessible interactive control" href="#" className="hover:text-white transition-colors">Privacy Policy</a>
+                        <a aria-label="Accessible interactive control" href="#" className="hover:text-white transition-colors">Terms of Service</a>
+                        <a aria-label="Accessible interactive control" href="#" className="hover:text-white transition-colors">Cookie Settings</a>
                     </div>
                 </div>
             </div>

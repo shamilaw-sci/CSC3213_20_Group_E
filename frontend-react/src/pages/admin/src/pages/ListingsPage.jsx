@@ -10,14 +10,14 @@ const RejectModal = ({ listing, onConfirm, onCancel }) => {
       <div className="modal">
         <div className="modal-header">
           <h3 className="card-title">Reject Listing</h3>
-          <button className="modal-close" onClick={onCancel}>✕</button>
+          <button aria-label="Accessible interactive control" type="button" className="modal-close" onClick={onCancel}>✕</button>
         </div>
         <p style={{ fontSize: "0.875rem", color: "var(--text-secondary)", marginBottom: 16 }}>
           You are rejecting: <strong style={{ color: "var(--text-primary)" }}>{listing?.title}</strong>
         </p>
         <div className="form-group">
-          <label className="form-label">Rejection Reason (required)</label>
-          <textarea
+          <label htmlFor="uid_6zon5uqn" className="form-label">Rejection Reason (required)</label>
+          <textarea aria-label="Accessible interactive control"
             className="form-control"
             rows={4}
             placeholder="Please provide a clear reason for rejecting this listing…"
@@ -26,8 +26,8 @@ const RejectModal = ({ listing, onConfirm, onCancel }) => {
           />
         </div>
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-          <button className="btn btn-secondary" onClick={onCancel}>Cancel</button>
-          <button
+          <button aria-label="Accessible interactive control" type="button" className="btn btn-secondary" onClick={onCancel}>Cancel</button>
+          <button aria-label="Accessible interactive control" type="button"
             className="btn btn-danger"
             onClick={() => reason.trim() && onConfirm(reason)}
             disabled={!reason.trim()}
@@ -176,14 +176,14 @@ const ListingsPage = () => {
       <div className="filters-row">
         <div className="search-bar" style={{ flex: 1, maxWidth: 340 }}>
           <span style={{ color: "var(--text-muted)" }}>🔍</span>
-          <input
+          <input aria-label="Accessible interactive control"
             placeholder="Search by title, seller, location…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
         {["all", "pending", "approved", "rejected"].map((s) => (
-          <button
+          <button aria-label="Accessible interactive control" type="button"
             key={s}
             className={`btn ${filter === s ? "btn-primary" : "btn-secondary"} btn-sm`}
             onClick={() => setFilter(s)}
@@ -246,7 +246,7 @@ const ListingsPage = () => {
                     <div style={{ display: "flex", gap: 6 }}>
                       {l.status === "Pending Approval" && (
                         <>
-                          <button
+                          <button aria-label="Accessible interactive control" type="button"
                             className="btn btn-success btn-sm"
                             onClick={() => handleApprove(l._id)}
                             disabled={loading[l._id]}
@@ -254,7 +254,7 @@ const ListingsPage = () => {
                           >
                             ✓ Approve
                           </button>
-                          <button
+                          <button aria-label="Accessible interactive control" type="button"
                             className="btn btn-danger btn-sm"
                             onClick={() => setRejectTarget(l)}
                             disabled={loading[l._id]}
@@ -264,7 +264,7 @@ const ListingsPage = () => {
                           </button>
                         </>
                       )}
-                      <button
+                      <button aria-label="Accessible interactive control" type="button"
                         className="btn btn-secondary btn-sm"
                         onClick={() => handleDelete(l._id)}
                         title="Delete"

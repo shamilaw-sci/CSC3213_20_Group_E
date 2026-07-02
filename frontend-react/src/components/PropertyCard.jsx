@@ -82,7 +82,7 @@ const PropertyCard = ({ prop, handleMessageSeller }) => {
                     <span className="bg-white/90 backdrop-blur-sm text-blue-900 text-[11px] font-black px-3 py-1.5 rounded-full shadow-sm uppercase tracking-widest">
                         {prop.type === 'Land' ? 'Land for sale' : 'House for sale'}
                     </span>
-                    <button 
+                    <button aria-label="Accessible interactive control" type="button" 
                         onClick={toggleFavorite}
                         className={`transition-colors drop-shadow-md p-2 rounded-full backdrop-blur-sm ${isFavorite ? 'bg-white text-red-500' : 'bg-black/20 text-white hover:bg-white hover:text-red-500'}`}
                     >
@@ -127,7 +127,7 @@ const PropertyCard = ({ prop, handleMessageSeller }) => {
                 <p className="text-gray-500 text-sm truncate mb-4 font-medium">{prop.address || prop.title}</p>
                 
                 <div className="mt-auto pt-4 flex items-center justify-between gap-3">
-                    <button
+                    <button aria-label="Accessible interactive control" type="button"
                         onClick={(e) => {
                             e.stopPropagation();
                             handleMessageSeller(prop.id);

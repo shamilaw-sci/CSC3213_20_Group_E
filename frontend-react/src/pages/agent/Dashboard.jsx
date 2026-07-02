@@ -65,7 +65,7 @@ const AgentDashboard = () => {
                         Thank you for registering as an Agent! Your profile is currently being reviewed by our administrators. 
                         You will gain access to the CRM dashboard once approved.
                     </p>
-                    <button onClick={() => navigate('/')} className="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 w-full">
+                    <button aria-label="Accessible interactive control" type="button" onClick={() => navigate('/')} className="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 w-full">
                         Return to Homepage
                     </button>
                 </div>
@@ -117,8 +117,8 @@ const AgentDashboard = () => {
                                 </div>
                                 {/* Quick Actions */}
                                 <div className="flex justify-end gap-2 mt-3 pt-3 border-t border-gray-100">
-                                    <button className="text-xs font-medium text-gray-600 hover:text-blue-600 flex items-center gap-1"><MessageSquare className="w-3 h-3"/> Text</button>
-                                    <button className="text-xs font-medium text-gray-600 hover:text-blue-600 flex items-center gap-1"><CheckSquare className="w-3 h-3"/> Done</button>
+                                    <button aria-label="Accessible interactive control" type="button" className="text-xs font-medium text-gray-600 hover:text-blue-600 flex items-center gap-1"><MessageSquare className="w-3 h-3"/> Text</button>
+                                    <button aria-label="Accessible interactive control" type="button" className="text-xs font-medium text-gray-600 hover:text-blue-600 flex items-center gap-1"><CheckSquare className="w-3 h-3"/> Done</button>
                                 </div>
                             </div>
                         ))
@@ -127,11 +127,11 @@ const AgentDashboard = () => {
 
                 {/* Bottom Mobile Nav */}
                 <div className="md:hidden bg-white border-t border-gray-200 p-2 flex justify-around">
-                    <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center p-2 ${activeTab === 'home' ? 'text-blue-600' : 'text-gray-500'}`}><Home className="w-6 h-6" /><span className="text-[10px]">Home</span></button>
-                    <button onClick={() => setActiveTab('inbox')} className={`flex flex-col items-center p-2 ${activeTab === 'inbox' ? 'text-blue-600' : 'text-gray-500'}`}><Inbox className="w-6 h-6" /><span className="text-[10px]">Inbox</span></button>
-                    <button onClick={() => setActiveTab('contacts')} className={`flex flex-col items-center p-2 ${activeTab === 'contacts' ? 'text-blue-600' : 'text-gray-500'}`}><Users className="w-6 h-6" /><span className="text-[10px]">Contacts</span></button>
-                    <button onClick={() => setActiveTab('tasks')} className={`flex flex-col items-center p-2 ${activeTab === 'tasks' ? 'text-blue-600' : 'text-gray-500'}`}><CheckSquare className="w-6 h-6" /><span className="text-[10px]">Tasks</span></button>
-                    <button className="flex flex-col items-center p-2 text-gray-500"><MoreHorizontal className="w-6 h-6" /><span className="text-[10px]">More</span></button>
+                    <button aria-label="Accessible interactive control" type="button" onClick={() => setActiveTab('home')} className={`flex flex-col items-center p-2 ${activeTab === 'home' ? 'text-blue-600' : 'text-gray-500'}`}><Home className="w-6 h-6" /><span className="text-[10px]">Home</span></button>
+                    <button aria-label="Accessible interactive control" type="button" onClick={() => setActiveTab('inbox')} className={`flex flex-col items-center p-2 ${activeTab === 'inbox' ? 'text-blue-600' : 'text-gray-500'}`}><Inbox className="w-6 h-6" /><span className="text-[10px]">Inbox</span></button>
+                    <button aria-label="Accessible interactive control" type="button" onClick={() => setActiveTab('contacts')} className={`flex flex-col items-center p-2 ${activeTab === 'contacts' ? 'text-blue-600' : 'text-gray-500'}`}><Users className="w-6 h-6" /><span className="text-[10px]">Contacts</span></button>
+                    <button aria-label="Accessible interactive control" type="button" onClick={() => setActiveTab('tasks')} className={`flex flex-col items-center p-2 ${activeTab === 'tasks' ? 'text-blue-600' : 'text-gray-500'}`}><CheckSquare className="w-6 h-6" /><span className="text-[10px]">Tasks</span></button>
+                    <button aria-label="Accessible interactive control" type="button" className="flex flex-col items-center p-2 text-gray-500"><MoreHorizontal className="w-6 h-6" /><span className="text-[10px]">More</span></button>
                 </div>
             </div>
 
@@ -146,7 +146,7 @@ const AgentDashboard = () => {
                     <>
                         {/* Header for Mobile Back Button */}
                         <div className="md:hidden p-4 bg-white border-b flex items-center gap-2">
-                            <button onClick={() => setSelectedLead(null)} className="text-blue-600 font-medium">← Back</button>
+                            <button aria-label="Accessible interactive control" type="button" onClick={() => setSelectedLead(null)} className="text-blue-600 font-medium">← Back</button>
                             <h2 className="font-bold">{selectedLead.client_name}</h2>
                         </div>
 
@@ -159,8 +159,8 @@ const AgentDashboard = () => {
                                 </div>
                             </div>
                             <div className="flex gap-2 items-center">
-                                <button className="p-3 bg-gray-100 rounded-full hover:bg-gray-200"><Phone className="w-5 h-5 text-gray-700" /></button>
-                                <button className="p-3 bg-blue-100 rounded-full hover:bg-blue-200"><Mail className="w-5 h-5 text-blue-700" /></button>
+                                <button aria-label="Accessible interactive control" type="button" className="p-3 bg-gray-100 rounded-full hover:bg-gray-200"><Phone className="w-5 h-5 text-gray-700" /></button>
+                                <button aria-label="Accessible interactive control" type="button" className="p-3 bg-blue-100 rounded-full hover:bg-blue-200"><Mail className="w-5 h-5 text-blue-700" /></button>
                             </div>
                         </div>
 
@@ -179,7 +179,7 @@ const AgentDashboard = () => {
                                 <div className="p-4 border-t border-gray-200 bg-gray-50">
                                     <div className="flex gap-2">
                                         <input aria-label="Accessible interactive control" type="text" placeholder="Type a message..." className="flex-1 rounded-full border-gray-300 px-4 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
-                                        <button className="bg-blue-600 text-white rounded-full px-6 py-2 text-sm font-bold hover:bg-blue-700">Send</button>
+                                        <button aria-label="Accessible interactive control" type="button" className="bg-blue-600 text-white rounded-full px-6 py-2 text-sm font-bold hover:bg-blue-700">Send</button>
                                     </div>
                                 </div>
                             </div>
@@ -191,7 +191,7 @@ const AgentDashboard = () => {
                                 <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6 space-y-4 text-sm">
                                     <div>
                                         <span className="block text-gray-500 text-xs font-medium">Lifecycle Status</span>
-                                        <select className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm font-medium">
+                                        <select aria-label="Accessible interactive control" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm font-medium">
                                             <option>New</option>
                                             <option>Attempted Contact</option>
                                             <option>Active</option>
@@ -216,7 +216,7 @@ const AgentDashboard = () => {
                                     <img src={selectedLead.property_image} className="w-full h-32 object-cover" alt="Property" />
                                     <div className="p-3">
                                         <p className="text-sm font-bold text-gray-900 truncate">{selectedLead.property_title}</p>
-                                        <a href="#" className="text-xs text-blue-600 hover:underline mt-1 inline-block">View Listing →</a>
+                                        <a aria-label="Accessible interactive control" href="#" className="text-xs text-blue-600 hover:underline mt-1 inline-block">View Listing →</a>
                                     </div>
                                 </div>
                             </div>

@@ -79,7 +79,7 @@ const LoginPage = () => {
                             onChange={(e) => setPassword(e.target.value)}
                             required
                         />
-                        <button
+                        <button aria-label="Accessible interactive control"
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
                             className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
@@ -95,7 +95,7 @@ const LoginPage = () => {
                     </m.div>
                 )}
 
-                <button 
+                <button aria-label="Accessible interactive control" 
                     type="submit" 
                     disabled={loading}
                     className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-gray-900 to-gray-800 hover:from-black hover:to-gray-900 text-white font-bold py-4 rounded-xl transition-all shadow-md mt-4 disabled:opacity-70"

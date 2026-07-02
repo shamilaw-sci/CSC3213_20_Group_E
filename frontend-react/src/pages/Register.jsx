@@ -61,7 +61,7 @@ const Register = () => {
             <div className="w-full md:w-[450px] lg:w-[500px] flex flex-col justify-center px-8 sm:px-12 py-10 relative overflow-y-auto">
                 
                 {/* Back to Home Button */}
-                <button aria-label="Accessible interactive control" aria-label="Accessible interactive control" 
+                <button type="button" aria-label="Accessible interactive control" aria-label="Accessible interactive control" 
                     onClick={() => navigate('/')} 
                     className="absolute top-6 left-6 text-gray-500 hover:text-gray-800 transition p-2 rounded-full hover:bg-gray-100"
                 >
@@ -94,21 +94,21 @@ const Register = () => {
                         <div className="mb-5">
                             <label htmlFor="z9fqly" className="block text-gray-700 text-sm font-medium mb-2">I want to...</label>
                             <div className="flex space-x-3">
-                                <button
+                                <button aria-label="Accessible interactive control"
                                     type="button"
                                     onClick={() => setRole('BUYER')}
                                     className={`flex-1 py-3 px-4 border rounded-lg font-bold text-sm transition ${role === 'BUYER' ? 'bg-blue-50 border-blue-500 text-blue-700' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'}`}
                                 >
                                     Buy Property
                                 </button>
-                                <button
+                                <button aria-label="Accessible interactive control"
                                     type="button"
                                     onClick={() => setRole('SELLER')}
                                     className={`flex-1 py-3 px-2 border rounded-lg font-bold text-xs sm:text-sm transition ${role === 'SELLER' ? 'bg-green-50 border-green-500 text-green-700' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'}`}
                                 >
                                     Sell Property
                                 </button>
-                                <button
+                                <button aria-label="Accessible interactive control"
                                     type="button"
                                     onClick={() => setRole('AGENT')}
                                     className={`flex-1 py-3 px-2 border rounded-lg font-bold text-xs sm:text-sm transition ${role === 'AGENT' ? 'bg-purple-50 border-purple-500 text-purple-700' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'}`}
@@ -184,7 +184,7 @@ const Register = () => {
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition pr-12"
                                     placeholder="At least 6 characters"
                                 />
-                                <button
+                                <button aria-label="Accessible interactive control"
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
                                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
@@ -203,7 +203,7 @@ const Register = () => {
                             </div>
                         </div>
 
-                        <button 
+                        <button aria-label="Accessible interactive control" 
                             type="submit" 
                             disabled={loading || !email || !password || !name}
                             className={`w-full text-white font-bold py-3 px-4 rounded-lg transition duration-200 ${loading || !email || !password || !name ? 'bg-blue-400 cursor-not-allowed' : 'bg-[#006aff] hover:bg-blue-700'}`}

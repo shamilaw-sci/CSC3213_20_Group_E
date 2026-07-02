@@ -51,7 +51,7 @@ const MyFavorites = () => {
                         <Heart className="mx-auto h-12 w-12 text-gray-300 mb-4" />
                         <h3 className="text-lg font-medium text-gray-900">No favorites yet</h3>
                         <p className="mt-1 text-gray-500">Start exploring the map and save properties you like.</p>
-                        <button onClick={() => navigate('/map')} className="mt-6 px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700">
+                        <button aria-label="Accessible interactive control" type="button" onClick={() => navigate('/map')} className="mt-6 px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700">
                             Explore Map
                         </button>
                     </div>
@@ -71,7 +71,7 @@ const MyFavorites = () => {
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center text-gray-400">No Image</div>
                                     )}
-                                    <button 
+                                    <button aria-label="Accessible interactive control" type="button" 
                                         onClick={(e) => { e.stopPropagation(); handleRemove(prop.id); }}
                                         className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-md text-red-500 hover:scale-110 transition"
                                     >

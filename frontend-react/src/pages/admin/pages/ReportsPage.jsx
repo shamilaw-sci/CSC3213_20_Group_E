@@ -61,14 +61,14 @@ const ReportsPage = () => {
           <p>Transaction history, financial summaries, and CSV/PDF exports</p>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <button
+          <button aria-label="Accessible interactive control" type="button"
             className="admin-btn admin-btn-secondary"
             onClick={() => handleExport("transactions")}
             disabled={exporting}
           >
             {exporting ? <span className="admin-spinner" /> : "⬇"} Export CSV
           </button>
-          <button
+          <button aria-label="Accessible interactive control" type="button"
             className="admin-btn admin-btn-primary"
             onClick={() => handleExport("financial")}
             disabled={exporting}
@@ -93,12 +93,12 @@ const ReportsPage = () => {
       </div>
 
       <div className="admin-filters-row">
-        <select className="admin-filter-select" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+        <select aria-label="Accessible interactive control" className="admin-filter-select" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
           <option value="all">All Types</option>
           <option value="Listing Fee">Listing Fee</option>
           <option value="Boost Fee">Boost Fee</option>
         </select>
-        <select className="admin-filter-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+        <select aria-label="Accessible interactive control" className="admin-filter-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
           <option value="all">All Status</option>
           <option value="completed">Completed</option>
           <option value="pending">Pending</option>

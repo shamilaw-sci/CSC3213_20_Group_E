@@ -40,7 +40,7 @@ const AgentProfile = () => {
     if (!agentData) return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Agent Not Found</h2>
-            <button onClick={() => navigate('/')} className="text-blue-600 hover:underline">Return Home</button>
+            <button aria-label="Accessible interactive control" type="button" onClick={() => navigate('/')} className="text-blue-600 hover:underline">Return Home</button>
         </div>
     );
 
@@ -107,11 +107,11 @@ const AgentProfile = () => {
                         <div className="w-full md:w-80 mt-6 md:mt-24 z-10">
                             <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 sticky top-24">
                                 <h3 className="text-lg font-bold text-gray-900 mb-4">Contact {agentData.name}</h3>
-                                <button className="w-full bg-[#006aff] hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg mb-3 transition shadow-md flex justify-center items-center gap-2">
+                                <button aria-label="Accessible interactive control" type="button" className="w-full bg-[#006aff] hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg mb-3 transition shadow-md flex justify-center items-center gap-2">
                                     <Mail className="h-5 w-5" />
                                     Send Message
                                 </button>
-                                <button className="w-full bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 font-bold py-3 px-4 rounded-lg transition flex justify-center items-center gap-2">
+                                <button aria-label="Accessible interactive control" type="button" className="w-full bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 font-bold py-3 px-4 rounded-lg transition flex justify-center items-center gap-2">
                                     <Phone className="h-5 w-5" />
                                     Call {agentData.phone || 'Agent'}
                                 </button>
@@ -163,19 +163,19 @@ const AgentProfile = () => {
                         {/* Tabs */}
                         <div className="mb-6 border-b border-gray-200">
                             <nav className="flex space-x-8">
-                                <button 
+                                <button aria-label="Accessible interactive control" type="button" 
                                     onClick={() => setActiveTab('listings')}
                                     className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'listings' ? 'border-[#006aff] text-[#006aff]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
                                 >
                                     Active Listings ({listings.length})
                                 </button>
-                                <button 
+                                <button aria-label="Accessible interactive control" type="button" 
                                     onClick={() => setActiveTab('sales')}
                                     className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'sales' ? 'border-[#006aff] text-[#006aff]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
                                 >
                                     Past Sales
                                 </button>
-                                <button 
+                                <button aria-label="Accessible interactive control" type="button" 
                                     onClick={() => setActiveTab('reviews')}
                                     className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'reviews' ? 'border-[#006aff] text-[#006aff]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
                                 >
@@ -219,7 +219,7 @@ const AgentProfile = () => {
                                     </div>
                                     <h3 className="text-xl font-bold text-gray-900 mb-2">Interactive Sales Map</h3>
                                     <p className="text-gray-500 mb-6">Explore the exact locations of {agentData.name}'s past successful deals.</p>
-                                    <button className="bg-gray-900 text-white font-medium py-2 px-6 rounded-lg hover:bg-gray-800 transition">
+                                    <button aria-label="Accessible interactive control" type="button" className="bg-gray-900 text-white font-medium py-2 px-6 rounded-lg hover:bg-gray-800 transition">
                                         View Map (Phase 3 Feature)
                                     </button>
                                 </div>

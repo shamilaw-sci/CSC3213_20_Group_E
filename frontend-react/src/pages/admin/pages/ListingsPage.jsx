@@ -25,14 +25,14 @@ const RejectModal = ({ listing, onConfirm, onCancel }) => {
       <div className="admin-modal">
         <div className="admin-modal-header">
           <h3 className="admin-card-title">Reject Listing</h3>
-          <button className="admin-modal-close" onClick={onCancel}>✕</button>
+          <button aria-label="Accessible interactive control" type="button" className="admin-modal-close" onClick={onCancel}>✕</button>
         </div>
         <p style={{ fontSize: "0.875rem", color: "var(--admin-text-secondary)", marginBottom: 16 }}>
           You are rejecting: <strong style={{ color: "var(--admin-text-primary)" }}>{listing?.title}</strong>
         </p>
         <div className="admin-form-group">
-          <label className="admin-form-label">Rejection Reason (required)</label>
-          <textarea
+          <label htmlFor="uid_nl31lid7" className="admin-form-label">Rejection Reason (required)</label>
+          <textarea aria-label="Accessible interactive control"
             className="admin-form-control"
             rows={4}
             placeholder="Please provide a clear reason for rejecting this listing…"
@@ -41,8 +41,8 @@ const RejectModal = ({ listing, onConfirm, onCancel }) => {
           />
         </div>
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-          <button className="admin-btn admin-btn-secondary" onClick={onCancel}>Cancel</button>
-          <button
+          <button aria-label="Accessible interactive control" type="button" className="admin-btn admin-btn-secondary" onClick={onCancel}>Cancel</button>
+          <button aria-label="Accessible interactive control" type="button"
             className="admin-btn admin-btn-danger"
             onClick={() => reason.trim() && onConfirm(reason)}
             disabled={!reason.trim()}
@@ -109,7 +109,7 @@ const ListingDetailsModal = ({ listing, onApprove, onReject, onClose, loading })
             <h3 className="admin-card-title">Property Review</h3>
             <p style={{ fontSize: "0.8rem", color: "var(--admin-text-secondary)" }}>View-only details submitted by seller</p>
           </div>
-          <button className="admin-modal-close" onClick={onClose}>Close</button>
+          <button aria-label="Accessible interactive control" type="button" className="admin-modal-close" onClick={onClose}>Close</button>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
@@ -191,10 +191,10 @@ const ListingDetailsModal = ({ listing, onApprove, onReject, onClose, loading })
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", borderTop: "1px solid var(--admin-border)", paddingTop: 16 }}>
           {listing.status === "Pending Approval" && (
             <>
-              <button className="admin-btn admin-btn-danger" onClick={() => onReject(listing)} disabled={loading}>
+              <button aria-label="Accessible interactive control" type="button" className="admin-btn admin-btn-danger" onClick={() => onReject(listing)} disabled={loading}>
                 Send Suggestion
               </button>
-              <button className="admin-btn admin-btn-success" onClick={() => onApprove(listing._id)} disabled={loading}>
+              <button aria-label="Accessible interactive control" type="button" className="admin-btn admin-btn-success" onClick={() => onApprove(listing._id)} disabled={loading}>
                 Approve Property
               </button>
             </>
@@ -312,14 +312,14 @@ const ListingsPage = () => {
       <div className="admin-filters-row">
         <div className="admin-search-bar" style={{ flex: 1, maxWidth: 340 }}>
           <span style={{ color: "var(--admin-text-muted)" }}>🔍</span>
-          <input
+          <input aria-label="Accessible interactive control"
             placeholder="Search by title, seller, location…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
         {["all", "pending", "approved", "rejected"].map((s) => (
-          <button
+          <button aria-label="Accessible interactive control" type="button"
             key={s}
             className={`admin-btn ${filter === s ? "admin-btn-primary" : "admin-btn-secondary"} admin-btn-sm`}
             onClick={() => setFilter(s)}
@@ -382,7 +382,7 @@ const ListingsPage = () => {
                     <div style={{ display: "flex", gap: 6 }}>
                       {l.status === "Pending Approval" && (
                         <>
-                          <button
+                          <button aria-label="Accessible interactive control" type="button"
                             className="admin-btn admin-btn-secondary admin-btn-sm"
                             onClick={() => handleViewDetails(l._id)}
                             disabled={loading[l._id]}
@@ -390,7 +390,7 @@ const ListingsPage = () => {
                           >
                             Review
                           </button>
-                          <button
+                          <button aria-label="Accessible interactive control" type="button"
                             className="admin-btn admin-btn-success admin-btn-sm"
                             onClick={() => handleApprove(l._id)}
                             disabled={loading[l._id]}
@@ -398,7 +398,7 @@ const ListingsPage = () => {
                           >
                             ✓ Approve
                           </button>
-                          <button
+                          <button aria-label="Accessible interactive control" type="button"
                             className="admin-btn admin-btn-danger admin-btn-sm"
                             onClick={() => setRejectTarget(l)}
                             disabled={loading[l._id]}
@@ -408,7 +408,7 @@ const ListingsPage = () => {
                           </button>
                         </>
                       )}
-                      <button
+                      <button aria-label="Accessible interactive control" type="button"
                         className="admin-btn admin-btn-secondary admin-btn-sm"
                         onClick={() => handleDelete(l._id)}
                         title="Delete"

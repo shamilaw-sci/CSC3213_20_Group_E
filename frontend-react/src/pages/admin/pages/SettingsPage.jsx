@@ -73,7 +73,7 @@ const SettingsPage = () => {
           <h1>Platform Settings</h1>
           <p>Configure financial parameters, categories, and system behaviour</p>
         </div>
-        <button
+        <button aria-label="Accessible interactive control" type="button"
           className="admin-btn admin-btn-primary"
           onClick={handleSave}
           disabled={!dirty || saving}
@@ -115,7 +115,7 @@ const SettingsPage = () => {
 
           <div className="admin-form-group">
             <label htmlFor="v7mzkh" className="admin-form-label">PayHere Mode</label>
-            <select className="admin-form-control" value={settings.payhereMode} onChange={(e) => update("payhereMode", e.target.value)}>
+            <select aria-label="Accessible interactive control" className="admin-form-control" value={settings.payhereMode} onChange={(e) => update("payhereMode", e.target.value)}>
               <option value="sandbox">Sandbox (Testing)</option>
               <option value="live">Live (Production)</option>
             </select>
@@ -155,7 +155,7 @@ const SettingsPage = () => {
                   <div style={{ fontSize: "0.875rem", fontWeight: 500, color: danger && settings[key] ? "var(--admin-danger)" : "var(--admin-text-primary)" }}>{label}</div>
                   <div style={{ fontSize: "0.75rem", color: "var(--admin-text-secondary)" }}>{desc}</div>
                 </div>
-                <button aria-label="Accessible interactive control"
+                <button type="button" aria-label="Accessible interactive control"
                   onClick={() => update(key, !settings[key])}
                   style={{
                     width: 44, height: 24, borderRadius: 12, border: "none",
@@ -190,7 +190,7 @@ const SettingsPage = () => {
                 color: "var(--admin-gold)", padding: "5px 12px", borderRadius: 100, fontSize: "0.85rem"
               }}>
                 {cat}
-                <button
+                <button aria-label="Accessible interactive control" type="button"
                   onClick={() => removeCategory(cat)}
                   style={{ background: "none", border: "none", color: "inherit", cursor: "pointer", padding: 0, fontSize: "0.9rem", lineHeight: 1 }}
                 >
@@ -208,7 +208,7 @@ const SettingsPage = () => {
               onKeyDown={(e) => e.key === "Enter" && addCategory()}
               style={{ maxWidth: 300 }}
             />
-            <button className="admin-btn admin-btn-secondary" onClick={addCategory}>+ Add</button>
+            <button aria-label="Accessible interactive control" type="button" className="admin-btn admin-btn-secondary" onClick={addCategory}>+ Add</button>
           </div>
         </div>
       </div>

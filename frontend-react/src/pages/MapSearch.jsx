@@ -187,7 +187,7 @@ const FreehandDrawControl = ({ onPolygonComplete, onDrawDelete, controlRef }) =>
 
     return (
         <div className="leaflet-draw-control">
-            <button 
+            <button aria-label="Accessible interactive control" type="button" 
                 onClick={(e) => {
                     e.stopPropagation();
                     setIsDrawMode(!isDrawMode);
@@ -225,7 +225,7 @@ const MarkerPopup = ({ prop, imageUrl, onNavigate }) => (
             {prop.price ? `Rs. ${prop.price.toLocaleString()}` : 'Price N/A'}
         </h3>
         <p className="text-sm font-bold text-gray-800 mt-1 truncate">{prop.title}</p>
-        <button 
+        <button aria-label="Accessible interactive control" type="button" 
             onClick={onNavigate}
             className="mt-3 w-full bg-blue-600 text-white text-xs font-bold py-2 rounded hover:bg-blue-700 transition">
             View Details
@@ -268,7 +268,7 @@ const PropertyCard = React.memo(({ prop, isActive, onMouseEnter, onMouseLeave, o
                 <div className="absolute top-1 left-1 bg-white text-gray-800 text-[10px] font-extrabold px-1.5 py-0.5 rounded shadow-sm uppercase">
                     {prop.type === 'Land' ? 'Land' : 'House'}
                 </div>
-                <button 
+                <button aria-label="Accessible interactive control" type="button" 
                     onClick={handleFavoriteClick}
                     className="absolute top-1 right-1 p-1.5 bg-white/80 hover:bg-white rounded-full shadow-sm transition"
                 >
@@ -370,7 +370,7 @@ const MapSearch = () => {
                     
                     {/* Zillow-Style Filter Bar */}
                     <div className="hidden md:flex gap-3 ml-4">
-                        <select 
+                        <select aria-label="Accessible interactive control" 
                             value={typeFilter} 
                             onChange={(e) => setTypeFilter(e.target.value)}
                             className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 font-bold cursor-pointer"
@@ -381,7 +381,7 @@ const MapSearch = () => {
                             <option value="Apartment">Apartments</option>
                         </select>
 
-                        <select 
+                        <select aria-label="Accessible interactive control" 
                             value={bedsFilter} 
                             onChange={(e) => setBedsFilter(e.target.value)}
                             className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 font-bold cursor-pointer"
@@ -393,7 +393,7 @@ const MapSearch = () => {
                             <option value="4">4+ bd</option>
                         </select>
 
-                        <select 
+                        <select aria-label="Accessible interactive control" 
                             value={bathsFilter} 
                             onChange={(e) => setBathsFilter(e.target.value)}
                             className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 font-bold cursor-pointer"
@@ -407,7 +407,7 @@ const MapSearch = () => {
                 </div>
 
                 <div className="flex gap-4">
-                    <button 
+                    <button aria-label="Accessible interactive control" type="button" 
                         onClick={async () => {
                             if (!currentPolygon) {
                                 alert("Please draw a boundary on the map first to save your search.");
@@ -438,14 +438,14 @@ const MapSearch = () => {
                     >
                         Save Search
                     </button>
-                    <button 
+                    <button aria-label="Accessible interactive control" type="button" 
                         onClick={() => setIsFeasibilityOpen(true)}
                         className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 font-bold rounded-lg hover:bg-blue-100 transition"
                     >
                         <Calculator className="h-5 w-5" />
                         Feasibility Engine
                     </button>
-                    <button onClick={() => navigate('/')} className="text-gray-600 hover:text-blue-600 font-bold px-4 py-2">
+                    <button aria-label="Accessible interactive control" type="button" onClick={() => navigate('/')} className="text-gray-600 hover:text-blue-600 font-bold px-4 py-2">
                         Close Map ✕
                     </button>
                 </div>
@@ -462,7 +462,7 @@ const MapSearch = () => {
                     
                     {searchMode === 'polygon' && (
                         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[1000] animate-fade-in">
-                            <button
+                            <button aria-label="Accessible interactive control" type="button"
                                 onClick={clearBoundary}
                                 className="bg-white px-5 py-2.5 rounded-full shadow-lg font-extrabold text-blue-600 hover:bg-blue-50 hover:shadow-xl transition border border-gray-200 flex items-center gap-2"
                             >

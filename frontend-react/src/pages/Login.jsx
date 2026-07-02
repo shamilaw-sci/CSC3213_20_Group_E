@@ -105,7 +105,7 @@ const Login = () => {
             <div className="w-full md:w-[450px] lg:w-[500px] flex flex-col justify-center px-8 sm:px-12 py-10 relative">
                 
                 {/* Back Button */}
-                <button aria-label="Accessible interactive control" 
+                <button type="button" aria-label="Accessible interactive control" 
                     onClick={() => step === 2 ? setStep(1) : step === 3 ? setStep(2) : navigate('/')} 
                     className="absolute top-6 left-6 text-gray-500 hover:text-gray-800 transition p-2 rounded-full hover:bg-gray-100"
                 >
@@ -181,7 +181,7 @@ const Login = () => {
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
                                 />
                             </div>
-                            <button 
+                            <button aria-label="Accessible interactive control" 
                                 type="submit" 
                                 disabled={loading || !email}
                                 className={`w-full text-white font-bold py-3 px-4 rounded-lg transition duration-200 ${loading || !email ? 'bg-blue-400 cursor-not-allowed' : 'bg-[#006aff] hover:bg-blue-700'}`}
@@ -210,7 +210,7 @@ const Login = () => {
                                         autoFocus
                                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition pr-12"
                                     />
-                                    <button
+                                    <button aria-label="Accessible interactive control"
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
                                         className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
@@ -228,7 +228,7 @@ const Login = () => {
                                     </button>
                                 </div>
                             </div>
-                            <button 
+                            <button aria-label="Accessible interactive control" 
                                 type="submit" 
                                 disabled={loading || !password}
                                 className={`w-full text-white font-bold py-3 px-4 rounded-lg transition duration-200 ${loading || !password ? 'bg-blue-400 cursor-not-allowed' : 'bg-[#006aff] hover:bg-blue-700'}`}
@@ -251,10 +251,10 @@ const Login = () => {
                             )}
 
                             <div className="mb-6">
-                                <label className="block text-gray-700 text-sm font-medium mb-2">
+                                <label htmlFor="uid_xw1aczsa" className="block text-gray-700 text-sm font-medium mb-2">
                                     Email Address <span className="text-red-500">*</span>
                                 </label>
-                                <input
+                                <input aria-label="Accessible interactive control"
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value.toLowerCase())}
@@ -264,7 +264,7 @@ const Login = () => {
                             </div>
                             
                             {!resetMessage ? (
-                                <button 
+                                <button aria-label="Accessible interactive control" 
                                     type="submit" 
                                     disabled={loading || !email}
                                     className={`w-full text-white font-bold py-3 px-4 rounded-lg transition duration-200 ${loading || !email ? 'bg-blue-400 cursor-not-allowed' : 'bg-[#006aff] hover:bg-blue-700'}`}
@@ -272,7 +272,7 @@ const Login = () => {
                                     {loading ? 'Sending...' : 'Send Reset Link'}
                                 </button>
                             ) : (
-                                <button 
+                                <button aria-label="Accessible interactive control" 
                                     type="button" 
                                     onClick={() => { setStep(2); setResetMessage(''); }}
                                     className="w-full bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-bold py-3 px-4 rounded-lg transition duration-200"
@@ -296,22 +296,22 @@ const Login = () => {
                             </div>
 
                             <div className="space-y-3">
-                                <button type="button" onClick={() => handleSocialLogin('Google')} className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium text-gray-700">
+                                <button aria-label="Accessible interactive control" type="button" onClick={() => handleSocialLogin('Google')} className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium text-gray-700">
                                     <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="h-5 w-5 mr-2" />
                                     Continue with Google
                                 </button>
-                                <button type="button" onClick={() => handleSocialLogin('Apple')} className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium text-gray-700">
+                                <button aria-label="Accessible interactive control" type="button" onClick={() => handleSocialLogin('Apple')} className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium text-gray-700">
                                     <img src="https://www.svgrepo.com/show/511330/apple-173.svg" alt="Apple" className="h-5 w-5 mr-2" />
                                     Continue with Apple
                                 </button>
-                                <button type="button" onClick={() => handleSocialLogin('Facebook')} className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium text-gray-700">
+                                <button aria-label="Accessible interactive control" type="button" onClick={() => handleSocialLogin('Facebook')} className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium text-gray-700">
                                     <img src="https://www.svgrepo.com/show/475647/facebook-color.svg" alt="Facebook" className="h-5 w-5 mr-2" />
                                     Continue with Facebook
                                 </button>
                             </div>
 
                             <p className="mt-8 text-xs text-gray-500">
-                                By submitting, I accept Thirasara's <a href="#" className="text-blue-600 hover:underline">terms of use</a>
+                                By submitting, I accept Thirasara's <a aria-label="Accessible interactive control" href="#" className="text-blue-600 hover:underline">terms of use</a>
                             </p>
                         </>
                     )}

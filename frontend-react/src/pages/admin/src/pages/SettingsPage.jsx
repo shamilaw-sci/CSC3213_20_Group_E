@@ -69,7 +69,7 @@ const SettingsPage = () => {
           <h1>Platform Settings</h1>
           <p>Configure financial parameters, categories, and system behaviour</p>
         </div>
-        <button
+        <button aria-label="Accessible interactive control" type="button"
           className="btn btn-primary"
           onClick={handleSave}
           disabled={!dirty || saving}
@@ -132,7 +132,7 @@ const SettingsPage = () => {
 
           <div className="form-group">
             <label htmlFor="lc1acl" className="form-label">PayHere Mode</label>
-            <select
+            <select aria-label="Accessible interactive control"
               className="form-control"
               value={settings.payhereMode}
               onChange={(e) => update("payhereMode", e.target.value)}
@@ -191,7 +191,7 @@ const SettingsPage = () => {
                   <div style={{ fontSize: "0.875rem", fontWeight: 500, color: danger && settings[key] ? "var(--danger)" : "var(--text-primary)" }}>{label}</div>
                   <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>{desc}</div>
                 </div>
-                <button aria-label="Accessible interactive control"
+                <button type="button" aria-label="Accessible interactive control"
                   onClick={() => update(key, !settings[key])}
                   style={{
                     width: 44, height: 24, borderRadius: 12, border: "none",
@@ -226,7 +226,7 @@ const SettingsPage = () => {
                 color: "var(--gold)", padding: "5px 12px", borderRadius: 100, fontSize: "0.85rem"
               }}>
                 {cat}
-                <button
+                <button aria-label="Accessible interactive control" type="button"
                   onClick={() => removeCategory(cat)}
                   style={{ background: "none", border: "none", color: "inherit", cursor: "pointer", padding: 0, fontSize: "0.9rem", lineHeight: 1 }}
                 >
@@ -244,7 +244,7 @@ const SettingsPage = () => {
               onKeyDown={(e) => e.key === "Enter" && addCategory()}
               style={{ maxWidth: 300 }}
             />
-            <button className="btn btn-secondary" onClick={addCategory}>+ Add</button>
+            <button aria-label="Accessible interactive control" type="button" className="btn btn-secondary" onClick={addCategory}>+ Add</button>
           </div>
         </div>
       </div>

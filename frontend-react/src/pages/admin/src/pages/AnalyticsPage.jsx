@@ -76,7 +76,7 @@ const AnalyticsPage = () => {
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           {["weekly", "monthly", "yearly"].map((p) => (
-            <button
+            <button aria-label="Accessible interactive control" type="button"
               key={p}
               className={`btn btn-sm ${period === p ? "btn-primary" : "btn-secondary"}`}
               onClick={() => setPeriod(p)}

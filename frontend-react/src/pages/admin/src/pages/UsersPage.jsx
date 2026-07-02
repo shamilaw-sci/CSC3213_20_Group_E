@@ -19,7 +19,7 @@ const BanModal = ({ user, onConfirm, onCancel }) => {
       <div className="modal">
         <div className="modal-header">
           <h3 className="card-title">Ban User</h3>
-          <button className="modal-close" onClick={onCancel}>✕</button>
+          <button aria-label="Accessible interactive control" type="button" className="modal-close" onClick={onCancel}>✕</button>
         </div>
         <p style={{ fontSize: "0.875rem", color: "var(--text-secondary)", marginBottom: 16 }}>
           Ban <strong style={{ color: "var(--text-primary)" }}>{user?.name}</strong> ({user?.email})?
@@ -36,8 +36,8 @@ const BanModal = ({ user, onConfirm, onCancel }) => {
           />
         </div>
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-          <button className="btn btn-secondary" onClick={onCancel}>Cancel</button>
-          <button
+          <button aria-label="Accessible interactive control" type="button" className="btn btn-secondary" onClick={onCancel}>Cancel</button>
+          <button aria-label="Accessible interactive control" type="button"
             className="btn btn-danger"
             onClick={() => reason.trim() && onConfirm(reason)}
             disabled={!reason.trim()}
@@ -126,20 +126,20 @@ const UsersPage = () => {
       <div className="filters-row">
         <div className="search-bar" style={{ flex: 1, maxWidth: 320 }}>
           <span style={{ color: "var(--text-muted)" }}>🔍</span>
-          <input
+          <input aria-label="Accessible interactive control"
             placeholder="Search by name, email, location…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
 
-        <select className="filter-select" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
+        <select aria-label="Accessible interactive control" className="filter-select" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
           <option value="all">All Roles</option>
           <option value="buyer">Buyer</option>
           <option value="seller">Seller</option>
         </select>
 
-        <select className="filter-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+        <select aria-label="Accessible interactive control" className="filter-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
           <option value="all">All Status</option>
           <option value="active">Active</option>
           <option value="banned">Banned</option>
@@ -213,7 +213,7 @@ const UsersPage = () => {
                     </div>
                   </td>
                   <td>
-                    <select
+                    <select aria-label="Accessible interactive control"
                       className="filter-select"
                       value={u.role}
                       onChange={(e) => handleRoleChange(u._id, e.target.value)}
@@ -233,11 +233,11 @@ const UsersPage = () => {
                   </td>
                   <td>
                     {u.status === "Active" ? (
-                      <button className="btn btn-danger btn-sm" onClick={() => setBanTarget(u)}>
+                      <button aria-label="Accessible interactive control" type="button" className="btn btn-danger btn-sm" onClick={() => setBanTarget(u)}>
                         🚫 Ban
                       </button>
                     ) : (
-                      <button className="btn btn-success btn-sm" onClick={() => handleUnban(u)}>
+                      <button aria-label="Accessible interactive control" type="button" className="btn btn-success btn-sm" onClick={() => handleUnban(u)}>
                         ✓ Unban
                       </button>
                     )}

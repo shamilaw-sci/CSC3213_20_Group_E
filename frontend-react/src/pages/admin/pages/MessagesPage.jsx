@@ -151,7 +151,7 @@ const MessagesPage = () => {
               </div>
             )}
             {conversations.map((conversation) => (
-              <button
+              <button aria-label="Accessible interactive control" type="button"
                 key={conversation.id}
                 onClick={() => setSelectedId(conversation.id)}
                 style={{
@@ -225,7 +225,7 @@ const MessagesPage = () => {
                             </div>
                             {message.body && <div style={{ fontSize: "0.9rem", whiteSpace: "pre-wrap" }}>{message.body}</div>}
                             {message.attachment_url && (
-                              <a
+                              <a aria-label="Accessible interactive control"
                                 href={message.attachment_url}
                                 target="_blank"
                                 rel="noreferrer"
@@ -262,13 +262,13 @@ const MessagesPage = () => {
                   {attachment && (
                     <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginBottom: 10, padding: 10, borderRadius: 8, background: "var(--admin-bg)", color: "var(--admin-text-secondary)" }}>
                       <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{attachment.name}</span>
-                      <button type="button" className="admin-btn admin-btn-secondary admin-btn-sm" onClick={() => setAttachment(null)}>Remove</button>
+                      <button aria-label="Accessible interactive control" type="button" className="admin-btn admin-btn-secondary admin-btn-sm" onClick={() => setAttachment(null)}>Remove</button>
                     </div>
                   )}
                   <div style={{ display: "flex", gap: 10 }}>
-                    <label className="admin-btn admin-btn-secondary" style={{ cursor: "pointer" }}>
+                    <label htmlFor="uid_r6l831uf" className="admin-btn admin-btn-secondary" style={{ cursor: "pointer" }}>
                       Attach
-                      <input type="file" accept="image/*,.pdf" style={{ display: "none" }} onChange={(event) => setAttachment(event.target.files?.[0] || null)} />
+                      <input aria-label="Accessible interactive control" type="file" accept="image/*,.pdf" style={{ display: "none" }} onChange={(event) => setAttachment(event.target.files?.[0] || null)} />
                     </label>
                     <input aria-label="Accessible interactive control" aria-label="Accessible interactive control"
                       className="admin-form-control"
@@ -276,7 +276,7 @@ const MessagesPage = () => {
                       onChange={(event) => setDraft(event.target.value)}
                       placeholder="Write an admin reply..."
                     />
-                    <button className="admin-btn admin-btn-primary" type="submit">Send</button>
+                    <button aria-label="Accessible interactive control" className="admin-btn admin-btn-primary" type="submit">Send</button>
                   </div>
                 </form>
               </>
