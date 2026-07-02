@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef } from 'react';
+import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/UserAuthContext';
@@ -77,7 +77,7 @@ const Messages = () => {
         [conversations, selectedId]
     );
 
-    const loadConversations = async ({ silent = false } = {}) => {
+    const loadConversations = useCallback(async ({ silent = false } = {}) => {
         try {
             const response = await axios.get('http://localhost:5000/api/conversations', {
                 headers: apiHeaders(),
@@ -94,25 +94,28 @@ const Messages = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [selectedId]);
 
     useEffect(() => {
         loadConversations();
-    }, []);
+    }, [loadConversations]);
 
     useEffect(() => {
         if (!selectedId) return;
         setSearchParams({ conversation: selectedId });
 
+        const controller = new AbortController();
         const loadMessages = async () => {
             setMessagesLoading(true);
             try {
                 const response = await axios.get(`http://localhost:5000/api/conversations/${selectedId}/messages`, {
                     headers: apiHeaders(),
+                    signal: controller.signal
                 });
                 setMessages(response.data.messages || []);
                 scrollToBottom();
             } catch (err) {
+                if (axios.isCancel(err)) return;
                 setError(err.response?.data?.message || err.response?.data?.error || 'Failed to load messages.');
             } finally {
                 setMessagesLoading(false);
@@ -120,22 +123,29 @@ const Messages = () => {
         };
 
         loadMessages();
+        return () => controller.abort();
     }, [selectedId, setSearchParams]);
 
     useEffect(() => {
+        const controller = new AbortController();
         const interval = setInterval(() => {
             loadConversations({ silent: true });
             if (selectedId) {
                 axios.get(`http://localhost:5000/api/conversations/${selectedId}/messages`, {
                     headers: apiHeaders(),
+                    signal: controller.signal
                 })
                     .then((response) => setMessages(response.data.messages || []))
-                    .catch(() => {});
+                    .catch((err) => {
+                        if (!axios.isCancel(err)) {
+                            // error
+                        }
+                    });
             }
         }, 10000);
 
-        return () => clearInterval(interval);
-    }, [selectedId]);
+        return () => { clearInterval(interval); controller.abort(); };
+    }, [selectedId, loadConversations]);
 
     const scrollToBottom = () => {
         setTimeout(() => {

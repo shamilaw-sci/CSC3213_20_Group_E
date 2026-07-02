@@ -25,9 +25,12 @@ const Home = () => {
 
     // Fetch property data on component mount or page change
     useEffect(() => {
+        const controller = new AbortController();
         const fetchProperties = async () => {
             try {
-                const response = await axios.get(`http://localhost:5000/api/properties?page=${page}&limit=12`);
+                const response = await axios.get(`http://localhost:5000/api/properties?page=${page}&limit=12`, {
+                    signal: controller.signal
+                });
                 if (page === 1) {
                     setProperties(response.data.properties);
                 } else {
@@ -35,6 +38,7 @@ const Home = () => {
                 }
                 setTotalPages(response.data.totalPages);
             } catch (error) {
+                if (axios.isCancel(error)) return;
                 console.error('Error fetching properties:', error);
             }
         };
