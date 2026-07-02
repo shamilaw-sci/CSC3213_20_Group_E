@@ -44,26 +44,27 @@ const AnalyticsPage = () => {
   const [userGrowth, setUserGrowth] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const loadAnalytics = async (p) => {
+    setLoading(true);
+    try {
+      const [s, r, u] = await Promise.all([
+        fetchDashboardStats(),
+        fetchRevenueData(p),
+        fetchUserGrowth(p)
+      ]);
+      if (s) setStats(s);
+      if (r?.data) setRevenue(r.data);
+      if (u?.data) setUserGrowth(u.data);
+    } catch (err) {
+      console.error("Failed to load analytics:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      try {
-        const [s, r, u] = await Promise.all([
-          fetchDashboardStats(),
-          fetchRevenueData(period),
-          fetchUserGrowth(period)
-        ]);
-        if (s) setStats(s);
-        if (r?.data) setRevenue(r.data);
-        if (u?.data) setUserGrowth(u.data);
-      } catch (err) {
-        console.error("Failed to load analytics:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, [period]);
+    loadAnalytics(period);
+  }, []); // Only run on mount
 
   const maxRevenue = Math.max(...revenue.map((d) => d.value), 1);
   const maxGrowth = Math.max(...userGrowth.map((d) => d.value), 1);
@@ -91,7 +92,10 @@ const AnalyticsPage = () => {
             <button
               key={p}
               className={`admin-btn admin-btn-sm ${period === p ? "admin-btn-primary" : "admin-btn-secondary"}`}
-              onClick={() => setPeriod(p)}
+              onClick={() => {
+                setPeriod(p);
+                loadAnalytics(p);
+              }}
             >
               {p.charAt(0).toUpperCase() + p.slice(1)}
             </button>

@@ -9,7 +9,7 @@ import { Bed, Bath, Maximize, MapPin, Heart, MessageCircle, ChevronLeft, Chevron
 import { MapContainer, TileLayer, Marker, Polygon, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, m } from "framer-motion";
 
 import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png';
 import iconUrl from 'leaflet/dist/images/marker-icon.png';
@@ -175,7 +175,7 @@ const PropertyDetails = () => {
                     {/* Center Heart Animation */}
                     <AnimatePresence>
                         {showAnimation && (
-                            <motion.div
+                            <m.div
                                 initial={{ scale: 0, opacity: 0 }}
                                 animate={{ scale: [0, 1.5, 1.2], opacity: 1 }}
                                 exit={{ scale: 0, opacity: 0 }}
@@ -184,7 +184,7 @@ const PropertyDetails = () => {
                                 style={{ pointerEvents: 'none' }}
                             >
                                 <Heart className="w-40 h-40 text-red-500 fill-red-500 drop-shadow-lg" />
-                            </motion.div>
+                            </m.div>
                         )}
                     </AnimatePresence>
 

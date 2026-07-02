@@ -3,7 +3,7 @@ import { Bed, Bath, Maximize, Heart, MessageCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/UserAuthContext';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, m } from "framer-motion";
 
 const PropertyCard = ({ prop, handleMessageSeller }) => {
     const navigate = useNavigate();
@@ -42,7 +42,7 @@ const PropertyCard = ({ prop, handleMessageSeller }) => {
     };
 
     return (
-        <motion.div 
+        <m.div 
             whileHover={{ y: -10, rotateX: 2, rotateY: -2, z: 50 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
             onClick={() => navigate(`/property/${prop.id}`)}
@@ -53,7 +53,7 @@ const PropertyCard = ({ prop, handleMessageSeller }) => {
                 {/* Center Heart Animation */}
                 <AnimatePresence>
                     {showAnimation && (
-                        <motion.div
+                        <m.div
                             initial={{ scale: 0, opacity: 0 }}
                             animate={{ scale: [0, 1.5, 1.2], opacity: 1 }}
                             exit={{ scale: 0, opacity: 0 }}
@@ -62,7 +62,7 @@ const PropertyCard = ({ prop, handleMessageSeller }) => {
                             style={{ pointerEvents: 'none' }}
                         >
                             <Heart className="w-24 h-24 text-red-500 fill-red-500 drop-shadow-lg" />
-                        </motion.div>
+                        </m.div>
                     )}
                 </AnimatePresence>
 
@@ -139,7 +139,7 @@ const PropertyCard = ({ prop, handleMessageSeller }) => {
                     </button>
                 </div>
             </div>
-        </motion.div>
+        </m.div>
     );
 };
 

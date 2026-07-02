@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../context/api';
 import { Heart, MapPin } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { m } from "framer-motion";
 import { useNavigate } from 'react-router-dom';
 
 const MyFavorites = () => {
@@ -58,7 +58,7 @@ const MyFavorites = () => {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {favorites.map((prop) => (
-                            <motion.div 
+                            <m.div 
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 key={prop.id} 
@@ -86,7 +86,7 @@ const MyFavorites = () => {
                                         <span className="truncate">{prop.address}</span>
                                     </div>
                                 </div>
-                            </motion.div>
+                            </m.div>
                         ))}
                     </div>
                 )}

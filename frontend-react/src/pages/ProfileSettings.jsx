@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/UserAuthContext';
 import { useTheme } from '../context/ThemeProvider';
 import { User, Lock, Phone, Save, Loader, Search, Trash2, Heart, Moon, Sun, Monitor, ImagePlus, Bell, MapPin, Bed, Bath, Maximize } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, m } from "framer-motion";
 import { useNavigate } from 'react-router-dom';
 import api from '../context/api';
 
@@ -172,7 +172,7 @@ const ProfileSettings = () => {
                             {tab === 'favorites' && 'Favorites'}
                             {tab === 'searches' && 'Saved Searches'}
                             {activeTab === tab && (
-                                <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400" />
+                                <m.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400" />
                             )}
                         </button>
                     ))}
@@ -182,7 +182,7 @@ const ProfileSettings = () => {
                     <AnimatePresence mode="wait">
                         {/* PROFILE TAB */}
                         {activeTab === 'profile' && (
-                            <motion.div key="profile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                            <m.div key="profile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
                                 <div className="max-w-2xl bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 transition-colors">
                                     <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Personal Information</h2>
                                     
@@ -234,12 +234,12 @@ const ProfileSettings = () => {
                                         </div>
                                     </form>
                                 </div>
-                            </motion.div>
+                            </m.div>
                         )}
 
                         {/* PREFERENCES TAB */}
                         {activeTab === 'preferences' && (
-                            <motion.div key="preferences" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                            <m.div key="preferences" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
                                 <div className="max-w-2xl space-y-6">
                                     
                                     {/* Appearance */}
@@ -280,12 +280,12 @@ const ProfileSettings = () => {
                                     </div>
 
                                 </div>
-                            </motion.div>
+                            </m.div>
                         )}
 
                         {/* FAVORITES TAB */}
                         {activeTab === 'favorites' && (
-                            <motion.div key="favorites" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                            <m.div key="favorites" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
                                 <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 transition-colors">
                                     <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2"><Heart className="text-red-500 fill-red-500" /> Saved Properties</h2>
                                     
@@ -323,12 +323,12 @@ const ProfileSettings = () => {
                                         </div>
                                     )}
                                 </div>
-                            </motion.div>
+                            </m.div>
                         )}
 
                         {/* SEARCHES TAB */}
                         {activeTab === 'searches' && (
-                            <motion.div key="searches" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                            <m.div key="searches" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
                                 <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 transition-colors">
                                     <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2"><Search className="text-blue-600" /> Saved Map Searches</h2>
                                     
@@ -363,7 +363,7 @@ const ProfileSettings = () => {
                                         </div>
                                     )}
                                 </div>
-                            </motion.div>
+                            </m.div>
                         )}
                     </AnimatePresence>
                 </div>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Calculator, X, DollarSign, Wallet, Percent, Calendar } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, m } from "framer-motion";
 import api from '../context/api';
 
 const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
@@ -51,7 +51,7 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
             {isOpen && (
                 <>
                     {/* Backdrop */}
-                    <motion.div 
+                    <m.div 
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -60,7 +60,7 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
                     />
 
                     {/* Modal */}
-                    <motion.div 
+                    <m.div 
                         initial={{ opacity: 0, x: -100 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -100 }}
@@ -168,7 +168,7 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
                             {error && <p className="mt-4 text-sm text-red-500 bg-red-50 p-3 rounded-lg">{error}</p>}
 
                             {result && (
-                                <motion.div 
+                                <m.div 
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     className="mt-6 border-t pt-6"
@@ -199,10 +199,10 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
                                     >
                                         Filter Map to Affordability
                                     </button>
-                                </motion.div>
+                                </m.div>
                             )}
                         </div>
-                    </motion.div>
+                    </m.div>
                 </>
             )}
         </AnimatePresence>

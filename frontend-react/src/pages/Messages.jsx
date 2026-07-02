@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/UserAuthContext';
 import Navbar from '../components/Navbar';
-import { motion } from 'framer-motion';
+import { m } from "framer-motion";
 import { Send, Paperclip, X, Image as ImageIcon, FileText, User, MessageSquare, ShieldAlert } from 'lucide-react';
 
 // axios is globally configured with withCredentials = true
@@ -216,10 +216,10 @@ const Messages = () => {
                 </div>
 
                 {error && (
-                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-4 bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm font-medium flex items-center justify-between">
+                    <m.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-4 bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm font-medium flex items-center justify-between">
                         <span>{error}</span>
                         <button onClick={() => setError('')}><X className="w-4 h-4" /></button>
-                    </motion.div>
+                    </m.div>
                 )}
 
                 <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden grid grid-cols-1 md:grid-cols-[360px_1fr] flex-1 shadow-sm min-h-[600px] max-h-[calc(100vh-200px)]">
@@ -368,7 +368,7 @@ const Messages = () => {
                                     {messages.map((message) => {
                                         const mine = message.sender_id === user?.id;
                                         return (
-                                            <motion.div 
+                                            <m.div 
                                                 initial={{ opacity: 0, y: 10 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 key={message.id} 
@@ -411,7 +411,7 @@ const Messages = () => {
                                                         {formatMessageTime(message.created_at)}
                                                     </p>
                                                 </div>
-                                            </motion.div>
+                                            </m.div>
                                         );
                                     })}
                                     <div ref={messagesEndRef} />

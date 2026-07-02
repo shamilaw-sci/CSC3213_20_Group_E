@@ -4,7 +4,7 @@ import axios from 'axios';
 import { UserAuthProvider } from './context/UserAuthContext';
 import { ThemeProvider } from './context/ThemeProvider';
 import { AdminAuthProvider } from './pages/admin/context/AdminAuthContext';
-import { MotionConfig } from 'framer-motion';
+import { MotionConfig, LazyMotion, domAnimation } from 'framer-motion';
 
 // Components that should load immediately
 import FloatingAIChat from './components/FloatingAIChat';
@@ -51,6 +51,7 @@ const PageLoader = () => (
 function App() {
   return (
     <MotionConfig reducedMotion="user">
+      <LazyMotion features={domAnimation}>
       <UserAuthProvider>
         <ThemeProvider>
           <Router>
@@ -102,6 +103,7 @@ function App() {
           </Router>
         </ThemeProvider>
       </UserAuthProvider>
+      </LazyMotion>
     </MotionConfig>
   );
 }

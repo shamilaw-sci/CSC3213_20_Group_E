@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, m } from "framer-motion";
 import { Bot, X, Send, Loader, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../context/api';
@@ -21,9 +21,7 @@ const FloatingAIChat = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
-    useEffect(() => {
-        if (isOpen) scrollToBottom();
-    }, [messages, isOpen]);
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -35,6 +33,7 @@ const FloatingAIChat = () => {
         const newMessages = [...messages, { id: Date.now(), role: 'user', text: userMsg }];
         setMessages(newMessages);
         setLoading(true);
+        setTimeout(scrollToBottom, 100);
 
         try {
             // Prepare history (excluding the very first greeting if it's too generic, but passing it is fine)
@@ -46,6 +45,7 @@ const FloatingAIChat = () => {
             });
 
             setMessages(prev => [...prev, { id: Date.now() + 1, role: 'model', text: response.data.response }]);
+            setTimeout(scrollToBottom, 100);
         } catch (error) {
             setMessages(prev => [...prev, { id: Date.now() + 1, role: 'model', text: "Sorry, I'm having trouble connecting right now. Please try again later." }]);
         } finally {
@@ -92,7 +92,7 @@ const FloatingAIChat = () => {
         <div className="fixed bottom-6 right-6 z-[9999] font-outfit">
             <AnimatePresence>
                 {isOpen && (
-                    <motion.div
+                    <m.div
                         initial={{ opacity: 0, y: 20, scale: 0.9 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.9 }}
@@ -164,19 +164,22 @@ const FloatingAIChat = () => {
                                 </button>
                             </form>
                         </div>
-                    </motion.div>
+                    </m.div>
                 )}
             </AnimatePresence>
 
             {/* Floating Bubble */}
-            <motion.button
+            <m.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={() => {
+                    setIsOpen(!isOpen);
+                    if (!isOpen) setTimeout(scrollToBottom, 200);
+                }}
                 className="w-14 h-14 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-full flex items-center justify-center shadow-2xl hover:shadow-blue-500/50 transition-all border-2 border-white dark:border-gray-800"
             >
                 {isOpen ? <X className="w-6 h-6" /> : <Bot className="w-7 h-7" />}
-            </motion.button>
+            </m.button>
         </div>
     );
 };

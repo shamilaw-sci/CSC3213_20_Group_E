@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { fetchDashboardStats, fetchRevenueData, fetchUserGrowth, fetchListings } from "../api/adminApi";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Home, Clock, Users, DollarSign, ArrowUpRight, ArrowDownRight, ChevronRight } from "lucide-react";
 
 // Simple bar chart using Tailwind utilities
@@ -12,7 +12,7 @@ const BarChart = ({ data = [], colorClass = "bg-blue-500" }) => {
       {data.map((d, i) => (
         <div key={i} className="flex flex-col items-center flex-1 group">
           <div className="w-full relative flex items-end justify-center h-full rounded-t-lg bg-gray-50 overflow-hidden">
-            <motion.div
+            <m.div
               initial={{ height: 0 }}
               animate={{ height: `${(d.value / max) * 100}%` }}
               transition={{ duration: 1, ease: "easeOut", delay: i * 0.1 }}
@@ -106,7 +106,7 @@ const DashboardPage = () => {
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((stat, idx) => (
-          <motion.div 
+          <m.div 
             key={idx}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -132,13 +132,13 @@ const DashboardPage = () => {
                     {stat.desc}
                 </span>
             </div>
-          </motion.div>
+          </m.div>
         ))}
       </div>
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }} className="admin-card">
+        <m.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }} className="admin-card">
           <div className="admin-card-header">
             <div>
                 <h3 className="admin-card-title">Revenue Overview</h3>
@@ -146,9 +146,9 @@ const DashboardPage = () => {
             </div>
           </div>
           <BarChart data={revenue} colorClass="bg-gradient-to-t from-blue-600 to-blue-400" />
-        </motion.div>
+        </m.div>
 
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }} className="admin-card">
+        <m.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }} className="admin-card">
           <div className="admin-card-header">
             <div>
                 <h3 className="admin-card-title">User Growth</h3>
@@ -156,13 +156,13 @@ const DashboardPage = () => {
             </div>
           </div>
           <BarChart data={userGrowth} colorClass="bg-gradient-to-t from-indigo-600 to-indigo-400" />
-        </motion.div>
+        </m.div>
       </div>
 
       {/* Tables Row */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Overview List */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="admin-card xl:col-span-1">
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="admin-card xl:col-span-1">
           <div className="admin-card-header border-b border-gray-100 pb-4">
             <h3 className="admin-card-title">Platform Summary</h3>
           </div>
@@ -180,10 +180,10 @@ const DashboardPage = () => {
               </div>
             ))}
           </div>
-        </motion.div>
+        </m.div>
 
         {/* Pending Listings Table */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="admin-card xl:col-span-2 flex flex-col">
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="admin-card xl:col-span-2 flex flex-col">
           <div className="admin-card-header border-b border-gray-100 pb-4">
             <h3 className="admin-card-title">Pending Approvals</h3>
             <a href="/admin/listings" className="text-sm font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 bg-blue-50 px-4 py-2 rounded-lg transition-colors">
@@ -228,7 +228,7 @@ const DashboardPage = () => {
               </table>
             </div>
           </div>
-        </motion.div>
+        </m.div>
       </div>
 
     </div>

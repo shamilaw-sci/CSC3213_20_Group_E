@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAdminAuth } from "../context/AdminAuthContext";
 import { adminLogin } from "../api/adminApi";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { ShieldAlert, ArrowRight, Loader2, Eye, EyeOff } from "lucide-react";
 
 const LoginPage = () => {
@@ -36,7 +36,7 @@ const LoginPage = () => {
       <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-500/10 blur-3xl rounded-full mix-blend-multiply pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-cyan-500/10 blur-3xl rounded-full mix-blend-multiply pointer-events-none" />
 
-      <motion.div 
+      <m.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
@@ -90,9 +90,9 @@ const LoginPage = () => {
                 </div>
 
                 {error && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-red-50 text-red-600 text-xs font-bold p-3 rounded-lg text-center border border-red-100">
+                    <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-red-50 text-red-600 text-xs font-bold p-3 rounded-lg text-center border border-red-100">
                         {error}
-                    </motion.div>
+                    </m.div>
                 )}
 
                 <button 
@@ -115,7 +115,7 @@ const LoginPage = () => {
                 </p>
             </div>
         </div>
-      </motion.div>
+      </m.div>
     </div>
   );
 };
