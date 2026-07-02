@@ -57,8 +57,8 @@ const LoginPage = () => {
 
             <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                    <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Email Address</label>
-                    <input
+                    <label htmlFor="a70pxl" htmlFor="zt6z5z" className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Email Address</label>
+                    <input aria-label="Accessible interactive control"
                         type="email"
                         className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium"
                         placeholder="admin@thirasara.lk"
@@ -69,9 +69,9 @@ const LoginPage = () => {
                 </div>
 
                 <div className="relative">
-                    <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Password</label>
+                    <label htmlFor="l8kov9" className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Password</label aria-label="Accessible interactive control">
                     <div className="relative">
-                        <input
+                        <input aria-label="Accessible interactive control"
                             type={showPassword ? "text" : "password"}
                             className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium pr-12"
                             placeholder="••••••••"

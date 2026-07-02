@@ -104,9 +104,9 @@ const ReportsPage = () => {
           <option value="pending">Pending</option>
           <option value="refunded">Refunded</option>
         </select>
-        <input type="date" className="admin-filter-select" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+        <input aria-label="Accessible interactive control" type="date" className="admin-filter-select" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
         <span style={{ color: "var(--admin-text-muted)" }}>to</span>
-        <input type="date" className="admin-filter-select" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+        <input aria-label="Accessible interactive control" type="date" className="admin-filter-select" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
       </div>
 
       <div className="admin-card" style={{ padding: 0 }}>

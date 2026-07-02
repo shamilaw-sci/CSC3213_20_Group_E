@@ -192,36 +192,36 @@ const ProfileSettings = () => {
                                     <form onSubmit={handleSubmit} className="space-y-6">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div>
-                                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Full Name</label>
+                                                <label htmlFor="mjc448" htmlFor="zzgfh2" className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Full Name</label>
                                                 <div className="relative">
                                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><User className="h-5 w-5 text-gray-400" /></div>
-                                                    <input type="text" name="name" value={formData.name} onChange={handleChange} className="pl-10 w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all outline-none font-medium" required />
+                                                    <input aria-label="Accessible interactive control" type="text" name="name" value={formData.name} onChange={handleChange} className="pl-10 w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all outline-none font-medium" required />
                                                 </div>
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Phone Number</label>
+                                                <label htmlFor="p6s1d8" className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Phone Number</label>
                                                 <div className="relative">
-                                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Phone className="h-5 w-5 text-gray-400" /></div>
-                                                    <input type="text" name="phone" value={formData.phone} onChange={handleChange} placeholder="0712345678" className="pl-10 w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all outline-none font-medium" />
+                                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Phone className="h-5 w-5 text-gray-400 aria-label="Accessible interactive control"" /></div>
+                                                    <input aria-label="Accessible interactive control" type="text" name="phone" value={formData.phone} onChange={handleChange} placeholder="0712345678" className="pl-10 w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all outline-none font-medium" />
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div className="pt-6 border-t border-gray-100 dark:border-gray-700">
                                             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Change Password</h3>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 htmlFor="h4ujbl" gap-6">
                                                 <div>
-                                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">New Password</label>
+                                                    <label htmlFor="3u5wza" className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">New Password</label>
                                                     <div className="relative">
-                                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Lock className="h-5 w-5 text-gray-400" /></div>
-                                                        <input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="Leave blank to keep current" className="pl-10 w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all outline-none font-medium" />
+                                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center aria-label="Accessible interactive control" pointer-events-none"><Lock className="h-5 w-5 text-gray-400" /></div>
+                                                        <input aria-label="Accessible interactive control" type="password" name="password" value={formData.password} onChange={handleChange} placeholder="Leave blank to keep current" className="pl-10 w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all outline-none font-medium" />
                                                     </div>
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Confirm Password</label>
+                                                    <label htmlFor="6bj885" className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Confirm Password</label>
                                                     <div className="relative">
                                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Lock className="h-5 w-5 text-gray-400" /></div>
-                                                        <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder="Confirm new password" className="pl-10 w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all outline-none font-medium" />
+                                                        <input aria-label="Accessible interactive control" type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder="Confirm new password" className="pl-10 w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all outline-none font-medium" />
                                                     </div>
                                                 </div>
                                             </div>
@@ -272,8 +272,8 @@ const ProfileSettings = () => {
                                                     <p className="text-sm text-gray-500 dark:text-gray-400">Receive alerts for new messages and saved searches</p>
                                                 </div>
                                             </div>
-                                            <label className="relative inline-flex items-center cursor-pointer">
-                                                <input type="checkbox" name="email_notifications" checked={formData.email_notifications} onChange={(e) => { handleChange(e); handleSubmit(e); }} className="sr-only peer" />
+                                            <label htmlFor="6awq8f" className="relative inline-flex items-center cursor-pointer">
+                                                <input aria-label="Accessible interactive control" type="checkbox" name="email_notifications" checked={formData.email_notifications} onChange={(e) => { handleChange(e); handleSubmit(e); }} className="sr-only peer" />
                                                 <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
                                             </label>
                                         </div>

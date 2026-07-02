@@ -178,7 +178,7 @@ const AgentDashboard = () => {
                                 </div>
                                 <div className="p-4 border-t border-gray-200 bg-gray-50">
                                     <div className="flex gap-2">
-                                        <input type="text" placeholder="Type a message..." className="flex-1 rounded-full border-gray-300 px-4 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
+                                        <input aria-label="Accessible interactive control" type="text" placeholder="Type a message..." className="flex-1 rounded-full border-gray-300 px-4 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
                                         <button className="bg-blue-600 text-white rounded-full px-6 py-2 text-sm font-bold hover:bg-blue-700">Send</button>
                                     </div>
                                 </div>

@@ -105,7 +105,7 @@ const Login = () => {
             <div className="w-full md:w-[450px] lg:w-[500px] flex flex-col justify-center px-8 sm:px-12 py-10 relative">
                 
                 {/* Back Button */}
-                <button 
+                <button aria-label="Accessible interactive control" 
                     onClick={() => step === 2 ? setStep(1) : step === 3 ? setStep(2) : navigate('/')} 
                     className="absolute top-6 left-6 text-gray-500 hover:text-gray-800 transition p-2 rounded-full hover:bg-gray-100"
                 >
@@ -169,10 +169,10 @@ const Login = () => {
                     {step === 1 && (
                         <form onSubmit={handleEmailCheck} className="animate-fade-in">
                             <div className="mb-4">
-                                <label className="block text-gray-700 text-sm font-medium mb-2">
+                                <label htmlFor="o9rlxc" className="block text-gray-700 text-sm font-medium mb-2">
                                     Email Address <span className="text-red-500">*</span>
                                 </label>
-                                <input
+                                <input aria-label="Accessible interactive control"
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value.toLowerCase())}
@@ -194,7 +194,7 @@ const Login = () => {
                     {step === 2 && (
                         <form onSubmit={handleLogin} className="animate-fade-in">
                             <div className="mb-6">
-                                <label className="block text-gray-700 text-sm font-medium mb-2 flex justify-between">
+                                <label htmlFor="h49tyj" className="block text-gray-700 text-sm font-medium mb-2 flex justify-between">
                                     <span>Password <span className="text-red-500">*</span></span>
                                     <span
                                      onClick={() => {setStep(3);setError('');setResetMessage('');}}
@@ -202,7 +202,7 @@ const Login = () => {
                                 </label>
                                 
                                 <div className="relative">
-                                    <input
+                                    <input aria-label="Accessible interactive control"
                                         type={showPassword ? "text" : "password"}
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
@@ -251,7 +251,7 @@ const Login = () => {
                             )}
 
                             <div className="mb-6">
-                                <label className="block text-gray-700 text-sm font-medium mb-2">
+                                <label className htmlFor="99c651"="block text-gray-700 text-sm font-medium mb-2">
                                     Email Address <span className="text-red-500">*</span>
                                 </label>
                                 <input

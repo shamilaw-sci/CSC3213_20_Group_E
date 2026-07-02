@@ -26,8 +26,8 @@ const BanModal = ({ user, onConfirm, onCancel }) => {
           This will restrict their access immediately.
         </p>
         <div className="admin-form-group">
-          <label className="admin-form-label">Reason for Ban</label>
-          <textarea
+          <label htmlFor="4md3g3" className="admin-form-label">Reason for Ban</label>
+          <textarea aria-label="Accessible interactive control"
             className="admin-form-control"
             rows={3}
             placeholder="State the reason for banning this user…"

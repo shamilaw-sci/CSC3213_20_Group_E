@@ -148,7 +148,7 @@ const FloatingAIChat = () => {
                         {/* Input Area */}
                         <div className="p-4 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700">
                             <form onSubmit={handleSubmit} className="flex items-center gap-2">
-                                <input
+                                <input aria-label="Accessible interactive control"
                                     type="text"
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}

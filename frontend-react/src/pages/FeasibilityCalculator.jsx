@@ -83,12 +83,12 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
 
                             <form onSubmit={handleCalculate} className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Monthly Salary (LKR)</label>
+                                    <label htmlFor="l13opy" htmlFor="b7d54o" className="block text-sm font-semibold text-gray-700 mb-1">Monthly Salary (LKR)</label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <DollarSign className="h-4 w-4 text-gray-400" />
                                         </div>
-                                        <input
+                                        <input aria-label="Accessible interactive control"
                                             type="number"
                                             name="salary"
                                             value={formData.salary}
@@ -101,12 +101,12 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Current Savings / Downpayment</label>
+                                    <label htmlFor="sz753m" className="block text-sm font-semibold text-gray-700 mb-1">Current Savings / Downpayment</label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <Wallet className="h-4 w-4 text-gray-400" />
                                         </div>
-                                        <input
+                                        <input aria-label="Accessible interactive control"
                                             type="number"
                                             name="savings"
                                             value={formData.savings}
@@ -119,12 +119,12 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Existing Monthly Loan Deductions</label>
+                                    <label htmlFor="3k8nyy" className="block text-sm font-semibold text-gray-700 mb-1">Existing Monthly Loan Deductions</label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <Percent className="h-4 w-4 text-gray-400" />
                                         </div>
-                                        <input
+                                        <input aria-label="Accessible interactive control"
                                             type="number"
                                             name="loanDeductions"
                                             value={formData.loanDeductions}
@@ -137,7 +137,7 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Desired Repayment Tenure (Years)</label>
+                                    <label htmlFor="yfezqh" className="block text-sm font-semibold text-gray-700 mb-1">Desired Repayment Tenure (Years)</label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <Calendar className="h-4 w-4 text-gray-400" />

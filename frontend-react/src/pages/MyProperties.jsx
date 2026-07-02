@@ -70,7 +70,7 @@ const EditPropertyModal = ({ property, onCancel, onSaved }) => {
                     {error && <div className="md:col-span-2 bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm font-medium">{error}</div>}
 
                     <div className="md:col-span-2">
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Property Type</label>
+                        <label htmlFor="xduq6e" htmlFor="62xpnf" className="block text-sm font-bold text-gray-700 mb-2">Property Type</label>
                         <select name="type" value={formData.type} onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
                             <option value="House">House</option>
                             <option value="Land">Land</option>
@@ -78,42 +78,42 @@ const EditPropertyModal = ({ property, onCancel, onSaved }) => {
                     </div>
 
                     <div className="md:col-span-2">
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Title</label>
-                        <input name="title" value={formData.title} onChange={handleChange} required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
+                        <label htmlFor="rapvbi" className="block text-sm font-bold text-gray-700 mb-2">Title</label>
+                        <input aria-label="Accessible interactive control" name="title" value={formData.title} onChange={handleChange} required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Price (Rs.)</label>
-                        <input type="number" name="price" value={formData.price} onChange={handleChange} required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
+                        <label htmlFor="sb7h5e" className aria-label="Accessible interactive control"="block text-sm font-bold text-gray-700 mb-2">Price (Rs.)</label>
+                        <input aria-label="Accessible interactive control" type="number" name="price" value={formData.price} onChange={handleChange} required className="w-full px-4 py-3 border border-gray-300 rounded-lg htmlFor="4if859" focus:outline-none focus:border-blue-500" />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Land Size (Perches)</label>
-                        <input type="number" name="landSize" value={formData.landSize} onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
+                        <label htmlFor="ac6gom" className="block text-sm font-bold text-gray-700 mb-2">Land Size (Perches)</label>
+                        <input aria-label="Accessible interactive control" type="number" name="landSize" value={formData.landSize} onChange={handleChange} className="w-full htmlFor="6xfyqu" px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
                     </div>
 
                     <div className="md:col-span-2">
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Address</label>
-                        <input name="address" value={formData.address} onChange={handleChange} required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
+                        <label htmlFor="88c0s2" className="block text-sm font-bold text-gray-700 mb-2">Address</label>
+                        <input aria-label="Accessible interactive control" name="address" value={formData.address} onChange={handleChange} required className="w-full px-4 py-3 htmlFor="p52g1q" border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
                     </div>
 
                     {formData.type !== 'Land' && (
                         <>
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-2">Bedrooms</label>
-                                <input type="number" name="bedrooms" value={formData.bedrooms} onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
+                                <label htmlFor="7x815n" className="block text-sm font-bold text-gray-700 mb-2">Bedrooms</label>
+                                <input aria-label="Accessible htmlFor="4nuq8u" interactive control" type="number" name="bedrooms" value={formData.bedrooms} onChange={handleChange} className aria-label="Accessible interactive control"="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-2">Bathrooms</label>
-                                <input type="number" name="bathrooms" value={formData.bathrooms} onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
+                                <label htmlFor="3ssl0e" className="block text-sm font-bold text-gray-700 mb-2">Bathrooms</label>
+                                <input aria-label="Accessible htmlFor="zx9yga" interactive control" type="number" name="bathrooms" value={formData.bathrooms} onChange={handleChange} className aria-label="Accessible interactive control"="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
                             </div>
                         </>
                     )}
 
                     <div className="md:col-span-2">
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Description</label>
-                        <textarea name="description" value={formData.description} onChange={handleChange} rows={5} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
+                        <label htmlFor="2k4rsd" className="block text-sm font-bold text-gray-700 mb-2">Description</label>
+                        <textarea aria-label="Accessible interactive control" name="description" value={formData.description} onChange={handleChange} rows={5} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
                     </div>
                 </div>
 

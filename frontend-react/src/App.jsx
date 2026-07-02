@@ -4,6 +4,7 @@ import axios from 'axios';
 import { UserAuthProvider } from './context/UserAuthContext';
 import { ThemeProvider } from './context/ThemeProvider';
 import { AdminAuthProvider } from './pages/admin/context/AdminAuthContext';
+import { MotionConfig } from 'framer-motion';
 
 // Components that should load immediately
 import FloatingAIChat from './components/FloatingAIChat';
@@ -49,9 +50,10 @@ const PageLoader = () => (
 
 function App() {
   return (
-    <UserAuthProvider>
-      <ThemeProvider>
-        <Router>
+    <MotionConfig reducedMotion="user">
+      <UserAuthProvider>
+        <ThemeProvider>
+          <Router>
           <FloatingAIChat />
           <Suspense fallback={<PageLoader />}>
             <Routes>
@@ -97,9 +99,10 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           </Suspense>
-        </Router>
-      </ThemeProvider>
-    </UserAuthProvider>
+          </Router>
+        </ThemeProvider>
+      </UserAuthProvider>
+    </MotionConfig>
   );
 }
 

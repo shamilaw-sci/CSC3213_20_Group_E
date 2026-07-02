@@ -331,7 +331,7 @@ const AddProperty = () => {
                         )}
 
                         <div className="mb-8 border-b pb-8">
-                            <label className="block text-gray-900 text-lg font-bold mb-4">What are you listing?</label>
+                            <label htmlFor="303i42" htmlFor="h88x5b" className="block text-gray-900 text-lg font-bold mb-4">What are you listing?</label>
                             <div className="flex space-x-4">
                                 <div onClick={() => handleTypeChange('House')} className={`flex-1 flex flex-col items-center justify-center p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 ${formData.type === 'House' ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-sm' : 'border-gray-200 hover:border-blue-300 text-gray-600 hover:bg-gray-50'}`}>
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
@@ -347,20 +347,20 @@ const AddProperty = () => {
                         <h3 className="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Basic Information</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                             <div className="md:col-span-2">
-                                <label className="block text-gray-700 text-sm font-medium mb-2">Property Title <span className="text-red-500">*</span></label>
-                                <input type="text" name="title" value={formData.title} onChange={handleChange} required placeholder={formData.type === 'House' ? "e.g. Beautiful 2-Story House in Colombo 07" : "e.g. 15 Perch Prime Land in Malabe"} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition" />
+                                <label htmlFor="ptvzbz" className="block text-gray-700 text-sm font-medium mb-2">Property Title <span className="text-red-500">*</span></label>
+                                <input aria-label="Accessible interactive control" type="text" name="title" value={formData.title} onChange={handleChange} required placeholder={formData.type === 'House' ? "e.g. Beautiful 2-Story House in Colombo 07" : "e.g. 15 Perch Prime Land in Malabe"} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition" />
                             </div>
                             <div>
-                                <label className="block text-gray-700 text-sm font-medium mb-2">Price (Rs.) <span className="text-red-500">*</span></label>
-                                <input type="number" name="price" value={formData.price} onChange={handleChange} required placeholder="e.g. 15000000" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition" />
+                                <label htmlFor="d0qgbf" className="block text-gray-700 text-sm font-medium mb-2">Price (Rs.) <span className="text-red-500">*</span></label>
+                                <input aria-label="Accessible interactive control" type="number" name="price" value={formData.price} onChange={handleChange} required placeholder="e.g. 15000000" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus htmlFor="gx6bea":ring-blue-500 transition" />
                             </div>
                             <div>
-                                <label className="block text-gray-700 text-sm font-medium mb-2">Street Address <span className="text-red-500">*</span></label>
-                                <input type="text" name="address" value={formData.address} onChange={handleChange} required placeholder="e.g. Kandy Road, Kadawatha" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition" />
+                                <label htmlFor="lpahvp" className="block text-gray-700 text-sm font-medium mb-2">Street Address <span className="text-red-500">*</span></label>
+                                <input aria-label="Accessible interactive control" type="text" name="address" value={formData.address} onChange={handleChange} required placeholder="e.g. Kandy Road, Kadawatha" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus htmlFor="fkfj9w":border-blue-500 focus:ring-1 focus:ring-blue-500 transition" />
                             </div>
                             <div className="md:col-span-2">
-                                <label className="block text-gray-700 text-sm font-medium mb-2">Description</label>
-                                <textarea name="description" value={formData.description} onChange={handleChange} rows="4" placeholder="Describe the key features of your property..." className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"></textarea>
+                                <label htmlFor="0iahf1" className="block text-gray-700 text-sm font-medium mb-2">Description</label>
+                                <textarea aria-label="Accessible interactive control" name="description" value={formData.description} onChange={handleChange} rows="4" placeholder="Describe the key features of your property..." className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"></textarea>
                             </div>
                         </div>
 
@@ -426,15 +426,15 @@ const AddProperty = () => {
 
                         <h3 className="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Property Features</h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                            {formData.type === 'House' && (
+                            {formData.type === 'House aria-label="Accessible interactive control"' && (
                                 <>
                                     <div>
                                         <label className="block text-gray-700 text-sm font-medium mb-2">Bedrooms</label>
-                                        <input type="number" name="bedrooms" value={formData.bedrooms} onChange={handleChange} placeholder="e.g. 3" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition" />
+                                        <input type="number" name="bedrooms" value={formData.bedrooms} onChange={handleChange} placeholder="e.g. 3" className="w-full px-4 py-3 htmlFor="n5rk94" border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition" />
                                     </div>
                                     <div>
                                         <label className="block text-gray-700 text-sm font-medium mb-2">Bathrooms</label>
-                                        <input type="number" name="bathrooms" value={formData.bathrooms} onChange={handleChange} placeholder="e.g. 2" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition" />
+                                        <input type="number" name="bathrooms" value={formData.bathrooms} onChange={handleChange} placeholder="e.g. 2" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition htmlFor="vzixqt"" />
                                     </div>
                                 </>
                             )}
@@ -470,7 +470,7 @@ const AddProperty = () => {
                                 </div>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                                     {previewUrls.map((url, index) => (
-                                        <div key={index} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 shadow-sm group">
+                                        <div key={index} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 aria-label="Accessible interactive control" shadow-sm group">
                                             <img src={url} alt={`Preview ${index + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                                             <button type="button" onClick={() => removeImage(index)} className="absolute top-2 right-2 p-1.5 bg-white/90 rounded-full text-gray-500 hover:text-red-600 hover:bg-white shadow-md transition-all opacity-0 group-hover:opacity-100">
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>

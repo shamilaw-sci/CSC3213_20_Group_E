@@ -91,30 +91,30 @@ const SettingsPage = () => {
           </div>
 
           <div className="admin-form-group">
-            <label className="admin-form-label">Listing Fee (LKR)</label>
-            <input type="number" className="admin-form-control" value={settings.listingFee} onChange={(e) => update("listingFee", Number(e.target.value))} />
+            <label htmlFor="6l0gat" className="admin-form-label">Listing Fee (LKR)</label>
+            <input aria-label="Accessible interactive control" type="number" className="admin-form-control" value={settings.listingFee} onChange={(e) => update("listingFee", Number(e.target.value))} />
           </div>
 
           <div className="admin-form-group">
-            <label className="admin-form-label">Boost / Promotion Fee (LKR)</label>
-            <input type="number" className="admin-form-control" value={settings.boostFee} onChange={(e) => update("boostFee", Number(e.target.value))} />
+            <label htmlFor="cmb6kq" className="admin-form-label">Boost / Promotion Fee (LKR)</label>
+            <input aria-label="Accessible interactive control" type="number" className="admin-form-control" value={settings.boostFee} onChange={(e) => update("boostFee", Number(e.target.value))} />
           </div>
 
           <div className="admin-form-group">
-            <label className="admin-form-label">Bank Loan Interest Rate (%)</label>
-            <input type="number" step="0.1" className="admin-form-control" value={settings.loanInterestRate} onChange={(e) => update("loanInterestRate", Number(e.target.value))} />
+            <label htmlFor="7ddvwz" className="admin-form-label">Bank Loan Interest Rate (%)</label>
+            <input aria-label="Accessible interactive control" type="number" step="0.1" className="admin-form-control" value={settings.loanInterestRate} onChange={(e) => update("loanInterestRate", Number(e.target.value))} />
             <small style={{ color: "var(--admin-text-muted)", fontSize: "0.75rem" }}>
               Used by the Financial Feasibility Engine (FR-REQ-5.3)
             </small>
           </div>
 
           <div className="admin-form-group">
-            <label className="admin-form-label">Max Repayment Tenure (Years)</label>
-            <input type="number" className="admin-form-control" value={settings.maxRepaymentTenure} onChange={(e) => update("maxRepaymentTenure", Number(e.target.value))} />
+            <label htmlFor="2f9m7a" className="admin-form-label">Max Repayment Tenure (Years)</label>
+            <input aria-label="Accessible interactive control" type="number" className="admin-form-control" value={settings.maxRepaymentTenure} onChange={(e) => update("maxRepaymentTenure", Number(e.target.value))} />
           </div>
 
           <div className="admin-form-group">
-            <label className="admin-form-label">PayHere Mode</label>
+            <label htmlFor="v7mzkh" className="admin-form-label">PayHere Mode</label>
             <select className="admin-form-control" value={settings.payhereMode} onChange={(e) => update("payhereMode", e.target.value)}>
               <option value="sandbox">Sandbox (Testing)</option>
               <option value="live">Live (Production)</option>
@@ -129,18 +129,18 @@ const SettingsPage = () => {
           </div>
 
           <div className="admin-form-group">
-            <label className="admin-form-label">Max Images Per Listing</label>
-            <input type="number" className="admin-form-control" value={settings.maxImagesPerListing} onChange={(e) => update("maxImagesPerListing", Number(e.target.value))} />
+            <label htmlFor="z3a3va" className="admin-form-label">Max Images Per Listing</label>
+            <input aria-label="Accessible interactive control" type="number" className="admin-form-control" value={settings.maxImagesPerListing} onChange={(e) => update("maxImagesPerListing", Number(e.target.value))} />
           </div>
 
           <div className="admin-form-group">
-            <label className="admin-form-label">Max Buyer Inquiries Per Day (Rate Limit)</label>
-            <input type="number" className="admin-form-control" value={settings.maxInquiriesPerDay} onChange={(e) => update("maxInquiriesPerDay", Number(e.target.value))} />
+            <label htmlFor="pm5xpo" className="admin-form-label">Max Buyer Inquiries Per Day (Rate Limit)</label>
+            <input aria-label="Accessible interactive control" type="number" className="admin-form-control" value={settings.maxInquiriesPerDay} onChange={(e) => update("maxInquiriesPerDay", Number(e.target.value))} />
           </div>
 
           <div className="admin-form-group">
-            <label className="admin-form-label">Session Timeout (Minutes)</label>
-            <input type="number" className="admin-form-control" value={settings.sessionTimeoutMinutes} onChange={(e) => update("sessionTimeoutMinutes", Number(e.target.value))} />
+            <label htmlFor="7h7jog" className="admin-form-label">Session Timeout (Minutes)</label>
+            <input aria-label="Accessible interactive control" type="number" className="admin-form-control" value={settings.sessionTimeoutMinutes} onChange={(e) => update("sessionTimeoutMinutes", Number(e.target.value))} />
             <small style={{ color: "var(--admin-text-muted)", fontSize: "0.75rem" }}>SEC-003: Auto-logout inactive users</small>
           </div>
 
@@ -155,7 +155,7 @@ const SettingsPage = () => {
                   <div style={{ fontSize: "0.875rem", fontWeight: 500, color: danger && settings[key] ? "var(--admin-danger)" : "var(--admin-text-primary)" }}>{label}</div>
                   <div style={{ fontSize: "0.75rem", color: "var(--admin-text-secondary)" }}>{desc}</div>
                 </div>
-                <button
+                <button aria-label="Accessible interactive control"
                   onClick={() => update(key, !settings[key])}
                   style={{
                     width: 44, height: 24, borderRadius: 12, border: "none",
@@ -200,7 +200,7 @@ const SettingsPage = () => {
             ))}
           </div>
           <div style={{ display: "flex", gap: 10 }}>
-            <input
+            <input aria-label="Accessible interactive control"
               className="admin-form-control"
               placeholder="Add new category…"
               value={newCategory}

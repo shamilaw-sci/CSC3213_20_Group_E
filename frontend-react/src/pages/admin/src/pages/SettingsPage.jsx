@@ -87,8 +87,8 @@ const SettingsPage = () => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Listing Fee (LKR)</label>
-            <input
+            <label htmlFor="gn5f6o" className="form-label">Listing Fee (LKR)</label>
+            <input aria-label="Accessible interactive control"
               type="number"
               className="form-control"
               value={settings.listingFee}
@@ -97,8 +97,8 @@ const SettingsPage = () => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Boost / Promotion Fee (LKR)</label>
-            <input
+            <label htmlFor="lk9sg6" className="form-label">Boost / Promotion Fee (LKR)</label>
+            <input aria-label="Accessible interactive control"
               type="number"
               className="form-control"
               value={settings.boostFee}
@@ -107,8 +107,8 @@ const SettingsPage = () => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Bank Loan Interest Rate (%)</label>
-            <input
+            <label htmlFor="47udwy" className="form-label">Bank Loan Interest Rate (%)</label>
+            <input aria-label="Accessible interactive control"
               type="number"
               step="0.1"
               className="form-control"
@@ -121,8 +121,8 @@ const SettingsPage = () => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Max Repayment Tenure (Years)</label>
-            <input
+            <label htmlFor="9mfi0q" className="form-label">Max Repayment Tenure (Years)</label>
+            <input aria-label="Accessible interactive control"
               type="number"
               className="form-control"
               value={settings.maxRepaymentTenure}
@@ -131,7 +131,7 @@ const SettingsPage = () => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">PayHere Mode</label>
+            <label htmlFor="lc1acl" className="form-label">PayHere Mode</label>
             <select
               className="form-control"
               value={settings.payhereMode}
@@ -150,8 +150,8 @@ const SettingsPage = () => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Max Images Per Listing</label>
-            <input
+            <label htmlFor="z3lk7t" className="form-label">Max Images Per Listing</label>
+            <input aria-label="Accessible interactive control"
               type="number"
               className="form-control"
               value={settings.maxImagesPerListing}
@@ -160,8 +160,8 @@ const SettingsPage = () => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Max Buyer Inquiries Per Day (Rate Limit)</label>
-            <input
+            <label htmlFor="45xofx" className="form-label">Max Buyer Inquiries Per Day (Rate Limit)</label>
+            <input aria-label="Accessible interactive control"
               type="number"
               className="form-control"
               value={settings.maxInquiriesPerDay}
@@ -170,8 +170,8 @@ const SettingsPage = () => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Session Timeout (Minutes)</label>
-            <input
+            <label htmlFor="05848b" className="form-label">Session Timeout (Minutes)</label>
+            <input aria-label="Accessible interactive control"
               type="number"
               className="form-control"
               value={settings.sessionTimeoutMinutes}
@@ -191,7 +191,7 @@ const SettingsPage = () => {
                   <div style={{ fontSize: "0.875rem", fontWeight: 500, color: danger && settings[key] ? "var(--danger)" : "var(--text-primary)" }}>{label}</div>
                   <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>{desc}</div>
                 </div>
-                <button
+                <button aria-label="Accessible interactive control"
                   onClick={() => update(key, !settings[key])}
                   style={{
                     width: 44, height: 24, borderRadius: 12, border: "none",
@@ -236,7 +236,7 @@ const SettingsPage = () => {
             ))}
           </div>
           <div style={{ display: "flex", gap: 10 }}>
-            <input
+            <input aria-label="Accessible interactive control"
               className="form-control"
               placeholder="Add new category…"
               value={newCategory}

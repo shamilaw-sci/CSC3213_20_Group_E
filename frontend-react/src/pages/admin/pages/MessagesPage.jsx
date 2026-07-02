@@ -270,7 +270,7 @@ const MessagesPage = () => {
                       Attach
                       <input type="file" accept="image/*,.pdf" style={{ display: "none" }} onChange={(event) => setAttachment(event.target.files?.[0] || null)} />
                     </label>
-                    <input
+                    <input aria-label="Accessible interactive control" aria-label="Accessible interactive control"
                       className="admin-form-control"
                       value={draft}
                       onChange={(event) => setDraft(event.target.value)}

@@ -37,8 +37,8 @@ const MortgageCalculator = ({ propertyPrice }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-4">
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-1">Home Price (Rs.)</label>
-                        <input 
+                        <label htmlFor="tz8jfs" htmlFor="mngonu" className="block text-sm font-bold text-gray-700 mb-1">Home Price (Rs.)</label>
+                        <input aria-label="Accessible interactive control" 
                             type="number" 
                             value={price}
                             onChange={(e) => setPrice(Number(e.target.value))}
@@ -47,9 +47,9 @@ const MortgageCalculator = ({ propertyPrice }) => {
                     </div>
                     
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-1">Down Payment (%)</label>
+                        <label htmlFor="si30d9" className="block text-sm font-bold text-gray-700 mb-1">Down Payment (%)</label>
                         <div className="flex gap-2">
-                            <input 
+                            <input aria-label="Accessible interactive control" 
                                 type="number" 
                                 value={downPaymentPercent}
                                 onChange={(e) => setDownPaymentPercent(Number(e.target.value))}
@@ -59,7 +59,7 @@ const MortgageCalculator = ({ propertyPrice }) => {
                                 Rs. {(price * (downPaymentPercent / 100)).toLocaleString(undefined, {maximumFractionDigits: 0})}
                             </div>
                         </div>
-                        <input 
+                        <input aria-label="Accessible interactive control" 
                             type="range" 
                             min="0" max="100" 
                             value={downPaymentPercent} 
@@ -70,16 +70,16 @@ const MortgageCalculator = ({ propertyPrice }) => {
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-1">Interest Rate (%)</label>
-                            <input 
+                            <label htmlFor="1evz63" className="block text-sm font-bold text-gray-700 mb-1">Interest Rate (%)</label>
+                            <input aria-label="Accessible interactive control" 
                                 type="number" step="0.1"
                                 value={interestRate}
                                 onChange={(e) => setInterestRate(Number(e.target.value))}
-                                className="w-full bg-gray-50 border border-gray-300 rounded-lg p-3 font-semibold focus:ring-blue-500 focus:border-blue-500"
+                                className="w-full bg-gray-50 htmlFor="sdkv2f" border border-gray-300 rounded-lg p-3 font-semibold focus:ring-blue-500 focus:border-blue-500"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-1">Loan Term (Years)</label>
+                            <label htmlFor="bdon3b" className="block text-sm font-bold text-gray-700 mb-1">Loan Term (Years)</label>
                             <select 
                                 value={loanTerm}
                                 onChange={(e) => setLoanTerm(Number(e.target.value))}
