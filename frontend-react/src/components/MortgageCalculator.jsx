@@ -75,7 +75,7 @@ const MortgageCalculator = ({ propertyPrice }) => {
                                 type="number" step="0.1"
                                 value={interestRate}
                                 onChange={(e) => setInterestRate(Number(e.target.value))}
-                                className="w-full bg-gray-50 htmlFor="sdkv2f" border border-gray-300 rounded-lg p-3 font-semibold focus:ring-blue-500 focus:border-blue-500"
+                                className="w-full bg-gray-50 border border-gray-300 rounded-lg p-3 font-semibold focus:ring-blue-500 focus:border-blue-500"
                             />
                         </div>
                         <div>

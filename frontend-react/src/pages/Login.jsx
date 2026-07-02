@@ -251,7 +251,7 @@ const Login = () => {
                             )}
 
                             <div className="mb-6">
-                                <label className htmlFor="99c651"="block text-gray-700 text-sm font-medium mb-2">
+                                <label className="block text-gray-700 text-sm font-medium mb-2">
                                     Email Address <span className="text-red-500">*</span>
                                 </label>
                                 <input

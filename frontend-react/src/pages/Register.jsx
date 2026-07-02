@@ -91,7 +91,7 @@ const Register = () => {
                     <form onSubmit={handleRegister} className="animate-fade-in">
                         
                         {/* Role Selection */}
-                        <div className htmlFor="rp3ely"="mb-5">
+                        <div className="mb-5">
                             <label htmlFor="z9fqly" className="block text-gray-700 text-sm font-medium mb-2">I want to...</label>
                             <div className="flex space-x-3">
                                 <button
@@ -148,7 +148,7 @@ const Register = () => {
                         {role === 'AGENT' && (
                             <div className="bg-purple-50 p-4 rounded-lg mb-4 border border-purple-100">
                                 <h3 className="text-purple-800 font-semibold mb-3 text-sm">Agent Details</h3>
-                                <div className aria-label="Accessible interactive control"="mb-3">
+                                <div className="mb-3">
                                     <label htmlFor="70j4rc" className="block text-gray-700 text-xs font-medium mb-1">Agency Name (Optional)</label>
                                     <input aria-label="Accessible interactive control"
                                         type="text"

@@ -20,7 +20,7 @@ const RejectModal = ({ listing, onConfirm, onCancel }) => {
           <textarea
             className="form-control"
             rows={4}
-            placeholder="Please provide a clear reason for rejecting aria-label="Accessible interactive control" this listing…"
+            placeholder="Please provide a clear reason for rejecting this listing…"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
           />
