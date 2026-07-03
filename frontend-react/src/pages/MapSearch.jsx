@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { MapContainer, TileLayer, useMap, Marker, Popup, GeoJSON } from 'react-leaflet';
 import L from 'leaflet';
-import axios from 'axios';
+// axios removed for map microservice calls; use fetch with explicit URL
 import { useNavigate } from 'react-router-dom';
 import { Heart, Calculator } from 'lucide-react';
 import api from '../context/api';
@@ -137,7 +137,6 @@ const FreehandDrawControl = ({ onPolygonComplete, onDrawDelete, controlRef }) =>
         let isDrawing = false;
         let points = [];
         let polyline = null;
-        let polygon = null;
         const drawnItems = drawnItemsRef.current;
 
         const onMouseDown = (e) => {
@@ -159,7 +158,7 @@ const FreehandDrawControl = ({ onPolygonComplete, onDrawDelete, controlRef }) =>
             drawnItems.removeLayer(polyline);
 
             if (points.length > 3) {
-                polygon = L.polygon(points, { color: '#006aff', weight: 3, fillOpacity: 0.2 }).addTo(drawnItems);
+                L.polygon(points, { color: '#006aff', weight: 3, fillOpacity: 0.2 }).addTo(drawnItems);
                 
                 // Construct WKT in Lng Lat order
                 let wktPoints = points.map(pt => `${pt.lng} ${pt.lat}`).join(', ');
@@ -322,8 +321,14 @@ const MapSearch = () => {
                 if (bathsFilter) payload.baths = parseInt(bathsFilter);
                 if (typeFilter) payload.type = typeFilter;
 
-                const response = await axios.post(apiUrl, payload);
-                setProperties(response.data.properties || []);
+                const res = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+                if (!res.ok) throw new Error('Map service failed');
+                const data = await res.json();
+                setProperties(data.properties || []);
             } catch (error) {
                 console.error("🔥 Search error:", error.response?.data || error.message);
             } finally {

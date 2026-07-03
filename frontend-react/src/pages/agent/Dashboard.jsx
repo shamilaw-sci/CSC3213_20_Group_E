@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Inbox, Home, Users, CheckSquare, MoreHorizontal, CheckCircle, Archive, MessageSquare, Home as HomeIcon, User as UserIcon, Phone, Mail } from 'lucide-react';
 import { useAuth } from '../../context/UserAuthContext';
-import axios from 'axios';
 
 const AgentDashboard = () => {
     const { user } = useAuth();
@@ -17,7 +16,7 @@ const AgentDashboard = () => {
     // Mock Leads for UI demonstration until API is connected
     useEffect(() => {
         // In a real app, this would be axios.get('/api/leads')
-        setTimeout(() => {
+        const timer = setTimeout(() => {
             setLeads([
                 {
                     id: 1,
@@ -42,6 +41,8 @@ const AgentDashboard = () => {
             ]);
             setLoading(false);
         }, 1000);
+
+        return () => clearTimeout(timer);
     }, []);
 
     // Redirect if not an agent
@@ -52,6 +53,13 @@ const AgentDashboard = () => {
     }, [user, navigate]);
 
     if (!user) return null;
+
+    const handleLeadKeyDown = (event, lead) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            setSelectedLead(lead);
+        }
+    };
 
     if (user.role === 'PENDING_AGENT') {
         return (
@@ -96,7 +104,10 @@ const AgentDashboard = () => {
                         leads.map(lead => (
                             <div 
                                 key={lead.id} 
+                                role="button"
+                                tabIndex={0}
                                 onClick={() => setSelectedLead(lead)}
+                                onKeyDown={(event) => handleLeadKeyDown(event, lead)}
                                 className={`bg-white border rounded-xl p-4 cursor-pointer hover:shadow-md transition relative overflow-hidden ${selectedLead?.id === lead.id ? 'border-blue-500 ring-1 ring-blue-500' : 'border-gray-200'}`}
                             >
                                 {/* Swipe Indicator hint (UI only) */}
@@ -146,7 +157,7 @@ const AgentDashboard = () => {
                     <>
                         {/* Header for Mobile Back Button */}
                         <div className="md:hidden p-4 bg-white border-b flex items-center gap-2">
-                            <button aria-label="Accessible interactive control" type="button" onClick={() => setSelectedLead(null)} className="text-blue-600 font-medium">← Back</button>
+                            <button aria-label="Back to leads" type="button" onClick={() => setSelectedLead(null)} className="text-blue-600 font-medium">Back</button>
                             <h2 className="font-bold">{selectedLead.client_name}</h2>
                         </div>
 
@@ -216,7 +227,14 @@ const AgentDashboard = () => {
                                     <img src={selectedLead.property_image} className="w-full h-32 object-cover" alt="Property" />
                                     <div className="p-3">
                                         <p className="text-sm font-bold text-gray-900 truncate">{selectedLead.property_title}</p>
-                                        <a aria-label="Accessible interactive control" href="#" className="text-xs text-blue-600 hover:underline mt-1 inline-block">View Listing →</a>
+                                        <button
+                                            aria-label={`View listing for ${selectedLead.property_title}`}
+                                            type="button"
+                                            onClick={() => navigate(`/property/${selectedLead.id}`)}
+                                            className="text-xs text-blue-600 hover:underline mt-1 inline-block"
+                                        >
+                                            View Listing
+                                        </button>
                                     </div>
                                 </div>
                             </div>

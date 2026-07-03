@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import axios from 'axios';
+import api from '../context/api';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/UserAuthContext';
@@ -40,11 +40,7 @@ const EditPropertyModal = ({ property, onCancel, onSaved }) => {
         setError('');
 
         try {
-            const response = await axios.patch(
-                `http://localhost:5000/api/properties/my-listings/${property.id}`,
-                formData,
-                { withCredentials: true }
-            );
+            const response = await api.patch(`/properties/my-listings/${property.id}`, formData);
             onSaved(response.data.property);
         } catch (err) {
             setError(err.response?.data?.message || err.response?.data?.error || 'Failed to update property.');
@@ -149,9 +145,7 @@ const MyProperties = () => {
 
         const fetchMyProperties = async () => {
             try {
-                const response = await axios.get(`http://localhost:5000/api/properties/my-listings?page=${page}&limit=12`, {
-                    withCredentials: true
-                });
+                const response = await api.get(`/properties/my-listings?page=${page}&limit=12`);
                 if (page === 1) {
                     setProperties(response.data.properties || []);
                 } else {

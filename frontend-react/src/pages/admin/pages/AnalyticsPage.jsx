@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { fetchDashboardStats, fetchRevenueData, fetchUserGrowth } from "../api/adminApi";
 import "../styles/admin-global.css";
 
@@ -8,26 +8,29 @@ const DonutChart = ({ segments, size = 120 }) => {
   const r = 46; const cx = 60; const cy = 60;
   const circ = 2 * Math.PI * r;
   const total = segments.reduce((s, g) => s + g.value, 0) || 1;
-  let offset = 0;
+  const arcs = segments.reduce((items, seg, i) => {
+    if (seg.value === 0) return items;
+    const dash = (seg.value / total) * circ;
+    const gap = circ - dash;
+    const previousOffset = items.reduce((sum, item) => sum + item.dash, 0);
+    return [...items, { seg, i, dash, gap, strokeDashoffset: -previousOffset }];
+  }, []);
 
   return (
     <svg width={size} height={size} viewBox="0 0 120 120">
       <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--admin-border)" strokeWidth="20" />
-      {segments.map((seg, i) => {
-        if (seg.value === 0) return null;
-        const dash = (seg.value / total) * circ;
-        const gap = circ - dash;
-        const el = (
+      {arcs.map((arc) => {
+        if (!arc) return null;
+        const { seg, i, dash, gap, strokeDashoffset } = arc;
+        return (
           <circle
             key={i} cx={cx} cy={cy} r={r}
             fill="none" stroke={seg.color} strokeWidth="20"
             strokeDasharray={`${dash} ${gap}`}
-            strokeDashoffset={-offset}
+            strokeDashoffset={strokeDashoffset}
             style={{ transform: "rotate(-90deg)", transformOrigin: "60px 60px", transition: "stroke-dasharray 1s ease" }}
           />
         );
-        offset += dash;
-        return el;
       })}
       <text x={cx} y={cy - 6} textAnchor="middle" fill="var(--admin-text-secondary)" fontSize="9">TOTAL</text>
       <text x={cx} y={cy + 10} textAnchor="middle" fill="var(--admin-text-primary)" fontSize="14" fontWeight="600">
@@ -44,7 +47,7 @@ const AnalyticsPage = () => {
   const [userGrowth, setUserGrowth] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const loadAnalytics = async (p) => {
+  const loadAnalytics = useCallback(async (p) => {
     setLoading(true);
     try {
       const [s, r, u] = await Promise.all([
@@ -60,11 +63,11 @@ const AnalyticsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadAnalytics(period);
-  }, []); // Only run on mount
+  }, [period, loadAnalytics]);
 
   const maxRevenue = Math.max(...revenue.map((d) => d.value), 1);
   const maxGrowth = Math.max(...userGrowth.map((d) => d.value), 1);

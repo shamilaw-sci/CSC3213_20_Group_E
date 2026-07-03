@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { fetchListings, fetchListingById, approveListing, rejectListing, deleteListing } from "../api/adminApi";
 import { MapContainer, TileLayer, Marker, Polygon, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';

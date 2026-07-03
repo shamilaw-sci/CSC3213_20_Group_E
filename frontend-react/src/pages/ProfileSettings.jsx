@@ -22,7 +22,6 @@ const ProfileSettings = () => {
         email_notifications: user?.email_notifications ?? true
     });
     const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || '');
-    const [avatarFile, setAvatarFile] = useState(null);
     
     // UI State
     const [loading, setLoading] = useState(false);
@@ -61,7 +60,6 @@ const ProfileSettings = () => {
     const handleAvatarChange = (e) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            setAvatarFile(file);
             // Convert to base64 to send to backend
             const reader = new FileReader();
             reader.onloadend = () => {
@@ -84,8 +82,6 @@ const ProfileSettings = () => {
         setError(null);
 
         try {
-            let finalAvatarUrl = user?.avatar_url;
-
             // Optional: If you had an actual upload endpoint for Supabase bucket, you'd call it here
             // For now, if we are simulating or passing a URL, we will assume backend or direct supabase upload.
             // Since we don't have a specific upload endpoint written in Node, we will just save the text url for now.

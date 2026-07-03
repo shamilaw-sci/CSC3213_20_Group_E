@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const logger = require('./logger');
 
 const port = parseInt(process.env.EMAIL_PORT || '465', 10);
 
@@ -15,7 +16,7 @@ const transporter = nodemailer.createTransport({
 const sendEmail = async (to, subject, html) => {
     try {
         if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-            console.warn("⚠️ Email not sent: EMAIL_USER or EMAIL_PASS is missing in .env");
+            logger.warn('Email not sent because EMAIL_USER or EMAIL_PASS is missing');
             return;
         }
 
@@ -27,9 +28,9 @@ const sendEmail = async (to, subject, html) => {
         };
 
         const info = await transporter.sendMail(mailOptions);
-        console.log(`✉️ Email sent: ${info.response}`);
+        logger.info('Email sent', { to, subject, response: info.response });
     } catch (error) {
-        console.error("❌ Failed to send email:", error.message);
+        logger.error('Failed to send email', error);
     }
 };
 

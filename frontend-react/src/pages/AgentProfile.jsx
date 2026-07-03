@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../context/api';
 import { Star, MapPin, Phone, Mail, Globe, CheckCircle, ShieldCheck } from 'lucide-react';
-import { useAuth } from '../context/UserAuthContext';
 
 const AgentProfile = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { user } = useAuth();
     
     const [agentData, setAgentData] = useState(null);
     const [listings, setListings] = useState([]);
@@ -18,7 +16,7 @@ const AgentProfile = () => {
     useEffect(() => {
         const fetchAgent = async () => {
             try {
-                const response = await axios.get(`http://localhost:5000/api/agents/${id}`);
+                const response = await api.get(`/agents/${id}`);
                 setAgentData(response.data.agent);
                 setListings(response.data.listings || []);
                 setReviews(response.data.reviews || []);

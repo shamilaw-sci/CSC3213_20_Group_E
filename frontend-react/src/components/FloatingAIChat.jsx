@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { AnimatePresence, m } from "framer-motion";
 import { Bot, X, Send, Loader, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';

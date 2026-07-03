@@ -46,11 +46,9 @@ const DashboardPage = () => {
   const [revenue, setRevenue] = useState([]);
   const [userGrowth, setUserGrowth] = useState([]);
   const [pendingListings, setPendingListings] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
-      setLoading(true);
       try {
         const [s, r, u, pending] = await Promise.all([
           fetchDashboardStats(),
@@ -74,8 +72,6 @@ const DashboardPage = () => {
         }
       } catch (err) {
         console.error("Failed to load dashboard data:", err);
-      } finally {
-        setLoading(false);
       }
     };
     load();

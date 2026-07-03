@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../context/api';
 import imageCompression from 'browser-image-compression';
 import { MapContainer, TileLayer, Marker, Polygon, CircleMarker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -61,7 +61,7 @@ const AddProperty = () => {
 
     useEffect(() => {
         // Fetch dynamic payment configuration from backend
-        axios.get('http://localhost:5000/api/payment/config')
+        api.get('/payment/config')
             .then(res => {
                 if (res.data) {
                     setPaymentConfig({
@@ -164,7 +164,7 @@ const AddProperty = () => {
 
         try {
             // Get the security hash from the backend
-            const response = await axios.post('http://localhost:5000/api/payment/generate-hash', {
+            const response = await api.post('/payment/generate-hash', {
                 order_id: propertyId,
                 amount: amount
             });
@@ -286,7 +286,7 @@ const AddProperty = () => {
             });
 
             // 1. Dispatch API request to backend to save property
-            const response = await axios.post('http://localhost:5000/api/properties', submitData, {
+            const response = await api.post('/properties', submitData, {
                 withCredentials: true,
                 headers: { 
                     'Content-Type': 'multipart/form-data' 

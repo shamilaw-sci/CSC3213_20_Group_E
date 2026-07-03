@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
+import api from '../context/api';
 import axios from 'axios';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/UserAuthContext';
@@ -10,7 +11,6 @@ import { Send, Paperclip, X, Image as ImageIcon, FileText, User, MessageSquare, 
 const apiHeaders = () => ({
     // Authorization header no longer strictly required for browser if relying on HttpOnly cookies,
     // but kept here as fallback for any edge case or manual token storage.
-    Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
 });
 
 const getConversationTitle = (conversation, user) => {
@@ -79,9 +79,7 @@ const Messages = () => {
 
     const loadConversations = useCallback(async ({ silent = false } = {}) => {
         try {
-            const response = await axios.get('http://localhost:5000/api/conversations', {
-                headers: apiHeaders(),
-            });
+            const response = await api.get('/conversations');
             const nextConversations = response.data.conversations || [];
             setConversations(nextConversations);
             if (!selectedId && nextConversations.length > 0) {
@@ -108,14 +106,13 @@ const Messages = () => {
         const loadMessages = async () => {
             setMessagesLoading(true);
             try {
-                const response = await axios.get(`http://localhost:5000/api/conversations/${selectedId}/messages`, {
-                    headers: apiHeaders(),
+                const response = await api.get(`/conversations/${selectedId}/messages`, {
                     signal: controller.signal
                 });
                 setMessages(response.data.messages || []);
                 scrollToBottom();
             } catch (err) {
-                if (axios.isCancel(err)) return;
+                if (axios.isCancel?.(err) || err.name === 'CanceledError') return;
                 setError(err.response?.data?.message || err.response?.data?.error || 'Failed to load messages.');
             } finally {
                 setMessagesLoading(false);
@@ -131,13 +128,12 @@ const Messages = () => {
         const interval = setInterval(() => {
             loadConversations({ silent: true });
             if (selectedId) {
-                axios.get(`http://localhost:5000/api/conversations/${selectedId}/messages`, {
-                    headers: apiHeaders(),
+                api.get(`/conversations/${selectedId}/messages`, {
                     signal: controller.signal
                 })
                     .then((response) => setMessages(response.data.messages || []))
                     .catch((err) => {
-                        if (!axios.isCancel(err)) {
+                        if (!axios.isCancel?.(err)) {
                             // error
                         }
                     });
@@ -155,9 +151,7 @@ const Messages = () => {
 
     const startSupport = async () => {
         try {
-            const response = await axios.post('http://localhost:5000/api/conversations/support', {}, {
-                headers: apiHeaders(),
-            });
+            const response = await api.post('/conversations/support', {});
             const conversation = response.data.conversation;
             await loadConversations();
             setSelectedId(conversation.id);
@@ -169,17 +163,12 @@ const Messages = () => {
     const requestSupportForCurrent = async () => {
         if (!selectedId) return;
         try {
-            await axios.patch(`http://localhost:5000/api/conversations/${selectedId}/request-support`, {}, {
-                headers: apiHeaders(),
-            });
+            await api.patch(`/conversations/${selectedId}/request-support`, {});
             await loadConversations({ silent: true });
-            
-            const response = await axios.get(`http://localhost:5000/api/conversations/${selectedId}/messages`, {
-                headers: apiHeaders(),
-            });
+
+            const response = await api.get(`/conversations/${selectedId}/messages`);
             setMessages(response.data.messages || []);
             scrollToBottom();
-            
         } catch (err) {
             setError(err.response?.data?.message || err.response?.data?.error || 'Failed to request support.');
         }
@@ -198,10 +187,10 @@ const Messages = () => {
             formData.append('body', body);
             if (selectedFile) formData.append('attachment', selectedFile);
 
-            const response = await axios.post(
-                `http://localhost:5000/api/conversations/${selectedId}/messages`,
-                formData,
-                { headers: { ...apiHeaders(), 'Content-Type': 'multipart/form-data' } }
+                const response = await api.post(
+                    `/conversations/${selectedId}/messages`,
+                    formData,
+                    { headers: { 'Content-Type': 'multipart/form-data' } }
             );
             setMessages((prev) => [...prev, response.data.message]);
             scrollToBottom();

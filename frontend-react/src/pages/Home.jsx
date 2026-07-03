@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../context/api';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -28,7 +28,7 @@ const Home = () => {
         const controller = new AbortController();
         const fetchProperties = async () => {
             try {
-                const response = await axios.get(`http://localhost:5000/api/properties?page=${page}&limit=12`, {
+                const response = await api.get(`/properties?page=${page}&limit=12`, {
                     signal: controller.signal
                 });
                 if (page === 1) {
@@ -38,7 +38,8 @@ const Home = () => {
                 }
                 setTotalPages(response.data.totalPages);
             } catch (error) {
-                if (axios.isCancel(error)) return;
+                // Axios cancellation check retained via api (axios instance)
+                if (api.isCancel?.(error) || error.name === 'CanceledError') return;
                 console.error('Error fetching properties:', error);
             }
         };
@@ -57,9 +58,7 @@ const Home = () => {
         }
 
         try {
-            const response = await axios.post(
-                `http://localhost:5000/api/conversations/property/${propertyId}`
-            );
+            const response = await api.post(`/conversations/property/${propertyId}`);
             navigate(`/messages?conversation=${response.data.conversation.id}`);
         } catch (error) {
             console.error('Error starting conversation:', error.response?.data || error.message);

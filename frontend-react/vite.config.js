@@ -13,9 +13,13 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) return 'vendor';
-            if (id.includes('framer-motion') || id.includes('lucide-react')) return 'ui';
-            if (id.includes('leaflet')) return 'map';
+            if (id.includes('react-dom')) return 'react-dom';
+            if (id.includes('react-router-dom') || id.includes('@remix-run')) return 'router';
+            if (id.includes('react')) return 'react';
+            if (id.includes('framer-motion')) return 'motion';
+            if (id.includes('lucide-react')) return 'icons';
+            if (id.includes('react-leaflet') || id.includes('react-leaflet-cluster') || id.includes('leaflet')) return 'map-vendor';
+            if (id.includes('axios')) return 'http';
             return 'deps';
           }
         }

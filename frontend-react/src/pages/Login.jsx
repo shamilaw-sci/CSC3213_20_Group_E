@@ -5,7 +5,7 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../context/api';
 import { useAuth } from '../context/UserAuthContext';
 
 const Login = () => {
@@ -32,7 +32,7 @@ const Login = () => {
         setLoading(true);
 
         try {
-            const response = await axios.post('http://localhost:5000/api/auth/check-email', { email });
+            const response = await api.post('/auth/check-email', { email });
             
             if (response.data.exists) {
                 setUserName(response.data.name); 
@@ -59,7 +59,7 @@ const Login = () => {
         setLoading(true);
 
         try {
-            const response = await axios.post('http://localhost:5000/api/auth/login', {
+            const response = await api.post('/auth/login', {
                 email: email,
                 password: password
             });
@@ -85,7 +85,7 @@ const Login = () => {
         setLoading(true);
 
         try {
-            const response = await axios.post('http://localhost:5000/api/auth/forgot-password', { email });
+            const response = await api.post('/auth/forgot-password', { email });
             setResetMessage(response.data.message); 
         } catch (err) {
             setError("Something went wrong. Please try again.");

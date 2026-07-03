@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import api from './api';
 
 // Create Context
 const UserAuthContext = createContext();
@@ -13,7 +13,7 @@ export const UserAuthProvider = ({ children }) => {
         // Fetch the currently authenticated user from the backend using the HttpOnly cookie
         const verifyUser = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/api/auth/me');
+                const response = await api.get('/auth/me');
                 setUser(response.data.user);
             } catch (error) {
                 // If 401/404, the user is not logged in or the cookie expired
@@ -34,7 +34,7 @@ export const UserAuthProvider = ({ children }) => {
     // Logout function hits the backend to clear the cookie and resets state
     const logout = async () => {
         try {
-            await axios.post('http://localhost:5000/api/auth/logout');
+            await api.post('/auth/logout');
         } catch (error) {
             console.error('Logout error:', error);
         } finally {

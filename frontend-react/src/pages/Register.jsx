@@ -5,7 +5,7 @@
 
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../context/api';
 import { useAuth } from '../context/UserAuthContext';
 
 const Register = () => {
@@ -34,7 +34,7 @@ const Register = () => {
 
         try {
             // Dispatch registration payload to the backend API
-            const response = await axios.post('http://localhost:5000/api/auth/register', { 
+            const response = await api.post('/auth/register', { 
                 name: name,
                 email: email, 
                 password: password,

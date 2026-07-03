@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../context/api';
 import { useAuth } from '../context/UserAuthContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -40,15 +40,12 @@ const PropertyDetails = () => {
         const fetchProperty = async () => {
             try {
                 // Fetch property details
-                const res = await axios.get(`http://localhost:5000/api/properties/${id}`);
+                const res = await api.get(`/properties/${id}`);
                 setProperty(res.data.property);
                 
                 // If user is logged in, check if it's a favorite
                 if (user) {
-                    const token = localStorage.getItem('token');
-                    const favRes = await axios.get('http://localhost:5000/api/favorites', {
-                        headers: { Authorization: `Bearer ${token}` }
-                    });
+                    const favRes = await api.get('/favorites');
                     const favList = favRes.data.favorites;
                     if (favList.some(f => f.property_id === id)) {
                         setIsFavorite(true);
@@ -70,10 +67,7 @@ const PropertyDetails = () => {
         }
         setIsFavLoading(true);
         try {
-            const token = localStorage.getItem('token');
-            const res = await axios.post(`http://localhost:5000/api/favorites/${id}`, {}, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const res = await api.post(`/favorites/${id}`);
             
             // The backend returns { isFavorite: boolean }
             setIsFavorite(res.data.isFavorite);
@@ -100,10 +94,10 @@ const PropertyDetails = () => {
             return;
         }
         try {
-            const response = await axios.post(
-                `http://localhost:5000/api/conversations/property/${id}`,
+            const response = await api.post(
+                `/conversations/property/${id}`,
                 {},
-                { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+                {}
             );
             navigate(`/messages?conversation=${response.data.conversation.id}`);
         } catch (error) {

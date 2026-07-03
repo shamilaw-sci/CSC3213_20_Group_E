@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fetchConversationMessages, fetchConversations, sendConversationMessage } from "../api/adminApi";
 import "../styles/admin-global.css";
 
@@ -42,23 +42,23 @@ const MessagesPage = () => {
   const [loading, setLoading] = useState(true);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [toast, setToast] = useState(null);
-  const messagesEndRef = React.useRef(null);
+  const messagesEndRef = useRef(null);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  }, []);
 
   const selected = useMemo(
     () => conversations.find((conversation) => conversation.id === selectedId),
     [conversations, selectedId]
   );
 
-  const showToast = (msg, type = "success") => {
+  const showToast = useCallback((msg, type = "success") => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3000);
-  };
+  }, []);
 
-  const loadConversations = async ({ silent = false } = {}) => {
+  const loadConversations = useCallback(async ({ silent = false } = {}) => {
     try {
       const data = await fetchConversations();
       const next = data.conversations || [];
@@ -69,30 +69,29 @@ const MessagesPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedId, showToast]);
+
+  const loadMessages = useCallback(async () => {
+    if (!selectedId) return;
+    setMessagesLoading(true);
+    try {
+      const data = await fetchConversationMessages(selectedId);
+      setMessages(data.messages || []);
+    } catch {
+      showToast("Failed to load messages.", "error");
+    } finally {
+      setMessagesLoading(false);
+      setTimeout(scrollToBottom, 100);
+    }
+  }, [selectedId, scrollToBottom, showToast]);
 
   useEffect(() => {
     loadConversations();
-  }, []);
+  }, [loadConversations]);
 
   useEffect(() => {
-    if (!selectedId) return;
-
-    const loadMessages = async () => {
-      setMessagesLoading(true);
-      try {
-        const data = await fetchConversationMessages(selectedId);
-        setMessages(data.messages || []);
-      } catch {
-        showToast("Failed to load messages.", "error");
-      } finally {
-        setMessagesLoading(false);
-        setTimeout(scrollToBottom, 100);
-      }
-    };
-
     loadMessages();
-  }, [selectedId]);
+  }, [loadMessages]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -105,7 +104,7 @@ const MessagesPage = () => {
     }, 10000);
 
     return () => clearInterval(interval);
-  }, [selectedId]);
+  }, [selectedId, loadConversations]);
 
   const sendMessage = async (event) => {
     event.preventDefault();
