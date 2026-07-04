@@ -388,22 +388,16 @@ const AddProperty = () => {
       <Navbar />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="bg-blue-600 px-8 py-10 text-black">
-            <h2 className="text-3xl font-bold mb-2 align-center">
-              Post a Property for Sale
-            </h2>
-          </div>
-
+        <div className="from_backgroung">
           <form onSubmit={handleSubmit} className="p-8">
             <div className="mb-8 border-b pb-8">
               <label className="block text-gray-900 text-lg font-bold mb-4">
-                What are you listing?
+                Property Type
               </label>
-              <div className="flex space-x-4">
+              <div className="proparty_type">
                 <div
                   onClick={() => handleTypeChange("House")}
-                  className={`flex-1 flex flex-col items-center justify-center p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
+                  className={`type ${
                     formData.type === "House"
                       ? "border-blue-600 bg-blue-50 text-blue-700 shadow-sm"
                       : "border-gray-200 hover:border-blue-300 text-gray-600 hover:bg-gray-50"
@@ -427,7 +421,7 @@ const AddProperty = () => {
                 </div>
                 <div
                   onClick={() => handleTypeChange("Land")}
-                  className={`flex-1 flex flex-col items-center justify-center p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
+                  className={`type ${
                     formData.type === "Land"
                       ? "border-green-600 bg-green-50 text-green-700 shadow-sm"
                       : "border-gray-200 hover:border-green-300 text-gray-600 hover:bg-gray-50"
@@ -448,6 +442,31 @@ const AddProperty = () => {
                     />
                   </svg>
                   <span className="font-bold text-lg">Land Only</span>
+                </div>
+                {/*  rent house*/}
+                <div
+                  onClick={() => handleTypeChange("Rent")}
+                  className={`type ${
+                    formData.type === "Rent"
+                      ? "border-purple-600 bg-purple-50 text-purple-700 shadow-sm"
+                      : "border-gray-200 hover:border-purple-300 text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-10 w-10 mb-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M8 7V3m8 4V3M4 11h16M6 21h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2zm4-5h4"
+                    />
+                  </svg>
+                  <span className="font-bold text-lg">Rent House</span>
                 </div>
               </div>
             </div>
@@ -771,6 +790,12 @@ const AddProperty = () => {
               </div>
             )}
           </form>
+
+          <div className="bg-blue-600 px-8 py-10 text-black">
+            <h2 className="text-3xl font-bold mb-2 align-center">
+              Post a Property for Sale
+            </h2>
+          </div>
         </div>
       </div>
     </div>
