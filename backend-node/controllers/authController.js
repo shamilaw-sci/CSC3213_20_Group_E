@@ -16,7 +16,7 @@ const setTokenCookie = (res, token) => {
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
 // 1. User Registration - Create new user account
-const registerUser = async (req, res, next) => {
+const registerUser = async(req, res, next) => {
     try {
         const { name, email, password, role } = req.body;
 
@@ -61,10 +61,8 @@ const registerUser = async (req, res, next) => {
             }]);
         }
 
-        const token = jwt.sign(
-            { id: newUser[0].id, role: newUser[0].role }, 
-            process.env.JWT_SECRET, 
-            { expiresIn: '1d' }
+        const token = jwt.sign({ id: newUser[0].id, role: newUser[0].role },
+            process.env.JWT_SECRET, { expiresIn: '1d' }
         );
 
         setTokenCookie(res, token);
@@ -80,7 +78,7 @@ const registerUser = async (req, res, next) => {
 };
 
 // 2. User Login - Authenticate existing user
-const loginUser = async (req, res, next) => {
+const loginUser = async(req, res, next) => {
     try {
         const { email, password } = req.body;
 
@@ -103,20 +101,23 @@ const loginUser = async (req, res, next) => {
         }
 
         // Generate JWT token
-        const token = jwt.sign(
-            { id: user.id, role: user.role }, 
-            process.env.JWT_SECRET, 
-            { expiresIn: '1d' } // Token expires in 1 day
+        const token = jwt.sign({ id: user.id, role: user.role },
+            process.env.JWT_SECRET, { expiresIn: '1d' } // Token expires in 1 day
         );
 
         setTokenCookie(res, token);
 
         res.status(200).json({
             message: "Login successful.",
-            user: { 
-                id: user.id, name: user.name, email: user.email, role: user.role,
-                phone: user.phone, avatar_url: user.avatar_url,
-                theme_preference: user.theme_preference, email_notifications: user.email_notifications
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                phone: user.phone,
+                avatar_url: user.avatar_url,
+                theme_preference: user.theme_preference,
+                email_notifications: user.email_notifications
             }
         });
 
@@ -126,10 +127,10 @@ const loginUser = async (req, res, next) => {
 };
 
 // Check if email exists for two-step login process
-const checkEmail = async (req, res, next) => {
+const checkEmail = async(req, res, next) => {
     try {
         const { email } = req.body;
-        
+
         // Query database to check if user exists
         const { data, error } = await supabase
             .from('users')
@@ -150,10 +151,10 @@ const checkEmail = async (req, res, next) => {
 
 // Handle forgot password requests
 
-const forgotPassword = async (req, res, next) => {
+const forgotPassword = async(req, res, next) => {
     try {
         const { email } = req.body;
-        
+
         // 1. Check if email exists in database
         const { data, error } = await supabase
             .from('users')
@@ -186,7 +187,7 @@ const logoutUser = (req, res) => {
     res.status(200).json({ message: "Logged out successfully" });
 };
 
-const getMe = async (req, res, next) => {
+const getMe = async(req, res, next) => {
     try {
         const token = req.cookies.token;
         if (!token) return res.status(401).json({ message: "Not authenticated" });
@@ -206,10 +207,10 @@ const getMe = async (req, res, next) => {
     }
 };
 
-const updateProfile = async (req, res, next) => {
+const updateProfile = async(req, res, next) => {
     try {
         const { name, phone, password, avatar_url, theme_preference, email_notifications } = req.body;
-        
+
         // 1. Find user to update
         const { data: user, error: fetchError } = await supabase
             .from('users')
@@ -258,7 +259,7 @@ const updateProfile = async (req, res, next) => {
         }
         if (theme_preference !== undefined) updates.theme_preference = theme_preference;
         if (email_notifications !== undefined) updates.email_notifications = email_notifications;
-        
+
         if (password) {
             // Hash new password
             const salt = await bcrypt.genSalt(10);
@@ -273,24 +274,24 @@ const updateProfile = async (req, res, next) => {
             .single();
 
         if (updateError) {
-             // Fallback if 'phone' column doesn't exist yet, try updating without it
-             if (updateError.message.includes('column') && updateError.message.includes('does not exist')) {
-                 delete updates.phone;
-                 delete updates.avatar_url;
-                 delete updates.theme_preference;
-                 delete updates.email_notifications;
-                 
-                 const { data: fallbackUser, error: fallbackError } = await supabase
+            // Fallback if 'phone' column doesn't exist yet, try updating without it
+            if (updateError.message.includes('column') && updateError.message.includes('does not exist')) {
+                delete updates.phone;
+                delete updates.avatar_url;
+                delete updates.theme_preference;
+                delete updates.email_notifications;
+
+                const { data: fallbackUser, error: fallbackError } = await supabase
                     .from('users')
                     .update(updates)
                     .eq('id', req.user.id)
                     .select('id, name, email, role, phone')
                     .single();
-                    
-                 if (fallbackError) throw fallbackError;
-                 return res.status(200).json({ message: "Profile updated (without new columns, please run SQL script)", user: fallbackUser });
-             }
-             throw updateError;
+
+                if (fallbackError) throw fallbackError;
+                return res.status(200).json({ message: "Profile updated (without new columns, please run SQL script)", user: fallbackUser });
+            }
+            throw updateError;
         }
 
         res.status(200).json({ message: "Profile updated successfully", user: updatedUser });
@@ -300,4 +301,4 @@ const updateProfile = async (req, res, next) => {
     }
 };
 
-module.exports = { registerUser, loginUser, checkEmail, forgotPassword, logoutUser, getMe, updateProfile };
+module.exports = { registerUser, loginUser, checkEmail, forgotPassword, logoutUser, getMe, updateProfile, setTokenCookie };
