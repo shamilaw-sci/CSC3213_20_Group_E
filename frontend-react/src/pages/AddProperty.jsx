@@ -33,6 +33,91 @@ const AddProperty = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  // Add Sri Lankan Districts
+  const sriLankaDistricts = [
+    "Ampara",
+    "Anuradhapura",
+    "Badulla",
+    "Batticaloa",
+    "Colombo",
+    "Galle",
+    "Gampaha",
+    "Hambantota",
+    "Jaffna",
+    "Kalutara",
+    "Kandy",
+    "Kegalle",
+    "Kilinochchi",
+    "Kurunegala",
+    "Mannar",
+    "Matale",
+    "Matara",
+    "Monaragala",
+    "Mullaitivu",
+    "Nuwara Eliya",
+    "Polonnaruwa",
+    "Puttalam",
+    "Ratnapura",
+    "Trincomalee",
+    "Vavuniya",
+  ];
+
+  //Add District Coordinates
+  const districtLocations = {
+    Colombo: [6.9271, 79.8612],
+    Gampaha: [7.0917, 79.9992],
+    Kalutara: [6.5854, 79.9607],
+    Kandy: [7.2906, 80.6337],
+    Galle: [6.0535, 80.221],
+    Matara: [5.9549, 80.555],
+    Hambantota: [6.1241, 81.1185],
+    Jaffna: [9.6615, 80.0255],
+    Kilinochchi: [9.3961, 80.3982],
+    Mannar: [8.981, 79.9042],
+    Mullaitivu: [9.267, 80.813],
+    Vavuniya: [8.7514, 80.4971],
+    Trincomalee: [8.5874, 81.2152],
+    Batticaloa: [7.7102, 81.6924],
+    Ampara: [7.2975, 81.682],
+    Badulla: [6.9934, 81.055],
+    Monaragala: [6.8728, 81.3507],
+    Ratnapura: [6.6828, 80.3992],
+    Kegalle: [7.2513, 80.3464],
+    Kurunegala: [7.4863, 80.3647],
+    Puttalam: [8.0362, 79.8283],
+    Anuradhapura: [8.3114, 80.4037],
+    Polonnaruwa: [7.9403, 81.0188],
+    Matale: [7.4675, 80.6234],
+    "Nuwara Eliya": [6.9497, 80.7891],
+  };
+
+  const [gpsActive, setGpsActive] = useState(false);
+
+  const handleGetGPSLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        setFormData({
+          ...formData,
+          latitude: lat,
+          longitude: lng,
+        });
+
+        setGpsActive(true); // ✅ activate blue style
+      },
+      () => {
+        alert("Unable to retrieve your location.");
+        setGpsActive(false);
+      }
+    );
+  };
   // Route protection: Only 'SELLER' roles can access this page
   useEffect(() => {
     if (!user || user.role !== "SELLER") {
@@ -397,7 +482,7 @@ const AddProperty = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
         <div className="from_backgroung">
           <form onSubmit={handleSubmit} className="p-8">
-            <div className="mb-8 border-b pb-8">
+            <div className="mb-8 ">
               <label className="block text-gray-900 text-lg font-bold mb-4">
                 Property Type
               </label>
@@ -522,7 +607,11 @@ const AddProperty = () => {
                   placeholder={
                     formData.type === "House"
                       ? "e.g. Beautiful 2-Story House in Colombo 07"
-                      : "e.g. 15 Perch Prime Land in Malabe"
+                      : formData.type === "Land"
+                      ? "e.g. 15 Perch Prime Land in Malabe"
+                      : formData.type === "Rent House"
+                      ? "e.g. Fully Furnished 3 Bedroom House for Rent in Kandy"
+                      : "Enter Property Title"
                   }
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
                 />
@@ -604,6 +693,19 @@ const AddProperty = () => {
                 }`}
               >
                 📍 Drop Pin (Single Point)
+              </button>
+
+              <button
+                type="button"
+                onClick={handleGetGPSLocation}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition 
+                  ${
+                    gpsActive
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+              >
+                🎯 Get GPS Location
               </button>
               <button
                 type="button"
