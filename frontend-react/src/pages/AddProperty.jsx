@@ -118,6 +118,7 @@ const AddProperty = () => {
       }
     );
   };
+
   // Route protection: Only 'SELLER' roles can access this page
   useEffect(() => {
     if (!user || user.role !== "SELLER") {
@@ -131,7 +132,8 @@ const AddProperty = () => {
     description: "",
     price: "",
     pricePeriod: "Month", // rent price catagery
-    address: "",
+    district: "",
+    city: "",
     bedrooms: "",
     bathrooms: "",
     landSize: "",
@@ -427,7 +429,8 @@ const AddProperty = () => {
       submitData.append("price", formData.price);
       submitData.append("pricePeriod", formData.pricePeriod); // new rent
       submitData.append("type", formData.type);
-      submitData.append("address", formData.address);
+      submitData.append("district", formData.district);
+      submitData.append("city", formData.city);
       submitData.append("bedrooms", formData.bedrooms);
       submitData.append("bathrooms", formData.bathrooms);
       submitData.append("landSize", formData.landSize);
@@ -648,18 +651,62 @@ const AddProperty = () => {
               </div>
               <div>
                 <label className="block text-gray-700 text-sm font-medium mb-2">
-                  Street Address <span className="text-red-500">*</span>
+                  District
+                  <span className="text-red-500">*</span>
                 </label>
+
+                <select
+                  name="district"
+                  value={formData.district}
+                  onChange={(e) => {
+                    const district = e.target.value;
+
+                    setFormData({
+                      ...formData,
+                      district,
+                    });
+
+                    if (districtLocations[district]) {
+                      const [lat, lng] = districtLocations[district];
+
+                      setFormData((prev) => ({
+                        ...prev,
+                        district,
+                        latitude: lat,
+                        longitude: lng,
+                      }));
+                    }
+                  }}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                  required
+                >
+                  <option value="">Select District</option>
+
+                  {sriLankaDistricts.map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-gray-700 text-sm font-medium mb-2">
+                  Nearby City / Town
+                  <span className="text-red-500">*</span>
+                </label>
+
                 <input
                   type="text"
-                  name="address"
-                  value={formData.address}
+                  name="city"
+                  value={formData.city}
                   onChange={handleChange}
+                  placeholder="e.g. Kadawatha"
                   required
-                  placeholder="e.g. Kandy Road, Kadawatha"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg"
                 />
               </div>
+
               <div className="md:col-span-2">
                 <label className="block text-gray-700 text-sm font-medium mb-2">
                   Description
