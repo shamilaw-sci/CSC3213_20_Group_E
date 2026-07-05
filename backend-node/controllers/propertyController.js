@@ -29,6 +29,7 @@ const addProperty = async (req, res, next) => {
       bedrooms,
       bathrooms,
       landSize,
+      houseSize,
       latitude,
       longitude,
       boundary,
@@ -82,11 +83,12 @@ const addProperty = async (req, res, next) => {
           title,
           description,
           price,
-          pricePeriod: pricePeriod || null,
+          price_period: pricePeriod || null,
           address,
           bedrooms: bedrooms || null, // Default to null if not provided
           bathrooms: bathrooms || null,
           land_size: landSize || null,
+          house_size: houseSize || null,
           latitude,
           longitude,
           boundary: boundary, // Provided as a WKT String (POLYGON) directly from the frontend
@@ -233,17 +235,19 @@ const updateMyProperty = async (req, res, next) => {
       bedrooms,
       bathrooms,
       landSize,
+      houseSize,
     } = req.body;
     const updates = {
       type,
       title,
       description,
       price,
-      pricePeriod: pricePeriod || null,
+      price_period: pricePeriod || null,
       address,
       bedrooms: bedrooms || null,
       bathrooms: bathrooms || null,
       land_size: landSize || null,
+      house_size: houseSize || null,
       status: "pending",
       rejection_reason: null,
     };

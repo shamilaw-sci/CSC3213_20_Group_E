@@ -50,6 +50,7 @@ const AddProperty = () => {
     bedrooms: "",
     bathrooms: "",
     landSize: "",
+    houseSize: "",
     latitude: 7.8731,
     longitude: 80.7718,
   });
@@ -95,10 +96,13 @@ const AddProperty = () => {
   const handleTypeChange = (type) => {
     setFormData({
       ...formData,
-      type: type,
+      type,
       bedrooms: type === "Land" ? "" : formData.bedrooms,
       bathrooms: type === "Land" ? "" : formData.bathrooms,
-      pricePeriod: type === "Rent House" ? "Month" : "", // rent price catagery
+      houseSize: type === "Rent House" ? formData.houseSize : "",
+      landSize:
+        type === "Rent House" || type === "Rent Wela" ? "" : formData.landSize,
+      pricePeriod: type === "Rent House" || type === "Rent Wela" ? "Month" : "",
     });
   };
 
@@ -342,7 +346,7 @@ const AddProperty = () => {
       submitData.append("bedrooms", formData.bedrooms);
       submitData.append("bathrooms", formData.bathrooms);
       submitData.append("landSize", formData.landSize);
-
+      submitData.append("houseSize", formData.houseSize);
       submitData.append("latitude", centerLat);
       submitData.append("longitude", centerLng);
       submitData.append("boundary", finalBoundaryWKT);
@@ -471,6 +475,33 @@ const AddProperty = () => {
                   </svg>
                   <span className="font-bold text-lg">Rent House</span>
                 </div>
+
+                {/*rent wela */}
+                <div
+                  onClick={() => handleTypeChange("Rent Wela")}
+                  className={`type ${
+                    formData.type === "Rent Wela"
+                      ? "border-orange-600 bg-orange-50 text-orange-700 shadow-sm"
+                      : "border-gray-200 hover:border-orange-300 text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-10 w-10 mb-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+
+                  <span className="font-bold text-lg">Rent Wela</span>
+                </div>
               </div>
             </div>
 
@@ -509,18 +540,19 @@ const AddProperty = () => {
                     onChange={handleChange}
                     required
                     placeholder="Enter Price"
-                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg"
                   />
 
-                  {formData.type === "Rent House" && (
+                  {(formData.type === "Rent House" ||
+                    formData.type === "Rent Wela") && (
                     <select
                       name="pricePeriod"
                       value={formData.pricePeriod}
                       onChange={handleChange}
-                      className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none"
+                      className="px-4 py-3 border border-gray-300 rounded-lg"
                     >
-                      <option value="Month">Per Month</option>
-                      <option value="Year">Per Year</option>
+                      <option value="Month">Month</option>
+                      <option value="Year">Year</option>
                     </select>
                   )}
                 </div>
@@ -642,7 +674,9 @@ const AddProperty = () => {
               Property Features
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              {formData.type === "House" && (
+              {(formData.type === "House" ||
+                formData.type === "Rent House" ||
+                formData.type === "Rent Wela") && (
                 <>
                   <div>
                     <label className="block text-gray-700 text-sm font-medium mb-2">
@@ -672,19 +706,40 @@ const AddProperty = () => {
                   </div>
                 </>
               )}
-              <div className={formData.type === "Land" ? "md:col-span-3" : ""}>
-                <label className="block text-gray-700 text-sm font-medium mb-2">
-                  Land Size (Perches)
-                </label>
-                <input
-                  type="number"
-                  name="landSize"
-                  value={formData.landSize}
-                  onChange={handleChange}
-                  placeholder="e.g. 15"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
-                />
-              </div>
+
+              {formData.type === "House" && (
+                <div>
+                  <label className="block text-gray-700 text-sm font-medium mb-2">
+                    House Size (sqft)
+                  </label>
+
+                  <input
+                    type="number"
+                    name="houseSize"
+                    value={formData.houseSize}
+                    onChange={handleChange}
+                    placeholder="e.g. 1800"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                  />
+                </div>
+              )}
+
+              {(formData.type === "Land" || formData.type === "House") && (
+                <div className="md:col-span-3">
+                  <label className="block text-gray-700 text-sm font-medium mb-2">
+                    Land Size (Perches)
+                  </label>
+
+                  <input
+                    type="number"
+                    name="landSize"
+                    value={formData.landSize}
+                    onChange={handleChange}
+                    placeholder="e.g. 15"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                  />
+                </div>
+              )}
             </div>
 
             <h3 className="text-lg font-bold text-gray-900 mb-4 border-b pb-2">
