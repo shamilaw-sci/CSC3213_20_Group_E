@@ -134,6 +134,7 @@ const AddProperty = () => {
     pricePeriod: "Month", // rent price catagery
     district: "",
     city: "",
+    contactNumber: "",
     bedrooms: "",
     bathrooms: "",
     landSize: "",
@@ -431,6 +432,7 @@ const AddProperty = () => {
       submitData.append("type", formData.type);
       submitData.append("district", formData.district);
       submitData.append("city", formData.city);
+      submitData.append("contactNumber", formData.contactNumber);
       submitData.append("bedrooms", formData.bedrooms);
       submitData.append("bathrooms", formData.bathrooms);
       submitData.append("landSize", formData.landSize);
@@ -704,6 +706,24 @@ const AddProperty = () => {
                   placeholder="e.g. Kadawatha"
                   required
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-700 text-sm font-medium mb-2">
+                  Contact Number (WhatsApp / Call)
+                  <span className="text-red-500">*</span>
+                </label>
+
+                <input
+                  type="text"
+                  name="contactNumber"
+                  value={formData.contactNumber}
+                  onChange={handleChange}
+                  required
+                  placeholder="e.g. 0771234567"
+                  pattern="[0-9]{10}"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
                 />
               </div>
 
