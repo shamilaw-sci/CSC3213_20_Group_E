@@ -45,6 +45,7 @@ const AddProperty = () => {
     title: "",
     description: "",
     price: "",
+    pricePeriod: "Month", // rent price catagery
     address: "",
     bedrooms: "",
     bathrooms: "",
@@ -97,6 +98,7 @@ const AddProperty = () => {
       type: type,
       bedrooms: type === "Land" ? "" : formData.bedrooms,
       bathrooms: type === "Land" ? "" : formData.bathrooms,
+      pricePeriod: type === "Rent House" ? "Month" : "", // rent price catagery
     });
   };
 
@@ -334,6 +336,7 @@ const AddProperty = () => {
       submitData.append("title", formData.title);
       submitData.append("description", formData.description);
       submitData.append("price", formData.price);
+      submitData.append("pricePeriod", formData.pricePeriod); // new rent
       submitData.append("type", formData.type);
       submitData.append("address", formData.address);
       submitData.append("bedrooms", formData.bedrooms);
@@ -445,9 +448,9 @@ const AddProperty = () => {
                 </div>
                 {/*  rent house*/}
                 <div
-                  onClick={() => handleTypeChange("Rent")}
+                  onClick={() => handleTypeChange("Rent House")}
                   className={`type ${
-                    formData.type === "Rent"
+                    formData.type === "Rent House"
                       ? "border-purple-600 bg-purple-50 text-purple-700 shadow-sm"
                       : "border-gray-200 hover:border-purple-300 text-gray-600 hover:bg-gray-50"
                   }`}
@@ -463,7 +466,7 @@ const AddProperty = () => {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={1.5}
-                      d="M8 7V3m8 4V3M4 11h16M6 21h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2zm4-5h4"
+                      d="M3 10l9-7 9 7v10a2 2 0 01-2 2H5a2 2 0 01-2-2V10zm7 10v-6h4v6"
                     />
                   </svg>
                   <span className="font-bold text-lg">Rent House</span>
@@ -497,15 +500,30 @@ const AddProperty = () => {
                 <label className="block text-gray-700 text-sm font-medium mb-2">
                   Price (Rs.) <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="number"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleChange}
-                  required
-                  placeholder="e.g. 15000000"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
-                />
+
+                <div className="flex gap-3">
+                  <input
+                    type="number"
+                    name="price"
+                    value={formData.price}
+                    onChange={handleChange}
+                    required
+                    placeholder="Enter Price"
+                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                  />
+
+                  {formData.type === "Rent House" && (
+                    <select
+                      name="pricePeriod"
+                      value={formData.pricePeriod}
+                      onChange={handleChange}
+                      className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none"
+                    >
+                      <option value="Month">Per Month</option>
+                      <option value="Year">Per Year</option>
+                    </select>
+                  )}
+                </div>
               </div>
               <div>
                 <label className="block text-gray-700 text-sm font-medium mb-2">
