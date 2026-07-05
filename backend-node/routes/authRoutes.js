@@ -4,6 +4,7 @@ const router = express.Router();
 // Import controller functions
 const { protect } = require('../middleware/authMiddleware');
 const { registerUser, loginUser, checkEmail, forgotPassword, getMe, logoutUser, updateProfile } = require('../controllers/authController');
+const { googleLogin, facebookLogin, appleLogin } = require('../controllers/socialAuthController');
 
 // Import validation
 const validate = require('../middleware/validate');
@@ -36,5 +37,11 @@ router.post('/logout', logoutUser);
 // 7. Update Profile Route
 // PUT /api/auth/profile - Updates current authenticated user profile
 router.put('/profile', protect, updateProfile);
+
+// 8. Social Login Routes (Google / Facebook / Apple)
+// POST /api/auth/google, /api/auth/facebook, /api/auth/apple
+router.post('/google', googleLogin);
+router.post('/facebook', facebookLogin);
+router.post('/apple', appleLogin);
 
 module.exports = router;
