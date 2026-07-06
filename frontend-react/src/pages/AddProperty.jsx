@@ -33,6 +33,92 @@ const AddProperty = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  // Add Sri Lankan Districts
+  const sriLankaDistricts = [
+    "Ampara",
+    "Anuradhapura",
+    "Badulla",
+    "Batticaloa",
+    "Colombo",
+    "Galle",
+    "Gampaha",
+    "Hambantota",
+    "Jaffna",
+    "Kalutara",
+    "Kandy",
+    "Kegalle",
+    "Kilinochchi",
+    "Kurunegala",
+    "Mannar",
+    "Matale",
+    "Matara",
+    "Monaragala",
+    "Mullaitivu",
+    "Nuwara Eliya",
+    "Polonnaruwa",
+    "Puttalam",
+    "Ratnapura",
+    "Trincomalee",
+    "Vavuniya",
+  ];
+
+  //Add District Coordinates
+  const districtLocations = {
+    Colombo: [6.9271, 79.8612],
+    Gampaha: [7.0917, 79.9992],
+    Kalutara: [6.5854, 79.9607],
+    Kandy: [7.2906, 80.6337],
+    Galle: [6.0535, 80.221],
+    Matara: [5.9549, 80.555],
+    Hambantota: [6.1241, 81.1185],
+    Jaffna: [9.6615, 80.0255],
+    Kilinochchi: [9.3961, 80.3982],
+    Mannar: [8.981, 79.9042],
+    Mullaitivu: [9.267, 80.813],
+    Vavuniya: [8.7514, 80.4971],
+    Trincomalee: [8.5874, 81.2152],
+    Batticaloa: [7.7102, 81.6924],
+    Ampara: [7.2975, 81.682],
+    Badulla: [6.9934, 81.055],
+    Monaragala: [6.8728, 81.3507],
+    Ratnapura: [6.6828, 80.3992],
+    Kegalle: [7.2513, 80.3464],
+    Kurunegala: [7.4863, 80.3647],
+    Puttalam: [8.0362, 79.8283],
+    Anuradhapura: [8.3114, 80.4037],
+    Polonnaruwa: [7.9403, 81.0188],
+    Matale: [7.4675, 80.6234],
+    "Nuwara Eliya": [6.9497, 80.7891],
+  };
+
+  const [gpsActive, setGpsActive] = useState(false);
+
+  const handleGetGPSLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        setFormData({
+          ...formData,
+          latitude: lat,
+          longitude: lng,
+        });
+
+        setGpsActive(true); // ✅ activate blue style
+      },
+      () => {
+        alert("Unable to retrieve your location.");
+        setGpsActive(false);
+      }
+    );
+  };
+
   // Route protection: Only 'SELLER' roles can access this page
   useEffect(() => {
     if (!user || user.role !== "SELLER") {
@@ -45,10 +131,14 @@ const AddProperty = () => {
     title: "",
     description: "",
     price: "",
-    address: "",
+    pricePeriod: "Month", // rent price catagery
+    district: "",
+    city: "",
+    contactNumber: "",
     bedrooms: "",
     bathrooms: "",
     landSize: "",
+    houseSize: "",
     latitude: 7.8731,
     longitude: 80.7718,
   });
@@ -94,9 +184,13 @@ const AddProperty = () => {
   const handleTypeChange = (type) => {
     setFormData({
       ...formData,
-      type: type,
+      type,
       bedrooms: type === "Land" ? "" : formData.bedrooms,
       bathrooms: type === "Land" ? "" : formData.bathrooms,
+      houseSize: type === "Rent House" ? formData.houseSize : "",
+      landSize:
+        type === "Rent House" || type === "Rent Wela" ? "" : formData.landSize,
+      pricePeriod: type === "Rent House" || type === "Rent Wela" ? "Month" : "",
     });
   };
 
@@ -334,12 +428,15 @@ const AddProperty = () => {
       submitData.append("title", formData.title);
       submitData.append("description", formData.description);
       submitData.append("price", formData.price);
+      submitData.append("pricePeriod", formData.pricePeriod); // new rent
       submitData.append("type", formData.type);
-      submitData.append("address", formData.address);
+      submitData.append("district", formData.district);
+      submitData.append("city", formData.city);
+      submitData.append("contactNumber", formData.contactNumber);
       submitData.append("bedrooms", formData.bedrooms);
       submitData.append("bathrooms", formData.bathrooms);
       submitData.append("landSize", formData.landSize);
-
+      submitData.append("houseSize", formData.houseSize);
       submitData.append("latitude", centerLat);
       submitData.append("longitude", centerLng);
       submitData.append("boundary", finalBoundaryWKT);
@@ -390,7 +487,7 @@ const AddProperty = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
         <div className="from_backgroung">
           <form onSubmit={handleSubmit} className="p-8">
-            <div className="mb-8 border-b pb-8">
+            <div className="mb-8 ">
               <label className="block text-gray-900 text-lg font-bold mb-4">
                 Property Type
               </label>
@@ -445,9 +542,9 @@ const AddProperty = () => {
                 </div>
                 {/*  rent house*/}
                 <div
-                  onClick={() => handleTypeChange("Rent")}
+                  onClick={() => handleTypeChange("Rent House")}
                   className={`type ${
-                    formData.type === "Rent"
+                    formData.type === "Rent House"
                       ? "border-purple-600 bg-purple-50 text-purple-700 shadow-sm"
                       : "border-gray-200 hover:border-purple-300 text-gray-600 hover:bg-gray-50"
                   }`}
@@ -463,10 +560,37 @@ const AddProperty = () => {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={1.5}
-                      d="M8 7V3m8 4V3M4 11h16M6 21h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2zm4-5h4"
+                      d="M3 10l9-7 9 7v10a2 2 0 01-2 2H5a2 2 0 01-2-2V10zm7 10v-6h4v6"
                     />
                   </svg>
                   <span className="font-bold text-lg">Rent House</span>
+                </div>
+
+                {/*rent wela */}
+                <div
+                  onClick={() => handleTypeChange("Rent Wela")}
+                  className={`type ${
+                    formData.type === "Rent Wela"
+                      ? "border-orange-600 bg-orange-50 text-orange-700 shadow-sm"
+                      : "border-gray-200 hover:border-orange-300 text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-10 w-10 mb-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+
+                  <span className="font-bold text-lg">Rent Wela</span>
                 </div>
               </div>
             </div>
@@ -488,7 +612,11 @@ const AddProperty = () => {
                   placeholder={
                     formData.type === "House"
                       ? "e.g. Beautiful 2-Story House in Colombo 07"
-                      : "e.g. 15 Perch Prime Land in Malabe"
+                      : formData.type === "Land"
+                      ? "e.g. 15 Perch Prime Land in Malabe"
+                      : formData.type === "Rent House"
+                      ? "e.g. Fully Furnished 3 Bedroom House for Rent in Kandy"
+                      : "Enter Property Title"
                   }
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
                 />
@@ -497,30 +625,108 @@ const AddProperty = () => {
                 <label className="block text-gray-700 text-sm font-medium mb-2">
                   Price (Rs.) <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="number"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleChange}
-                  required
-                  placeholder="e.g. 15000000"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
-                />
+
+                <div className="flex gap-3">
+                  <input
+                    type="number"
+                    name="price"
+                    value={formData.price}
+                    onChange={handleChange}
+                    required
+                    placeholder="Enter Price"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                  />
+
+                  {(formData.type === "Rent House" ||
+                    formData.type === "Rent Wela") && (
+                    <select
+                      name="pricePeriod"
+                      value={formData.pricePeriod}
+                      onChange={handleChange}
+                      className="px-4 py-3 border border-gray-300 rounded-lg"
+                    >
+                      <option value="Month">Month</option>
+                      <option value="Year">Year</option>
+                    </select>
+                  )}
+                </div>
               </div>
               <div>
                 <label className="block text-gray-700 text-sm font-medium mb-2">
-                  Street Address <span className="text-red-500">*</span>
+                  District
+                  <span className="text-red-500">*</span>
                 </label>
+
+                <select
+                  name="district"
+                  value={formData.district}
+                  onChange={(e) => {
+                    const district = e.target.value;
+
+                    setFormData({
+                      ...formData,
+                      district,
+                    });
+
+                    if (districtLocations[district]) {
+                      const [lat, lng] = districtLocations[district];
+
+                      setFormData((prev) => ({
+                        ...prev,
+                        district,
+                        latitude: lat,
+                        longitude: lng,
+                      }));
+                    }
+                  }}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                  required
+                >
+                  <option value="">Select District</option>
+
+                  {sriLankaDistricts.map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-gray-700 text-sm font-medium mb-2">
+                  Nearby City / Town
+                  <span className="text-red-500">*</span>
+                </label>
+
                 <input
                   type="text"
-                  name="address"
-                  value={formData.address}
+                  name="city"
+                  value={formData.city}
+                  onChange={handleChange}
+                  placeholder="e.g. Kadawatha"
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-700 text-sm font-medium mb-2">
+                  Contact Number (WhatsApp / Call)
+                  <span className="text-red-500">*</span>
+                </label>
+
+                <input
+                  type="text"
+                  name="contactNumber"
+                  value={formData.contactNumber}
                   onChange={handleChange}
                   required
-                  placeholder="e.g. Kandy Road, Kadawatha"
+                  placeholder="e.g. 0771234567"
+                  pattern="[0-9]{10}"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
                 />
               </div>
+
               <div className="md:col-span-2">
                 <label className="block text-gray-700 text-sm font-medium mb-2">
                   Description
@@ -554,6 +760,19 @@ const AddProperty = () => {
                 }`}
               >
                 📍 Drop Pin (Single Point)
+              </button>
+
+              <button
+                type="button"
+                onClick={handleGetGPSLocation}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition 
+                  ${
+                    gpsActive
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+              >
+                🎯 Get GPS Location
               </button>
               <button
                 type="button"
@@ -624,7 +843,9 @@ const AddProperty = () => {
               Property Features
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              {formData.type === "House" && (
+              {(formData.type === "House" ||
+                formData.type === "Rent House" ||
+                formData.type === "Rent Wela") && (
                 <>
                   <div>
                     <label className="block text-gray-700 text-sm font-medium mb-2">
@@ -654,19 +875,40 @@ const AddProperty = () => {
                   </div>
                 </>
               )}
-              <div className={formData.type === "Land" ? "md:col-span-3" : ""}>
-                <label className="block text-gray-700 text-sm font-medium mb-2">
-                  Land Size (Perches)
-                </label>
-                <input
-                  type="number"
-                  name="landSize"
-                  value={formData.landSize}
-                  onChange={handleChange}
-                  placeholder="e.g. 15"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
-                />
-              </div>
+
+              {formData.type === "House" && (
+                <div>
+                  <label className="block text-gray-700 text-sm font-medium mb-2">
+                    House Size (sqft)
+                  </label>
+
+                  <input
+                    type="number"
+                    name="houseSize"
+                    value={formData.houseSize}
+                    onChange={handleChange}
+                    placeholder="e.g. 1800"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                  />
+                </div>
+              )}
+
+              {(formData.type === "Land" || formData.type === "House") && (
+                <div className="md:col-span-3">
+                  <label className="block text-gray-700 text-sm font-medium mb-2">
+                    Land Size (Perches)
+                  </label>
+
+                  <input
+                    type="number"
+                    name="landSize"
+                    value={formData.landSize}
+                    onChange={handleChange}
+                    placeholder="e.g. 15"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                  />
+                </div>
+              )}
             </div>
 
             <h3 className="text-lg font-bold text-gray-900 mb-4 border-b pb-2">
