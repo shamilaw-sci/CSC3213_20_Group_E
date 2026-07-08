@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Bed, Bath, Maximize, Heart, MessageCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../context/api';
 import { useAuth } from '../context/UserAuthContext';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, m } from "framer-motion";
 
 const PropertyCard = ({ prop, handleMessageSeller }) => {
     const navigate = useNavigate();
@@ -23,10 +23,7 @@ const PropertyCard = ({ prop, handleMessageSeller }) => {
             return;
         }
         try {
-            const token = localStorage.getItem('token');
-            const res = await axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/favorites/${prop.id}`, {}, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const res = await api.post(`/favorites/${prop.id}`);
             
             // The backend returns { isFavorite: boolean }
             setIsFavorite(res.data.isFavorite);
@@ -42,7 +39,7 @@ const PropertyCard = ({ prop, handleMessageSeller }) => {
     };
 
     return (
-        <motion.div 
+        <m.div 
             whileHover={{ y: -10, rotateX: 2, rotateY: -2, z: 50 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
             onClick={() => navigate(`/property/${prop.id}`)}
@@ -53,7 +50,7 @@ const PropertyCard = ({ prop, handleMessageSeller }) => {
                 {/* Center Heart Animation */}
                 <AnimatePresence>
                     {showAnimation && (
-                        <motion.div
+                        <m.div
                             initial={{ scale: 0, opacity: 0 }}
                             animate={{ scale: [0, 1.5, 1.2], opacity: 1 }}
                             exit={{ scale: 0, opacity: 0 }}
@@ -62,7 +59,7 @@ const PropertyCard = ({ prop, handleMessageSeller }) => {
                             style={{ pointerEvents: 'none' }}
                         >
                             <Heart className="w-24 h-24 text-red-500 fill-red-500 drop-shadow-lg" />
-                        </motion.div>
+                        </m.div>
                     )}
                 </AnimatePresence>
 
@@ -82,7 +79,7 @@ const PropertyCard = ({ prop, handleMessageSeller }) => {
                     <span className="bg-white/90 backdrop-blur-sm text-blue-900 text-[11px] font-black px-3 py-1.5 rounded-full shadow-sm uppercase tracking-widest">
                         {prop.type === 'Land' ? 'Land for sale' : 'House for sale'}
                     </span>
-                    <button 
+                    <button aria-label="Accessible interactive control" type="button" 
                         onClick={toggleFavorite}
                         className={`transition-colors drop-shadow-md p-2 rounded-full backdrop-blur-sm ${isFavorite ? 'bg-white text-red-500' : 'bg-black/20 text-white hover:bg-white hover:text-red-500'}`}
                     >
@@ -127,7 +124,7 @@ const PropertyCard = ({ prop, handleMessageSeller }) => {
                 <p className="text-gray-500 text-sm truncate mb-4 font-medium">{prop.address || prop.title}</p>
                 
                 <div className="mt-auto pt-4 flex items-center justify-between gap-3">
-                    <button
+                    <button aria-label="Accessible interactive control" type="button"
                         onClick={(e) => {
                             e.stopPropagation();
                             handleMessageSeller(prop.id);
@@ -139,7 +136,7 @@ const PropertyCard = ({ prop, handleMessageSeller }) => {
                     </button>
                 </div>
             </div>
-        </motion.div>
+        </m.div>
     );
 };
 

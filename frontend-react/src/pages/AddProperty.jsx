@@ -5,6 +5,7 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import api from "../context/api";
 import axios from "axios";
 import imageCompression from "browser-image-compression";
 import {
@@ -127,6 +128,8 @@ const AddProperty = () => {
   }, [user, navigate]);
 
   const [formData, setFormData] = useState({
+    listingType: "Sale",
+    address: "",
     type: "House",
     title: "",
     description: "",
@@ -428,10 +431,12 @@ const AddProperty = () => {
       submitData.append("title", formData.title);
       submitData.append("description", formData.description);
       submitData.append("price", formData.price);
+      submitData.append("listingType", formData.listingType);
       submitData.append("pricePeriod", formData.pricePeriod); // new rent
       submitData.append("type", formData.type);
       submitData.append("district", formData.district);
       submitData.append("city", formData.city);
+      submitData.append("address", formData.address);
       submitData.append("contactNumber", formData.contactNumber);
       submitData.append("bedrooms", formData.bedrooms);
       submitData.append("bathrooms", formData.bathrooms);

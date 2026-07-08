@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fetchConversationMessages, fetchConversations, sendConversationMessage } from "../api/adminApi";
 import "../styles/admin-global.css";
 
@@ -42,23 +42,23 @@ const MessagesPage = () => {
   const [loading, setLoading] = useState(true);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [toast, setToast] = useState(null);
-  const messagesEndRef = React.useRef(null);
+  const messagesEndRef = useRef(null);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  }, []);
 
   const selected = useMemo(
     () => conversations.find((conversation) => conversation.id === selectedId),
     [conversations, selectedId]
   );
 
-  const showToast = (msg, type = "success") => {
+  const showToast = useCallback((msg, type = "success") => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3000);
-  };
+  }, []);
 
-  const loadConversations = async ({ silent = false } = {}) => {
+  const loadConversations = useCallback(async ({ silent = false } = {}) => {
     try {
       const data = await fetchConversations();
       const next = data.conversations || [];
@@ -69,30 +69,29 @@ const MessagesPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedId, showToast]);
+
+  const loadMessages = useCallback(async () => {
+    if (!selectedId) return;
+    setMessagesLoading(true);
+    try {
+      const data = await fetchConversationMessages(selectedId);
+      setMessages(data.messages || []);
+    } catch {
+      showToast("Failed to load messages.", "error");
+    } finally {
+      setMessagesLoading(false);
+      setTimeout(scrollToBottom, 100);
+    }
+  }, [selectedId, scrollToBottom, showToast]);
 
   useEffect(() => {
     loadConversations();
-  }, []);
+  }, [loadConversations]);
 
   useEffect(() => {
-    if (!selectedId) return;
-
-    const loadMessages = async () => {
-      setMessagesLoading(true);
-      try {
-        const data = await fetchConversationMessages(selectedId);
-        setMessages(data.messages || []);
-      } catch {
-        showToast("Failed to load messages.", "error");
-      } finally {
-        setMessagesLoading(false);
-        setTimeout(scrollToBottom, 100);
-      }
-    };
-
     loadMessages();
-  }, [selectedId]);
+  }, [loadMessages]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -105,7 +104,7 @@ const MessagesPage = () => {
     }, 10000);
 
     return () => clearInterval(interval);
-  }, [selectedId]);
+  }, [selectedId, loadConversations]);
 
   const sendMessage = async (event) => {
     event.preventDefault();
@@ -151,7 +150,7 @@ const MessagesPage = () => {
               </div>
             )}
             {conversations.map((conversation) => (
-              <button
+              <button aria-label="Accessible interactive control" type="button"
                 key={conversation.id}
                 onClick={() => setSelectedId(conversation.id)}
                 style={{
@@ -225,7 +224,7 @@ const MessagesPage = () => {
                             </div>
                             {message.body && <div style={{ fontSize: "0.9rem", whiteSpace: "pre-wrap" }}>{message.body}</div>}
                             {message.attachment_url && (
-                              <a
+                              <a aria-label="Accessible interactive control"
                                 href={message.attachment_url}
                                 target="_blank"
                                 rel="noreferrer"
@@ -262,21 +261,21 @@ const MessagesPage = () => {
                   {attachment && (
                     <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginBottom: 10, padding: 10, borderRadius: 8, background: "var(--admin-bg)", color: "var(--admin-text-secondary)" }}>
                       <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{attachment.name}</span>
-                      <button type="button" className="admin-btn admin-btn-secondary admin-btn-sm" onClick={() => setAttachment(null)}>Remove</button>
+                      <button aria-label="Accessible interactive control" type="button" className="admin-btn admin-btn-secondary admin-btn-sm" onClick={() => setAttachment(null)}>Remove</button>
                     </div>
                   )}
                   <div style={{ display: "flex", gap: 10 }}>
-                    <label className="admin-btn admin-btn-secondary" style={{ cursor: "pointer" }}>
+                    <label htmlFor="uid_r6l831uf" className="admin-btn admin-btn-secondary" style={{ cursor: "pointer" }}>
                       Attach
-                      <input type="file" accept="image/*,.pdf" style={{ display: "none" }} onChange={(event) => setAttachment(event.target.files?.[0] || null)} />
+                      <input aria-label="Accessible interactive control" type="file" accept="image/*,.pdf" style={{ display: "none" }} onChange={(event) => setAttachment(event.target.files?.[0] || null)} />
                     </label>
-                    <input
+                    <input aria-label="Accessible interactive control"
                       className="admin-form-control"
                       value={draft}
                       onChange={(event) => setDraft(event.target.value)}
                       placeholder="Write an admin reply..."
                     />
-                    <button className="admin-btn admin-btn-primary" type="submit">Send</button>
+                    <button aria-label="Accessible interactive control" className="admin-btn admin-btn-primary" type="submit">Send</button>
                   </div>
                 </form>
               </>

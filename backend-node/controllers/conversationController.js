@@ -129,6 +129,64 @@ const startSupportConversation = async (req, res) => {
     }
 };
 
+const startAgentConversation = async (req, res) => {
+    try {
+        if (!req.user || !['BUYER', 'SELLER'].includes(req.user.role)) {
+            return res.status(403).json({ message: "Only registered users can message agents directly." });
+        }
+
+        const agentId = req.params.agentId;
+
+        if (agentId === req.user.id) {
+            return res.status(400).json({ message: "You cannot message yourself." });
+        }
+
+        // Verify the target is actually an agent
+        const { data: agent, error: agentError } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', agentId)
+            .single();
+
+        if (agentError || !agent || agent.role !== 'AGENT') {
+            return res.status(404).json({ message: "Agent not found." });
+        }
+
+        // Check if an agent conversation already exists
+        const { data: existing } = await supabase
+            .from('conversations')
+            .select('*')
+            .eq('type', 'agent')
+            .eq('buyer_id', req.user.id)
+            .eq('seller_id', agentId)
+            .maybeSingle();
+
+        if (existing) {
+            return res.status(200).json({ conversation: existing });
+        }
+
+        // Create new agent conversation
+        const { data: conversation, error } = await supabase
+            .from('conversations')
+            .insert([{
+                type: 'agent',
+                property_id: null,
+                buyer_id: req.user.id,
+                seller_id: agentId,
+                created_at: new Date(),
+                updated_at: new Date()
+            }])
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        res.status(201).json({ conversation });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
 const getConversations = async (req, res) => {
     try {
         let query = supabase
@@ -367,6 +425,7 @@ const getUnreadMessages = async (req, res) => {
 module.exports = {
     startPropertyConversation,
     startSupportConversation,
+    startAgentConversation,
     getConversations,
     getMessages,
     sendMessage,

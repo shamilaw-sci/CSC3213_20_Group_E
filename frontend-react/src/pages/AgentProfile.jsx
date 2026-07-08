@@ -1,9 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { Star, MapPin, Phone, Mail, Globe, CheckCircle, ShieldCheck } from 'lucide-react';
+import api from '../context/api';
 import { useAuth } from '../context/UserAuthContext';
+import { Star, MapPin, Share, Mail, Award, CheckCircle, ChevronLeft, ChevronRight, PlayCircle } from 'lucide-react';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 
+/**
+ * Agent Profile View Component.
+ * Fetches and displays public agent data, their listings, ratings, and statistics.
+ * Allows users to initiate contact via internal messaging.
+ *
+ * @component
+ * @returns {React.ReactElement} Agent Profile Page
+ */
 const AgentProfile = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -13,12 +23,11 @@ const AgentProfile = () => {
     const [listings, setListings] = useState([]);
     const [reviews, setReviews] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('listings'); // 'listings', 'sales', 'reviews'
 
     useEffect(() => {
         const fetchAgent = async () => {
             try {
-                const response = await axios.get(`http://localhost:5000/api/agents/${id}`);
+                const response = await api.get(`/agents/${id}`);
                 setAgentData(response.data.agent);
                 setListings(response.data.listings || []);
                 setReviews(response.data.reviews || []);
@@ -32,232 +41,278 @@ const AgentProfile = () => {
     }, [id]);
 
     if (loading) return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="min-h-screen flex flex-col bg-white">
+            <Navbar />
+            <div className="flex-1 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
         </div>
     );
 
     if (!agentData) return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Agent Not Found</h2>
-            <button onClick={() => navigate('/')} className="text-blue-600 hover:underline">Return Home</button>
+        <div className="min-h-screen flex flex-col bg-white">
+            <Navbar />
+            <div className="flex-1 flex flex-col items-center justify-center">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">Agent Not Found</h2>
+                <button aria-label="Accessible interactive control" type="button" onClick={() => navigate('/')} className="text-blue-600 hover:underline">Return Home</button>
+            </div>
         </div>
     );
 
     const profile = agentData.agent_profiles[0] || {};
     const agencyName = profile.agency_name || 'Independent Agent';
     const totalSales = profile.total_sales || 0;
+    const totalRentals = profile.total_rentals || 0;
     const avgPrice = listings.length > 0 
         ? (listings.reduce((sum, p) => sum + p.price, 0) / listings.length).toFixed(0) 
         : 0;
 
+    const averageRating = reviews.length > 0 
+        ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+        : 0;
+    
+    const isTopAgent = averageRating >= 4.5 && reviews.length > 0;
+
+    const handleShare = () => {
+        navigator.clipboard.writeText(window.location.href);
+        alert("Link copied to clipboard!");
+    };
+    
+    const getEmbedUrl = (url) => {
+        if (!url) return null;
+        const videoId = url.split('v=')[1]?.split('&')[0];
+        return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1` : null;
+    };
+    
+    const embedUrl = getEmbedUrl(profile.youtube_video_url);
+
+    const handleContactAgent = async () => {
+        if (!agentData || !agentData.id) return;
+        
+        try {
+            const response = await api.post(`/conversations/agent/${agentData.id}`);
+            navigate(`/messages?conversation=${response.data.conversation.id}`);
+        } catch (error) {
+            console.error("Error creating/fetching conversation:", error);
+            if (error.response?.status === 401 || error.response?.status === 403) {
+                navigate('/login');
+            } else {
+                alert(error.response?.data?.message || "Failed to start conversation");
+            }
+        }
+    };
+
     return (
-        <div className="bg-gray-50 min-h-screen font-sans">
-            {/* HERO SECTION */}
-            <div className="w-full bg-white border-b border-gray-200">
-                {/* Cover Image/Video Banner */}
-                <div className="h-64 md:h-80 w-full bg-gray-900 relative overflow-hidden">
-                    <img 
-                        src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80" 
-                        alt="Cover" 
-                        className="w-full h-full object-cover opacity-60"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                </div>
-
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative -mt-24 sm:-mt-32 pb-8">
-                    <div className="flex flex-col md:flex-row gap-8">
-                        {/* Profile Info Left */}
-                        <div className="flex-1 flex flex-col md:flex-row gap-6 items-end md:items-start">
-                            {/* Avatar */}
-                            <div className="relative z-10 mx-auto md:mx-0">
-                                <div className="h-40 w-40 rounded-full border-4 border-white shadow-xl overflow-hidden bg-white">
-                                    <img 
-                                        src={agentData.avatar_url || `https://ui-avatars.com/api/?name=${agentData.name}&size=200&background=006aff&color=fff`} 
-                                        alt={agentData.name}
-                                        className="h-full w-full object-cover"
-                                    />
-                                </div>
-                                <div className="absolute bottom-2 right-2 bg-white rounded-full p-1 shadow-lg">
-                                    <ShieldCheck className="h-6 w-6 text-blue-600" />
-                                </div>
-                            </div>
-
-                            {/* Name & Title */}
-                            <div className="pt-4 md:pt-36 text-center md:text-left z-10 w-full">
-                                <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight flex items-center justify-center md:justify-start gap-2">
-                                    {agentData.name}
-                                    <CheckCircle className="h-6 w-6 text-blue-500 mt-1" />
-                                </h1>
-                                <p className="text-xl font-medium text-gray-600 mt-1">{agencyName}</p>
-                                
-                                <div className="flex items-center justify-center md:justify-start gap-4 mt-3 text-sm font-medium text-gray-700">
-                                    <div className="flex items-center gap-1">
-                                        <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
-                                        <span className="text-lg">4.9</span>
-                                        <span className="text-gray-500 font-normal">({reviews.length} reviews)</span>
-                                    </div>
-                                    <span className="text-gray-300">|</span>
-                                    <span>License: {profile.license_number || 'N/A'}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* CTA Sidebar Right */}
-                        <div className="w-full md:w-80 mt-6 md:mt-24 z-10">
-                            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 sticky top-24">
-                                <h3 className="text-lg font-bold text-gray-900 mb-4">Contact {agentData.name}</h3>
-                                <button className="w-full bg-[#006aff] hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg mb-3 transition shadow-md flex justify-center items-center gap-2">
-                                    <Mail className="h-5 w-5" />
-                                    Send Message
-                                </button>
-                                <button className="w-full bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 font-bold py-3 px-4 rounded-lg transition flex justify-center items-center gap-2">
-                                    <Phone className="h-5 w-5" />
-                                    Call {agentData.phone || 'Agent'}
-                                </button>
-                            </div>
-                        </div>
+        <div className="bg-white min-h-screen font-outfit">
+            <Navbar />
+            
+            <div className="max-w-[1200px] mx-auto px-4 py-8">
+                {/* Breadcrumbs */}
+                <div className="text-sm text-gray-500 mb-6 flex items-center justify-between">
+                    <div>
+                        <span className="hover:underline cursor-pointer">Sri Lanka</span> - <span className="hover:underline cursor-pointer">Agents</span> - <span className="text-gray-900">{agentData.name}</span>
                     </div>
+                    <div className="text-blue-600 hover:underline cursor-pointer">Report a problem</div>
                 </div>
 
-                {/* Performance Metrics Ribbon */}
-                <div className="border-t border-gray-200 bg-gray-50">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 divide-x divide-gray-200">
-                            <div className="text-center md:text-left px-4">
-                                <p className="text-sm text-gray-500 font-medium mb-1">Total Sales (Last 12m)</p>
-                                <p className="text-2xl font-bold text-gray-900">{totalSales}</p>
-                            </div>
-                            <div className="text-center md:text-left px-4">
-                                <p className="text-sm text-gray-500 font-medium mb-1">Active Listings</p>
-                                <p className="text-2xl font-bold text-gray-900">{listings.length}</p>
-                            </div>
-                            <div className="text-center md:text-left px-4">
-                                <p className="text-sm text-gray-500 font-medium mb-1">Avg. Price</p>
-                                <p className="text-2xl font-bold text-gray-900">${Number(avgPrice).toLocaleString()}</p>
-                            </div>
-                            <div className="text-center md:text-left px-4">
-                                <p className="text-sm text-gray-500 font-medium mb-1">Languages</p>
-                                <p className="text-lg font-bold text-gray-900">{profile.languages || 'English'}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* MAIN CONTENT AREA */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-                <div className="flex flex-col lg:flex-row gap-10">
+                <div className="flex flex-col md:flex-row gap-8">
                     
-                    {/* Left Column (Main content) */}
-                    <div className="flex-1">
-                        
-                        {/* About Section */}
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 mb-8">
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4">About {agentData.name}</h2>
-                            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                                {profile.bio || "This agent hasn't written a bio yet."}
-                            </p>
-                        </div>
-
-                        {/* Tabs */}
-                        <div className="mb-6 border-b border-gray-200">
-                            <nav className="flex space-x-8">
-                                <button 
-                                    onClick={() => setActiveTab('listings')}
-                                    className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'listings' ? 'border-[#006aff] text-[#006aff]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
-                                >
-                                    Active Listings ({listings.length})
-                                </button>
-                                <button 
-                                    onClick={() => setActiveTab('sales')}
-                                    className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'sales' ? 'border-[#006aff] text-[#006aff]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
-                                >
-                                    Past Sales
-                                </button>
-                                <button 
-                                    onClick={() => setActiveTab('reviews')}
-                                    className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'reviews' ? 'border-[#006aff] text-[#006aff]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
-                                >
-                                    Reviews ({reviews.length})
-                                </button>
-                            </nav>
-                        </div>
-
-                        {/* Tab Content */}
-                        <div className="min-h-[400px]">
-                            {activeTab === 'listings' && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {listings.length === 0 ? (
-                                        <p className="text-gray-500 col-span-2 py-10 text-center">No active listings available.</p>
-                                    ) : (
-                                        listings.map(property => (
-                                            <div key={property.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition cursor-pointer" onClick={() => navigate(`/property/${property.id}`)}>
-                                                <div className="h-48 bg-gray-200 relative">
-                                                    <img src={property.images?.[0] || 'https://via.placeholder.com/400x300?text=No+Image'} alt={property.title} className="w-full h-full object-cover" />
-                                                    <div className="absolute top-3 left-3 bg-white px-2 py-1 rounded text-xs font-bold shadow">
-                                                        {property.purpose === 'SELL' ? 'FOR SALE' : 'FOR RENT'}
-                                                    </div>
-                                                </div>
-                                                <div className="p-4">
-                                                    <h3 className="text-lg font-bold text-gray-900 truncate">{property.title}</h3>
-                                                    <p className="text-[#006aff] font-bold text-xl mt-1">${property.price.toLocaleString()}</p>
-                                                    <p className="text-gray-500 text-sm mt-2 flex items-center gap-1">
-                                                        <MapPin className="h-4 w-4" /> {property.city}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        ))
+                    {/* Left Sidebar - Agent Card */}
+                    <div className="w-full md:w-[320px] flex-shrink-0">
+                        <div className="bg-white border border-gray-200 shadow-sm sticky top-24 rounded-sm overflow-hidden">
+                            {/* Blue Top Banner */}
+                            <div className="h-32 bg-[#2d5c8d] w-full"></div>
+                            
+                            <div className="px-6 pb-6 -mt-16 flex flex-col items-center text-center">
+                                {/* Profile Picture with Badge */}
+                                <div className="relative mb-4">
+                                    <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-md bg-white">
+                                        <img 
+                                            src={agentData.avatar_url || `https://ui-avatars.com/api/?name=${agentData.name}&size=200&background=006aff&color=fff`} 
+                                            alt={agentData.name}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </div>
+                                    {isTopAgent && (
+                                        <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 bg-white rounded-full px-3 py-1 text-[11px] font-bold text-gray-900 shadow border border-gray-100 flex items-center whitespace-nowrap">
+                                            <Award className="w-3 h-3 text-blue-600 mr-1" /> Top Agent <span className="text-gray-400 font-normal ml-1">on Thirasara</span>
+                                        </div>
                                     )}
                                 </div>
-                            )}
 
-                            {activeTab === 'sales' && (
-                                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
-                                    <div className="w-24 h-24 bg-gray-100 rounded-full mx-auto flex items-center justify-center mb-4">
-                                        <MapPin className="h-10 w-10 text-gray-400" />
+                                {/* Name & Info */}
+                                <h1 className="text-2xl font-bold text-gray-900 mt-2 flex items-center justify-center gap-1">
+                                    {agentData.name}
+                                </h1>
+                                <div className="text-sm text-gray-500 flex items-center justify-center gap-1 mt-1 mb-3">
+                                    Thirasara Pro <CheckCircle className="w-3 h-3 text-gray-400" />
+                                </div>
+
+                                <p className="text-sm font-semibold text-gray-800">{agencyName}</p>
+                                <p className="text-xs text-blue-600 hover:underline cursor-pointer mt-1 font-medium tracking-wide uppercase">Lead of {agentData.name}</p>
+
+                                {profile.specialization && profile.specialization !== 'Both' && (
+                                    <div className="text-[10px] font-bold bg-blue-50 text-blue-700 px-2 py-1 rounded-sm mt-2 border border-blue-100 uppercase tracking-wider shadow-sm">
+                                        Specializes in {profile.specialization}
                                     </div>
-                                    <h3 className="text-xl font-bold text-gray-900 mb-2">Interactive Sales Map</h3>
-                                    <p className="text-gray-500 mb-6">Explore the exact locations of {agentData.name}'s past successful deals.</p>
-                                    <button className="bg-gray-900 text-white font-medium py-2 px-6 rounded-lg hover:bg-gray-800 transition">
-                                        View Map (Phase 3 Feature)
+                                )}
+
+                                {profile.service_areas && (
+                                    <div className="text-sm text-gray-600 flex items-center justify-center gap-1 mt-2">
+                                        <MapPin className="w-4 h-4 text-gray-400" />
+                                        {profile.service_areas}
+                                    </div>
+                                )}
+
+                                {/* Rating */}
+                                <div className="flex items-center justify-center gap-1 mt-3 mb-6">
+                                    <div className="flex text-blue-600">
+                                        {[...Array(5)].map((_, i) => (
+                                            <Star key={i} className={`w-4 h-4 ${i < Math.round(averageRating) ? 'fill-current' : 'text-gray-300'}`} />
+                                        ))}
+                                    </div>
+                                    <span className="text-sm font-bold text-gray-900 ml-1">{averageRating > 0 ? averageRating : 'New'}</span>
+                                    <span className="text-sm text-gray-500 hover:underline cursor-pointer">{reviews.length} reviews</span>
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="flex flex-col w-full gap-2">
+                                    <div className="flex w-full gap-2">
+                                        <button 
+                                            type="button" 
+                                            onClick={handleContactAgent} 
+                                            className="flex-1 bg-[#006aff] hover:bg-blue-700 text-white font-bold py-2 rounded transition text-sm flex items-center justify-center gap-1"
+                                        >
+                                            <Mail className="w-4 h-4" /> Message
+                                        </button>
+                                        <button 
+                                            type="button" 
+                                            onClick={handleShare}
+                                            className="flex items-center justify-center gap-1 bg-white hover:bg-gray-50 text-[#006aff] border border-[#006aff] font-bold py-2 px-3 rounded transition text-sm"
+                                        >
+                                            <Share className="w-4 h-4" /> Share
+                                        </button>
+                                    </div>
+                                    <a 
+                                        href={`mailto:${agentData.email}`} 
+                                        className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-2 rounded transition text-sm flex items-center justify-center gap-1 mt-1"
+                                    >
+                                        <Mail className="w-4 h-4" /> Email directly
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right Content */}
+                    <div className="flex-1 min-w-0">
+                        {/* Video / Image Banner */}
+                        <div className="bg-black w-full aspect-video md:h-[400px] flex items-center justify-center relative mb-6 rounded-sm overflow-hidden group cursor-pointer">
+                            {embedUrl ? (
+                                <iframe 
+                                    src={embedUrl} 
+                                    className="w-full h-full object-cover border-0"
+                                    allow="autoplay; encrypted-media"
+                                    allowFullScreen
+                                ></iframe>
+                            ) : (
+                                <>
+                                    <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80" alt="Agent Intro" className="w-full h-full object-cover opacity-50" />
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <PlayCircle className="w-16 h-16 text-white opacity-80 group-hover:scale-110 group-hover:opacity-100 transition-all" />
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        {/* Bio Section */}
+                        {profile.bio && (
+                            <div className="mb-6 p-6 bg-white border border-gray-200 rounded-sm">
+                                <h3 className="text-lg font-bold text-gray-900 mb-2">About {agentData.name}</h3>
+                                <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{profile.bio}</p>
+                            </div>
+                        )}
+
+                        {/* Stats Row */}
+                        <div className="border border-gray-200 rounded-sm mb-12 bg-white">
+                            <div className="px-6 py-3 border-b border-gray-200 flex items-center text-xs font-bold text-gray-900 tracking-wider">
+                                <span className="text-orange-500 mr-2">TEAM</span> Sales numbers represent all team members
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-gray-200">
+                                <div className="p-6 text-center flex flex-col justify-center">
+                                    <p className="text-2xl font-bold text-gray-900 mb-1">{totalSales}</p>
+                                    <p className="text-xs text-gray-500">Sales</p>
+                                </div>
+                                <div className="p-6 text-center flex flex-col justify-center">
+                                    <p className="text-2xl font-bold text-gray-900 mb-1">{totalRentals}</p>
+                                    <p className="text-xs text-gray-500">Rentals</p>
+                                </div>
+                                <div className="p-6 text-center flex flex-col justify-center">
+                                    <p className="text-2xl font-bold text-gray-900 mb-1">Rs.5M-50M</p>
+                                    <p className="text-xs text-gray-500">Price range</p>
+                                </div>
+                                <div className="p-6 text-center flex flex-col justify-center">
+                                    <p className="text-2xl font-bold text-gray-900 mb-1">Rs.{Number(avgPrice).toLocaleString()}</p>
+                                    <p className="text-xs text-gray-500">Average price</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Featured Sales */}
+                        <div className="mb-12">
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-2xl font-bold text-gray-900">Featured listings</h2>
+                                <div className="flex gap-2">
+                                    <button aria-label="Previous" className="p-2 border border-gray-300 rounded-full hover:bg-gray-50 text-gray-400">
+                                        <ChevronLeft className="w-5 h-5" />
+                                    </button>
+                                    <button aria-label="Next" className="p-2 border border-gray-300 rounded-full hover:bg-gray-50 text-gray-900">
+                                        <ChevronRight className="w-5 h-5" />
                                     </button>
                                 </div>
-                            )}
-
-                            {activeTab === 'reviews' && (
-                                <div className="space-y-6">
-                                    {reviews.length === 0 ? (
-                                        <p className="text-gray-500 py-10 text-center">No reviews yet.</p>
-                                    ) : (
-                                        reviews.map(review => (
-                                            <div key={review.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                                                <div className="flex items-center gap-4 mb-4">
-                                                    <img 
-                                                        src={review.reviewer?.avatar_url || `https://ui-avatars.com/api/?name=${review.reviewer?.name || 'U'}`} 
-                                                        className="w-12 h-12 rounded-full" 
-                                                        alt="Reviewer" 
-                                                    />
-                                                    <div>
-                                                        <h4 className="font-bold text-gray-900">{review.reviewer?.name || 'Anonymous'}</h4>
-                                                        <div className="flex text-yellow-400">
-                                                            {[...Array(5)].map((_, i) => (
-                                                                <Star key={i} className={`h-4 w-4 ${i < review.rating ? 'fill-yellow-400' : 'text-gray-300'}`} />
-                                                            ))}
-                                                        </div>
-                                                    </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {listings.length === 0 ? (
+                                    <div className="col-span-full py-10 text-center border border-gray-200 rounded-sm bg-gray-50 text-gray-500">
+                                        No active featured listings right now.
+                                    </div>
+                                ) : (
+                                    listings.slice(0, 3).map(property => (
+                                        <div key={property.id} className="group cursor-pointer rounded-sm overflow-hidden" onClick={() => navigate(`/property/${property.id}`)}>
+                                            <div className="relative h-48 w-full overflow-hidden">
+                                                <img 
+                                                    src={property.images?.[0] || 'https://via.placeholder.com/400x300?text=No+Image'} 
+                                                    alt={property.title} 
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                                                />
+                                                <div className={`absolute top-2 left-2 text-white text-[10px] font-bold px-2 py-0.5 rounded-sm ${property.listing_type === 'Rent' ? 'bg-purple-600' : 'bg-red-600'}`}>
+                                                    {property.listing_type === 'Rent' ? 'For Rent' : 'For Sale'}
                                                 </div>
-                                                <p className="text-gray-700">{review.comment}</p>
                                             </div>
-                                        ))
-                                    )}
-                                </div>
-                            )}
+                                            <div className="pt-3 pb-1 border-b-2 border-transparent group-hover:border-blue-600 transition-colors">
+                                                <p className="text-lg font-bold text-gray-900">Rs.{property.price.toLocaleString()}{property.listing_type === 'Rent' ? '/mo' : ''}</p>
+                                                <p className="text-sm text-gray-600 truncate">{property.title}</p>
+                                                <p className="text-xs text-gray-500 truncate mt-1">{property.address || property.city}</p>
+                                                <div className="flex gap-3 text-xs text-gray-700 mt-2 font-medium">
+                                                    <span>{property.bedrooms} <span className="font-normal text-gray-500">bds</span></span>
+                                                    <span className="text-gray-300">|</span>
+                                                    <span>{property.bathrooms} <span className="font-normal text-gray-500">ba</span></span>
+                                                    <span className="text-gray-300">|</span>
+                                                    <span>{property.landSize || '1,200'} <span className="font-normal text-gray-500">sqft</span></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
                         </div>
 
                     </div>
                 </div>
             </div>
+
+            <Footer />
         </div>
     );
 };

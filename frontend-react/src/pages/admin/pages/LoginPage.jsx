@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAdminAuth } from "../context/AdminAuthContext";
 import { adminLogin } from "../api/adminApi";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { ShieldAlert, ArrowRight, Loader2, Eye, EyeOff } from "lucide-react";
 
 const LoginPage = () => {
@@ -36,7 +36,7 @@ const LoginPage = () => {
       <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-500/10 blur-3xl rounded-full mix-blend-multiply pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-cyan-500/10 blur-3xl rounded-full mix-blend-multiply pointer-events-none" />
 
-      <motion.div 
+      <m.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
@@ -57,8 +57,8 @@ const LoginPage = () => {
 
             <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                    <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Email Address</label>
-                    <input
+                    <label htmlFor="a11y" className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Email Address</label>
+                    <input aria-label="Accessible interactive control"
                         type="email"
                         className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium"
                         placeholder="admin@thirasara.lk"
@@ -69,9 +69,9 @@ const LoginPage = () => {
                 </div>
 
                 <div className="relative">
-                    <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Password</label>
+                    <label htmlFor="l8kov9" className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Password</label>
                     <div className="relative">
-                        <input
+                        <input aria-label="Accessible interactive control"
                             type={showPassword ? "text" : "password"}
                             className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium pr-12"
                             placeholder="••••••••"
@@ -79,7 +79,7 @@ const LoginPage = () => {
                             onChange={(e) => setPassword(e.target.value)}
                             required
                         />
-                        <button
+                        <button aria-label="Accessible interactive control"
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
                             className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
@@ -90,12 +90,12 @@ const LoginPage = () => {
                 </div>
 
                 {error && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-red-50 text-red-600 text-xs font-bold p-3 rounded-lg text-center border border-red-100">
+                    <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-red-50 text-red-600 text-xs font-bold p-3 rounded-lg text-center border border-red-100">
                         {error}
-                    </motion.div>
+                    </m.div>
                 )}
 
-                <button 
+                <button aria-label="Accessible interactive control" 
                     type="submit" 
                     disabled={loading}
                     className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-gray-900 to-gray-800 hover:from-black hover:to-gray-900 text-white font-bold py-4 rounded-xl transition-all shadow-md mt-4 disabled:opacity-70"
@@ -115,7 +115,7 @@ const LoginPage = () => {
                 </p>
             </div>
         </div>
-      </motion.div>
+      </m.div>
     </div>
   );
 };

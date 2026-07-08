@@ -1,16 +1,16 @@
-import { useEffect, useMemo, useState, useRef } from 'react';
+import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
+import api from '../context/api';
 import axios from 'axios';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/UserAuthContext';
 import Navbar from '../components/Navbar';
-import { motion } from 'framer-motion';
+import { m } from "framer-motion";
 import { Send, Paperclip, X, Image as ImageIcon, FileText, User, MessageSquare, ShieldAlert } from 'lucide-react';
 
 // axios is globally configured with withCredentials = true
 const apiHeaders = () => ({
     // Authorization header no longer strictly required for browser if relying on HttpOnly cookies,
     // but kept here as fallback for any edge case or manual token storage.
-    Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
 });
 
 const getConversationTitle = (conversation, user) => {
@@ -77,11 +77,9 @@ const Messages = () => {
         [conversations, selectedId]
     );
 
-    const loadConversations = async ({ silent = false } = {}) => {
+    const loadConversations = useCallback(async ({ silent = false } = {}) => {
         try {
-            const response = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/conversations`, {
-                headers: apiHeaders(),
-            });
+            const response = await api.get('/conversations');
             const nextConversations = response.data.conversations || [];
             setConversations(nextConversations);
             if (!selectedId && nextConversations.length > 0) {
@@ -94,25 +92,27 @@ const Messages = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [selectedId]);
 
     useEffect(() => {
         loadConversations();
-    }, []);
+    }, [loadConversations]);
 
     useEffect(() => {
         if (!selectedId) return;
         setSearchParams({ conversation: selectedId });
 
+        const controller = new AbortController();
         const loadMessages = async () => {
             setMessagesLoading(true);
             try {
-                const response = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/conversations/${selectedId}/messages`, {
-                    headers: apiHeaders(),
+                const response = await api.get(`/conversations/${selectedId}/messages`, {
+                    signal: controller.signal
                 });
                 setMessages(response.data.messages || []);
                 scrollToBottom();
             } catch (err) {
+                if (axios.isCancel?.(err) || err.name === 'CanceledError') return;
                 setError(err.response?.data?.message || err.response?.data?.error || 'Failed to load messages.');
             } finally {
                 setMessagesLoading(false);
@@ -120,22 +120,28 @@ const Messages = () => {
         };
 
         loadMessages();
+        return () => controller.abort();
     }, [selectedId, setSearchParams]);
 
     useEffect(() => {
+        const controller = new AbortController();
         const interval = setInterval(() => {
             loadConversations({ silent: true });
             if (selectedId) {
-                axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/conversations/${selectedId}/messages`, {
-                    headers: apiHeaders(),
+                api.get(`/conversations/${selectedId}/messages`, {
+                    signal: controller.signal
                 })
                     .then((response) => setMessages(response.data.messages || []))
-                    .catch(() => {});
+                    .catch((err) => {
+                        if (!axios.isCancel?.(err)) {
+                            // error
+                        }
+                    });
             }
         }, 10000);
 
-        return () => clearInterval(interval);
-    }, [selectedId]);
+        return () => { clearInterval(interval); controller.abort(); };
+    }, [selectedId, loadConversations]);
 
     const scrollToBottom = () => {
         setTimeout(() => {
@@ -145,9 +151,7 @@ const Messages = () => {
 
     const startSupport = async () => {
         try {
-            const response = await axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/conversations/support`, {}, {
-                headers: apiHeaders(),
-            });
+            const response = await api.post('/conversations/support', {});
             const conversation = response.data.conversation;
             await loadConversations();
             setSelectedId(conversation.id);
@@ -159,17 +163,12 @@ const Messages = () => {
     const requestSupportForCurrent = async () => {
         if (!selectedId) return;
         try {
-            await axios.patch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/conversations/${selectedId}/request-support`, {}, {
-                headers: apiHeaders(),
-            });
+            await api.patch(`/conversations/${selectedId}/request-support`, {});
             await loadConversations({ silent: true });
-            
-            const response = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/conversations/${selectedId}/messages`, {
-                headers: apiHeaders(),
-            });
+
+            const response = await api.get(`/conversations/${selectedId}/messages`);
             setMessages(response.data.messages || []);
             scrollToBottom();
-            
         } catch (err) {
             setError(err.response?.data?.message || err.response?.data?.error || 'Failed to request support.');
         }
@@ -188,10 +187,10 @@ const Messages = () => {
             formData.append('body', body);
             if (selectedFile) formData.append('attachment', selectedFile);
 
-            const response = await axios.post(
-                `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/conversations/${selectedId}/messages`,
-                formData,
-                { headers: { ...apiHeaders(), 'Content-Type': 'multipart/form-data' } }
+                const response = await api.post(
+                    `/conversations/${selectedId}/messages`,
+                    formData,
+                    { headers: { 'Content-Type': 'multipart/form-data' } }
             );
             setMessages((prev) => [...prev, response.data.message]);
             scrollToBottom();
@@ -216,10 +215,10 @@ const Messages = () => {
                 </div>
 
                 {error && (
-                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-4 bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm font-medium flex items-center justify-between">
+                    <m.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-4 bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm font-medium flex items-center justify-between">
                         <span>{error}</span>
-                        <button onClick={() => setError('')}><X className="w-4 h-4" /></button>
-                    </motion.div>
+                        <button aria-label="Accessible interactive control" type="button" onClick={() => setError('')}><X className="w-4 h-4" /></button>
+                    </m.div>
                 )}
 
                 <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden grid grid-cols-1 md:grid-cols-[360px_1fr] flex-1 shadow-sm min-h-[600px] max-h-[calc(100vh-200px)]">
@@ -240,7 +239,7 @@ const Messages = () => {
                                     </div>
                                     <h2 className="font-bold text-gray-900 mb-2">No conversations yet</h2>
                                     <p className="text-sm text-gray-500 mb-6">Start from a property card or contact support.</p>
-                                    <button onClick={startSupport} className="px-6 py-2.5 rounded-full bg-blue-600 text-white font-bold hover:bg-blue-700 transition-all shadow-sm">
+                                    <button aria-label="Accessible interactive control" type="button" onClick={startSupport} className="px-6 py-2.5 rounded-full bg-blue-600 text-white font-bold hover:bg-blue-700 transition-all shadow-sm">
                                         Contact Support
                                     </button>
                                 </div>
@@ -253,7 +252,7 @@ const Messages = () => {
                                 const isSupport = conversation.type === 'support';
                                 
                                 return (
-                                    <button
+                                    <button aria-label="Accessible interactive control" type="button"
                                         key={conversation.id}
                                         onClick={() => setSelectedId(conversation.id)}
                                         className={`w-full text-left p-4 border-b border-gray-50 transition-all duration-200 flex items-start gap-4 ${isActive ? 'bg-blue-50/50 relative' : 'hover:bg-gray-50'}`}
@@ -335,7 +334,7 @@ const Messages = () => {
                                     </div>
                                     
                                     {selectedConversation.type !== 'support' && !selectedConversation.support_requested && (
-                                        <button 
+                                        <button aria-label="Accessible interactive control" type="button" 
                                             onClick={requestSupportForCurrent}
                                             className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-red-50 text-gray-600 hover:text-red-600 border border-gray-200 hover:border-red-200 rounded-full font-bold text-sm transition-colors shadow-sm"
                                             title="Report or Request Admin Support"
@@ -368,7 +367,7 @@ const Messages = () => {
                                     {messages.map((message) => {
                                         const mine = message.sender_id === user?.id;
                                         return (
-                                            <motion.div 
+                                            <m.div 
                                                 initial={{ opacity: 0, y: 10 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 key={message.id} 
@@ -387,7 +386,7 @@ const Messages = () => {
                                                         {message.body && <p className="text-[15px] whitespace-pre-wrap leading-relaxed">{message.body}</p>}
                                                         
                                                         {message.attachment_url && (
-                                                            <a
+                                                            <a aria-label="Accessible interactive control"
                                                                 href={message.attachment_url}
                                                                 target="_blank"
                                                                 rel="noreferrer"
@@ -411,7 +410,7 @@ const Messages = () => {
                                                         {formatMessageTime(message.created_at)}
                                                     </p>
                                                 </div>
-                                            </motion.div>
+                                            </m.div>
                                         );
                                     })}
                                     <div ref={messagesEndRef} />
@@ -425,20 +424,20 @@ const Messages = () => {
                                                 {attachment.type.startsWith('image/') ? <ImageIcon className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
                                                 <span className="font-medium truncate">{attachment.name}</span>
                                             </div>
-                                            <button type="button" onClick={() => setAttachment(null)} className="p-1 hover:bg-blue-100 rounded-full transition-colors">
+                                            <button aria-label="Accessible interactive control" type="button" onClick={() => setAttachment(null)} className="p-1 hover:bg-blue-100 rounded-full transition-colors">
                                                 <X className="w-4 h-4" />
                                             </button>
                                         </div>
                                     )}
                                     
                                     <form onSubmit={sendMessage} className="flex items-end gap-3 px-2">
-                                        <label className="p-3.5 rounded-full text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer flex-shrink-0 mb-1">
+                                        <label htmlFor="uid_q6997xk0" className="p-3.5 rounded-full text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer flex-shrink-0 mb-1">
                                             <Paperclip className="w-5 h-5" />
-                                            <input type="file" accept="image/*,.pdf" className="hidden" onChange={(event) => setAttachment(event.target.files?.[0] || null)} />
+                                            <input aria-label="Accessible interactive control" type="file" accept="image/*,.pdf" className="hidden" onChange={(event) => setAttachment(event.target.files?.[0] || null)} />
                                         </label>
                                         
                                         <div className="flex-1 bg-gray-50 border border-gray-200 rounded-3xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-300 transition-all">
-                                            <textarea
+                                            <textarea aria-label="Accessible interactive control"
                                                 value={draft}
                                                 onChange={(event) => setDraft(event.target.value)}
                                                 onKeyDown={(e) => {
@@ -454,7 +453,7 @@ const Messages = () => {
                                             />
                                         </div>
                                         
-                                        <button 
+                                        <button aria-label="Accessible interactive control" 
                                             type="submit" 
                                             disabled={!draft.trim() && !attachment}
                                             className="p-3.5 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 mb-1 shadow-sm hover:shadow-md"

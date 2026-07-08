@@ -1,7 +1,16 @@
 const express = require('express');
 const router = express.Router();
-const { getAgents, getAgentProfile, postReview } = require('../controllers/agentController');
+const { getAgents, getAgentProfile, postReview, getAgentLeads, updateLeadMetadata, updateAgentProfile } = require('../controllers/agentController');
 const { protect } = require('../middleware/authMiddleware');
+
+// CRM: Get agent leads (conversations about their properties)
+router.get('/leads', protect, getAgentLeads);
+
+// CRM: Update lead metadata
+router.put('/leads/:id', protect, updateLeadMetadata);
+
+// Update agent profile (Bio, Youtube, etc)
+router.put('/profile', protect, updateAgentProfile);
 
 // Get all approved agents
 router.get('/', getAgents);

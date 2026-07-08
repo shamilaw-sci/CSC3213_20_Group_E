@@ -21,10 +21,12 @@ const addProperty = async (req, res, next) => {
   try {
     const {
       type,
+      listingType,
       title,
       description,
       price,
       pricePeriod,
+      address,
       district,
       city,
       contactNumber,
@@ -82,14 +84,16 @@ const addProperty = async (req, res, next) => {
       .insert([
         {
           type,
+          listing_type: listingType || 'Sale',
           title,
           description,
           price,
           price_period: pricePeriod || null,
-          district,
-          city,
+          address: address || null,
+          district: district || null,
+          city: city || null,
           contact_number: contactNumber || null,
-          bedrooms: bedrooms || null, // Default to null if not provided
+          bedrooms: bedrooms || null,
           bathrooms: bathrooms || null,
           land_size: landSize || null,
           house_size: houseSize || null,

@@ -5,6 +5,13 @@ import { Bell, MessageSquare, User } from "lucide-react";
 import api from "../context/api";
 import "./Navbar.css";
 
+/**
+ * Global Navigation Bar Component.
+ * Handles primary routing, user session state, and real-time notification polling.
+ *
+ * @component
+ * @returns {React.ReactElement} Top navigation bar interface
+ */
 const Navbar = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -22,7 +29,7 @@ const Navbar = () => {
 
     const fetchUnread = async () => {
       try {
-        const res = await api.get("/api/conversations/unread");
+        const res = await api.get("/conversations/unread");
         setUnreadCount(res.data.unreadCount || 0);
         setRecentMessages(res.data.recentMessages || []);
       } catch (err) {
@@ -40,12 +47,18 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="flex justify-between h-20 items-center">
           <div className="hidden md:flex items-center space-x-6 h-full">
-            <div className="group h-full flex items-center relative cursor-pointer">
+            <div
+              className="group h-full flex items-center relative cursor-pointer"
+              onClick={() => navigate("/map")}
+            >
               <span className="text-gray-800 hover:text-blue-600 font-medium px-2 py-8 transition duration-200 border-b-4 border-transparent group-hover:border-blue-600">
                 Buy
               </span>
             </div>
-            <div className="h-full flex items-center cursor-pointer">
+            <div
+              className="h-full flex items-center cursor-pointer"
+              onClick={() => navigate("/rent")}
+            >
               <span className="text-gray-800 hover:text-blue-600 font-medium px-2 transition duration-200">
                 Rent
               </span>
@@ -60,19 +73,27 @@ const Navbar = () => {
                 Sell
               </span>
             </div>
+            <div
+              className="h-full flex items-center cursor-pointer"
+              onClick={() => navigate("/agents")}
+            >
+              <span className="text-gray-800 hover:text-blue-600 font-medium px-2 transition duration-200">
+                Find an agent
+              </span>
+            </div>
           </div>
 
           <div
             className="absolute left-1/2 transform -translate-x-1/2 flex-shrink-0 cursor-pointer"
             onClick={() => navigate("/")}
           >
-            <h1 className="text-2xl font-extrabold text-black-600 tracking-tight flex items-center gap-2">
+            <h1 className="text-2xl font-extrabold text-black-600 tracking-tight flex items-center gap-2 text-blue-600">
               <img
                 src="/logo.jpeg"
                 alt="Thirasara Logo"
-                className="navbar-logo"
+                className="navbar-logo h-8 w-8 rounded-lg"
               />
-              Thirasara Property
+              Thirasara
             </h1>
           </div>
 

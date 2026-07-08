@@ -4,6 +4,7 @@ import axios from 'axios';
 import { UserAuthProvider } from './context/UserAuthContext';
 import { ThemeProvider } from './context/ThemeProvider';
 import { AdminAuthProvider } from './pages/admin/context/AdminAuthContext';
+import { MotionConfig, LazyMotion, domAnimation } from 'framer-motion';
 
 // Components that should load immediately
 import FloatingAIChat from './components/FloatingAIChat';
@@ -23,6 +24,7 @@ const Login = lazy(() => import('./pages/Login'));
 const MyProperties = lazy(() => import('./pages/MyProperties'));
 const Messages = lazy(() => import('./pages/Messages'));
 const ProfileSettings = lazy(() => import('./pages/ProfileSettings'));
+const AgentSearch = lazy(() => import('./pages/AgentSearch'));
 const AgentProfile = lazy(() => import('./pages/AgentProfile'));
 const AgentDashboard = lazy(() => import('./pages/agent/Dashboard'));
 const MyFavorites = lazy(() => import('./pages/MyFavorites'));
@@ -49,14 +51,17 @@ const PageLoader = () => (
 
 function App() {
   return (
-    <UserAuthProvider>
-      <ThemeProvider>
-        <Router>
+    <MotionConfig reducedMotion="user">
+      <LazyMotion features={domAnimation}>
+      <UserAuthProvider>
+        <ThemeProvider>
+          <Router>
           <FloatingAIChat />
           <Suspense fallback={<PageLoader />}>
             <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
+            <Route path="/agents" element={<AgentSearch />} />
             <Route path="/property/:id" element={<PropertyDetails />} />
             <Route path="/agent/:id" element={<AgentProfile />} />
             <Route path="/agent-dashboard" element={
@@ -66,6 +71,7 @@ function App() {
             } />
             <Route path="/login" element={<Login />} />
             <Route path="/map" element={<MapSearch />} />
+            <Route path="/rent" element={<MapSearch />} />
             <Route path="/add-property" element={<AddProperty />} />
             <Route path="/my-properties" element={<MyProperties />} />
             <Route path="/messages" element={<Messages />} />
@@ -97,9 +103,11 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           </Suspense>
-        </Router>
-      </ThemeProvider>
-    </UserAuthProvider>
+          </Router>
+        </ThemeProvider>
+      </UserAuthProvider>
+      </LazyMotion>
+    </MotionConfig>
   );
 }
 
