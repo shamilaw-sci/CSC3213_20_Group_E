@@ -63,20 +63,20 @@ const AuditLogsPage = () => {
       <div className="admin-filters-row">
         <div className="admin-search-bar" style={{ flex: 1, maxWidth: 360 }}>
           <span style={{ color: "var(--admin-text-muted)" }}>🔍</span>
-          <input
+          <input aria-label="Accessible interactive control"
             placeholder="Search actions, targets, actors…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <select className="admin-filter-select" value={sevFilter} onChange={(e) => setSevFilter(e.target.value)}>
+        <select aria-label="Accessible interactive control" className="admin-filter-select" value={sevFilter} onChange={(e) => setSevFilter(e.target.value)}>
           <option value="all">All Severity</option>
           <option value="info">Info</option>
           <option value="success">Success</option>
           <option value="warning">Warning</option>
           <option value="danger">Danger</option>
         </select>
-        <select className="admin-filter-select" value={actorFilter} onChange={(e) => setActorFilter(e.target.value)}>
+        <select aria-label="Accessible interactive control" className="admin-filter-select" value={actorFilter} onChange={(e) => setActorFilter(e.target.value)}>
           <option value="all">All Actors</option>
           <option value="admin">Admin</option>
           <option value="system">System</option>

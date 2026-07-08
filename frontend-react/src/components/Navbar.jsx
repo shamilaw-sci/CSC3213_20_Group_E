@@ -4,6 +4,13 @@ import { useState, useEffect } from 'react';
 import { Bell, MessageSquare, User } from 'lucide-react';
 import api from '../context/api';
 
+/**
+ * Global Navigation Bar Component.
+ * Handles primary routing, user session state, and real-time notification polling.
+ *
+ * @component
+ * @returns {React.ReactElement} Top navigation bar interface
+ */
 const Navbar = () => {
     const navigate = useNavigate();
     const { user, logout } = useAuth();
@@ -21,7 +28,7 @@ const Navbar = () => {
         
         const fetchUnread = async () => {
             try {
-                const res = await api.get('/api/conversations/unread');
+                const res = await api.get('/conversations/unread');
                 setUnreadCount(res.data.unreadCount || 0);
                 setRecentMessages(res.data.recentMessages || []);
             } catch (err) {
@@ -39,14 +46,17 @@ const Navbar = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
                 <div className="flex justify-between h-20 items-center">
                     <div className="hidden md:flex items-center space-x-6 h-full">
-                        <div className="group h-full flex items-center relative cursor-pointer">
+                        <div className="group h-full flex items-center relative cursor-pointer" onClick={() => navigate('/map')}>
                             <span className="text-gray-800 hover:text-blue-600 font-medium px-2 py-8 transition duration-200 border-b-4 border-transparent group-hover:border-blue-600">Buy</span>
                         </div>
-                        <div className="h-full flex items-center cursor-pointer">
+                        <div className="h-full flex items-center cursor-pointer" onClick={() => navigate('/rent')}>
                             <span className="text-gray-800 hover:text-blue-600 font-medium px-2 transition duration-200">Rent</span>
                         </div>
                         <div className="h-full flex items-center cursor-pointer" onClick={() => navigate(user?.role === 'SELLER' ? '/add-property' : '/login')}>
                             <span className="text-gray-800 hover:text-blue-600 font-medium px-2 transition duration-200">Sell</span>
+                        </div>
+                        <div className="h-full flex items-center cursor-pointer" onClick={() => navigate('/agents')}>
+                            <span className="text-gray-800 hover:text-blue-600 font-medium px-2 transition duration-200">Find an agent</span>
                         </div>
                     </div>
 
@@ -60,7 +70,7 @@ const Navbar = () => {
                     </div>
 
                     <div className="flex items-center space-x-6 h-full">
-                        <button onClick={() => navigate('/map')} className="text-gray-800 hover:text-blue-600 font-medium transition hidden md:block">Map Search</button>
+                        <button aria-label="Accessible interactive control" type="button" onClick={() => navigate('/map')} className="text-gray-800 hover:text-blue-600 font-medium transition hidden md:block">Map Search</button>
                         
                         {user && (
                             <div className="group h-full flex items-center relative cursor-pointer ml-4">
@@ -108,7 +118,7 @@ const Navbar = () => {
                                             ))
                                         )}
                                     </div>
-                                    <button onClick={() => navigate('/messages')} className="w-full px-4 py-2 text-sm text-center text-blue-600 hover:bg-gray-50 font-medium border-t border-gray-100">
+                                    <button aria-label="Accessible interactive control" type="button" onClick={() => navigate('/messages')} className="w-full px-4 py-2 text-sm text-center text-blue-600 hover:bg-gray-50 font-medium border-t border-gray-100">
                                         View all messages
                                     </button>
                                 </div>
@@ -150,17 +160,17 @@ const Navbar = () => {
                                     </div>
                                 </div>
                                 <div className="absolute top-16 right-0 w-48 bg-white border border-gray-200 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 rounded-lg py-2">
-                                    <button onClick={() => navigate('/profile')} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600">Profile & Settings</button>
-                                    <button onClick={() => navigate('/favorites')} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600">My Favorites</button>
-                                    <button onClick={() => navigate('/messages')} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600">Messages</button>
+                                    <button aria-label="Accessible interactive control" type="button" onClick={() => navigate('/profile')} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600">Profile & Settings</button>
+                                    <button aria-label="Accessible interactive control" type="button" onClick={() => navigate('/favorites')} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600">My Favorites</button>
+                                    <button aria-label="Accessible interactive control" type="button" onClick={() => navigate('/messages')} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600">Messages</button>
                                     {user.role === 'SELLER' && (
-                                        <button onClick={() => navigate('/my-properties')} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600">My Properties</button>
+                                        <button aria-label="Accessible interactive control" type="button" onClick={() => navigate('/my-properties')} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600">My Properties</button>
                                     )}
-                                    <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-red-600">Sign Out</button>
+                                    <button aria-label="Accessible interactive control" type="button" onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-red-600">Sign Out</button>
                                 </div>
                             </div>
                         ) : (
-                            <button onClick={() => navigate('/login')} className="text-blue-600 hover:text-white border border-blue-600 hover:bg-blue-600 px-5 py-2 rounded-lg transition duration-300 font-medium">Sign in</button>
+                            <button aria-label="Accessible interactive control" type="button" onClick={() => navigate('/login')} className="text-blue-600 hover:text-white border border-blue-600 hover:bg-blue-600 px-5 py-2 rounded-lg transition duration-300 font-medium">Sign in</button>
                         )}
                     </div>
                 </div>

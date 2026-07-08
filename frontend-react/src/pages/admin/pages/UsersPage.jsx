@@ -19,15 +19,15 @@ const BanModal = ({ user, onConfirm, onCancel }) => {
       <div className="admin-modal">
         <div className="admin-modal-header">
           <h3 className="admin-card-title">Ban User</h3>
-          <button className="admin-modal-close" onClick={onCancel}>✕</button>
+          <button aria-label="Accessible interactive control" type="button" className="admin-modal-close" onClick={onCancel}>✕</button>
         </div>
         <p style={{ fontSize: "0.875rem", color: "var(--admin-text-secondary)", marginBottom: 16 }}>
           Ban <strong style={{ color: "var(--admin-text-primary)" }}>{user?.name}</strong> ({user?.email})?
           This will restrict their access immediately.
         </p>
         <div className="admin-form-group">
-          <label className="admin-form-label">Reason for Ban</label>
-          <textarea
+          <label htmlFor="4md3g3" className="admin-form-label">Reason for Ban</label>
+          <textarea aria-label="Accessible interactive control"
             className="admin-form-control"
             rows={3}
             placeholder="State the reason for banning this user…"
@@ -36,8 +36,8 @@ const BanModal = ({ user, onConfirm, onCancel }) => {
           />
         </div>
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-          <button className="admin-btn admin-btn-secondary" onClick={onCancel}>Cancel</button>
-          <button
+          <button aria-label="Accessible interactive control" type="button" className="admin-btn admin-btn-secondary" onClick={onCancel}>Cancel</button>
+          <button aria-label="Accessible interactive control" type="button"
             className="admin-btn admin-btn-danger"
             onClick={() => reason.trim() && onConfirm(reason)}
             disabled={!reason.trim()}
@@ -70,10 +70,10 @@ const UsersPage = () => {
   }, [roleFilter]);
 
   const handleBan = async (reason) => {
-    const id = banTarget._id;
+    const id = banTarget.id || banTarget._id;
     try {
       await banUser(id, reason);
-      setUsers((p) => p.map((u) => (u._id === id ? { ...u, status: "Banned" } : u)));
+      setUsers((p) => p.map((u) => ((u.id || u._id) === id ? { ...u, status: "Banned" } : u)));
       showToast(`${banTarget.name} has been banned.`);
     } catch {
       showToast("Failed to ban user.", "error");
@@ -84,8 +84,9 @@ const UsersPage = () => {
 
   const handleUnban = async (user) => {
     try {
-      await unbanUser(user._id);
-      setUsers((p) => p.map((u) => (u._id === user._id ? { ...u, status: "Active" } : u)));
+      const id = user.id || user._id;
+      await unbanUser(id);
+      setUsers((p) => p.map((u) => ((u.id || u._id) === id ? { ...u, status: "Active" } : u)));
       showToast(`${user.name} has been unbanned.`);
     } catch {
       showToast("Failed to unban user.", "error");
@@ -95,7 +96,7 @@ const UsersPage = () => {
   const handleRoleChange = async (userId, newRole) => {
     try {
       await updateUserRole(userId, newRole);
-      setUsers((p) => p.map((u) => (u._id === userId ? { ...u, role: newRole } : u)));
+      setUsers((p) => p.map((u) => ((u.id || u._id) === userId ? { ...u, role: newRole } : u)));
       showToast("Role updated.");
     } catch {
       showToast("Failed to update role.", "error");
@@ -103,7 +104,7 @@ const UsersPage = () => {
   };
 
   const filtered = users.filter((u) => {
-    const matchRole = roleFilter === "all" || u.role.toLowerCase() === roleFilter;
+    const matchRole = roleFilter === "all" || (u.role && u.role.toLowerCase() === roleFilter);
     const matchStatus = statusFilter === "all" || u.status.toLowerCase() === statusFilter;
     const matchSearch = !search ||
       u.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -125,18 +126,21 @@ const UsersPage = () => {
       <div className="admin-filters-row">
         <div className="admin-search-bar" style={{ flex: 1, maxWidth: 320 }}>
           <span style={{ color: "var(--admin-text-muted)" }}>🔍</span>
-          <input
+          <input aria-label="Accessible interactive control"
             placeholder="Search by name, email, location…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <select className="admin-filter-select" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
+        <select aria-label="Accessible interactive control" className="admin-filter-select" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
           <option value="all">All Roles</option>
           <option value="buyer">Buyer</option>
           <option value="seller">Seller</option>
+          <option value="agent">Agent</option>
+          <option value="pending_agent">Pending Agent</option>
+          <option value="admin">Admin</option>
         </select>
-        <select className="admin-filter-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+        <select aria-label="Accessible interactive control" className="admin-filter-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
           <option value="all">All Status</option>
           <option value="active">Active</option>
           <option value="banned">Banned</option>
@@ -151,7 +155,7 @@ const UsersPage = () => {
         <div className="admin-stat-card">
           <div className="admin-stat-label">Sellers</div>
           <div className="admin-stat-value" style={{ color: "var(--admin-gold)" }}>
-            {users.filter((u) => u.role === "Seller").length}
+            {users.filter((u) => u.role?.toUpperCase() === "SELLER").length}
           </div>
         </div>
         <div className="admin-stat-card">
@@ -189,7 +193,7 @@ const UsersPage = () => {
                 </tr>
               )}
               {filtered.map((u) => (
-                <tr key={u._id}>
+                <tr key={u.id || u._id}>
                   <td>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                       <div style={{
@@ -208,14 +212,17 @@ const UsersPage = () => {
                     </div>
                   </td>
                   <td>
-                    <select
+                    <select aria-label="Accessible interactive control"
                       className="admin-filter-select"
-                      value={u.role}
-                      onChange={(e) => handleRoleChange(u._id, e.target.value)}
+                      value={u.role?.toUpperCase()}
+                      onChange={(e) => handleRoleChange(u.id || u._id, e.target.value)}
                       style={{ padding: "4px 8px", fontSize: "0.8rem" }}
                     >
-                      <option>Buyer</option>
-                      <option>Seller</option>
+                      <option value="BUYER">Buyer</option>
+                      <option value="SELLER">Seller</option>
+                      <option value="AGENT">Agent</option>
+                      <option value="PENDING_AGENT">Pending Agent</option>
+                      <option value="ADMIN">Admin</option>
                     </select>
                   </td>
                   <td style={{ fontSize: "0.875rem" }}>{u.location}</td>
@@ -228,11 +235,11 @@ const UsersPage = () => {
                   </td>
                   <td>
                     {u.status === "Active" ? (
-                      <button className="admin-btn admin-btn-danger admin-btn-sm" onClick={() => setBanTarget(u)}>
+                      <button aria-label="Accessible interactive control" type="button" className="admin-btn admin-btn-danger admin-btn-sm" onClick={() => setBanTarget(u)}>
                         🚫 Ban
                       </button>
                     ) : (
-                      <button className="admin-btn admin-btn-success admin-btn-sm" onClick={() => handleUnban(u)}>
+                      <button aria-label="Accessible interactive control" type="button" className="admin-btn admin-btn-success admin-btn-sm" onClick={() => handleUnban(u)}>
                         ✓ Unban
                       </button>
                     )}

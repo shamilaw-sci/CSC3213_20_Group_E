@@ -16,7 +16,7 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY
 const addProperty = async (req, res, next) => {
     let uploadedFiles = []; // Track uploaded file paths for rollback
     try {
-        const { type, title, description, price, address, bedrooms, bathrooms, landSize, latitude, longitude, boundary } = req.body;
+        const { type, listingType, title, description, price, address, bedrooms, bathrooms, landSize, latitude, longitude, boundary } = req.body;
         
         const files = req.files; 
 
@@ -57,6 +57,7 @@ const addProperty = async (req, res, next) => {
             .from('properties')
             .insert([{
                 type,
+                listing_type: listingType || 'Sale',
                 title,
                 description,
                 price,

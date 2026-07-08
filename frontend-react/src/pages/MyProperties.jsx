@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import axios from 'axios';
+import api from '../context/api';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/UserAuthContext';
@@ -40,11 +40,7 @@ const EditPropertyModal = ({ property, onCancel, onSaved }) => {
         setError('');
 
         try {
-            const response = await axios.patch(
-                `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/properties/my-listings/${property.id}`,
-                formData,
-                { withCredentials: true }
-            );
+            const response = await api.patch(`/properties/my-listings/${property.id}`, formData);
             onSaved(response.data.property);
         } catch (err) {
             setError(err.response?.data?.message || err.response?.data?.error || 'Failed to update property.');
@@ -61,7 +57,7 @@ const EditPropertyModal = ({ property, onCancel, onSaved }) => {
                         <h2 className="text-xl font-extrabold text-gray-900">Edit Property</h2>
                         <p className="text-sm text-gray-500">Saving changes will send this back to admin review.</p>
                     </div>
-                    <button type="button" onClick={onCancel} className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 font-bold hover:bg-gray-100">
+                    <button aria-label="Accessible interactive control" type="button" onClick={onCancel} className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 font-bold hover:bg-gray-100">
                         Close
                     </button>
                 </div>
@@ -70,58 +66,58 @@ const EditPropertyModal = ({ property, onCancel, onSaved }) => {
                     {error && <div className="md:col-span-2 bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm font-medium">{error}</div>}
 
                     <div className="md:col-span-2">
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Property Type</label>
-                        <select name="type" value={formData.type} onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                        <label htmlFor="a11y" className="block text-sm font-bold text-gray-700 mb-2">Property Type</label>
+                        <select aria-label="Accessible interactive control" name="type" value={formData.type} onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
                             <option value="House">House</option>
                             <option value="Land">Land</option>
                         </select>
                     </div>
 
                     <div className="md:col-span-2">
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Title</label>
-                        <input name="title" value={formData.title} onChange={handleChange} required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
+                        <label htmlFor="rapvbi" className="block text-sm font-bold text-gray-700 mb-2">Title</label>
+                        <input aria-label="Accessible interactive control" name="title" value={formData.title} onChange={handleChange} required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Price (Rs.)</label>
-                        <input type="number" name="price" value={formData.price} onChange={handleChange} required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
+                        <label htmlFor="sb7h5e" className="block text-sm font-bold text-gray-700 mb-2">Price (Rs.)</label>
+                        <input aria-label="Accessible interactive control" type="number" name="price" value={formData.price} onChange={handleChange} required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Land Size (Perches)</label>
-                        <input type="number" name="landSize" value={formData.landSize} onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
+                        <label htmlFor="ac6gom" className="block text-sm font-bold text-gray-700 mb-2">Land Size (Perches)</label>
+                        <input aria-label="Accessible interactive control" type="number" name="landSize" value={formData.landSize} onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
                     </div>
 
                     <div className="md:col-span-2">
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Address</label>
-                        <input name="address" value={formData.address} onChange={handleChange} required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
+                        <label htmlFor="88c0s2" className="block text-sm font-bold text-gray-700 mb-2">Address</label>
+                        <input aria-label="Accessible interactive control" name="address" value={formData.address} onChange={handleChange} required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
                     </div>
 
                     {formData.type !== 'Land' && (
                         <>
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-2">Bedrooms</label>
-                                <input type="number" name="bedrooms" value={formData.bedrooms} onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
+                                <label htmlFor="7x815n" className="block text-sm font-bold text-gray-700 mb-2">Bedrooms</label>
+                                <input aria-label="Accessible interactive control" type="number" name="bedrooms" value={formData.bedrooms} onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-2">Bathrooms</label>
-                                <input type="number" name="bathrooms" value={formData.bathrooms} onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
+                                <label htmlFor="3ssl0e" className="block text-sm font-bold text-gray-700 mb-2">Bathrooms</label>
+                                <input aria-label="Accessible interactive control" type="number" name="bathrooms" value={formData.bathrooms} onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
                             </div>
                         </>
                     )}
 
                     <div className="md:col-span-2">
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Description</label>
-                        <textarea name="description" value={formData.description} onChange={handleChange} rows={5} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
+                        <label htmlFor="2k4rsd" className="block text-sm font-bold text-gray-700 mb-2">Description</label>
+                        <textarea aria-label="Accessible interactive control" name="description" value={formData.description} onChange={handleChange} rows={5} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
                     </div>
                 </div>
 
                 <div className="border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
-                    <button type="button" onClick={onCancel} className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-bold hover:bg-gray-100">
+                    <button aria-label="Accessible interactive control" type="button" onClick={onCancel} className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-bold hover:bg-gray-100">
                         Cancel
                     </button>
-                    <button type="submit" disabled={saving} className="px-5 py-2.5 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 disabled:bg-blue-300">
+                    <button aria-label="Accessible interactive control" type="submit" disabled={saving} className="px-5 py-2.5 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 disabled:bg-blue-300">
                         {saving ? 'Sending...' : 'Save & Send to Review'}
                     </button>
                 </div>
@@ -149,9 +145,7 @@ const MyProperties = () => {
 
         const fetchMyProperties = async () => {
             try {
-                const response = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/properties/my-listings?page=${page}&limit=12`, {
-                    withCredentials: true
-                });
+                const response = await api.get(`/properties/my-listings?page=${page}&limit=12`);
                 if (page === 1) {
                     setProperties(response.data.properties || []);
                 } else {
@@ -220,7 +214,7 @@ const MyProperties = () => {
                     <div className="bg-white border border-gray-200 rounded-lg p-10 text-center">
                         <h2 className="text-xl font-bold text-gray-900 mb-2">No submitted properties yet</h2>
                         <p className="text-gray-500 mb-5">Publish a property and it will appear here while admins review it.</p>
-                        <button onClick={() => navigate('/add-property')} className="px-5 py-2 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700">
+                        <button aria-label="Accessible interactive control" type="button" onClick={() => navigate('/add-property')} className="px-5 py-2 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700">
                             Add Property
                         </button>
                     </div>
@@ -260,7 +254,7 @@ const MyProperties = () => {
                                         </div>
                                     )}
                                     {status !== 'approved' && (
-                                        <button
+                                        <button aria-label="Accessible interactive control" type="button"
                                             onClick={() => setEditTarget(property)}
                                             className="mt-4 w-full px-4 py-2.5 rounded-lg border border-blue-600 text-blue-600 font-bold hover:bg-blue-50"
                                         >
@@ -276,7 +270,7 @@ const MyProperties = () => {
                 {/* Load More Button */}
                 {page < totalPages && properties.length > 0 && (
                     <div className="text-center mt-12 mb-8">
-                        <button 
+                        <button aria-label="Accessible interactive control" type="button" 
                             onClick={() => setPage(prev => prev + 1)}
                             className="bg-white border border-blue-600 text-blue-600 hover:bg-blue-50 font-bold py-3 px-8 rounded-lg transition duration-300"
                         >

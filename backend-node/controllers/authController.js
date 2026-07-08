@@ -36,8 +36,9 @@ const registerUser = async (req, res, next) => {
         const password_hash = await bcrypt.hash(password, salt);
 
         // Security Fix: Prevent Role Spoofing
-        // Only allow BUYER or SELLER. Default to BUYER if invalid or maliciously trying to send ADMIN.
-        const safeRole = (role === 'SELLER') ? 'SELLER' : 'BUYER';
+        let safeRole = 'BUYER';
+        if (role === 'SELLER') safeRole = 'SELLER';
+        if (role === 'AGENT') safeRole = 'PENDING_AGENT';
 
         // Insert new user into database
         const { data: newUser, error } = await supabase
@@ -45,7 +46,20 @@ const registerUser = async (req, res, next) => {
             .insert([{ name, email, password_hash, role: safeRole }])
             .select();
 
-        if (error) throw error;
+        if (error) {
+            return res.status(500).json({ message: "Database error during registration.", error: error.message });
+        }
+
+        // If registering as an agent, create an initial agent_profiles record
+        if (safeRole === 'PENDING_AGENT') {
+            const { agency_name, license_number } = req.body;
+            await supabase.from('agent_profiles').insert([{
+                agent_id: newUser[0].id,
+                agency_name: agency_name || 'Independent Agent',
+                license_number: license_number || null,
+                bio: `Hello, I am ${name}.`,
+            }]);
+        }
 
         const token = jwt.sign(
             { id: newUser[0].id, role: newUser[0].role }, 
@@ -213,10 +227,11 @@ const updateProfile = async (req, res, next) => {
         if (avatar_url !== undefined) {
             if (avatar_url.startsWith('data:image')) {
                 try {
-                    const matches = avatar_url.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-                    if (matches && matches.length === 3) {
-                        const mimeType = matches[1];
-                        const buffer = Buffer.from(matches[2], 'base64');
+                    const parts = avatar_url.split(',');
+                    if (parts.length === 2) {
+                        const mimeType = parts[0].split(':')[1].split(';')[0];
+                        const base64Data = parts[1];
+                        const buffer = Buffer.from(base64Data, 'base64');
                         const ext = mimeType.split('/')[1] || 'png';
                         const fileName = `${req.user.id}_${Date.now()}.${ext}`;
 

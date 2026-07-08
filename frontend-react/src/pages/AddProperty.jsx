@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../context/api';
 import imageCompression from 'browser-image-compression';
 import { MapContainer, TileLayer, Marker, Polygon, CircleMarker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -33,6 +33,7 @@ const AddProperty = () => {
     }, [user, navigate]);
 
     const [formData, setFormData] = useState({
+        listingType: 'Sale',
         type: 'House', 
         title: '',
         description: '',
@@ -61,7 +62,7 @@ const AddProperty = () => {
 
     useEffect(() => {
         // Fetch dynamic payment configuration from backend
-        axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/payment/config`)
+        api.get('/payment/config')
             .then(res => {
                 if (res.data) {
                     setPaymentConfig({
@@ -164,7 +165,7 @@ const AddProperty = () => {
 
         try {
             // Get the security hash from the backend
-            const response = await axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/payment/generate-hash`, {
+            const response = await api.post('/payment/generate-hash', {
                 order_id: propertyId,
                 amount: amount
             });
@@ -177,7 +178,9 @@ const AddProperty = () => {
                 merchant_id: paymentConfig.merchantId, 
                 return_url: "http://localhost:5173/my-properties", // Redirect after success
                 cancel_url: "http://localhost:5173/my-properties", // Redirect after cancellation
-                notify_url: "https://strep-reenact-rocket.ngrok-free.dev/api/payment/notify", 
+                notify_url: import.meta.env.VITE_BACKEND_PUBLIC_URL 
+                            ? `${import.meta.env.VITE_BACKEND_PUBLIC_URL}/api/payment/notify` 
+                            : "https://strep-reenact-rocket.ngrok-free.dev/api/payment/notify",  
                 order_id: propertyId,
                 items: "Thirasara Property Listing Fee",
                 amount: amount,
@@ -246,17 +249,10 @@ const AddProperty = () => {
             let centerLng = formData.longitude;
 
             if (locationMode === 'boundary' && boundaryCoordinates.length >= 3) {
-                const coords = [...boundaryCoordinates];
-                const first = coords[0];
-                const last = coords[coords.length - 1];
+                const wktCoordinates = boundaryCoordinates.map(coord => `${coord[1]} ${coord[0]}`).join(', ');
+                finalBoundaryWKT = `POLYGON((${wktCoordinates}, ${boundaryCoordinates[0][1]} ${boundaryCoordinates[0][0]}))`;
                 
-                if (first[0] !== last[0] || first[1] !== last[1]) {
-                    coords.push(first);
-                }
-                
-                const wktPoints = coords.map(c => `${c[1]} ${c[0]}`).join(', ');
-                finalBoundaryWKT = `POLYGON((${wktPoints}))`;
-                
+                // Calculate rough center for the database
                 centerLat = boundaryCoordinates[0][0];
                 centerLng = boundaryCoordinates[0][1];
             } else {
@@ -271,6 +267,7 @@ const AddProperty = () => {
             submitData.append('title', formData.title);
             submitData.append('description', formData.description);
             submitData.append('price', formData.price);
+            submitData.append('listingType', formData.listingType);
             submitData.append('type', formData.type);
             submitData.append('address', formData.address);
             submitData.append('bedrooms', formData.bedrooms);
@@ -286,7 +283,7 @@ const AddProperty = () => {
             });
 
             // 1. Dispatch API request to backend to save property
-            const response = await axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/properties`, submitData, {
+            const response = await api.post('/properties', submitData, {
                 withCredentials: true,
                 headers: { 
                     'Content-Type': 'multipart/form-data' 
@@ -331,7 +328,7 @@ const AddProperty = () => {
                         )}
 
                         <div className="mb-8 border-b pb-8">
-                            <label className="block text-gray-900 text-lg font-bold mb-4">What are you listing?</label>
+                            <label htmlFor="a11y" className="block text-gray-900 text-lg font-bold mb-4">What are you listing?</label>
                             <div className="flex space-x-4">
                                 <div onClick={() => handleTypeChange('House')} className={`flex-1 flex flex-col items-center justify-center p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 ${formData.type === 'House' ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-sm' : 'border-gray-200 hover:border-blue-300 text-gray-600 hover:bg-gray-50'}`}>
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
@@ -344,37 +341,49 @@ const AddProperty = () => {
                             </div>
                         </div>
 
+                        <div className="mb-8 border-b pb-8">
+                            <label htmlFor="listing-type" className="block text-gray-900 text-lg font-bold mb-4">Are you Selling or Renting?</label>
+                            <div className="flex space-x-4">
+                                <div onClick={() => setFormData({ ...formData, listingType: 'Sale' })} className={`flex-1 flex flex-col items-center justify-center p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 ${formData.listingType === 'Sale' ? 'border-red-600 bg-red-50 text-red-700 shadow-sm' : 'border-gray-200 hover:border-red-300 text-gray-600 hover:bg-gray-50'}`}>
+                                    <span className="font-bold text-lg">For Sale</span>
+                                </div>
+                                <div onClick={() => setFormData({ ...formData, listingType: 'Rent' })} className={`flex-1 flex flex-col items-center justify-center p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 ${formData.listingType === 'Rent' ? 'border-purple-600 bg-purple-50 text-purple-700 shadow-sm' : 'border-gray-200 hover:border-purple-300 text-gray-600 hover:bg-gray-50'}`}>
+                                    <span className="font-bold text-lg">For Rent</span>
+                                </div>
+                            </div>
+                        </div>
+
                         <h3 className="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Basic Information</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                             <div className="md:col-span-2">
-                                <label className="block text-gray-700 text-sm font-medium mb-2">Property Title <span className="text-red-500">*</span></label>
-                                <input type="text" name="title" value={formData.title} onChange={handleChange} required placeholder={formData.type === 'House' ? "e.g. Beautiful 2-Story House in Colombo 07" : "e.g. 15 Perch Prime Land in Malabe"} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition" />
+                                <label htmlFor="ptvzbz" className="block text-gray-700 text-sm font-medium mb-2">Property Title <span className="text-red-500">*</span></label>
+                                <input aria-label="Accessible interactive control" type="text" name="title" value={formData.title} onChange={handleChange} required placeholder={formData.type === 'House' ? "e.g. Beautiful 2-Story House in Colombo 07" : "e.g. 15 Perch Prime Land in Malabe"} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition" />
                             </div>
                             <div>
-                                <label className="block text-gray-700 text-sm font-medium mb-2">Price (Rs.) <span className="text-red-500">*</span></label>
-                                <input type="number" name="price" value={formData.price} onChange={handleChange} required placeholder="e.g. 15000000" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition" />
+                                <label htmlFor="d0qgbf" className="block text-gray-700 text-sm font-medium mb-2">{formData.listingType === 'Rent' ? 'Price per month (Rs.)' : 'Price (Rs.)'} <span className="text-red-500">*</span></label>
+                                <input aria-label="Accessible interactive control" type="number" name="price" value={formData.price} onChange={handleChange} required placeholder="e.g. 15000000" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition" />
                             </div>
                             <div>
-                                <label className="block text-gray-700 text-sm font-medium mb-2">Street Address <span className="text-red-500">*</span></label>
-                                <input type="text" name="address" value={formData.address} onChange={handleChange} required placeholder="e.g. Kandy Road, Kadawatha" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition" />
+                                <label htmlFor="lpahvp" className="block text-gray-700 text-sm font-medium mb-2">Street Address <span className="text-red-500">*</span></label>
+                                <input aria-label="Accessible interactive control" type="text" name="address" value={formData.address} onChange={handleChange} required placeholder="e.g. Kandy Road, Kadawatha" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition" />
                             </div>
                             <div className="md:col-span-2">
-                                <label className="block text-gray-700 text-sm font-medium mb-2">Description</label>
-                                <textarea name="description" value={formData.description} onChange={handleChange} rows="4" placeholder="Describe the key features of your property..." className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"></textarea>
+                                <label htmlFor="0iahf1" className="block text-gray-700 text-sm font-medium mb-2">Description</label>
+                                <textarea aria-label="Accessible interactive control" name="description" value={formData.description} onChange={handleChange} rows="4" placeholder="Describe the key features of your property..." className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"></textarea>
                             </div>
                         </div>
 
                         <h3 className="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Location & Boundary <span className="text-red-500">*</span></h3>
                         
                         <div className="flex space-x-2 mb-4">
-                            <button 
+                            <button aria-label="Accessible interactive control" 
                                 type="button" 
                                 onClick={() => { setLocationMode('point'); setBoundaryCoordinates([]); }}
                                 className={`px-4 py-2 rounded-lg text-sm font-bold transition ${locationMode === 'point' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
                             >
                                 📍 Drop Pin (Single Point)
                             </button>
-                            <button 
+                            <button aria-label="Accessible interactive control" 
                                 type="button" 
                                 onClick={() => setLocationMode('boundary')}
                                 className={`px-4 py-2 rounded-lg text-sm font-bold transition ${locationMode === 'boundary' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
@@ -397,7 +406,7 @@ const AddProperty = () => {
                                 style={{ height: '100%', width: '100%' }}
                             >
                                 <TileLayer
-                                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                    attribution='&copy; <a aria-label="Accessible interactive control" href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                                 />
                                 <LocationMarker />
@@ -407,7 +416,7 @@ const AddProperty = () => {
                         {locationMode === 'boundary' && (
                             <div className="flex justify-between items-center mb-8 bg-blue-50 p-4 rounded-lg border border-blue-100">
                                 <span className="text-sm text-blue-800 font-medium">Points selected: {boundaryCoordinates.length}</span>
-                                <button 
+                                <button aria-label="Accessible interactive control" 
                                     type="button" 
                                     onClick={() => setBoundaryCoordinates([])}
                                     className="text-sm text-red-600 font-bold hover:text-red-800"
@@ -426,28 +435,28 @@ const AddProperty = () => {
 
                         <h3 className="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Property Features</h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                            {formData.type === 'House' && (
+                            {formData.type === 'House aria-label="Accessible interactive control"' && (
                                 <>
                                     <div>
-                                        <label className="block text-gray-700 text-sm font-medium mb-2">Bedrooms</label>
-                                        <input type="number" name="bedrooms" value={formData.bedrooms} onChange={handleChange} placeholder="e.g. 3" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition" />
+                                        <label htmlFor="uid_3ruqwlhm" className="block text-gray-700 text-sm font-medium mb-2">Bedrooms</label>
+                                        <input aria-label="Accessible interactive control" type="number" name="bedrooms" value={formData.bedrooms} onChange={handleChange} placeholder="e.g. 3" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition" />
                                     </div>
                                     <div>
-                                        <label className="block text-gray-700 text-sm font-medium mb-2">Bathrooms</label>
-                                        <input type="number" name="bathrooms" value={formData.bathrooms} onChange={handleChange} placeholder="e.g. 2" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition" />
+                                        <label htmlFor="uid_u8kikf21" className="block text-gray-700 text-sm font-medium mb-2">Bathrooms</label>
+                                        <input aria-label="Accessible interactive control" type="number" name="bathrooms" value={formData.bathrooms} onChange={handleChange} placeholder="e.g. 2" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition" />
                                     </div>
                                 </>
                             )}
                             <div className={formData.type === 'Land' ? "md:col-span-3" : ""}>
-                                <label className="block text-gray-700 text-sm font-medium mb-2">Land Size (Perches)</label>
-                                <input type="number" name="landSize" value={formData.landSize} onChange={handleChange} placeholder="e.g. 15" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition" />
+                                <label htmlFor="uid_5akgxvs4" className="block text-gray-700 text-sm font-medium mb-2">Land Size (Perches)</label>
+                                <input aria-label="Accessible interactive control" type="number" name="landSize" value={formData.landSize} onChange={handleChange} placeholder="e.g. 15" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition" />
                             </div>
                         </div>
 
                         <h3 className="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Media <span className="text-red-500">*</span></h3>
                         
                         <div className="mb-4 relative border-2 border-dashed border-gray-300 rounded-lg p-8 hover:border-blue-500 transition-colors bg-gray-50 flex flex-col items-center justify-center cursor-pointer">
-                            <input 
+                            <input aria-label="Accessible interactive control" 
                                 type="file" 
                                 multiple 
                                 accept="image/*" 
@@ -472,7 +481,7 @@ const AddProperty = () => {
                                     {previewUrls.map((url, index) => (
                                         <div key={index} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 shadow-sm group">
                                             <img src={url} alt={`Preview ${index + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                                            <button type="button" onClick={() => removeImage(index)} className="absolute top-2 right-2 p-1.5 bg-white/90 rounded-full text-gray-500 hover:text-red-600 hover:bg-white shadow-md transition-all opacity-0 group-hover:opacity-100">
+                                            <button aria-label="Accessible interactive control" type="button" onClick={() => removeImage(index)} className="absolute top-2 right-2 p-1.5 bg-white/90 rounded-full text-gray-500 hover:text-red-600 hover:bg-white shadow-md transition-all opacity-0 group-hover:opacity-100">
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
                                             </button>
                                         </div>
@@ -482,10 +491,10 @@ const AddProperty = () => {
                         )}
 
                         <div className="flex justify-end border-t pt-6 mt-6">
-                            <button type="button" onClick={() => navigate('/')} className="px-6 py-3 border border-gray-300 text-gray-700 font-bold rounded-lg mr-4 hover:bg-gray-50 transition">
+                            <button aria-label="Accessible interactive control" type="button" onClick={() => navigate('/')} className="px-6 py-3 border border-gray-300 text-gray-700 font-bold rounded-lg mr-4 hover:bg-gray-50 transition">
                                 Cancel
                             </button>
-                            <button type="submit" disabled={loading} className={`px-8 py-3 text-white font-bold rounded-lg transition shadow-md flex items-center ${loading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}>
+                            <button aria-label="Accessible interactive control" type="submit" disabled={loading} className={`px-8 py-3 text-white font-bold rounded-lg transition shadow-md flex items-center ${loading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}>
                                 {loading ? 'Processing...' : `Pay Rs. ${parseFloat(paymentConfig.listingFee).toLocaleString()} & Publish`}
                             </button>
                         </div>

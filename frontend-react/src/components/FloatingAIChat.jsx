@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useRef } from 'react';
+import { AnimatePresence, m } from "framer-motion";
 import { Bot, X, Send, Loader, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../context/api';
@@ -21,9 +21,7 @@ const FloatingAIChat = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
-    useEffect(() => {
-        if (isOpen) scrollToBottom();
-    }, [messages, isOpen]);
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -35,17 +33,19 @@ const FloatingAIChat = () => {
         const newMessages = [...messages, { id: Date.now(), role: 'user', text: userMsg }];
         setMessages(newMessages);
         setLoading(true);
+        setTimeout(scrollToBottom, 100);
 
         try {
             // Prepare history (excluding the very first greeting if it's too generic, but passing it is fine)
             const historyForAPI = newMessages.map(m => ({ role: m.role, text: m.text }));
 
-            const response = await api.post('/api/ai/chat', {
+            const response = await api.post('/ai/chat', {
                 message: userMsg,
                 history: historyForAPI.slice(0, -1) // Exclude current message from history array
             });
 
             setMessages(prev => [...prev, { id: Date.now() + 1, role: 'model', text: response.data.response }]);
+            setTimeout(scrollToBottom, 100);
         } catch (error) {
             setMessages(prev => [...prev, { id: Date.now() + 1, role: 'model', text: "Sorry, I'm having trouble connecting right now. Please try again later." }]);
         } finally {
@@ -61,7 +61,7 @@ const FloatingAIChat = () => {
             if (match) {
                 const propertyId = match[1];
                 return (
-                    <button 
+                    <button aria-label="Accessible interactive control" type="button" 
                         key={index} 
                         onClick={() => navigate(`/property/${propertyId}`)}
                         className="inline-block mt-2 px-3 py-1 bg-blue-100 text-blue-700 hover:bg-blue-200 hover:text-blue-800 rounded-lg text-xs font-bold transition-colors cursor-pointer"
@@ -92,7 +92,7 @@ const FloatingAIChat = () => {
         <div className="fixed bottom-6 right-6 z-[9999] font-outfit">
             <AnimatePresence>
                 {isOpen && (
-                    <motion.div
+                    <m.div
                         initial={{ opacity: 0, y: 20, scale: 0.9 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.9 }}
@@ -111,7 +111,7 @@ const FloatingAIChat = () => {
                                     <p className="text-[10px] text-blue-100 opacity-90">Powered by Gemini</p>
                                 </div>
                             </div>
-                            <button onClick={() => setIsOpen(false)} className="p-1 hover:bg-white/20 rounded-full transition-colors">
+                            <button aria-label="Accessible interactive control" type="button" onClick={() => setIsOpen(false)} className="p-1 hover:bg-white/20 rounded-full transition-colors">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
@@ -148,14 +148,14 @@ const FloatingAIChat = () => {
                         {/* Input Area */}
                         <div className="p-4 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700">
                             <form onSubmit={handleSubmit} className="flex items-center gap-2">
-                                <input
+                                <input aria-label="Accessible interactive control"
                                     type="text"
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
                                     placeholder="Ask about properties..."
                                     className="flex-1 bg-gray-100 dark:bg-gray-900 border-none rounded-full px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                 />
-                                <button
+                                <button aria-label="Accessible interactive control"
                                     type="submit"
                                     disabled={!input.trim() || loading}
                                     className="p-2.5 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
@@ -164,19 +164,22 @@ const FloatingAIChat = () => {
                                 </button>
                             </form>
                         </div>
-                    </motion.div>
+                    </m.div>
                 )}
             </AnimatePresence>
 
             {/* Floating Bubble */}
-            <motion.button
+            <m.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={() => {
+                    setIsOpen(!isOpen);
+                    if (!isOpen) setTimeout(scrollToBottom, 200);
+                }}
                 className="w-14 h-14 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-full flex items-center justify-center shadow-2xl hover:shadow-blue-500/50 transition-all border-2 border-white dark:border-gray-800"
             >
                 {isOpen ? <X className="w-6 h-6" /> : <Bot className="w-7 h-7" />}
-            </motion.button>
+            </m.button>
         </div>
     );
 };

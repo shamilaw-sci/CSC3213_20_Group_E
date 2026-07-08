@@ -35,6 +35,9 @@ app.use('/api/auth', authLimiter, authRoutes);
 const propertyRoutes = require('./routes/propertyRoutes');
 app.use('/api/properties', propertyRoutes);
 // Routes: /api/properties (GET all, POST add), /api/properties/search
+// --- Agent Routes ---
+const agentRoutes = require('./routes/agentRoutes');
+app.use('/api/agents', agentRoutes);
 // ----------------------------------------
 
 // --- Admin Routes ---
@@ -92,11 +95,11 @@ const PORT = process.env.PORT || 5000;
 if (process.env.VERCEL) {
     // Export for Vercel serverless deployment
     module.exports = app;
-} else {
+} else if (process.env.NODE_ENV !== 'test') {
     // Normal local deployment
     app.listen(PORT, () => {
         console.log(`Server is running on port ${PORT}`);
     });
 }
 
-
+module.exports = app;

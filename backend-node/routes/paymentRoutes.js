@@ -7,6 +7,7 @@ const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
 const { sendPaymentReceipt } = require('../utils/emailService');
+const logger = require('../utils/logger');
 
 // Initialize Supabase client
 const { createClient } = require('@supabase/supabase-js');
@@ -35,6 +36,7 @@ router.get('/config', async (req, res) => {
             currency: 'LKR'
         });
     } catch (err) {
+        logger.error('Failed to fetch payment config', err);
         res.status(500).json({ error: "Failed to fetch payment config" });
     }
 });
@@ -69,7 +71,12 @@ router.post('/generate-hash', (req, res) => {
  * Validates the signature and updates the database accordingly.
  */
 router.post('/notify', async (req, res) => {
-    console.log("[PayHere Webhook] Triggered. Payload received:", req.body); 
+    logger.info('PayHere webhook received', {
+        order_id: req.body.order_id,
+        status_code: req.body.status_code,
+        amount: req.body.payhere_amount,
+        currency: req.body.payhere_currency,
+    });
 
     const {
         merchant_id, 
@@ -101,16 +108,20 @@ router.post('/notify', async (req, res) => {
             REQUIRED_FEE = parseFloat(data.setting_value);
         }
     } catch (e) {
-        console.error("Failed to fetch required fee for webhook validation", e);
+        logger.error('Failed to fetch required fee for webhook validation', e);
     }
     
     if (local_md5sig === md5sig && status_code === '2') {
         if (parseFloat(payhere_amount) !== REQUIRED_FEE) {
-            console.error(`🚨 [PayHere Webhook] Security Alert: Payment amount mismatch! Expected ${REQUIRED_FEE}, got ${payhere_amount} for Order ID: ${order_id}`);
+            logger.warn('PayHere payment amount mismatch', {
+                order_id,
+                expected: REQUIRED_FEE,
+                received: payhere_amount,
+            });
             return res.status(400).send("Invalid Amount");
         }
 
-        console.log(`✅ [PayHere Webhook] Payment verified for Order ID: ${order_id} | Amount: ${payhere_amount}`);
+        logger.info('PayHere payment verified', { order_id, amount: payhere_amount });
 
         try {
             // 1. Record the transaction in the 'transactions' table
@@ -127,7 +138,7 @@ router.post('/notify', async (req, res) => {
                 }]);
 
             if (txError) {
-                console.error("[DB Error] Failed to insert transaction record:", txError.message);
+                logger.error('Failed to insert transaction record', txError);
             }
 
             // 2. Update the property's payment status and send for admin review
@@ -142,28 +153,29 @@ router.post('/notify', async (req, res) => {
                 .single();
 
             if (propError) {
-                console.error("[DB Error] Failed to update property status:", propError.message);
+                logger.error('Failed to update property status', propError);
             } else if (property) {
-                console.log(`[DB Success] Database successfully updated for Property ID: ${order_id}`);
+                logger.info('Property payment status updated', { property_id: order_id });
 
                 // Send Email Notification
                 const { data: user } = await supabase.from('users').select('email').eq('id', property.seller_id).single();
                 if (user && user.email) {
-                    sendPaymentReceipt(user.email, property.title || 'Your Property', parseFloat(payhere_amount)).catch(console.error);
+                    sendPaymentReceipt(user.email, property.title || 'Your Property', parseFloat(payhere_amount))
+                        .catch((error) => logger.error('Failed to send payment receipt', error));
                 }
 
                 return res.status(200).send("OK");
             }
 
         } catch (dbError) {
-            console.error("[Catch Error] Unexpected database error during webhook processing:", dbError.message);
+            logger.error('Unexpected database error during webhook processing', dbError);
         }
 
         // Acknowledge receipt of the webhook to PayHere
         res.status(200).send("OK");
 
     } else {
-        console.error("[PayHere Webhook] Payment failed or security hash mismatch!");
+        logger.warn('PayHere payment failed or security hash mismatch', { order_id, status_code });
         // Return 400 to indicate an invalid request
         res.status(400).send("Invalid"); 
     }
