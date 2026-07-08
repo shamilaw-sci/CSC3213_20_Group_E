@@ -437,7 +437,7 @@ const Messages = () => {
                                         </label>
                                         
                                         <div className="flex-1 bg-gray-50 border border-gray-200 rounded-3xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-300 transition-all">
-                                            <textarea aria-label="Accessible interactive control" aria-label="Accessible interactive control"
+                                            <textarea aria-label="Accessible interactive control"
                                                 value={draft}
                                                 onChange={(event) => setDraft(event.target.value)}
                                                 onKeyDown={(e) => {

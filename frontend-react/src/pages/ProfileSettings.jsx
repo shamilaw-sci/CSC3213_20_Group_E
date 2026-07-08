@@ -5,6 +5,7 @@ import { User, Lock, Phone, Save, Loader, Search, Trash2, Heart, Moon, Sun, Moni
 import { AnimatePresence, m } from "framer-motion";
 import { useNavigate } from 'react-router-dom';
 import api from '../context/api';
+import Navbar from '../components/Navbar';
 
 const ProfileSettings = () => {
     const { user, login } = useAuth();
@@ -21,6 +22,19 @@ const ProfileSettings = () => {
         confirmPassword: '',
         email_notifications: user?.email_notifications ?? true
     });
+    
+    // Agent Specific State
+    const [agentFormData, setAgentFormData] = useState({
+        bio: '',
+        languages: '',
+        youtube_video_url: '',
+        agency_name: '',
+        license_number: '',
+        license_number: '',
+        service_areas: '',
+        specialization: 'Both'
+    });
+    
     const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || '');
     
     // UI State
@@ -38,11 +52,28 @@ const ProfileSettings = () => {
             setLoadingData(true);
             try {
                 const [searchRes, favRes] = await Promise.all([
-                    api.get('/api/saved-searches').catch(() => ({ data: { savedSearches: [] } })),
-                    api.get('/api/favorites').catch(() => ({ data: { favorites: [] } }))
+                    api.get('/saved-searches').catch(() => ({ data: { savedSearches: [] } })),
+                    api.get('/favorites').catch(() => ({ data: { favorites: [] } }))
                 ]);
                 setSavedSearches(searchRes.data.savedSearches || []);
                 setFavorites(favRes.data.favorites || []);
+                
+                // Fetch agent profile if they are an agent or seller
+                if (user?.role === 'AGENT' || user?.role === 'SELLER') {
+                    const agentRes = await api.get(`/agents/${user.id}`).catch(() => null);
+                    if (agentRes && agentRes.data && agentRes.data.agent && agentRes.data.agent.agent_profiles) {
+                        const p = agentRes.data.agent.agent_profiles[0] || {};
+                        setAgentFormData({
+                            bio: p.bio || '',
+                            languages: p.languages || '',
+                            youtube_video_url: p.youtube_video_url || '',
+                            agency_name: p.agency_name || '',
+                            license_number: p.license_number || '',
+                            service_areas: p.service_areas || '',
+                            specialization: p.specialization || 'Both'
+                        });
+                    }
+                }
             } catch (err) {
                 console.error("Failed to load user data");
             } finally {
@@ -50,11 +81,15 @@ const ProfileSettings = () => {
             }
         };
         fetchUserData();
-    }, []);
+    }, [user?.role, user?.id]);
 
     const handleChange = (e) => {
         const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
         setFormData({ ...formData, [e.target.name]: value });
+    };
+    
+    const handleAgentChange = (e) => {
+        setAgentFormData({ ...agentFormData, [e.target.name]: e.target.value });
     };
 
     const handleAvatarChange = (e) => {
@@ -82,17 +117,13 @@ const ProfileSettings = () => {
         setError(null);
 
         try {
-            // Optional: If you had an actual upload endpoint for Supabase bucket, you'd call it here
-            // For now, if we are simulating or passing a URL, we will assume backend or direct supabase upload.
-            // Since we don't have a specific upload endpoint written in Node, we will just save the text url for now.
             // (In a full implementation, you'd upload `avatarFile` to Supabase storage and get a public URL back).
-
             const updatePayload = { 
                 ...formData,
                 avatar_url: avatarUrl
             };
 
-            const res = await api.put('/api/auth/profile', updatePayload);
+            const res = await api.put('/auth/profile', updatePayload);
             login(res.data.user);
             setMessage("Profile updated successfully!");
             setFormData(prev => ({ ...prev, password: '', confirmPassword: '' }));
@@ -103,10 +134,27 @@ const ProfileSettings = () => {
             setTimeout(() => setMessage(null), 3000);
         }
     };
+    
+    const handleAgentSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setMessage(null);
+        setError(null);
+        
+        try {
+            await api.put('/agents/profile', agentFormData);
+            setMessage("Agent settings updated successfully!");
+        } catch (err) {
+            setError(err.response?.data?.message || "Failed to update agent settings");
+        } finally {
+            setLoading(false);
+            setTimeout(() => setMessage(null), 3000);
+        }
+    };
 
     const handleDeleteSearch = async (id) => {
         try {
-            await api.delete(`/api/saved-searches/${id}`);
+            await api.delete(`/saved-searches/${id}`);
             setSavedSearches(savedSearches.filter(s => s.id !== id));
         } catch (err) {
             console.error("Failed to delete search");
@@ -115,7 +163,7 @@ const ProfileSettings = () => {
 
     const handleRemoveFavorite = async (id) => {
         try {
-            await api.post(`/api/favorites/${id}`);
+            await api.post(`/favorites/${id}`);
             setFavorites(favorites.filter(f => f.id !== id));
         } catch (err) {
             console.error("Failed to remove favorite");
@@ -124,8 +172,9 @@ const ProfileSettings = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200 flex flex-col font-outfit selection:bg-blue-200">
+            <Navbar />
             {/* Header Area */}
-            <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 pt-24 pb-8 transition-colors">
+            <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 pt-10 pb-8 transition-colors">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
                     <div className="flex items-center gap-6">
                         <div className="relative group">
@@ -136,9 +185,9 @@ const ProfileSettings = () => {
                                     <User className="w-full h-full p-4 text-gray-400 dark:text-gray-500" />
                                 )}
                             </div>
-                            <label htmlFor="uid_ohcx33nx" className="absolute bottom-0 right-0 p-2 bg-blue-600 rounded-full text-white cursor-pointer shadow-lg hover:bg-blue-700 transition-colors">
+                            <label htmlFor="avatarUpload" className="absolute bottom-0 right-0 p-2 bg-blue-600 rounded-full text-white cursor-pointer shadow-lg hover:bg-blue-700 transition-colors">
                                 <ImagePlus className="w-4 h-4" />
-                                <input aria-label="Accessible interactive control" type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+                                <input aria-label="Accessible interactive control" id="avatarUpload" type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
                             </label>
                         </div>
                         <div>
@@ -155,7 +204,7 @@ const ProfileSettings = () => {
             {/* Navigation Tabs */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full mt-8">
                 <div className="flex space-x-2 border-b border-gray-200 dark:border-gray-700 mb-8 overflow-x-auto pb-[1px]">
-                    {['profile', 'preferences', 'favorites', 'searches'].map((tab) => (
+                    {['profile', 'preferences', 'favorites', 'searches', ...(user?.role === 'AGENT' || user?.role === 'SELLER' ? ['agentSettings'] : [])].map((tab) => (
                         <button aria-label="Accessible interactive control" type="button"
                             key={tab}
                             onClick={() => setActiveTab(tab)}
@@ -167,6 +216,7 @@ const ProfileSettings = () => {
                             {tab === 'preferences' && 'Preferences'}
                             {tab === 'favorites' && 'Favorites'}
                             {tab === 'searches' && 'Saved Searches'}
+                            {tab === 'agentSettings' && 'Agent Settings'}
                             {activeTab === tab && (
                                 <m.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400" />
                             )}
@@ -176,6 +226,64 @@ const ProfileSettings = () => {
 
                 <div className="pb-20">
                     <AnimatePresence mode="wait">
+                        {/* AGENT SETTINGS TAB */}
+                        {activeTab === 'agentSettings' && (
+                            <m.div key="agentSettings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                                <div className="max-w-2xl bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 transition-colors">
+                                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Agent Profile Information</h2>
+                                    
+                                    {message && <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-xl text-sm font-medium">{message}</div>}
+                                    {error && <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-xl text-sm font-medium">{error}</div>}
+
+                                    <form onSubmit={handleAgentSubmit} className="space-y-6">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div>
+                                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Agency Name</label>
+                                                <input aria-label="Accessible interactive control" type="text" name="agency_name" value={agentFormData.agency_name} onChange={handleAgentChange} className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all outline-none font-medium" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">License Number</label>
+                                                <input aria-label="Accessible interactive control" type="text" name="license_number" value={agentFormData.license_number} onChange={handleAgentChange} className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all outline-none font-medium" />
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div>
+                                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Specialization</label>
+                                                <select aria-label="Specialization" name="specialization" value={agentFormData.specialization} onChange={handleAgentChange} className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all outline-none font-medium cursor-pointer">
+                                                    <option value="Both">Sales & Rentals (Both)</option>
+                                                    <option value="Sales">Sales Only</option>
+                                                    <option value="Rentals">Rentals Only</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Languages Spoken</label>
+                                                <input aria-label="Accessible interactive control" type="text" name="languages" value={agentFormData.languages} onChange={handleAgentChange} placeholder="e.g. English, Sinhala" className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all outline-none font-medium" />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Service Areas / Location</label>
+                                            <input aria-label="Accessible interactive control" type="text" name="service_areas" value={agentFormData.service_areas} onChange={handleAgentChange} placeholder="e.g. Colombo, Kandy, Galle" className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all outline-none font-medium" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">YouTube Video URL</label>
+                                            <input aria-label="Accessible interactive control" type="text" name="youtube_video_url" value={agentFormData.youtube_video_url} onChange={handleAgentChange} placeholder="https://youtube.com/watch?v=..." className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all outline-none font-medium" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Bio / About Me</label>
+                                            <textarea aria-label="Accessible interactive control" name="bio" value={agentFormData.bio} onChange={handleAgentChange} rows="5" className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all outline-none font-medium resize-none"></textarea>
+                                        </div>
+
+                                        <div className="pt-4">
+                                            <button aria-label="Accessible interactive control" type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-md flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
+                                                {loading ? <Loader className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                                                {loading ? 'Saving Settings...' : 'Save Agent Settings'}
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </m.div>
+                        )}
+
                         {/* PROFILE TAB */}
                         {activeTab === 'profile' && (
                             <m.div key="profile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
@@ -338,7 +446,11 @@ const ProfileSettings = () => {
                                     ) : (
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             {savedSearches.map(search => (
-                                                <div key={search.id} className="p-6 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl flex justify-between items-start group hover:border-blue-300 dark:hover:border-blue-700 transition-colors">
+                                                <div 
+                                                    key={search.id} 
+                                                    onClick={() => navigate('/map', { state: { savedSearch: search } })}
+                                                    className="p-6 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl flex justify-between items-start group hover:border-blue-300 dark:hover:border-blue-700 transition-colors cursor-pointer shadow-sm hover:shadow-md"
+                                                >
                                                     <div>
                                                         <h4 className="font-bold text-gray-900 dark:text-white text-lg">{search.title}</h4>
                                                         <p className="text-sm text-gray-500 dark:text-gray-400 mb-3 mt-1">Area drawn on map</p>
@@ -349,7 +461,10 @@ const ProfileSettings = () => {
                                                         </div>
                                                     </div>
                                                     <button aria-label="Accessible interactive control" type="button" 
-                                                        onClick={() => handleDeleteSearch(search.id)}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleDeleteSearch(search.id);
+                                                        }}
                                                         className="p-3 text-gray-400 hover:text-red-500 hover:bg-white dark:hover:bg-gray-800 rounded-xl transition-all shadow-sm opacity-0 group-hover:opacity-100"
                                                     >
                                                         <Trash2 className="h-5 w-5" />

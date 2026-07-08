@@ -123,7 +123,7 @@ const Home = () => {
                         className="glass-effect p-2 rounded-full shadow-2xl flex items-center max-w-3xl mx-auto focus-within:ring-4 focus-within:ring-blue-400/50 transition-all border border-white/20 backdrop-blur-md bg-white/10"
                     >
                         <Search className="w-6 h-6 text-white/70 ml-4 mr-2" />
-                        <input aria-label="Accessible interactive control" aria-label="Accessible interactive control" 
+                        <input aria-label="Accessible interactive control" 
                             type="text" 
                             placeholder="Enter an address, neighborhood, city, or ZIP code" 
                             value={searchTerm}

@@ -25,7 +25,7 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
         setResult(null);
 
         try {
-            const res = await api.post('/api/feasibility/calculate', {
+            const res = await api.post('/feasibility/calculate', {
                 salary: Number(formData.salary),
                 savings: Number(formData.savings),
                 loanDeductions: Number(formData.loanDeductions),

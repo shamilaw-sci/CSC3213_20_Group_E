@@ -33,6 +33,7 @@ const AddProperty = () => {
     }, [user, navigate]);
 
     const [formData, setFormData] = useState({
+        listingType: 'Sale',
         type: 'House', 
         title: '',
         description: '',
@@ -177,7 +178,9 @@ const AddProperty = () => {
                 merchant_id: paymentConfig.merchantId, 
                 return_url: "http://localhost:5173/my-properties", // Redirect after success
                 cancel_url: "http://localhost:5173/my-properties", // Redirect after cancellation
-                notify_url: "https://strep-reenact-rocket.ngrok-free.dev/api/payment/notify", 
+                notify_url: import.meta.env.VITE_BACKEND_PUBLIC_URL 
+                            ? `${import.meta.env.VITE_BACKEND_PUBLIC_URL}/api/payment/notify` 
+                            : "https://strep-reenact-rocket.ngrok-free.dev/api/payment/notify",  
                 order_id: propertyId,
                 items: "Thirasara Property Listing Fee",
                 amount: amount,
@@ -246,17 +249,10 @@ const AddProperty = () => {
             let centerLng = formData.longitude;
 
             if (locationMode === 'boundary' && boundaryCoordinates.length >= 3) {
-                const coords = [...boundaryCoordinates];
-                const first = coords[0];
-                const last = coords[coords.length - 1];
+                const wktCoordinates = boundaryCoordinates.map(coord => `${coord[1]} ${coord[0]}`).join(', ');
+                finalBoundaryWKT = `POLYGON((${wktCoordinates}, ${boundaryCoordinates[0][1]} ${boundaryCoordinates[0][0]}))`;
                 
-                if (first[0] !== last[0] || first[1] !== last[1]) {
-                    coords.push(first);
-                }
-                
-                const wktPoints = coords.map(c => `${c[1]} ${c[0]}`).join(', ');
-                finalBoundaryWKT = `POLYGON((${wktPoints}))`;
-                
+                // Calculate rough center for the database
                 centerLat = boundaryCoordinates[0][0];
                 centerLng = boundaryCoordinates[0][1];
             } else {
@@ -271,6 +267,7 @@ const AddProperty = () => {
             submitData.append('title', formData.title);
             submitData.append('description', formData.description);
             submitData.append('price', formData.price);
+            submitData.append('listingType', formData.listingType);
             submitData.append('type', formData.type);
             submitData.append('address', formData.address);
             submitData.append('bedrooms', formData.bedrooms);
@@ -344,6 +341,18 @@ const AddProperty = () => {
                             </div>
                         </div>
 
+                        <div className="mb-8 border-b pb-8">
+                            <label htmlFor="listing-type" className="block text-gray-900 text-lg font-bold mb-4">Are you Selling or Renting?</label>
+                            <div className="flex space-x-4">
+                                <div onClick={() => setFormData({ ...formData, listingType: 'Sale' })} className={`flex-1 flex flex-col items-center justify-center p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 ${formData.listingType === 'Sale' ? 'border-red-600 bg-red-50 text-red-700 shadow-sm' : 'border-gray-200 hover:border-red-300 text-gray-600 hover:bg-gray-50'}`}>
+                                    <span className="font-bold text-lg">For Sale</span>
+                                </div>
+                                <div onClick={() => setFormData({ ...formData, listingType: 'Rent' })} className={`flex-1 flex flex-col items-center justify-center p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 ${formData.listingType === 'Rent' ? 'border-purple-600 bg-purple-50 text-purple-700 shadow-sm' : 'border-gray-200 hover:border-purple-300 text-gray-600 hover:bg-gray-50'}`}>
+                                    <span className="font-bold text-lg">For Rent</span>
+                                </div>
+                            </div>
+                        </div>
+
                         <h3 className="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Basic Information</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                             <div className="md:col-span-2">
@@ -351,7 +360,7 @@ const AddProperty = () => {
                                 <input aria-label="Accessible interactive control" type="text" name="title" value={formData.title} onChange={handleChange} required placeholder={formData.type === 'House' ? "e.g. Beautiful 2-Story House in Colombo 07" : "e.g. 15 Perch Prime Land in Malabe"} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition" />
                             </div>
                             <div>
-                                <label htmlFor="d0qgbf" className="block text-gray-700 text-sm font-medium mb-2">Price (Rs.) <span className="text-red-500">*</span></label>
+                                <label htmlFor="d0qgbf" className="block text-gray-700 text-sm font-medium mb-2">{formData.listingType === 'Rent' ? 'Price per month (Rs.)' : 'Price (Rs.)'} <span className="text-red-500">*</span></label>
                                 <input aria-label="Accessible interactive control" type="number" name="price" value={formData.price} onChange={handleChange} required placeholder="e.g. 15000000" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition" />
                             </div>
                             <div>

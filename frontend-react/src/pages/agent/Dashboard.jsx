@@ -1,49 +1,125 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Inbox, Home, Users, CheckSquare, MoreHorizontal, CheckCircle, Archive, MessageSquare, Home as HomeIcon, User as UserIcon, Phone, Mail } from 'lucide-react';
 import { useAuth } from '../../context/UserAuthContext';
+import api from '../../context/api';
 
 const AgentDashboard = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
     
     // UI State
-    const [activeTab, setActiveTab] = useState('inbox'); // bottom nav
+    const [activeTab, setActiveTab] = useState('inbox');
     const [selectedLead, setSelectedLead] = useState(null);
     const [leads, setLeads] = useState([]);
     const [loading, setLoading] = useState(true);
+    
+    // Chat State
+    const [messages, setMessages] = useState([]);
+    const [draft, setDraft] = useState('');
+    const [sending, setSending] = useState(false);
+    const messagesEndRef = useRef(null);
 
-    // Mock Leads for UI demonstration until API is connected
-    useEffect(() => {
-        // In a real app, this would be axios.get('/api/leads')
-        const timer = setTimeout(() => {
-            setLeads([
-                {
-                    id: 1,
-                    client_name: 'Sarah Jenkins',
-                    property_title: 'Luxury Villa in Colombo 07',
-                    property_image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-                    timeframe: '1-3 Months',
-                    status: 'New',
-                    pre_approved: true,
-                    last_message: 'Hi, I would like to schedule a tour this weekend.'
-                },
-                {
-                    id: 2,
-                    client_name: 'David Perera',
-                    property_title: 'Modern Apartment in Kandy',
-                    property_image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-                    timeframe: 'ASAP',
-                    status: 'Active',
-                    pre_approved: false,
-                    last_message: 'Is the price negotiable?'
-                }
-            ]);
+    // Fetch Leads from real backend
+    const fetchLeads = async () => {
+        try {
+            const response = await api.get('/agent/leads');
+            const formattedLeads = response.data.leads.map(lead => ({
+                id: lead.id, // conversation id
+                client_name: lead.buyer?.name || 'Unknown User',
+                client_email: lead.buyer?.email || '',
+                client_phone: lead.buyer?.phone || '',
+                property_id: lead.property_id,
+                property_title: lead.property_id ? (lead.properties?.title || 'Unknown Property') : 'Direct Agent Inquiry',
+                property_image: lead.property_id ? ((lead.properties?.images && lead.properties.images.length > 0) ? lead.properties.images[0] : 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80') : `https://ui-avatars.com/api/?name=${lead.buyer?.name || 'Inquiry'}&size=200&background=e0e7ff&color=4338ca`,
+                timeframe: lead.timeframe || 'Not specified',
+                status: lead.lead_status || 'New',
+                pre_approved: lead.pre_approved || false,
+                last_message: lead.last_message || 'No messages yet',
+                raw: lead
+            }));
+            setLeads(formattedLeads);
+        } catch (error) {
+            console.error("Failed to fetch leads", error);
+        } finally {
             setLoading(false);
-        }, 1000);
+        }
+    };
 
-        return () => clearTimeout(timer);
-    }, []);
+    useEffect(() => {
+        if (user && user.role === 'AGENT') {
+            fetchLeads();
+        } else {
+            setLoading(false);
+        }
+    }, [user]);
+
+    // Fetch messages when a lead is selected
+    useEffect(() => {
+        if (!selectedLead) return;
+        let isMounted = true;
+        const fetchMessages = async () => {
+            try {
+                const response = await api.get(`/conversations/${selectedLead.id}/messages`);
+                if (isMounted) {
+                    setMessages(response.data.messages || []);
+                    setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+                }
+            } catch (err) {
+                console.error("Failed to fetch messages", err);
+            }
+        };
+        fetchMessages();
+        
+        // Simple polling for new messages every 10 seconds
+        const interval = setInterval(fetchMessages, 10000);
+        return () => {
+            isMounted = false;
+            clearInterval(interval);
+        };
+    }, [selectedLead]);
+
+    // Send Message
+    const handleSendMessage = async () => {
+        if (!draft.trim() || !selectedLead) return;
+        setSending(true);
+        try {
+            const response = await api.post(`/conversations/${selectedLead.id}/messages`, {
+                content: draft
+            });
+            setMessages([...messages, response.data.message]);
+            setDraft('');
+            setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+            fetchLeads(); // refresh last message preview
+        } catch (error) {
+            console.error("Failed to send message", error);
+        } finally {
+            setSending(false);
+        }
+    };
+
+    // Update Lead CRM Metadata
+    const updateLead = async (field, value) => {
+        if (!selectedLead) return;
+        try {
+            const updated = { ...selectedLead, [field]: value };
+            setSelectedLead(updated);
+            
+            // map frontend keys to backend columns
+            const payload = {
+                lead_status: updated.status,
+                timeframe: updated.timeframe,
+                pre_approved: updated.pre_approved
+            };
+            
+            await api.put(`/agent/leads/${selectedLead.id}`, payload);
+            fetchLeads(); // refresh the list
+        } catch (error) {
+            console.error("Failed to update lead", error);
+            // Revert on error
+            setSelectedLead(selectedLead);
+        }
+    };
 
     // Redirect if not an agent
     useEffect(() => {
@@ -100,6 +176,8 @@ const AgentDashboard = () => {
                         <div className="flex justify-center items-center h-32">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                         </div>
+                    ) : leads.length === 0 ? (
+                        <div className="text-center text-gray-500 py-10">No leads yet.</div>
                     ) : (
                         leads.map(lead => (
                             <div 
@@ -118,18 +196,13 @@ const AgentDashboard = () => {
                                     <div className="flex-1">
                                         <div className="flex justify-between items-start">
                                             <h3 className="font-bold text-gray-900">{lead.client_name}</h3>
-                                            <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${lead.status === 'New' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                                            <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${lead.status === 'New' ? 'bg-green-100 text-green-700' : lead.status === 'Closed' ? 'bg-gray-100 text-gray-700' : 'bg-blue-100 text-blue-700'}`}>
                                                 {lead.status}
                                             </span>
                                         </div>
                                         <p className="text-xs text-gray-500 mt-1 truncate">{lead.property_title}</p>
                                         <p className="text-sm text-gray-700 mt-2 line-clamp-1">"{lead.last_message}"</p>
                                     </div>
-                                </div>
-                                {/* Quick Actions */}
-                                <div className="flex justify-end gap-2 mt-3 pt-3 border-t border-gray-100">
-                                    <button aria-label="Accessible interactive control" type="button" className="text-xs font-medium text-gray-600 hover:text-blue-600 flex items-center gap-1"><MessageSquare className="w-3 h-3"/> Text</button>
-                                    <button aria-label="Accessible interactive control" type="button" className="text-xs font-medium text-gray-600 hover:text-blue-600 flex items-center gap-1"><CheckSquare className="w-3 h-3"/> Done</button>
                                 </div>
                             </div>
                         ))
@@ -138,11 +211,9 @@ const AgentDashboard = () => {
 
                 {/* Bottom Mobile Nav */}
                 <div className="md:hidden bg-white border-t border-gray-200 p-2 flex justify-around">
-                    <button aria-label="Accessible interactive control" type="button" onClick={() => setActiveTab('home')} className={`flex flex-col items-center p-2 ${activeTab === 'home' ? 'text-blue-600' : 'text-gray-500'}`}><Home className="w-6 h-6" /><span className="text-[10px]">Home</span></button>
+                    <button aria-label="Accessible interactive control" type="button" onClick={() => navigate('/')} className={`flex flex-col items-center p-2 ${activeTab === 'home' ? 'text-blue-600' : 'text-gray-500'}`}><Home className="w-6 h-6" /><span className="text-[10px]">Home</span></button>
                     <button aria-label="Accessible interactive control" type="button" onClick={() => setActiveTab('inbox')} className={`flex flex-col items-center p-2 ${activeTab === 'inbox' ? 'text-blue-600' : 'text-gray-500'}`}><Inbox className="w-6 h-6" /><span className="text-[10px]">Inbox</span></button>
-                    <button aria-label="Accessible interactive control" type="button" onClick={() => setActiveTab('contacts')} className={`flex flex-col items-center p-2 ${activeTab === 'contacts' ? 'text-blue-600' : 'text-gray-500'}`}><Users className="w-6 h-6" /><span className="text-[10px]">Contacts</span></button>
-                    <button aria-label="Accessible interactive control" type="button" onClick={() => setActiveTab('tasks')} className={`flex flex-col items-center p-2 ${activeTab === 'tasks' ? 'text-blue-600' : 'text-gray-500'}`}><CheckSquare className="w-6 h-6" /><span className="text-[10px]">Tasks</span></button>
-                    <button aria-label="Accessible interactive control" type="button" className="flex flex-col items-center p-2 text-gray-500"><MoreHorizontal className="w-6 h-6" /><span className="text-[10px]">More</span></button>
+                    <button aria-label="Accessible interactive control" type="button" className="flex flex-col items-center p-2 text-gray-500 opacity-50"><Users className="w-6 h-6" /><span className="text-[10px]">Contacts</span></button>
                 </div>
             </div>
 
@@ -170,8 +241,12 @@ const AgentDashboard = () => {
                                 </div>
                             </div>
                             <div className="flex gap-2 items-center">
-                                <button aria-label="Accessible interactive control" type="button" className="p-3 bg-gray-100 rounded-full hover:bg-gray-200"><Phone className="w-5 h-5 text-gray-700" /></button>
-                                <button aria-label="Accessible interactive control" type="button" className="p-3 bg-blue-100 rounded-full hover:bg-blue-200"><Mail className="w-5 h-5 text-blue-700" /></button>
+                                {selectedLead.client_phone && (
+                                    <a href={`tel:${selectedLead.client_phone}`} aria-label="Accessible interactive control" className="p-3 bg-gray-100 rounded-full hover:bg-gray-200"><Phone className="w-5 h-5 text-gray-700" /></a>
+                                )}
+                                {selectedLead.client_email && (
+                                    <a href={`mailto:${selectedLead.client_email}`} aria-label="Accessible interactive control" className="p-3 bg-blue-100 rounded-full hover:bg-blue-200"><Mail className="w-5 h-5 text-blue-700" /></a>
+                                )}
                             </div>
                         </div>
 
@@ -179,18 +254,35 @@ const AgentDashboard = () => {
                             {/* Left Sub-Pane: Chat Thread */}
                             <div className="flex-1 flex flex-col bg-white border-r border-gray-200">
                                 <div className="flex-1 p-6 overflow-y-auto space-y-4">
-                                    {/* Mock Chat Bubbles */}
-                                    <div className="flex justify-center"><span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-full">Today 10:42 AM (Zillow Lead)</span></div>
-                                    <div className="flex justify-start">
-                                        <div className="bg-gray-100 rounded-2xl rounded-tl-none px-4 py-3 max-w-[80%] text-sm text-gray-800">
-                                            {selectedLead.last_message}
+                                    {messages.map((msg, i) => (
+                                        <div key={i} className={`flex ${msg.sender_id === user.id ? 'justify-end' : 'justify-start'}`}>
+                                            <div className={`${msg.sender_id === user.id ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-gray-100 text-gray-800 rounded-tl-none'} rounded-2xl px-4 py-3 max-w-[80%] text-sm`}>
+                                                {msg.content}
+                                            </div>
                                         </div>
-                                    </div>
+                                    ))}
+                                    <div ref={messagesEndRef} />
                                 </div>
                                 <div className="p-4 border-t border-gray-200 bg-gray-50">
                                     <div className="flex gap-2">
-                                        <input aria-label="Accessible interactive control" type="text" placeholder="Type a message..." className="flex-1 rounded-full border-gray-300 px-4 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
-                                        <button aria-label="Accessible interactive control" type="button" className="bg-blue-600 text-white rounded-full px-6 py-2 text-sm font-bold hover:bg-blue-700">Send</button>
+                                        <input 
+                                            aria-label="Accessible interactive control" 
+                                            type="text" 
+                                            placeholder="Type a message..." 
+                                            className="flex-1 rounded-full border-gray-300 px-4 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+                                            value={draft}
+                                            onChange={(e) => setDraft(e.target.value)}
+                                            onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                                        />
+                                        <button 
+                                            aria-label="Accessible interactive control" 
+                                            type="button" 
+                                            onClick={handleSendMessage}
+                                            disabled={sending || !draft.trim()}
+                                            className="bg-blue-600 text-white rounded-full px-6 py-2 text-sm font-bold hover:bg-blue-700 disabled:opacity-50"
+                                        >
+                                            {sending ? 'Sending...' : 'Send'}
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -202,41 +294,60 @@ const AgentDashboard = () => {
                                 <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6 space-y-4 text-sm">
                                     <div>
                                         <span className="block text-gray-500 text-xs font-medium">Lifecycle Status</span>
-                                        <select aria-label="Accessible interactive control" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm font-medium">
-                                            <option>New</option>
-                                            <option>Attempted Contact</option>
-                                            <option>Active</option>
-                                            <option>Closed</option>
+                                        <select 
+                                            aria-label="Accessible interactive control" 
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm font-medium"
+                                            value={selectedLead.status}
+                                            onChange={(e) => updateLead('status', e.target.value)}
+                                        >
+                                            <option value="New">New</option>
+                                            <option value="Attempted Contact">Attempted Contact</option>
+                                            <option value="Active">Active</option>
+                                            <option value="Closed">Closed</option>
                                         </select>
                                     </div>
                                     <div>
                                         <span className="block text-gray-500 text-xs font-medium">Timeframe to Move</span>
-                                        <span className="block text-gray-900 font-medium">{selectedLead.timeframe}</span>
+                                        <input 
+                                            type="text"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                            placeholder="e.g. ASAP, 1-3 Months"
+                                            value={selectedLead.timeframe}
+                                            onChange={(e) => updateLead('timeframe', e.target.value)}
+                                        />
                                     </div>
-                                    <div>
-                                        <span className="block text-gray-500 text-xs font-medium">Mortgage Pre-Approval</span>
-                                        <span className={`inline-flex items-center gap-1 mt-1 font-bold ${selectedLead.pre_approved ? 'text-green-600' : 'text-red-600'}`}>
-                                            {selectedLead.pre_approved ? <CheckCircle className="w-4 h-4"/> : <Archive className="w-4 h-4"/>}
-                                            {selectedLead.pre_approved ? 'Verified' : 'Not Approved'}
-                                        </span>
+                                    <div className="pt-2">
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                            <input 
+                                                type="checkbox"
+                                                className="rounded text-blue-600 focus:ring-blue-500"
+                                                checked={selectedLead.pre_approved}
+                                                onChange={(e) => updateLead('pre_approved', e.target.checked)}
+                                            />
+                                            <span className="block text-gray-700 text-sm font-medium">Mortgage Pre-Approved</span>
+                                        </label>
                                     </div>
                                 </div>
 
-                                <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2"><HomeIcon className="w-5 h-5" /> Inquired Property</h3>
-                                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden cursor-pointer hover:shadow-md transition">
-                                    <img src={selectedLead.property_image} className="w-full h-32 object-cover" alt="Property" />
-                                    <div className="p-3">
-                                        <p className="text-sm font-bold text-gray-900 truncate">{selectedLead.property_title}</p>
-                                        <button
-                                            aria-label={`View listing for ${selectedLead.property_title}`}
-                                            type="button"
-                                            onClick={() => navigate(`/property/${selectedLead.id}`)}
-                                            className="text-xs text-blue-600 hover:underline mt-1 inline-block"
-                                        >
-                                            View Listing
-                                        </button>
-                                    </div>
-                                </div>
+                                {selectedLead.property_id && (
+                                    <>
+                                        <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2"><HomeIcon className="w-5 h-5" /> Inquired Property</h3>
+                                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden cursor-pointer hover:shadow-md transition">
+                                            <img src={selectedLead.property_image} className="w-full h-32 object-cover" alt="Property" />
+                                            <div className="p-3">
+                                                <p className="text-sm font-bold text-gray-900 truncate">{selectedLead.property_title}</p>
+                                                <button
+                                                    aria-label={`View listing for ${selectedLead.property_title}`}
+                                                    type="button"
+                                                    onClick={() => navigate(`/property/${selectedLead.property_id}`)}
+                                                    className="text-xs text-blue-600 hover:underline mt-1 inline-block"
+                                                >
+                                                    View Listing
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
                     </>

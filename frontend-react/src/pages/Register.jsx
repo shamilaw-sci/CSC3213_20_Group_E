@@ -61,7 +61,7 @@ const Register = () => {
             <div className="w-full md:w-[450px] lg:w-[500px] flex flex-col justify-center px-8 sm:px-12 py-10 relative overflow-y-auto">
                 
                 {/* Back to Home Button */}
-                <button type="button" aria-label="Accessible interactive control" aria-label="Accessible interactive control" 
+                <button type="button" aria-label="Accessible interactive control" 
                     onClick={() => navigate('/')} 
                     className="absolute top-6 left-6 text-gray-500 hover:text-gray-800 transition p-2 rounded-full hover:bg-gray-100"
                 >
@@ -120,9 +120,11 @@ const Register = () => {
 
                         {/* Name Input */}
                         <div className="mb-4">
-                            <label htmlFor="8e8bz5" className="block text-gray-700 text-sm font-medium mb-2">Full Name <span className="text-red-500">*</span></label>
+                            <label htmlFor="name" className="block text-gray-700 text-sm font-medium mb-2">Full Name <span className="text-red-500">*</span></label>
                             <input aria-label="Accessible interactive control"
+                                id="name"
                                 type="text"
+                                autoComplete="name"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 required
@@ -133,9 +135,11 @@ const Register = () => {
 
                         {/* Email Input */}
                         <div className="mb-4">
-                            <label htmlFor="xyaok8" className="block text-gray-700 text-sm font-medium mb-2">Email Address <span className="text-red-500">*</span></label>
+                            <label htmlFor="email" className="block text-gray-700 text-sm font-medium mb-2">Email Address <span className="text-red-500">*</span></label>
                             <input aria-label="Accessible interactive control"
+                                id="email"
                                 type="email"
+                                autoComplete="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value.toLowerCase())}
                                 required
@@ -149,18 +153,20 @@ const Register = () => {
                             <div className="bg-purple-50 p-4 rounded-lg mb-4 border border-purple-100">
                                 <h3 className="text-purple-800 font-semibold mb-3 text-sm">Agent Details</h3>
                                 <div className="mb-3">
-                                    <label htmlFor="70j4rc" className="block text-gray-700 text-xs font-medium mb-1">Agency Name (Optional)</label>
+                                    <label htmlFor="agencyName" className="block text-gray-700 text-xs font-medium mb-1">Agency Name (Optional)</label>
                                     <input aria-label="Accessible interactive control"
+                                        id="agencyName"
                                         type="text"
                                         value={agencyName}
                                         onChange={(e) => setAgencyName(e.target.value)}
                                         className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition"
-                                        placeholder="e.g. Zillow Premier, Independent"
+                                        placeholder="e.g. Premier Realty, Independent"
                                     />
                                 </div>
                                 <div>
-                                    <label htmlFor="qeo103" className="block text-gray-700 text-xs font-medium mb-1">License Number (Optional)</label>
+                                    <label htmlFor="licenseNumber" className="block text-gray-700 text-xs font-medium mb-1">License Number (Optional)</label>
                                     <input aria-label="Accessible interactive control"
+                                        id="licenseNumber"
                                         type="text"
                                         value={licenseNumber}
                                         onChange={(e) => setLicenseNumber(e.target.value)}
@@ -173,10 +179,12 @@ const Register = () => {
 
                         {/* Password aria-label="Accessible interactive control" Input */}
                         <div className="mb-6">
-                            <label htmlFor="no3cb1" className="block text-gray-700 text-sm font-medium mb-2">Password <span className="text-red-500">*</span></label>
+                            <label htmlFor="password" className="block text-gray-700 text-sm font-medium mb-2">Password <span className="text-red-500">*</span></label>
                             <div className="relative">
                                 <input aria-label="Accessible interactive control"
+                                    id="password"
                                     type={showPassword ? "text" : "password"}
+                                    autoComplete="new-password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required

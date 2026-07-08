@@ -39,7 +39,7 @@ const FloatingAIChat = () => {
             // Prepare history (excluding the very first greeting if it's too generic, but passing it is fine)
             const historyForAPI = newMessages.map(m => ({ role: m.role, text: m.text }));
 
-            const response = await api.post('/api/ai/chat', {
+            const response = await api.post('/ai/chat', {
                 message: userMsg,
                 history: historyForAPI.slice(0, -1) // Exclude current message from history array
             });

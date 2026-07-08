@@ -227,10 +227,11 @@ const updateProfile = async (req, res, next) => {
         if (avatar_url !== undefined) {
             if (avatar_url.startsWith('data:image')) {
                 try {
-                    const matches = avatar_url.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-                    if (matches && matches.length === 3) {
-                        const mimeType = matches[1];
-                        const buffer = Buffer.from(matches[2], 'base64');
+                    const parts = avatar_url.split(',');
+                    if (parts.length === 2) {
+                        const mimeType = parts[0].split(':')[1].split(';')[0];
+                        const base64Data = parts[1];
+                        const buffer = Buffer.from(base64Data, 'base64');
                         const ext = mimeType.split('/')[1] || 'png';
                         const fileName = `${req.user.id}_${Date.now()}.${ext}`;
 

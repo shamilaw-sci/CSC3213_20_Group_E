@@ -7,7 +7,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { MapContainer, TileLayer, useMap, Marker, Popup, GeoJSON } from 'react-leaflet';
 import L from 'leaflet';
 // axios removed for map microservice calls; use fetch with explicit URL
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Heart, Calculator } from 'lucide-react';
 import api from '../context/api';
 import FeasibilityCalculator from './FeasibilityCalculator';
@@ -37,14 +37,21 @@ const formatPrice = (price) => {
     return price.toString();
 };
 
+const getMarkerColor = (type) => {
+    if (type === 'Rent') return 'bg-purple-600';
+    if (type === 'Sold') return 'bg-yellow-500';
+    return 'bg-red-600'; // Sale
+};
+
 /**
- * Generates a dynamic custom Zillow-style marker icon
+ * Generates a dynamic custom interactive map marker icon
  */
-const createCustomIcon = (price, isActive) => {
+const createCustomIcon = (price, isActive, listingType) => {
+    const priceText = formatPrice(price) + (listingType === 'Rent' ? '/mo' : '');
     return L.divIcon({
         className: `custom-leaflet-marker ${isActive ? 'active-marker' : ''}`,
-        html: `<div class="zillow-marker-container ${isActive ? 'active' : ''}">
-                 <span class="zillow-marker-price">${formatPrice(price)}</span>
+        html: `<div class="map-marker-container ${getMarkerColor(listingType)} ${isActive ? 'active' : ''}">
+                 <span class="map-marker-price">${priceText}</span>
                </div>`,
         iconSize: [0, 0],
         iconAnchor: [0, 0],
@@ -221,7 +228,7 @@ const MarkerPopup = ({ prop, imageUrl, onNavigate }) => (
             <div className="w-full h-32 bg-gray-100 flex items-center justify-center text-gray-400 rounded-md mb-2 border">No Image</div>
         )}
         <h3 className="font-extrabold text-xl text-blue-600 leading-tight">
-            {prop.price ? `Rs. ${prop.price.toLocaleString()}` : 'Price N/A'}
+            {prop.price ? `Rs. ${prop.price.toLocaleString()}${prop.listing_type === 'Rent' ? '/mo' : ''}` : 'Price N/A'}
         </h3>
         <p className="text-sm font-bold text-gray-800 mt-1 truncate">{prop.title}</p>
         <button aria-label="Accessible interactive control" type="button" 
@@ -264,8 +271,11 @@ const PropertyCard = React.memo(({ prop, isActive, onMouseEnter, onMouseLeave, o
                 ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No Image</div>
                 )}
-                <div className="absolute top-1 left-1 bg-white text-gray-800 text-[10px] font-extrabold px-1.5 py-0.5 rounded shadow-sm uppercase">
-                    {prop.type === 'Land' ? 'Land' : 'House'}
+                <div className="absolute top-1 left-1 bg-white text-gray-800 text-[10px] font-extrabold px-1.5 py-0.5 rounded shadow-sm uppercase flex gap-1">
+                    <span className={prop.listing_type === 'Rent' ? 'text-purple-600' : prop.listing_type === 'Sold' ? 'text-yellow-600' : 'text-red-600'}>
+                        {prop.listing_type || 'Sale'}
+                    </span>
+                    <span>• {prop.type === 'Land' ? 'Land' : 'House'}</span>
                 </div>
                 <button aria-label="Accessible interactive control" type="button" 
                     onClick={handleFavoriteClick}
@@ -276,7 +286,7 @@ const PropertyCard = React.memo(({ prop, isActive, onMouseEnter, onMouseLeave, o
                 {isActive && <div className="absolute inset-0 bg-blue-500/10"></div>}
             </div>
             <div className="p-2">
-                <h4 className="font-extrabold text-lg text-gray-900">Rs. {prop.price?.toLocaleString()}</h4>
+                <h4 className="font-extrabold text-lg text-gray-900">Rs. {prop.price?.toLocaleString()}{prop.listing_type === 'Rent' ? '/mo' : ''}</h4>
                 <div className="flex items-center text-gray-700 text-[11px] mt-0.5 mb-1 truncate">
                     {prop.bedrooms && <span className="font-bold">{prop.bedrooms} <span className="font-normal text-gray-500">bds</span> <span className="text-gray-300 mx-1">|</span></span>}
                     {prop.bathrooms && <span className="font-bold">{prop.bathrooms} <span className="font-normal text-gray-500">ba</span> <span className="text-gray-300 mx-1">|</span></span>}
@@ -289,21 +299,33 @@ const PropertyCard = React.memo(({ prop, isActive, onMouseEnter, onMouseLeave, o
     );
 });
 
+/**
+ * Main MapSearch Component.
+ * Handles the display of the interactive map, property markers, sidebar list, and dynamic filtering.
+ * Connects directly to the Go map-service for optimized geospatial querying.
+ *
+ * @component
+ * @returns {React.ReactElement} Map Search interface
+ */
 const MapSearch = () => {
+    const location = useLocation();
+    const savedSearch = location.state?.savedSearch;
+
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(false);
     const [selectedDistrict, setSelectedDistrict] = useState(null); 
     const [activeMarkerId, setActiveMarkerId] = useState(null);
     const [hoveredPropId, setHoveredPropId] = useState(null);
-    const [searchMode, setSearchMode] = useState('bounds'); 
+    const [searchMode, setSearchMode] = useState(savedSearch ? 'polygon' : 'bounds'); 
     const [isFeasibilityOpen, setIsFeasibilityOpen] = useState(false);
     const [maxPriceFilter, setMaxPriceFilter] = useState(null);
     
-    // New States for Phase 1 Filters
-    const [currentPolygon, setCurrentPolygon] = useState(null);
-    const [bedsFilter, setBedsFilter] = useState('');
-    const [bathsFilter, setBathsFilter] = useState('');
-    const [typeFilter, setTypeFilter] = useState('');
+    // New States for Phase 1 Filters, initialize with savedSearch if provided
+    const [currentPolygon, setCurrentPolygon] = useState(savedSearch?.polygon || null);
+    const [bedsFilter, setBedsFilter] = useState(savedSearch?.beds ? String(savedSearch.beds) : '');
+    const [bathsFilter, setBathsFilter] = useState(savedSearch?.baths ? String(savedSearch.baths) : '');
+    const [typeFilter, setTypeFilter] = useState(savedSearch?.property_type || '');
+    const [listingTypeFilter, setListingTypeFilter] = useState(location.pathname === '/rent' ? 'Rent' : 'Sale');
 
     const drawControlRef = useRef(null);
     const navigate = useNavigate();
@@ -320,6 +342,7 @@ const MapSearch = () => {
                 if (bedsFilter) payload.beds = parseInt(bedsFilter);
                 if (bathsFilter) payload.baths = parseInt(bathsFilter);
                 if (typeFilter) payload.type = typeFilter;
+                if (listingTypeFilter) payload.listing_type = listingTypeFilter;
 
                 const res = await fetch(apiUrl, {
                     method: 'POST',
@@ -341,7 +364,7 @@ const MapSearch = () => {
             fetchProps();
         }, 300);
         return () => clearTimeout(timeoutId);
-    }, [currentPolygon, bedsFilter, bathsFilter, typeFilter]);
+    }, [currentPolygon, bedsFilter, bathsFilter, typeFilter, listingTypeFilter]);
 
     const handleBoundsChange = useCallback((bounds) => {
         const boundsWKT = getWKTFromBounds(bounds);
@@ -373,8 +396,18 @@ const MapSearch = () => {
                         Thirasara Map Search
                     </h2>
                     
-                    {/* Zillow-Style Filter Bar */}
+                    {/* Primary Filter Bar */}
                     <div className="hidden md:flex gap-3 ml-4">
+                        <select aria-label="Listing Type" 
+                            value={listingTypeFilter} 
+                            onChange={(e) => setListingTypeFilter(e.target.value)}
+                            className="bg-white border-2 border-blue-600 text-blue-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 font-bold cursor-pointer"
+                        >
+                            <option value="Sale">For sale</option>
+                            <option value="Rent">For rent</option>
+                            <option value="Sold">Sold</option>
+                        </select>
+
                         <select aria-label="Accessible interactive control" 
                             value={typeFilter} 
                             onChange={(e) => setTypeFilter(e.target.value)}
@@ -422,7 +455,7 @@ const MapSearch = () => {
                             if (!searchTitle) return;
                             
                             try {
-                                await api.post('/api/saved-searches', {
+                                await api.post('/saved-searches', {
                                     title: searchTitle,
                                     polygon: currentPolygon,
                                     beds: bedsFilter ? parseInt(bedsFilter) : null,
@@ -541,7 +574,7 @@ const MapSearch = () => {
                                     <Marker 
                                         key={prop.id} 
                                         position={[prop.latitude, prop.longitude]} 
-                                        icon={createCustomIcon(prop.price, isActive)}
+                                        icon={createCustomIcon(prop.price, isActive, prop.listing_type)}
                                         eventHandlers={{
                                             click: (e) => {
                                                 L.DomEvent.stopPropagation(e);
@@ -568,7 +601,7 @@ const MapSearch = () => {
 
                 <div className="w-[450px] bg-white border-l overflow-y-auto flex flex-col z-10 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.1)]">
                     <div className="p-4 border-b sticky top-0 bg-white z-20 shadow-sm">
-                        <h3 className="font-bold text-lg text-gray-900">Real Estate & Homes For Sale</h3>
+                        <h3 className="font-bold text-lg text-gray-900">Real Estate & Homes</h3>
                         <p className="text-sm text-gray-500">{properties.length} results found</p>
                     </div>
                     <div className="p-4 grid grid-cols-2 gap-3 auto-rows-max">

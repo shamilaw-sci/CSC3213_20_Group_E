@@ -16,7 +16,7 @@ const MyFavorites = () => {
 
     const fetchFavorites = async () => {
         try {
-            const res = await api.get('/api/favorites');
+            const res = await api.get('/favorites');
             setFavorites(res.data.favorites);
         } catch (err) {
             setError("Failed to load favorites. " + (err.response?.data?.message || ''));

@@ -169,11 +169,13 @@ const Login = () => {
                     {step === 1 && (
                         <form onSubmit={handleEmailCheck} className="animate-fade-in">
                             <div className="mb-4">
-                                <label htmlFor="o9rlxc" className="block text-gray-700 text-sm font-medium mb-2">
+                                <label htmlFor="email" className="block text-gray-700 text-sm font-medium mb-2">
                                     Email Address <span className="text-red-500">*</span>
                                 </label>
                                 <input aria-label="Accessible interactive control"
+                                    id="email"
                                     type="email"
+                                    autoComplete="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value.toLowerCase())}
                                     required
@@ -194,7 +196,7 @@ const Login = () => {
                     {step === 2 && (
                         <form onSubmit={handleLogin} className="animate-fade-in">
                             <div className="mb-6">
-                                <label htmlFor="h49tyj" className="block text-gray-700 text-sm font-medium mb-2 flex justify-between">
+                                <label htmlFor="password" className="block text-gray-700 text-sm font-medium mb-2 flex justify-between">
                                     <span>Password <span className="text-red-500">*</span></span>
                                     <span
                                      onClick={() => {setStep(3);setError('');setResetMessage('');}}
@@ -203,7 +205,9 @@ const Login = () => {
                                 
                                 <div className="relative">
                                     <input aria-label="Accessible interactive control"
+                                        id="password"
                                         type={showPassword ? "text" : "password"}
+                                        autoComplete="current-password"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         required
@@ -251,11 +255,13 @@ const Login = () => {
                             )}
 
                             <div className="mb-6">
-                                <label htmlFor="uid_xw1aczsa" className="block text-gray-700 text-sm font-medium mb-2">
+                                <label htmlFor="reset_email" className="block text-gray-700 text-sm font-medium mb-2">
                                     Email Address <span className="text-red-500">*</span>
                                 </label>
                                 <input aria-label="Accessible interactive control"
+                                    id="reset_email"
                                     type="email"
+                                    autoComplete="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value.toLowerCase())}
                                     required
