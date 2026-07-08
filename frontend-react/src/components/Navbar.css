@@ -1,0 +1,18 @@
+nav {
+  background: rgba(255, 255, 255, 0.15); /* Frosted semi-transparent center */
+  backdrop-filter: blur(20px) saturate(140%); /* Smooth frost layer */
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 250ms;
+}
+
+/* --- Navigation Bar Tweaks --- */
+.navbar-logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #0a0a0a;
+}

@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../context/api';
 import { useAuth } from '../context/UserAuthContext';
+import { signInWithGoogle, signInWithFacebook, signInWithApple } from '../utils/socialAuth';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -94,9 +95,23 @@ const Login = () => {
         }
     };
 
-    const handleSocialLogin = (provider) => {
-        alert(`Integration with ${provider} coming soon! 🚀`);
-    };
+    const handleSocialLogin = async (provider) => {
+    setError('');
+    setLoading(true);
+    try {
+        let user;
+        if (provider === 'Google') user = await signInWithGoogle();
+        else if (provider === 'Facebook') user = await signInWithFacebook();
+        else if (provider === 'Apple') user = await signInWithApple();
+
+        login(user);
+        navigate('/');
+    } catch (err) {
+        setError(err.response?.data?.message || err.message || `${provider} login failed. Please try again.`);
+    } finally {
+        setLoading(false);
+    }
+};
 
     return (
         <div className="flex min-h-screen bg-white font-sans">
