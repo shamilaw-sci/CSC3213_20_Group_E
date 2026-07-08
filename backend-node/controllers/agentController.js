@@ -72,9 +72,9 @@ const getAgentProfile = async (req, res) => {
         // 2. Get agent's active listings
         const { data: listings } = await supabase
             .from('properties')
-            .select('*')
-            .eq('user_id', id)
-            .eq('status', 'active');
+            .select('*, users(name, role)')
+            .eq('seller_id', id)
+            .eq('status', 'approved');
 
         // 3. Get reviews
         const { data: reviews } = await supabase

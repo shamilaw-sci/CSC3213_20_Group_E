@@ -103,7 +103,7 @@ const AgentProfile = () => {
     };
 
     return (
-        <div className="bg-white min-h-screen font-outfit">
+        <div className="bg-gradient-to-br from-gray-50 to-blue-50/50 min-h-screen font-outfit">
             <Navbar />
             
             <div className="max-w-[1200px] mx-auto px-4 py-8">
@@ -119,7 +119,7 @@ const AgentProfile = () => {
                     
                     {/* Left Sidebar - Agent Card */}
                     <div className="w-full md:w-[320px] flex-shrink-0">
-                        <div className="bg-white border border-gray-200 shadow-sm sticky top-24 rounded-sm overflow-hidden">
+                        <div className="bg-white/70 backdrop-blur-xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] sticky top-28 rounded-3xl overflow-hidden">
                             {/* Blue Top Banner */}
                             <div className="h-32 bg-[#2d5c8d] w-full"></div>
                             
@@ -227,15 +227,15 @@ const AgentProfile = () => {
 
                         {/* Bio Section */}
                         {profile.bio && (
-                            <div className="mb-6 p-6 bg-white border border-gray-200 rounded-sm">
-                                <h3 className="text-lg font-bold text-gray-900 mb-2">About {agentData.name}</h3>
-                                <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{profile.bio}</p>
+                            <div className="mb-6 p-8 bg-white/70 backdrop-blur-xl border border-white/60 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+                                <h3 className="text-xl font-bold text-gray-900 mb-3">About {agentData.name}</h3>
+                                <p className="text-gray-700 whitespace-pre-wrap leading-relaxed text-lg">{profile.bio}</p>
                             </div>
                         )}
 
                         {/* Stats Row */}
-                        <div className="border border-gray-200 rounded-sm mb-12 bg-white">
-                            <div className="px-6 py-3 border-b border-gray-200 flex items-center text-xs font-bold text-gray-900 tracking-wider">
+                        <div className="border border-white/60 rounded-3xl mb-12 bg-white/70 backdrop-blur-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
+                            <div className="px-6 py-4 border-b border-gray-100 flex items-center text-xs font-bold text-gray-900 tracking-wider">
                                 <span className="text-orange-500 mr-2">TEAM</span> Sales numbers represent all team members
                             </div>
                             <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-gray-200">
@@ -286,12 +286,12 @@ const AgentProfile = () => {
                                                     alt={property.title} 
                                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
                                                 />
-                                                <div className={`absolute top-2 left-2 text-white text-[10px] font-bold px-2 py-0.5 rounded-sm ${property.listing_type === 'Rent' ? 'bg-purple-600' : 'bg-red-600'}`}>
-                                                    {property.listing_type === 'Rent' ? 'For Rent' : 'For Sale'}
+                                                <div className={`absolute top-2 left-2 text-white text-[10px] font-bold px-2 py-0.5 rounded-sm ${property.listing_type?.toLowerCase() === 'rent' || property.type?.includes('Rent') ? 'bg-purple-600' : 'bg-red-600'}`}>
+                                                    {property.listing_type?.toLowerCase() === 'rent' || property.type?.includes('Rent') ? 'For Rent' : 'For Sale'}
                                                 </div>
                                             </div>
                                             <div className="pt-3 pb-1 border-b-2 border-transparent group-hover:border-blue-600 transition-colors">
-                                                <p className="text-lg font-bold text-gray-900">Rs.{property.price.toLocaleString()}{property.listing_type === 'Rent' ? '/mo' : ''}</p>
+                                                <p className="text-lg font-bold text-gray-900">Rs.{property.price.toLocaleString()}{property.listing_type?.toLowerCase() === 'rent' || property.type?.includes('Rent') ? '/mo' : ''}</p>
                                                 <p className="text-sm text-gray-600 truncate">{property.title}</p>
                                                 <p className="text-xs text-gray-500 truncate mt-1">{property.address || property.city}</p>
                                                 <div className="flex gap-3 text-xs text-gray-700 mt-2 font-medium">

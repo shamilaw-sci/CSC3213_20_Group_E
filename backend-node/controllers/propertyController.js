@@ -39,13 +39,14 @@ const addProperty = async (req, res, next) => {
       boundary,
     } = req.body;
 
-    const files = req.files;
-
-    if (req.user.role !== "SELLER") {
+    // Check if the user is a SELLER or AGENT
+    if (req.user.role !== "SELLER" && req.user.role !== "AGENT") {
       return res
         .status(403)
-        .json({ message: "Only sellers can add properties." });
+        .json({ error: "Access denied. Only Sellers and Agents can add properties." });
     }
+
+    const files = req.files;
 
     let imageUrls = [];
 
@@ -145,7 +146,7 @@ const getProperties = async (req, res, next) => {
 
     const { data, error, count } = await supabase
       .from("properties")
-      .select("*", { count: "exact" })
+      .select("*, users(name, role)", { count: "exact" })
       .eq("status", "approved")
       .order("created_at", { ascending: false })
       .range(from, to);
@@ -171,10 +172,10 @@ const getProperties = async (req, res, next) => {
  */
 const getMyProperties = async (req, res, next) => {
   try {
-    if (req.user.role !== "SELLER") {
+    if (req.user.role !== "SELLER" && req.user.role !== "AGENT") {
       return res
         .status(403)
-        .json({ message: "Only sellers can view submitted properties." });
+        .json({ message: "Only sellers and agents can view submitted properties." });
     }
 
     const page = parseInt(req.query.page) || 1;
@@ -184,7 +185,7 @@ const getMyProperties = async (req, res, next) => {
 
     const { data, error, count } = await supabase
       .from("properties")
-      .select("*", { count: "exact" })
+      .select("*, users(name, role)", { count: "exact" })
       .eq("seller_id", req.user.id)
       .order("created_at", { ascending: false })
       .range(from, to);
@@ -210,10 +211,10 @@ const getMyProperties = async (req, res, next) => {
  */
 const updateMyProperty = async (req, res, next) => {
   try {
-    if (req.user.role !== "SELLER") {
+    if (req.user.role !== "SELLER" && req.user.role !== "AGENT") {
       return res
         .status(403)
-        .json({ message: "Only sellers can update submitted properties." });
+        .json({ message: "Only sellers and agents can update submitted properties." });
     }
 
     const { data: existingProperty, error: fetchError } = await supabase
@@ -253,6 +254,7 @@ const updateMyProperty = async (req, res, next) => {
       description,
       price,
       price_period: pricePeriod || null,
+      address: address || null,
       district,
       city,
       contact_number: contactNumber || null,
@@ -309,7 +311,7 @@ const getPropertyById = async (req, res, next) => {
 
     const { data, error } = await supabase
       .from("properties")
-      .select("*")
+      .select("*, users(name, role)")
       .eq("id", id)
       .single();
 

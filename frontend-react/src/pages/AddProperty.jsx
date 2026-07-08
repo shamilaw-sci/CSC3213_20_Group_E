@@ -120,9 +120,9 @@ const AddProperty = () => {
     );
   };
 
-  // Route protection: Only 'SELLER' roles can access this page
+  // Route protection: Only 'SELLER' and 'AGENT' roles can access this page
   useEffect(() => {
-    if (!user || user.role !== "SELLER") {
+    if (!user || (user.role !== "SELLER" && user.role !== "AGENT")) {
       navigate("/");
     }
   }, [user, navigate]);
@@ -188,12 +188,13 @@ const AddProperty = () => {
     setFormData({
       ...formData,
       type,
+      listingType: type === "Rent House" || type === "Rent Villa" ? "Rent" : "Sale",
       bedrooms: type === "Land" ? "" : formData.bedrooms,
       bathrooms: type === "Land" ? "" : formData.bathrooms,
-      houseSize: type === "Rent House" ? formData.houseSize : "",
+      houseSize: type === "Rent House" || type === "Rent Villa" ? formData.houseSize : "",
       landSize:
-        type === "Rent House" || type === "Rent Wela" ? "" : formData.landSize,
-      pricePeriod: type === "Rent House" || type === "Rent Wela" ? "Month" : "",
+        type === "Rent House" || type === "Rent Villa" ? "" : formData.landSize,
+      pricePeriod: type === "Rent House" || type === "Rent Villa" ? "Month" : "",
     });
   };
 
@@ -496,13 +497,13 @@ const AddProperty = () => {
               <label className="block text-gray-900 text-lg font-bold mb-4">
                 Property Type
               </label>
-              <div className="proparty_type">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div
                   onClick={() => handleTypeChange("House")}
-                  className={`type ${
+                  className={`flex flex-col items-center justify-center p-6 border-2 rounded-2xl cursor-pointer transition-all duration-200 ${
                     formData.type === "House"
-                      ? "border-blue-600 bg-blue-50 text-blue-700 shadow-sm"
-                      : "border-gray-200 hover:border-blue-300 text-gray-600 hover:bg-gray-50"
+                      ? "border-blue-600 bg-blue-50 text-blue-700 shadow-md transform scale-[1.02]"
+                      : "border-gray-200 hover:border-blue-300 text-gray-500 hover:bg-gray-50"
                   }`}
                 >
                   <svg
@@ -523,10 +524,10 @@ const AddProperty = () => {
                 </div>
                 <div
                   onClick={() => handleTypeChange("Land")}
-                  className={`type ${
+                  className={`flex flex-col items-center justify-center p-6 border-2 rounded-2xl cursor-pointer transition-all duration-200 ${
                     formData.type === "Land"
-                      ? "border-green-600 bg-green-50 text-green-700 shadow-sm"
-                      : "border-gray-200 hover:border-green-300 text-gray-600 hover:bg-gray-50"
+                      ? "border-green-600 bg-green-50 text-green-700 shadow-md transform scale-[1.02]"
+                      : "border-gray-200 hover:border-green-300 text-gray-500 hover:bg-gray-50"
                   }`}
                 >
                   <svg
@@ -548,10 +549,10 @@ const AddProperty = () => {
                 {/*  rent house*/}
                 <div
                   onClick={() => handleTypeChange("Rent House")}
-                  className={`type ${
+                  className={`flex flex-col items-center justify-center p-6 border-2 rounded-2xl cursor-pointer transition-all duration-200 ${
                     formData.type === "Rent House"
-                      ? "border-purple-600 bg-purple-50 text-purple-700 shadow-sm"
-                      : "border-gray-200 hover:border-purple-300 text-gray-600 hover:bg-gray-50"
+                      ? "border-purple-600 bg-purple-50 text-purple-700 shadow-md transform scale-[1.02]"
+                      : "border-gray-200 hover:border-purple-300 text-gray-500 hover:bg-gray-50"
                   }`}
                 >
                   <svg
@@ -571,13 +572,13 @@ const AddProperty = () => {
                   <span className="font-bold text-lg">Rent House</span>
                 </div>
 
-                {/*rent wela */}
+                {/*rent villa */}
                 <div
-                  onClick={() => handleTypeChange("Rent Wela")}
-                  className={`type ${
-                    formData.type === "Rent Wela"
-                      ? "border-orange-600 bg-orange-50 text-orange-700 shadow-sm"
-                      : "border-gray-200 hover:border-orange-300 text-gray-600 hover:bg-gray-50"
+                  onClick={() => handleTypeChange("Rent Villa")}
+                  className={`flex flex-col items-center justify-center p-6 border-2 rounded-2xl cursor-pointer transition-all duration-200 ${
+                    formData.type === "Rent Villa"
+                      ? "border-orange-600 bg-orange-50 text-orange-700 shadow-md transform scale-[1.02]"
+                      : "border-gray-200 hover:border-orange-300 text-gray-500 hover:bg-gray-50"
                   }`}
                 >
                   <svg
@@ -595,7 +596,7 @@ const AddProperty = () => {
                     />
                   </svg>
 
-                  <span className="font-bold text-lg">Rent Wela</span>
+                  <span className="font-bold text-lg">Rent Villa</span>
                 </div>
               </div>
             </div>
@@ -711,6 +712,20 @@ const AddProperty = () => {
                   placeholder="e.g. Kadawatha"
                   required
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-gray-700 text-sm font-medium mb-2">
+                  Full Address
+                </label>
+                <input
+                  type="text"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  placeholder="e.g. 123, Main Road, Kadawatha"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
                 />
               </div>
 
