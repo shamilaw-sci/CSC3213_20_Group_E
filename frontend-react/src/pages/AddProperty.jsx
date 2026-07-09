@@ -491,7 +491,7 @@ const AddProperty = () => {
               <label className="block text-gray-900 text-lg font-bold mb-4">
                 Property Type
               </label>
-              <div className="proparty_type">
+              <div className="button-group">
                 <div
                   onClick={() => handleTypeChange("House")}
                   className={`type ${
