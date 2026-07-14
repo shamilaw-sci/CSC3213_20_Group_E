@@ -139,7 +139,7 @@ const Home = () => {
 
             {/* --- Premium Features Section --- */}
             {!searchTerm && (
-                <div className="bg-gray-50 py-20 relative z-20 mt-[-40px]">
+                <div className="bg-gradient-to-b from-gray-50 to-white py-20 relative z-20 mt-[-40px]">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                         <m.h2 
                             initial={{ opacity: 0, y: 20 }}
@@ -162,8 +162,8 @@ const Home = () => {
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
                                     transition={{ duration: 0.6, delay: idx * 0.2 }}
-                                    whileHover={{ y: -8 }}
-                                    className="bg-white rounded-3xl shadow-sm hover:shadow-xl border border-gray-100 p-10 flex flex-col items-center transition-all duration-300 group cursor-pointer"
+                                    whileHover={{ y: -12, scale: 1.02 }}
+                                    className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.12)] border border-white/50 p-10 flex flex-col items-center transition-all duration-300 group cursor-pointer"
                                     onClick={() => navigate(feature.link)}
                                 >
                                     <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mb-6 group-hover:bg-blue-600 transition-colors duration-300">

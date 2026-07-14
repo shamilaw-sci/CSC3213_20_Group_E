@@ -66,7 +66,15 @@ const Login = () => {
             });
 
             login(response.data.user);
-            navigate('/');
+            
+            // Role-based redirect
+            if (response.data.user.role === 'SELLER') {
+                navigate('/seller-dashboard');
+            } else if (response.data.user.role === 'AGENT' || response.data.user.role === 'PENDING_AGENT') {
+                navigate('/agent-dashboard');
+            } else {
+                navigate('/');
+            }
 
         } catch (err) {
             setError(err.response?.data?.message || "Incorrect password. Please try again.");
@@ -105,7 +113,15 @@ const Login = () => {
         else if (provider === 'Apple') user = await signInWithApple();
 
         login(user);
-        navigate('/');
+        
+        // Role-based redirect
+        if (user.role === 'SELLER') {
+            navigate('/seller-dashboard');
+        } else if (user.role === 'AGENT' || user.role === 'PENDING_AGENT') {
+            navigate('/agent-dashboard');
+        } else {
+            navigate('/');
+        }
     } catch (err) {
         setError(err.response?.data?.message || err.message || `${provider} login failed. Please try again.`);
     } finally {

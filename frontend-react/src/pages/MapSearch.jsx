@@ -37,20 +37,21 @@ const formatPrice = (price) => {
     return price.toString();
 };
 
-const getMarkerColor = (type) => {
-    if (type === 'Rent') return 'bg-purple-600';
-    if (type === 'Sold') return 'bg-yellow-500';
-    return 'bg-red-600'; // Sale
+const getMarkerColor = (listingType, propType) => {
+    if (listingType?.toLowerCase() === 'rent' || propType?.includes('Rent')) return '!bg-purple-600';
+    if (listingType?.toLowerCase() === 'sold') return '!bg-yellow-500';
+    return '!bg-red-600'; // Sale
 };
 
 /**
  * Generates a dynamic custom interactive map marker icon
  */
-const createCustomIcon = (price, isActive, listingType) => {
-    const priceText = formatPrice(price) + (listingType === 'Rent' ? '/mo' : '');
+const createCustomIcon = (price, isActive, listingType, propType) => {
+    const isRent = listingType?.toLowerCase() === 'rent' || propType?.includes('Rent');
+    const priceText = formatPrice(price) + (isRent ? '/mo' : '');
     return L.divIcon({
         className: `custom-leaflet-marker ${isActive ? 'active-marker' : ''}`,
-        html: `<div class="map-marker-container ${getMarkerColor(listingType)} ${isActive ? 'active' : ''}">
+        html: `<div class="map-marker-container ${getMarkerColor(listingType, propType)} ${isActive ? 'active' : ''}">
                  <span class="map-marker-price">${priceText}</span>
                </div>`,
         iconSize: [0, 0],
@@ -228,7 +229,7 @@ const MarkerPopup = ({ prop, imageUrl, onNavigate }) => (
             <div className="w-full h-32 bg-gray-100 flex items-center justify-center text-gray-400 rounded-md mb-2 border">No Image</div>
         )}
         <h3 className="font-extrabold text-xl text-blue-600 leading-tight">
-            {prop.price ? `Rs. ${prop.price.toLocaleString()}${prop.listing_type === 'Rent' ? '/mo' : ''}` : 'Price N/A'}
+            {prop.price ? `Rs. ${prop.price.toLocaleString()}${prop.listing_type === 'Rent' || prop.type === 'Rent House' || prop.type === 'Rent Villa' ? '/mo' : ''}` : 'Price N/A'}
         </h3>
         <p className="text-sm font-bold text-gray-800 mt-1 truncate">{prop.title}</p>
         <button aria-label="Accessible interactive control" type="button" 
@@ -272,11 +273,16 @@ const PropertyCard = React.memo(({ prop, isActive, onMouseEnter, onMouseLeave, o
                     <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No Image</div>
                 )}
                 <div className="absolute top-1 left-1 bg-white text-gray-800 text-[10px] font-extrabold px-1.5 py-0.5 rounded shadow-sm uppercase flex gap-1">
-                    <span className={prop.listing_type === 'Rent' ? 'text-purple-600' : prop.listing_type === 'Sold' ? 'text-yellow-600' : 'text-red-600'}>
-                        {prop.listing_type || 'Sale'}
+                    <span className={prop.listing_type === 'Rent' || prop.type === 'Rent House' || prop.type === 'Rent Villa' ? 'text-purple-600' : prop.listing_type === 'Sold' ? 'text-yellow-600' : 'text-red-600'}>
+                        {(prop.listing_type === 'Rent' || prop.type === 'Rent House' || prop.type === 'Rent Villa') ? 'Rent' : (prop.listing_type || 'Sale')}
                     </span>
                     <span>• {prop.type === 'Land' ? 'Land' : 'House'}</span>
                 </div>
+                {prop.seller_role === 'AGENT' && prop.seller_name && (
+                    <div className="absolute bottom-1 right-1 bg-gray-900/80 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center shadow-sm">
+                        <span className="text-yellow-400 mr-1">★</span> By {prop.seller_name}
+                    </div>
+                )}
                 <button aria-label="Accessible interactive control" type="button" 
                     onClick={handleFavoriteClick}
                     className="absolute top-1 right-1 p-1.5 bg-white/80 hover:bg-white rounded-full shadow-sm transition"
@@ -286,7 +292,7 @@ const PropertyCard = React.memo(({ prop, isActive, onMouseEnter, onMouseLeave, o
                 {isActive && <div className="absolute inset-0 bg-blue-500/10"></div>}
             </div>
             <div className="p-2">
-                <h4 className="font-extrabold text-lg text-gray-900">Rs. {prop.price?.toLocaleString()}{prop.listing_type === 'Rent' ? '/mo' : ''}</h4>
+                <h4 className="font-extrabold text-lg text-gray-900">Rs. {prop.price?.toLocaleString()}{prop.listing_type === 'Rent' || prop.type === 'Rent House' || prop.type === 'Rent Villa' ? '/mo' : ''}</h4>
                 <div className="flex items-center text-gray-700 text-[11px] mt-0.5 mb-1 truncate">
                     {prop.bedrooms && <span className="font-bold">{prop.bedrooms} <span className="font-normal text-gray-500">bds</span> <span className="text-gray-300 mx-1">|</span></span>}
                     {prop.bathrooms && <span className="font-bold">{prop.bathrooms} <span className="font-normal text-gray-500">ba</span> <span className="text-gray-300 mx-1">|</span></span>}
@@ -342,6 +348,8 @@ const MapSearch = () => {
                 if (bedsFilter) payload.beds = parseInt(bedsFilter);
                 if (bathsFilter) payload.baths = parseInt(bathsFilter);
                 if (typeFilter) payload.type = typeFilter;
+                
+                // If filtering by Rent, send Rent as the listing_type to backend.
                 if (listingTypeFilter) payload.listing_type = listingTypeFilter;
 
                 const res = await fetch(apiUrl, {
@@ -574,7 +582,7 @@ const MapSearch = () => {
                                     <Marker 
                                         key={prop.id} 
                                         position={[prop.latitude, prop.longitude]} 
-                                        icon={createCustomIcon(prop.price, isActive, prop.listing_type)}
+                                        icon={createCustomIcon(prop.price, isActive, prop.listing_type, prop.type)}
                                         eventHandlers={{
                                             click: (e) => {
                                                 L.DomEvent.stopPropagation(e);

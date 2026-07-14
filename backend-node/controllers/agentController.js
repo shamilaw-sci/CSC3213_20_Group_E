@@ -53,12 +53,12 @@ const getAgentProfile = async (req, res) => {
             .from('users')
             .select(`
                 id, name, email, avatar_url, phone, role,
-                agent_profiles (agency_name, license_number, bio, languages, youtube_video_url, total_sales, total_rentals, service_areas, specialization)
+                agent_profiles (agency_name, license_number, bio, languages, youtube_video_url, total_sales, total_rentals, service_areas, specialization, rejection_reason)
             `)
             .eq('id', id)
             .single();
 
-        if (agentError || !agent || !['AGENT', 'SELLER'].includes(agent.role)) {
+        if (agentError || !agent || !['AGENT', 'SELLER', 'PENDING_AGENT', 'REJECTED_AGENT'].includes(agent.role)) {
             return res.status(404).json({ message: "Agent not found" });
         }
 
@@ -72,9 +72,9 @@ const getAgentProfile = async (req, res) => {
         // 2. Get agent's active listings
         const { data: listings } = await supabase
             .from('properties')
-            .select('*')
-            .eq('user_id', id)
-            .eq('status', 'active');
+            .select('*, users(name, role)')
+            .eq('seller_id', id)
+            .eq('status', 'approved');
 
         // 3. Get reviews
         const { data: reviews } = await supabase
@@ -192,7 +192,7 @@ const updateAgentProfile = async (req, res) => {
         const agentId = req.user.id; // From protect middleware
 
         // Validate user is allowed to have an agent profile
-        if (!['AGENT', 'SELLER'].includes(req.user.role)) {
+        if (!['AGENT', 'SELLER', 'PENDING_AGENT', 'REJECTED_AGENT'].includes(req.user.role)) {
             return res.status(403).json({ message: "Not authorized to update agent profile" });
         }
 
@@ -223,4 +223,44 @@ const updateAgentProfile = async (req, res) => {
     }
 };
 
-module.exports = { getAgents, getAgentProfile, postReview, getAgentLeads, updateLeadMetadata, updateAgentProfile };
+// Resubmit application after rejection
+const resubmitApplication = async (req, res) => {
+    try {
+        const agentId = req.user.id;
+        
+        // Ensure they are currently a REJECTED_AGENT
+        if (req.user.role !== 'REJECTED_AGENT') {
+            return res.status(403).json({ message: "Only rejected agents can resubmit applications" });
+        }
+
+        const { agency_name, license_number, bio } = req.body;
+
+        // 1. Update the profile and clear the rejection reason
+        const { error: profileError } = await supabase
+            .from('agent_profiles')
+            .update({ 
+                agency_name, 
+                license_number, 
+                bio,
+                rejection_reason: null, // Clear reason
+                updated_at: new Date().toISOString()
+            })
+            .eq('agent_id', agentId);
+
+        if (profileError) throw profileError;
+
+        // 2. Change role back to PENDING_AGENT
+        const { error: userError } = await supabase
+            .from('users')
+            .update({ role: 'PENDING_AGENT' })
+            .eq('id', agentId);
+
+        if (userError) throw userError;
+
+        res.status(200).json({ message: "Application resubmitted successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "Failed to resubmit application", error: error.message });
+    }
+};
+
+module.exports = { getAgents, getAgentProfile, postReview, getAgentLeads, updateLeadMetadata, updateAgentProfile, resubmitApplication };

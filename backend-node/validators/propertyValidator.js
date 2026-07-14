@@ -6,10 +6,10 @@ const addPropertySchema = z.object({
         title: z.string().min(3, "Title must be at least 3 characters long"),
         description: z.string().min(10, "Description must be at least 10 characters long"),
         price: z.coerce.number().positive("Price must be a positive number"),
-        address: z.string().min(5, "Address is required"),
+        address: z.string().min(5, "Address is required").optional().or(z.literal('')),
         bedrooms: z.coerce.number().int().nonnegative("Bedrooms must be zero or a positive integer").optional().nullable(),
         bathrooms: z.coerce.number().int().nonnegative("Bathrooms must be zero or a positive integer").optional().nullable(),
-        landSize: z.coerce.number().positive("Land size must be a positive number").optional().nullable(),
+        landSize: z.coerce.number().nonnegative("Land size must be a positive number or zero").optional().nullable(),
         latitude: z.coerce.number().min(-90).max(90),
         longitude: z.coerce.number().min(-180).max(180),
         boundary: z.string().optional().nullable(), // WKT Polygon string
@@ -22,10 +22,10 @@ const updatePropertySchema = z.object({
         title: z.string().min(3).optional(),
         description: z.string().min(10).optional(),
         price: z.coerce.number().positive().optional(),
-        address: z.string().min(5).optional(),
+        address: z.string().min(5).optional().or(z.literal('')),
         bedrooms: z.coerce.number().int().nonnegative().optional().nullable(),
         bathrooms: z.coerce.number().int().nonnegative().optional().nullable(),
-        landSize: z.coerce.number().positive().optional().nullable(),
+        landSize: z.coerce.number().nonnegative().optional().nullable(),
     }),
 });
 
