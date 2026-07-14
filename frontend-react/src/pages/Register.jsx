@@ -45,7 +45,15 @@ const Register = () => {
 
             // Persist authentication token and user data to local storage on successful registration
             login(response.data.user);
-            navigate('/');
+            
+            // Role-based redirect
+            if (response.data.user.role === 'SELLER') {
+                navigate('/seller-dashboard');
+            } else if (response.data.user.role === 'AGENT' || response.data.user.role === 'PENDING_AGENT') {
+                navigate('/agent-dashboard');
+            } else {
+                navigate('/');
+            }
             
         } catch (err) {
             setError(err.response?.data?.message || "Registration failed. Please try again.");

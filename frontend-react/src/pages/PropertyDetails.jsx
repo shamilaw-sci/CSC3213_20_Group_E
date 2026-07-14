@@ -224,10 +224,15 @@ const PropertyDetails = () => {
                     {/* Main Details */}
                     <div className="col-span-1 lg:col-span-2 space-y-10">
                         <div>
-                            <div className="flex items-center gap-3 mb-4">
-                                <span className="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                                    {property.type === 'Land' ? 'Land' : property.type} {property.listing_type ? (property.listing_type === 'Sale' ? 'for Sale' : property.listing_type === 'Rent' ? 'for Rent' : 'Sold') : 'for Sale'}
+                            <div className="flex flex-wrap items-center gap-3 mb-4">
+                                <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider ${property.listing_type?.toLowerCase() === 'rent' || property.type?.includes('Rent') ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
+                                    {property.type === 'Land' ? 'Land' : property.type?.includes('Rent') ? 'House' : property.type} for {property.listing_type?.toLowerCase() === 'rent' || property.type?.includes('Rent') ? 'Rent' : 'Sale'}
                                 </span>
+                                {property.users?.role === 'AGENT' && property.users?.name && (
+                                    <span className="bg-yellow-100 text-yellow-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider flex items-center">
+                                        <span className="mr-1">★</span> By {property.users.name}
+                                    </span>
+                                )}
                                 {property.status === 'approved' && (
                                     <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                                         Verified Listing
@@ -304,7 +309,7 @@ const PropertyDetails = () => {
                         </div>
 
                         {/* Mortgage Calculator Component */}
-                        {property.price && (
+                        {property.price && property.listing_type?.toLowerCase() !== 'rent' && !property.type?.includes('Rent') && (
                             <MortgageCalculator propertyPrice={property.price} />
                         )}
                     </div>
@@ -316,6 +321,7 @@ const PropertyDetails = () => {
                                 <span className="text-gray-500 font-bold uppercase tracking-wider text-sm">Asking Price</span>
                                 <h2 className="text-4xl font-black text-gray-900 mt-1 tracking-tight">
                                     Rs. {property.price?.toLocaleString()}
+                                    {(property.listing_type?.toLowerCase() === 'rent' || property.type?.includes('Rent')) && <span className="text-xl text-gray-500 font-medium">/mo</span>}
                                 </h2>
                             </div>
                             

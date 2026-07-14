@@ -432,9 +432,9 @@ const unbanUser = async (req, res) => {
 // Update user role
 const updateUserRole = async (req, res) => {
     try {
-        const { role } = req.body;
+        const { role, reason } = req.body;
         // Strict role checking
-        if (!['BUYER', 'SELLER', 'ADMIN', 'BANNED', 'AGENT', 'PENDING_AGENT'].includes(role)) {
+        if (!['BUYER', 'SELLER', 'ADMIN', 'BANNED', 'AGENT', 'PENDING_AGENT', 'REJECTED_AGENT'].includes(role)) {
             return res.status(400).json({ message: "Invalid role specified" });
         }
 
@@ -444,9 +444,19 @@ const updateUserRole = async (req, res) => {
             .eq('id', req.params.id);
 
         if (error) throw error;
+        
+        // Update agent_profiles rejection reason if applicable
+        if (role === 'REJECTED_AGENT' && reason) {
+            await supabase.from('agent_profiles').update({ rejection_reason: reason }).eq('agent_id', req.params.id);
+        } else if (role === 'AGENT') {
+            // Clear reason upon approval
+            await supabase.from('agent_profiles').update({ rejection_reason: null }).eq('agent_id', req.params.id);
+        }
+
         res.status(200).json({ message: `User role updated to ${role}` });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error("updateUserRole error:", error);
+        res.status(500).json({ message: error.message });
     }
 };
 

@@ -27,6 +27,7 @@ const ProfileSettings = lazy(() => import('./pages/ProfileSettings'));
 const AgentSearch = lazy(() => import('./pages/AgentSearch'));
 const AgentProfile = lazy(() => import('./pages/AgentProfile'));
 const AgentDashboard = lazy(() => import('./pages/agent/Dashboard'));
+const SellerDashboard = lazy(() => import('./pages/SellerDashboard'));
 const MyFavorites = lazy(() => import('./pages/MyFavorites'));
 const PropertyDetails = lazy(() => import('./pages/PropertyDetails'));
 
@@ -65,8 +66,13 @@ function App() {
             <Route path="/property/:id" element={<PropertyDetails />} />
             <Route path="/agent/:id" element={<AgentProfile />} />
             <Route path="/agent-dashboard" element={
-              <ProtectedRoute allowedRoles={['AGENT', 'PENDING_AGENT']}>
+              <ProtectedRoute allowedRoles={['AGENT', 'PENDING_AGENT', 'REJECTED_AGENT']}>
                 <AgentDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/seller-dashboard" element={
+              <ProtectedRoute allowedRoles={['SELLER']}>
+                <SellerDashboard />
               </ProtectedRoute>
             } />
             <Route path="/login" element={<Login />} />

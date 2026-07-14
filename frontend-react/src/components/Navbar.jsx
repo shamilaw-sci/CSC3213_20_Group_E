@@ -43,7 +43,7 @@ const Navbar = () => {
   }, [user]);
 
   return (
-    <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <nav className="bg-white/80 backdrop-blur-xl border-b border-gray-100/50 shadow-sm sticky top-0 z-50 transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="flex justify-between h-20 items-center">
           <div className="hidden md:flex items-center space-x-6 h-full">
@@ -237,6 +237,14 @@ const Navbar = () => {
                   >
                     Profile & Settings
                   </button>
+                  {(user.role === "SELLER" || user.role === "AGENT" || user.role === "PENDING_AGENT" || user.role === "REJECTED_AGENT") && (
+                    <button
+                      onClick={() => navigate(user.role === "SELLER" ? "/seller-dashboard" : "/agent-dashboard")}
+                      className="block w-full text-left px-4 py-2 text-sm text-blue-700 font-bold hover:bg-blue-50"
+                    >
+                      Dashboard
+                    </button>
+                  )}
                   <button
                     onClick={() => navigate("/favorites")}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600"
