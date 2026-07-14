@@ -4,7 +4,7 @@ import {
     Inbox, Home, Users, CheckSquare, MoreHorizontal, CheckCircle, 
     Archive, MessageSquare, Home as HomeIcon, User as UserIcon, 
     Phone, Mail, LayoutDashboard, Key, Building, BarChart3, 
-    MapPin, PlusCircle, Settings, LogOut, Menu, X
+    MapPin, PlusCircle, Settings, LogOut, Menu, X, AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../../context/UserAuthContext';
 import api from '../../context/api';
@@ -138,9 +138,9 @@ const AgentDashboard = () => {
         }
     };
 
-    // Redirect if not an agent
+    // Redirect if not an agent or pending/rejected
     useEffect(() => {
-        if (user && user.role !== 'AGENT' && user.role !== 'PENDING_AGENT') {
+        if (user && !['AGENT', 'PENDING_AGENT', 'REJECTED_AGENT'].includes(user.role)) {
             navigate('/');
         }
     }, [user, navigate]);
@@ -159,12 +159,16 @@ const AgentDashboard = () => {
                         Thank you for registering as an Agent! Your profile is currently being reviewed by our administrators. 
                         You will gain access to the dashboard once approved.
                     </p>
-                    <button onClick={() => navigate('/')} className="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 w-full">
+                    <button onClick={() => navigate('/')} className="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 w-full transition">
                         Return to Homepage
                     </button>
                 </div>
             </div>
         );
+    }
+
+    if (user.role === 'REJECTED_AGENT') {
+        return <RejectedAgentView user={user} navigate={navigate} />;
     }
 
     const navItems = [
@@ -498,3 +502,94 @@ const AgentDashboard = () => {
 };
 
 export default AgentDashboard;
+
+const RejectedAgentView = ({ user, navigate }) => {
+    const [profile, setProfile] = useState({ agency_name: '', license_number: '', bio: '', rejection_reason: '' });
+    const [loading, setLoading] = useState(true);
+    const [submitting, setSubmitting] = useState(false);
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const response = await api.get(`/agents/${user.id}`);
+                const rawData = response.data.agent?.agent_profiles || [];
+                const data = Array.isArray(rawData) ? rawData[0] || {} : rawData;
+                setProfile({
+                    agency_name: data.agency_name || '',
+                    license_number: data.license_number || '',
+                    bio: data.bio || '',
+                    rejection_reason: data.rejection_reason || 'Please update your details.'
+                });
+            } catch (err) {
+                console.error("Failed to fetch profile", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchProfile();
+    }, [user.id]);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setSubmitting(true);
+        try {
+            await api.post('/agents/resubmit', {
+                agency_name: profile.agency_name,
+                license_number: profile.license_number,
+                bio: profile.bio
+            });
+            alert('Application resubmitted successfully! Please log in again to see changes or wait for approval.');
+            // Usually we'd want to refresh the user context here, but reloading the page is a quick way to force a re-check if they log in again.
+            window.location.reload();
+        } catch (err) {
+            console.error("Resubmit failed", err);
+            alert("Failed to resubmit application.");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    if (loading) return <div className="min-h-screen flex justify-center items-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>;
+
+    return (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+            <div className="bg-white p-8 rounded-2xl shadow-xl max-w-xl w-full border border-gray-100">
+                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+                    <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center">
+                        <AlertCircle className="w-6 h-6" />
+                    </div>
+                    <div>
+                        <h2 className="text-xl font-bold text-gray-900">Application Needs Attention</h2>
+                        <p className="text-gray-500 text-sm">Your agent application was reviewed and requires updates.</p>
+                    </div>
+                </div>
+
+                <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-lg mb-6 text-sm">
+                    <strong>Admin Feedback:</strong> {profile.rejection_reason}
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Agency Name</label>
+                        <input type="text" required value={profile.agency_name} onChange={(e) => setProfile({...profile, agency_name: e.target.value})} className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">License Number</label>
+                        <input type="text" value={profile.license_number} onChange={(e) => setProfile({...profile, license_number: e.target.value})} className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Professional Bio</label>
+                        <textarea required value={profile.bio} onChange={(e) => setProfile({...profile, bio: e.target.value})} className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none min-h-[100px]"></textarea>
+                    </div>
+
+                    <div className="flex gap-3 pt-4">
+                        <button type="button" onClick={() => navigate('/')} className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition">Cancel</button>
+                        <button type="submit" disabled={submitting} className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50">
+                            {submitting ? 'Submitting...' : 'Resubmit Application'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};

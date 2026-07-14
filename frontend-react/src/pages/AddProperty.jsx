@@ -341,9 +341,9 @@ const AddProperty = () => {
       window.payhere.onCompleted = function onCompleted(orderId) {
         setMessage({
           type: "success",
-          text: `Payment successful for Property: ${orderId}. Sent for admin review.`,
+          text: `Payment successful for Property: ${orderId}. Property is sent to admin approval. Please stay alert, it will be listed soon.`,
         });
-        setTimeout(() => navigate("/my-properties"), 2000);
+        setTimeout(() => navigate(user.role === 'SELLER' ? "/seller-dashboard" : "/agent-dashboard"), 3000);
       };
 
       window.payhere.onDismissed = function onDismissed() {
@@ -351,12 +351,12 @@ const AddProperty = () => {
           type: "error",
           text: "Payment cancelled. You can pay later from your dashboard.",
         });
-        setTimeout(() => navigate("/my-properties"), 2000);
+        setTimeout(() => navigate(user.role === 'SELLER' ? "/seller-dashboard" : "/agent-dashboard"), 3000);
       };
 
       window.payhere.onError = function onError(error) {
         setMessage({ type: "error", text: `Payment Error: ${error}` });
-        setTimeout(() => navigate("/my-properties"), 2000);
+        setTimeout(() => navigate(user.role === 'SELLER' ? "/seller-dashboard" : "/agent-dashboard"), 3000);
       };
 
       // Start Payment
@@ -367,7 +367,7 @@ const AddProperty = () => {
         type: "error",
         text: "Property saved, but failed to start payment. Please try paying from the dashboard.",
       });
-      setTimeout(() => navigate("/my-properties"), 2000);
+      setTimeout(() => navigate(user.role === 'SELLER' ? "/seller-dashboard" : "/agent-dashboard"), 3000);
     }
   };
 

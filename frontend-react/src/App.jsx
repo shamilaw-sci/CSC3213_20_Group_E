@@ -66,7 +66,7 @@ function App() {
             <Route path="/property/:id" element={<PropertyDetails />} />
             <Route path="/agent/:id" element={<AgentProfile />} />
             <Route path="/agent-dashboard" element={
-              <ProtectedRoute allowedRoles={['AGENT', 'PENDING_AGENT']}>
+              <ProtectedRoute allowedRoles={['AGENT', 'PENDING_AGENT', 'REJECTED_AGENT']}>
                 <AgentDashboard />
               </ProtectedRoute>
             } />

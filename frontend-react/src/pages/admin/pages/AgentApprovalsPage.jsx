@@ -6,13 +6,17 @@ const AgentApprovalsPage = () => {
   const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Modal state
+  const [rejectingAgentId, setRejectingAgentId] = useState(null);
+  const [rejectReason, setRejectReason] = useState('');
 
   useEffect(() => {
     const fetchPending = async () => {
       try {
         setLoading(true);
-        const data = await adminApi.fetchUsers({ role: 'PENDING_AGENT' });
-        setAgents(data.users || data.agents || []);
+        const data = await adminApi.fetchPendingAgents();
+        setAgents(data.agents || []);
         setError(null);
       } catch (err) {
         console.error('Error fetching pending agents:', err);
@@ -25,14 +29,26 @@ const AgentApprovalsPage = () => {
     fetchPending();
   }, []);
 
-  const handleAction = async (id, newRole) => {
+  const handleAction = async (id, newRole, reason = null) => {
     try {
-      await adminApi.updateUserRole(id, newRole);
+      await adminApi.updateUserRole(id, newRole, reason);
       setAgents((prev) => prev.filter((a) => a.id !== id));
+      if (newRole === 'REJECTED_AGENT') {
+          setRejectingAgentId(null);
+          setRejectReason('');
+      }
     } catch (err) {
       console.error(`Failed to update role to ${newRole}:`, err);
       alert(`Error: ${err.message || 'Update failed'}`);
     }
+  };
+
+  const handleRejectSubmit = () => {
+      if (!rejectReason.trim()) {
+          alert("Please provide a reason for rejection.");
+          return;
+      }
+      handleAction(rejectingAgentId, 'REJECTED_AGENT', rejectReason);
   };
 
   if (loading) return <div className="flex justify-center p-8"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>;
@@ -95,18 +111,49 @@ const AgentApprovalsPage = () => {
                   )}
                 </div>
 
-                <div className="bg-gray-50 p-4 flex gap-3 border-t border-gray-200">
-                  <button type="button" onClick={() => handleAction(agent.id, 'BANNED')} className="flex-1 flex items-center justify-center gap-1 py-2 px-4 border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-lg font-medium transition">
-                    <X className="w-4 h-4" /> Reject
-                  </button>
-                  <button type="button" onClick={() => handleAction(agent.id, 'AGENT')} className="flex-1 flex items-center justify-center gap-1 py-2 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition shadow-sm">
-                    <Check className="w-4 h-4" /> Approve
+                <div className="bg-gray-50 p-4 flex flex-col gap-2 border-t border-gray-200">
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => setRejectingAgentId(agent.id)} className="flex-1 flex items-center justify-center gap-1 py-2 px-3 border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-lg font-medium transition text-sm">
+                      <X className="w-4 h-4" /> Reject
+                    </button>
+                    <button type="button" onClick={() => handleAction(agent.id, 'AGENT')} className="flex-1 flex items-center justify-center gap-1 py-2 px-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition shadow-sm text-sm">
+                      <Check className="w-4 h-4" /> Approve
+                    </button>
+                  </div>
+                  <button type="button" onClick={() => { if(window.confirm('Are you sure you want to permanently ban this agent?')) handleAction(agent.id, 'BANNED') }} className="w-full py-2 px-3 text-red-700 hover:underline text-xs font-medium transition text-center">
+                    Ban Permanently
                   </button>
                 </div>
               </div>
             );
           })}
         </div>
+      )}
+
+      {/* Reject Modal */}
+      {rejectingAgentId && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+              <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Reject Agent Application</h3>
+                  <p className="text-gray-600 mb-4 text-sm">Please provide a reason for rejection. This will be shown to the agent so they can correct their details and resubmit.</p>
+                  
+                  <textarea 
+                      className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 min-h-[100px] mb-4 outline-none"
+                      placeholder="e.g. Please provide a valid real estate license number."
+                      value={rejectReason}
+                      onChange={(e) => setRejectReason(e.target.value)}
+                  ></textarea>
+
+                  <div className="flex gap-3 justify-end">
+                      <button onClick={() => { setRejectingAgentId(null); setRejectReason(''); }} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition">
+                          Cancel
+                      </button>
+                      <button onClick={handleRejectSubmit} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition">
+                          Confirm Rejection
+                      </button>
+                  </div>
+              </div>
+          </div>
       )}
     </div>
   );

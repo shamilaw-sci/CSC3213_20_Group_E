@@ -237,7 +237,7 @@ const Navbar = () => {
                   >
                     Profile & Settings
                   </button>
-                  {(user.role === "SELLER" || user.role === "AGENT" || user.role === "PENDING_AGENT") && (
+                  {(user.role === "SELLER" || user.role === "AGENT" || user.role === "PENDING_AGENT" || user.role === "REJECTED_AGENT") && (
                     <button
                       onClick={() => navigate(user.role === "SELLER" ? "/seller-dashboard" : "/agent-dashboard")}
                       className="block w-full text-left px-4 py-2 text-sm text-blue-700 font-bold hover:bg-blue-50"
