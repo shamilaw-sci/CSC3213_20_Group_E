@@ -115,7 +115,7 @@ const AddProperty = () => {
       () => {
         alert("Unable to retrieve your location.");
         setGpsActive(false);
-      }
+      },
     );
   };
 
@@ -163,7 +163,7 @@ const AddProperty = () => {
       .get(
         `${
           import.meta.env.VITE_API_URL || "http://localhost:5000"
-        }/api/payment/config`
+        }/api/payment/config`,
       )
       .then((res) => {
         if (res.data) {
@@ -223,7 +223,7 @@ const AddProperty = () => {
             file: compressedFile,
             url: URL.createObjectURL(compressedFile),
           };
-        })
+        }),
       );
 
       newCompressedImages.push(...compressedResults.map((res) => res.file));
@@ -304,7 +304,7 @@ const AddProperty = () => {
         {
           order_id: propertyId,
           amount: amount,
-        }
+        },
       );
 
       const hash = response.data.hash;
@@ -456,7 +456,7 @@ const AddProperty = () => {
           headers: {
             "Content-Type": "multipart/form-data",
           },
-        }
+        },
       );
 
       // Assuming your backend returns the created property object containing the 'id'
@@ -613,10 +613,10 @@ const AddProperty = () => {
                     formData.type === "House"
                       ? "e.g. Beautiful 2-Story House in Colombo 07"
                       : formData.type === "Land"
-                      ? "e.g. 15 Perch Prime Land in Malabe"
-                      : formData.type === "Rent House"
-                      ? "e.g. Fully Furnished 3 Bedroom House for Rent in Kandy"
-                      : "Enter Property Title"
+                        ? "e.g. 15 Perch Prime Land in Malabe"
+                        : formData.type === "Rent House"
+                          ? "e.g. Fully Furnished 3 Bedroom House for Rent in Kandy"
+                          : "Enter Property Title"
                   }
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
                 />
@@ -826,19 +826,6 @@ const AddProperty = () => {
               </div>
             )}
 
-            {locationMode === "point" && (
-              <div className="flex gap-4 mb-8 bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <div className="text-sm text-gray-700">
-                  <span className="font-bold">Latitude:</span>{" "}
-                  {formData.latitude.toFixed(6)}
-                </div>
-                <div className="text-sm text-gray-700">
-                  <span className="font-bold">Longitude:</span>{" "}
-                  {formData.longitude.toFixed(6)}
-                </div>
-              </div>
-            )}
-
             <h3 className="text-lg font-bold text-gray-900 mb-4 border-b pb-2">
               Property Features
             </h3>
@@ -1015,7 +1002,7 @@ const AddProperty = () => {
                 {loading
                   ? "Processing..."
                   : `Pay Rs. ${parseFloat(
-                      paymentConfig.listingFee
+                      paymentConfig.listingFee,
                     ).toLocaleString()} & Publish`}
               </button>
             </div>
