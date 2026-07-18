@@ -6,13 +6,14 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { MapContainer, TileLayer, useMap, Marker, Popup, GeoJSON } from 'react-leaflet';
 import L from 'leaflet';
-// axios removed for map microservice calls; use fetch with explicit URL
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Heart, Calculator } from 'lucide-react';
+import { Heart, Calculator, Menu, Search } from 'lucide-react';
 import api from '../context/api';
 import FeasibilityCalculator from './FeasibilityCalculator';
+import AdvancedSearchBar from '../components/AdvancedSearchBar';
 import districtsData from '../assets/sri-lanka-districts.json';
 import MarkerClusterGroup from 'react-leaflet-cluster';
+import MarkerPopup from '../components/MarkerPopup';
 import 'leaflet/dist/leaflet.css';
 
 // Fix for default Leaflet icon missing issues in React
@@ -220,25 +221,6 @@ const getSafeImageUrl = (prop) => {
     return null;
 };
 
-// New Component for the popup
-const MarkerPopup = ({ prop, imageUrl, onNavigate }) => (
-    <div className="w-52 p-1">
-        {imageUrl ? (
-            <img src={imageUrl} alt={prop.title} loading="lazy" className="w-full h-32 object-cover rounded-md mb-2 shadow-sm" />
-        ) : (
-            <div className="w-full h-32 bg-gray-100 flex items-center justify-center text-gray-400 rounded-md mb-2 border">No Image</div>
-        )}
-        <h3 className="font-extrabold text-xl text-blue-600 leading-tight">
-            {prop.price ? `Rs. ${prop.price.toLocaleString()}${prop.listing_type === 'Rent' || prop.type === 'Rent House' || prop.type === 'Rent Villa' ? '/mo' : ''}` : 'Price N/A'}
-        </h3>
-        <p className="text-sm font-bold text-gray-800 mt-1 truncate">{prop.title}</p>
-        <button aria-label="Accessible interactive control" type="button" 
-            onClick={onNavigate}
-            className="mt-3 w-full bg-blue-600 text-white text-xs font-bold py-2 rounded hover:bg-blue-700 transition">
-            View Details
-        </button>
-    </div>
-);
 
 // New Component for the sidebar card
 const PropertyCard = React.memo(({ prop, isActive, onMouseEnter, onMouseLeave, onClick }) => {
@@ -328,10 +310,22 @@ const MapSearch = () => {
     
     // New States for Phase 1 Filters, initialize with savedSearch if provided
     const [currentPolygon, setCurrentPolygon] = useState(savedSearch?.polygon || null);
-    const [bedsFilter, setBedsFilter] = useState(savedSearch?.beds ? String(savedSearch.beds) : '');
-    const [bathsFilter, setBathsFilter] = useState(savedSearch?.baths ? String(savedSearch.baths) : '');
-    const [typeFilter, setTypeFilter] = useState(savedSearch?.property_type || '');
-    const [listingTypeFilter, setListingTypeFilter] = useState(location.pathname === '/rent' ? 'Rent' : 'Sale');
+    
+    const [filters, setFilters] = useState({
+        searchTerm: '',
+        listingType: location.pathname === '/rent' ? 'Rent' : 'Sale',
+        minPrice: '',
+        maxPrice: '',
+        beds: savedSearch?.beds ? String(savedSearch.beds) : 'Any',
+        baths: savedSearch?.baths ? String(savedSearch.baths) : 'Any',
+        exactMatch: false,
+        propTypes: { 
+            House: savedSearch?.property_type === 'House' || !savedSearch?.property_type, 
+            Land: savedSearch?.property_type === 'Land' || !savedSearch?.property_type, 
+            Apartment: savedSearch?.property_type === 'Apartment' || !savedSearch?.property_type, 
+            Villa: savedSearch?.property_type === 'Villa' || !savedSearch?.property_type
+        }
+    });
 
     const drawControlRef = useRef(null);
     const navigate = useNavigate();
@@ -345,12 +339,13 @@ const MapSearch = () => {
                 const apiUrl = import.meta.env.VITE_MAP_API_URL || 'http://localhost:8080/api/map/search';
                 
                 const payload = { polygon: currentPolygon };
-                if (bedsFilter) payload.beds = parseInt(bedsFilter);
-                if (bathsFilter) payload.baths = parseInt(bathsFilter);
-                if (typeFilter) payload.type = typeFilter;
+                if (filters.beds !== 'Any') payload.beds = parseInt(filters.beds.replace('+', ''));
+                if (filters.baths !== 'Any') payload.baths = parseInt(filters.baths.replace('+', ''));
                 
-                // If filtering by Rent, send Rent as the listing_type to backend.
-                if (listingTypeFilter) payload.listing_type = listingTypeFilter;
+                const activeTypes = Object.keys(filters.propTypes).filter(k => filters.propTypes[k]);
+                if (activeTypes.length === 1) payload.type = activeTypes[0];
+                
+                if (filters.listingType) payload.listing_type = filters.listingType;
 
                 const res = await fetch(apiUrl, {
                     method: 'POST',
@@ -372,7 +367,7 @@ const MapSearch = () => {
             fetchProps();
         }, 300);
         return () => clearTimeout(timeoutId);
-    }, [currentPolygon, bedsFilter, bathsFilter, typeFilter, listingTypeFilter]);
+    }, [currentPolygon, filters]);
 
     const handleBoundsChange = useCallback((bounds) => {
         const boundsWKT = getWKTFromBounds(bounds);
@@ -396,61 +391,71 @@ const MapSearch = () => {
         }
     }, []);
 
+    const handleSearch = (newFilters) => {
+        setFilters(newFilters);
+    };
+
+    // Strict local filtering to ensure results perfectly match UI filters
+    const filteredProperties = properties.filter(prop => {
+        // Search Term (matches title or address)
+        const matchesSearch = !filters.searchTerm || 
+            (prop.title?.toLowerCase().includes(filters.searchTerm.toLowerCase()) || 
+             prop.address?.toLowerCase().includes(filters.searchTerm.toLowerCase()));
+        
+        // Price Range
+        const propPrice = prop.price || 0;
+        const matchesMinPrice = !filters.minPrice || propPrice >= parseInt(filters.minPrice);
+        const matchesMaxPrice = !filters.maxPrice || propPrice <= parseInt(filters.maxPrice);
+        const matchesFeasibilityPrice = maxPriceFilter === null || propPrice <= maxPriceFilter;
+
+        // Property Type Checkboxes
+        const activeTypes = Object.keys(filters.propTypes).filter(k => filters.propTypes[k]);
+        const matchesType = activeTypes.length === 0 || activeTypes.some(t => (prop.type || 'House').includes(t));
+
+        // Listing Type Check (Rent, Sale, Sold)
+        const isPropRent = prop.listing_type === 'Rent' || prop.type === 'Rent House' || prop.type === 'Rent Villa';
+        let matchesListingType = true;
+        if (filters.listingType === 'Rent') matchesListingType = isPropRent;
+        else if (filters.listingType === 'Sale') matchesListingType = !isPropRent && prop.listing_type !== 'Sold';
+        else if (filters.listingType === 'Sold') matchesListingType = prop.listing_type === 'Sold';
+
+        // Beds
+        let matchesBeds = true;
+        if (filters.beds !== 'Any') {
+            const targetBeds = parseInt(filters.beds.replace('+', ''));
+            const propBeds = prop.bedrooms || 0;
+            matchesBeds = filters.exactMatch ? propBeds === targetBeds : propBeds >= targetBeds;
+        }
+
+        // Baths
+        let matchesBaths = true;
+        if (filters.baths !== 'Any') {
+            const targetBaths = parseInt(filters.baths.replace('+', ''));
+            const propBaths = prop.bathrooms || 0;
+            matchesBaths = filters.exactMatch ? propBaths === targetBaths : propBaths >= targetBaths;
+        }
+
+        return matchesSearch && matchesMinPrice && matchesMaxPrice && matchesFeasibilityPrice && matchesType && matchesBeds && matchesBaths && matchesListingType;
+    });
+
     return (
         <div className="flex flex-col h-screen bg-white">
-            <div className="flex justify-between items-center p-4 border-b shadow-sm z-10 relative bg-white">
-                <div className="flex items-center gap-6">
-                    <h2 className="text-2xl font-extrabold text-blue-600 tracking-tight cursor-pointer" onClick={() => navigate('/')}>
-                        Thirasara Map Search
-                    </h2>
-                    
-                    {/* Primary Filter Bar */}
-                    <div className="hidden md:flex gap-3 ml-4">
-                        <select aria-label="Listing Type" 
-                            value={listingTypeFilter} 
-                            onChange={(e) => setListingTypeFilter(e.target.value)}
-                            className="bg-white border-2 border-blue-600 text-blue-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 font-bold cursor-pointer"
-                        >
-                            <option value="Sale">For sale</option>
-                            <option value="Rent">For rent</option>
-                            <option value="Sold">Sold</option>
-                        </select>
-
-                        <select aria-label="Accessible interactive control" 
-                            value={typeFilter} 
-                            onChange={(e) => setTypeFilter(e.target.value)}
-                            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 font-bold cursor-pointer"
-                        >
-                            <option value="">Any Type</option>
-                            <option value="House">Houses</option>
-                            <option value="Land">Lands</option>
-                            <option value="Apartment">Apartments</option>
-                        </select>
-
-                        <select aria-label="Accessible interactive control" 
-                            value={bedsFilter} 
-                            onChange={(e) => setBedsFilter(e.target.value)}
-                            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 font-bold cursor-pointer"
-                        >
-                            <option value="">Any Beds</option>
-                            <option value="1">1+ bd</option>
-                            <option value="2">2+ bd</option>
-                            <option value="3">3+ bd</option>
-                            <option value="4">4+ bd</option>
-                        </select>
-
-                        <select aria-label="Accessible interactive control" 
-                            value={bathsFilter} 
-                            onChange={(e) => setBathsFilter(e.target.value)}
-                            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 font-bold cursor-pointer"
-                        >
-                            <option value="">Any Baths</option>
-                            <option value="1">1+ ba</option>
-                            <option value="2">2+ ba</option>
-                            <option value="3">3+ ba</option>
-                        </select>
+            {/* The Top Navigation & Search Bar Area */}
+            <div className="flex flex-col border-b shadow-sm z-50 relative bg-white pb-2">
+                
+                <div className="flex justify-between items-center p-4">
+                    <div className="flex items-center gap-4">
+                        <div className="lg:hidden p-2 text-gray-500 hover:bg-gray-100 rounded-md cursor-pointer">
+                            <Menu className="w-6 h-6" />
+                        </div>
+                        <h2 className="text-2xl font-extrabold text-blue-600 tracking-tight cursor-pointer hidden md:block" onClick={() => navigate('/')}>
+                            Thirasara
+                        </h2>
                     </div>
-                </div>
+
+                    <div className="flex-1 max-w-4xl px-4">
+                        <AdvancedSearchBar initialFilters={filters} onSearch={handleSearch} />
+                    </div>
 
                 <div className="flex gap-4">
                     <button aria-label="Accessible interactive control" type="button" 
@@ -466,9 +471,9 @@ const MapSearch = () => {
                                 await api.post('/saved-searches', {
                                     title: searchTitle,
                                     polygon: currentPolygon,
-                                    beds: bedsFilter ? parseInt(bedsFilter) : null,
-                                    baths: bathsFilter ? parseInt(bathsFilter) : null,
-                                    property_type: typeFilter || null
+                                    beds: filters.beds !== 'Any' ? parseInt(filters.beds) : null,
+                                    baths: filters.baths !== 'Any' ? parseInt(filters.baths) : null,
+                                    property_type: null // Or stringify selected types if needed
                                 });
                                 alert("Search saved successfully!");
                             } catch (error) {
@@ -494,6 +499,7 @@ const MapSearch = () => {
                     <button aria-label="Accessible interactive control" type="button" onClick={() => navigate('/')} className="text-gray-600 hover:text-blue-600 font-bold px-4 py-2">
                         Close Map ✕
                     </button>
+                </div>
                 </div>
             </div>
             
@@ -572,9 +578,7 @@ const MapSearch = () => {
                             maxClusterRadius={50}
                             showCoverageOnHover={false}
                         >
-                            {properties
-                                .filter(prop => maxPriceFilter === null || prop.price <= maxPriceFilter)
-                                .map((prop) => {
+                            {filteredProperties.map((prop) => {
                                 const imageUrl = getSafeImageUrl(prop);
                                 const isActive = activeMarkerId === prop.id || hoveredPropId === prop.id;
                                 
@@ -610,25 +614,48 @@ const MapSearch = () => {
                 <div className="w-[450px] bg-white border-l overflow-y-auto flex flex-col z-10 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.1)]">
                     <div className="p-4 border-b sticky top-0 bg-white z-20 shadow-sm">
                         <h3 className="font-bold text-lg text-gray-900">Real Estate & Homes</h3>
-                        <p className="text-sm text-gray-500">{properties.length} results found</p>
+                        <p className="text-sm text-gray-500">{filteredProperties.length} results found</p>
                     </div>
-                    <div className="p-4 grid grid-cols-2 gap-3 auto-rows-max">
-                        {properties
-                            .filter(prop => maxPriceFilter === null || prop.price <= maxPriceFilter)
-                            .map((prop) => {
-                            const isActive = activeMarkerId === prop.id || hoveredPropId === prop.id;
-                            return (
-                                <PropertyCard
-                                    key={prop.id}
-                                    prop={prop}
-                                    isActive={isActive}
-                                    onMouseEnter={() => setHoveredPropId(prop.id)}
-                                    onMouseLeave={() => setHoveredPropId(null)}
-                                    onClick={() => setActiveMarkerId(prop.id)}
-                                />
-                            );
-                        })}
-                    </div>
+                    {filteredProperties.length > 0 ? (
+                        <div className="p-4 grid grid-cols-2 gap-3 auto-rows-max">
+                            {filteredProperties.map((prop) => {
+                                const isActive = activeMarkerId === prop.id || hoveredPropId === prop.id;
+                                return (
+                                    <PropertyCard
+                                        key={prop.id}
+                                        prop={prop}
+                                        isActive={isActive}
+                                        onMouseEnter={() => setHoveredPropId(prop.id)}
+                                        onMouseLeave={() => setHoveredPropId(null)}
+                                        onClick={() => setActiveMarkerId(prop.id)}
+                                    />
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-gray-50/50">
+                            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 border border-gray-200">
+                                <Search className="w-8 h-8 text-gray-400" />
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-800 mb-2">No matching results</h3>
+                            <p className="text-gray-500 text-sm">We couldn't find any properties that match your exact filters. Try adjusting your search criteria or zooming out on the map.</p>
+                            <button aria-label="Accessible interactive control" type="button" 
+                                onClick={() => handleSearch({
+                                    searchTerm: '',
+                                    listingType: location.pathname === '/rent' ? 'Rent' : 'Sale',
+                                    minPrice: '',
+                                    maxPrice: '',
+                                    beds: 'Any',
+                                    baths: 'Any',
+                                    exactMatch: false,
+                                    propTypes: { House: true, Land: true, Apartment: true, Villa: true }
+                                })}
+                                className="mt-6 px-6 py-2 bg-blue-50 text-blue-600 font-bold rounded-lg border border-blue-200 hover:bg-blue-100 transition"
+                            >
+                                Reset all filters
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

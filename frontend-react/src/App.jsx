@@ -18,6 +18,7 @@ axios.defaults.withCredentials = true;
 // Lazy Loaded Pages
 const Home = lazy(() => import('./pages/Home'));
 const MapSearch = lazy(() => import('./pages/MapSearch'));
+const BuyPage = lazy(() => import('./pages/BuyPage'));
 const AddProperty = lazy(() => import('./pages/AddProperty'));
 const Register = lazy(() => import('./pages/Register'));
 const Login = lazy(() => import('./pages/Login'));
@@ -76,6 +77,7 @@ function App() {
               </ProtectedRoute>
             } />
             <Route path="/login" element={<Login />} />
+            <Route path="/buy" element={<BuyPage />} />
             <Route path="/map" element={<MapSearch />} />
             <Route path="/rent" element={<MapSearch />} />
             <Route path="/add-property" element={<AddProperty />} />

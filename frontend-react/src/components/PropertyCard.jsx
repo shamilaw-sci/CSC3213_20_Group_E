@@ -40,10 +40,11 @@ const PropertyCard = ({ prop, handleMessageSeller }) => {
 
     return (
         <m.div 
-            whileHover={{ y: -12, scale: 1.01 }}
-            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            whileHover={{ y: -15, scale: 1.02, rotateX: 2, rotateY: -2 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            style={{ perspective: 1000, transformStyle: "preserve-3d" }}
             onClick={() => navigate(`/property/${prop.id}`)}
-            className="bg-white/70 backdrop-blur-xl rounded-3xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.12)] transition-all duration-500 group cursor-pointer flex flex-col border border-white/50 relative"
+            className="bg-white/70 backdrop-blur-2xl rounded-3xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-[0_30px_60px_rgb(0,0,0,0.2)] transition-shadow duration-500 group cursor-pointer flex flex-col border border-white/60 relative"
         >
             <div className="h-64 w-full bg-gray-100 relative overflow-hidden flex items-center justify-center">
                 
@@ -68,7 +69,7 @@ const PropertyCard = ({ prop, handleMessageSeller }) => {
                         src={prop.images[0]} 
                         alt={prop.title} 
                         loading="lazy"
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out" 
+                        className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-1000 ease-out" 
                     />
                 ) : (
                     <div className="flex items-center justify-center h-full bg-gray-100 text-gray-400 font-medium w-full">No Image Available</div>

@@ -20,3 +20,6 @@ Submissions/
 .DS_Store
 .vscode/
 .idea/
+
+# Agent Skills
+.agents/skills/
