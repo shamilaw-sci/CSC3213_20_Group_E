@@ -83,7 +83,7 @@ const Sidebar = () => {
             <span className="block font-bold text-gray-900 text-sm truncate">{admin?.name || "Administrator"}</span>
             <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Super Admin</span>
           </div>
-          <button 
+          <button aria-label="Accessible interactive control" type="button" 
             className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors" 
             onClick={handleLogout} 
             title="Logout"

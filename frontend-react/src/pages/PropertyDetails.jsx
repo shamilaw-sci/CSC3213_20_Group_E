@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../context/api';
 import { useAuth } from '../context/UserAuthContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -9,7 +9,7 @@ import { Bed, Bath, Maximize, MapPin, Heart, MessageCircle, ChevronLeft, Chevron
 import { MapContainer, TileLayer, Marker, Polygon, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, m } from "framer-motion";
 
 import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png';
 import iconUrl from 'leaflet/dist/images/marker-icon.png';
@@ -40,15 +40,12 @@ const PropertyDetails = () => {
         const fetchProperty = async () => {
             try {
                 // Fetch property details
-                const res = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/properties/${id}`);
+                const res = await api.get(`/properties/${id}`);
                 setProperty(res.data.property);
                 
                 // If user is logged in, check if it's a favorite
                 if (user) {
-                    const token = localStorage.getItem('token');
-                    const favRes = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/favorites`, {
-                        headers: { Authorization: `Bearer ${token}` }
-                    });
+                    const favRes = await api.get('/favorites');
                     const favList = favRes.data.favorites;
                     if (favList.some(f => f.property_id === id)) {
                         setIsFavorite(true);
@@ -70,10 +67,7 @@ const PropertyDetails = () => {
         }
         setIsFavLoading(true);
         try {
-            const token = localStorage.getItem('token');
-            const res = await axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/favorites/${id}`, {}, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const res = await api.post(`/favorites/${id}`);
             
             // The backend returns { isFavorite: boolean }
             setIsFavorite(res.data.isFavorite);
@@ -100,10 +94,10 @@ const PropertyDetails = () => {
             return;
         }
         try {
-            const response = await axios.post(
-                `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/conversations/property/${id}`,
+            const response = await api.post(
+                `/conversations/property/${id}`,
                 {},
-                { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+                {}
             );
             navigate(`/messages?conversation=${response.data.conversation.id}`);
         } catch (error) {
@@ -144,7 +138,7 @@ const PropertyDetails = () => {
                     </div>
                     <h2 className="text-2xl font-bold text-gray-900 mb-2">Property Not Found</h2>
                     <p className="text-gray-500 mb-6">{error || "The property you're looking for doesn't exist or has been removed."}</p>
-                    <button onClick={() => navigate('/properties')} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all">
+                    <button aria-label="Accessible interactive control" type="button" onClick={() => navigate('/properties')} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all">
                         Browse Properties
                     </button>
                 </div>
@@ -161,7 +155,7 @@ const PropertyDetails = () => {
             <main className="flex-grow pt-24 pb-20 px-4 md:px-8 max-w-7xl mx-auto w-full">
                 
                 {/* Back Button */}
-                <button 
+                <button aria-label="Accessible interactive control" type="button" 
                     onClick={() => navigate(-1)} 
                     className="flex items-center text-gray-500 hover:text-blue-600 font-medium mb-6 transition-colors"
                 >
@@ -175,7 +169,7 @@ const PropertyDetails = () => {
                     {/* Center Heart Animation */}
                     <AnimatePresence>
                         {showAnimation && (
-                            <motion.div
+                            <m.div
                                 initial={{ scale: 0, opacity: 0 }}
                                 animate={{ scale: [0, 1.5, 1.2], opacity: 1 }}
                                 exit={{ scale: 0, opacity: 0 }}
@@ -184,7 +178,7 @@ const PropertyDetails = () => {
                                 style={{ pointerEvents: 'none' }}
                             >
                                 <Heart className="w-40 h-40 text-red-500 fill-red-500 drop-shadow-lg" />
-                            </motion.div>
+                            </m.div>
                         )}
                     </AnimatePresence>
 
@@ -198,10 +192,10 @@ const PropertyDetails = () => {
 
                     {images.length > 1 && (
                         <>
-                            <button onClick={prevImage} className="absolute left-6 top-1/2 -translate-y-1/2 p-3 bg-white/20 hover:bg-white text-white hover:text-gray-900 backdrop-blur-md rounded-full transition-all shadow-lg">
+                            <button aria-label="Accessible interactive control" type="button" onClick={prevImage} className="absolute left-6 top-1/2 -translate-y-1/2 p-3 bg-white/20 hover:bg-white text-white hover:text-gray-900 backdrop-blur-md rounded-full transition-all shadow-lg">
                                 <ChevronLeft className="w-6 h-6" />
                             </button>
-                            <button onClick={nextImage} className="absolute right-6 top-1/2 -translate-y-1/2 p-3 bg-white/20 hover:bg-white text-white hover:text-gray-900 backdrop-blur-md rounded-full transition-all shadow-lg">
+                            <button aria-label="Accessible interactive control" type="button" onClick={nextImage} className="absolute right-6 top-1/2 -translate-y-1/2 p-3 bg-white/20 hover:bg-white text-white hover:text-gray-900 backdrop-blur-md rounded-full transition-all shadow-lg">
                                 <ChevronRight className="w-6 h-6" />
                             </button>
                             
@@ -214,7 +208,7 @@ const PropertyDetails = () => {
                     )}
 
                     <div className="absolute top-6 right-6 flex gap-3 z-10">
-                        <button 
+                        <button aria-label="Accessible interactive control" type="button" 
                             onClick={handleToggleFavorite}
                             disabled={isFavLoading}
                             className={`p-4 rounded-full backdrop-blur-md transition-all shadow-xl ${isFavorite ? 'bg-white text-red-500' : 'bg-black/30 text-white hover:bg-white hover:text-red-500'}`}
@@ -230,10 +224,15 @@ const PropertyDetails = () => {
                     {/* Main Details */}
                     <div className="col-span-1 lg:col-span-2 space-y-10">
                         <div>
-                            <div className="flex items-center gap-3 mb-4">
-                                <span className="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                                    {property.type === 'Land' ? 'Land for sale' : 'House for sale'}
+                            <div className="flex flex-wrap items-center gap-3 mb-4">
+                                <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider ${property.listing_type?.toLowerCase() === 'rent' || property.type?.includes('Rent') ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
+                                    {property.type === 'Land' ? 'Land' : property.type?.includes('Rent') ? 'House' : property.type} for {property.listing_type?.toLowerCase() === 'rent' || property.type?.includes('Rent') ? 'Rent' : 'Sale'}
                                 </span>
+                                {property.users?.role === 'AGENT' && property.users?.name && (
+                                    <span className="bg-yellow-100 text-yellow-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider flex items-center">
+                                        <span className="mr-1">★</span> By {property.users.name}
+                                    </span>
+                                )}
                                 {property.status === 'approved' && (
                                     <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                                         Verified Listing
@@ -310,7 +309,7 @@ const PropertyDetails = () => {
                         </div>
 
                         {/* Mortgage Calculator Component */}
-                        {property.price && (
+                        {property.price && property.listing_type?.toLowerCase() !== 'rent' && !property.type?.includes('Rent') && (
                             <MortgageCalculator propertyPrice={property.price} />
                         )}
                     </div>
@@ -322,10 +321,11 @@ const PropertyDetails = () => {
                                 <span className="text-gray-500 font-bold uppercase tracking-wider text-sm">Asking Price</span>
                                 <h2 className="text-4xl font-black text-gray-900 mt-1 tracking-tight">
                                     Rs. {property.price?.toLocaleString()}
+                                    {(property.listing_type?.toLowerCase() === 'rent' || property.type?.includes('Rent')) && <span className="text-xl text-gray-500 font-medium">/mo</span>}
                                 </h2>
                             </div>
                             
-                            <button 
+                            <button aria-label="Accessible interactive control" type="button" 
                                 onClick={handleContactSeller}
                                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg hover:shadow-blue-600/30 flex items-center justify-center gap-2 mb-4"
                             >
@@ -333,7 +333,7 @@ const PropertyDetails = () => {
                                 Contact Seller
                             </button>
 
-                            <button 
+                            <button aria-label="Accessible interactive control" type="button" 
                                 onClick={handleToggleFavorite}
                                 disabled={isFavLoading}
                                 className="w-full bg-gray-50 hover:bg-gray-100 text-gray-900 font-bold py-4 rounded-xl transition-all border border-gray-200 flex items-center justify-center gap-2"

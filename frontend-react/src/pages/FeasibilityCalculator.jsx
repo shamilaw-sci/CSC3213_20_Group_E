@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Calculator, X, DollarSign, Wallet, Percent, Calendar } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, m } from "framer-motion";
 import api from '../context/api';
 
 const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
@@ -25,7 +25,7 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
         setResult(null);
 
         try {
-            const res = await api.post('/api/feasibility/calculate', {
+            const res = await api.post('/feasibility/calculate', {
                 salary: Number(formData.salary),
                 savings: Number(formData.savings),
                 loanDeductions: Number(formData.loanDeductions),
@@ -51,7 +51,7 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
             {isOpen && (
                 <>
                     {/* Backdrop */}
-                    <motion.div 
+                    <m.div 
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -60,7 +60,7 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
                     />
 
                     {/* Modal */}
-                    <motion.div 
+                    <m.div 
                         initial={{ opacity: 0, x: -100 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -100 }}
@@ -71,7 +71,7 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
                                 <Calculator className="h-6 w-6" />
                                 <h2 className="text-xl font-bold">Feasibility Engine</h2>
                             </div>
-                            <button onClick={onClose} className="p-1 hover:bg-blue-700 rounded-full transition">
+                            <button aria-label="Accessible interactive control" type="button" onClick={onClose} className="p-1 hover:bg-blue-700 rounded-full transition">
                                 <X className="h-5 w-5" />
                             </button>
                         </div>
@@ -83,12 +83,12 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
 
                             <form onSubmit={handleCalculate} className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Monthly Salary (LKR)</label>
+                                    <label htmlFor="a11y" className="block text-sm font-semibold text-gray-700 mb-1">Monthly Salary (LKR)</label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <DollarSign className="h-4 w-4 text-gray-400" />
                                         </div>
-                                        <input
+                                        <input aria-label="Accessible interactive control"
                                             type="number"
                                             name="salary"
                                             value={formData.salary}
@@ -101,12 +101,12 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Current Savings / Downpayment</label>
+                                    <label htmlFor="sz753m" className="block text-sm font-semibold text-gray-700 mb-1">Current Savings / Downpayment</label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <Wallet className="h-4 w-4 text-gray-400" />
                                         </div>
-                                        <input
+                                        <input aria-label="Accessible interactive control"
                                             type="number"
                                             name="savings"
                                             value={formData.savings}
@@ -119,12 +119,12 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Existing Monthly Loan Deductions</label>
+                                    <label htmlFor="3k8nyy" className="block text-sm font-semibold text-gray-700 mb-1">Existing Monthly Loan Deductions</label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <Percent className="h-4 w-4 text-gray-400" />
                                         </div>
-                                        <input
+                                        <input aria-label="Accessible interactive control"
                                             type="number"
                                             name="loanDeductions"
                                             value={formData.loanDeductions}
@@ -137,12 +137,12 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Desired Repayment Tenure (Years)</label>
+                                    <label htmlFor="yfezqh" className="block text-sm font-semibold text-gray-700 mb-1">Desired Repayment Tenure (Years)</label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <Calendar className="h-4 w-4 text-gray-400" />
                                         </div>
-                                        <select
+                                        <select aria-label="Accessible interactive control"
                                             name="tenureYears"
                                             value={formData.tenureYears}
                                             onChange={handleChange}
@@ -156,7 +156,7 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
                                     </div>
                                 </div>
 
-                                <button
+                                <button aria-label="Accessible interactive control"
                                     type="submit"
                                     disabled={loading}
                                     className="w-full mt-4 bg-gray-900 text-white font-bold py-3 rounded-lg shadow hover:bg-gray-800 transition disabled:opacity-50"
@@ -168,7 +168,7 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
                             {error && <p className="mt-4 text-sm text-red-500 bg-red-50 p-3 rounded-lg">{error}</p>}
 
                             {result && (
-                                <motion.div 
+                                <m.div 
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     className="mt-6 border-t pt-6"
@@ -193,16 +193,16 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
 
                                     {result.message && <p className="mt-3 text-xs text-orange-600">{result.message}</p>}
 
-                                    <button
+                                    <button aria-label="Accessible interactive control" type="button"
                                         onClick={handleApplyFilter}
                                         className="w-full mt-6 bg-blue-600 text-white font-bold py-3 rounded-lg shadow-lg shadow-blue-200 hover:bg-blue-700 transition"
                                     >
                                         Filter Map to Affordability
                                     </button>
-                                </motion.div>
+                                </m.div>
                             )}
                         </div>
-                    </motion.div>
+                    </m.div>
                 </>
             )}
         </AnimatePresence>

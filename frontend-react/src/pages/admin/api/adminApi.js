@@ -90,6 +90,9 @@ export const fetchUsers = (params = {}) => {
 export const fetchUserById = (userId) =>
   fetch(`${BASE_URL}/admin/users/${userId}`, { headers: getHeaders() }).then(handleResponse);
 
+export const fetchPendingAgents = () =>
+  fetch(`${BASE_URL}/admin/pending-agents`, { headers: getHeaders() }).then(handleResponse);
+
 export const banUser = (userId, reason) =>
   fetch(`${BASE_URL}/admin/users/${userId}/ban`, {
     method: "PATCH",
@@ -103,11 +106,11 @@ export const unbanUser = (userId) =>
     headers: getHeaders(),
   }).then(handleResponse);
 
-export const updateUserRole = (userId, role) =>
+export const updateUserRole = (userId, role, reason = null) =>
   fetch(`${BASE_URL}/admin/users/${userId}/role`, {
     method: "PATCH",
     headers: getHeaders(),
-    body: JSON.stringify({ role }),
+    body: JSON.stringify({ role, reason }),
   }).then(handleResponse);
 
 // ─── Analytics (FR-REQ-5.7, ADM-006) ────────────────────────────────────────

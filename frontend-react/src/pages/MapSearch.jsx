@@ -6,8 +6,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { MapContainer, TileLayer, useMap, Marker, Popup, GeoJSON } from 'react-leaflet';
 import L from 'leaflet';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+// axios removed for map microservice calls; use fetch with explicit URL
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Heart, Calculator } from 'lucide-react';
 import api from '../context/api';
 import FeasibilityCalculator from './FeasibilityCalculator';
@@ -37,14 +37,22 @@ const formatPrice = (price) => {
     return price.toString();
 };
 
+const getMarkerColor = (listingType, propType) => {
+    if (listingType?.toLowerCase() === 'rent' || propType?.includes('Rent')) return '!bg-purple-600';
+    if (listingType?.toLowerCase() === 'sold') return '!bg-yellow-500';
+    return '!bg-red-600'; // Sale
+};
+
 /**
- * Generates a dynamic custom Zillow-style marker icon
+ * Generates a dynamic custom interactive map marker icon
  */
-const createCustomIcon = (price, isActive) => {
+const createCustomIcon = (price, isActive, listingType, propType) => {
+    const isRent = listingType?.toLowerCase() === 'rent' || propType?.includes('Rent');
+    const priceText = formatPrice(price) + (isRent ? '/mo' : '');
     return L.divIcon({
         className: `custom-leaflet-marker ${isActive ? 'active-marker' : ''}`,
-        html: `<div class="zillow-marker-container ${isActive ? 'active' : ''}">
-                 <span class="zillow-marker-price">${formatPrice(price)}</span>
+        html: `<div class="map-marker-container ${getMarkerColor(listingType, propType)} ${isActive ? 'active' : ''}">
+                 <span class="map-marker-price">${priceText}</span>
                </div>`,
         iconSize: [0, 0],
         iconAnchor: [0, 0],
@@ -137,7 +145,6 @@ const FreehandDrawControl = ({ onPolygonComplete, onDrawDelete, controlRef }) =>
         let isDrawing = false;
         let points = [];
         let polyline = null;
-        let polygon = null;
         const drawnItems = drawnItemsRef.current;
 
         const onMouseDown = (e) => {
@@ -159,7 +166,7 @@ const FreehandDrawControl = ({ onPolygonComplete, onDrawDelete, controlRef }) =>
             drawnItems.removeLayer(polyline);
 
             if (points.length > 3) {
-                polygon = L.polygon(points, { color: '#006aff', weight: 3, fillOpacity: 0.2 }).addTo(drawnItems);
+                L.polygon(points, { color: '#006aff', weight: 3, fillOpacity: 0.2 }).addTo(drawnItems);
                 
                 // Construct WKT in Lng Lat order
                 let wktPoints = points.map(pt => `${pt.lng} ${pt.lat}`).join(', ');
@@ -187,7 +194,7 @@ const FreehandDrawControl = ({ onPolygonComplete, onDrawDelete, controlRef }) =>
 
     return (
         <div className="leaflet-draw-control">
-            <button 
+            <button aria-label="Accessible interactive control" type="button" 
                 onClick={(e) => {
                     e.stopPropagation();
                     setIsDrawMode(!isDrawMode);
@@ -222,10 +229,10 @@ const MarkerPopup = ({ prop, imageUrl, onNavigate }) => (
             <div className="w-full h-32 bg-gray-100 flex items-center justify-center text-gray-400 rounded-md mb-2 border">No Image</div>
         )}
         <h3 className="font-extrabold text-xl text-blue-600 leading-tight">
-            {prop.price ? `Rs. ${prop.price.toLocaleString()}` : 'Price N/A'}
+            {prop.price ? `Rs. ${prop.price.toLocaleString()}${prop.listing_type === 'Rent' || prop.type === 'Rent House' || prop.type === 'Rent Villa' ? '/mo' : ''}` : 'Price N/A'}
         </h3>
         <p className="text-sm font-bold text-gray-800 mt-1 truncate">{prop.title}</p>
-        <button 
+        <button aria-label="Accessible interactive control" type="button" 
             onClick={onNavigate}
             className="mt-3 w-full bg-blue-600 text-white text-xs font-bold py-2 rounded hover:bg-blue-700 transition">
             View Details
@@ -265,10 +272,18 @@ const PropertyCard = React.memo(({ prop, isActive, onMouseEnter, onMouseLeave, o
                 ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No Image</div>
                 )}
-                <div className="absolute top-1 left-1 bg-white text-gray-800 text-[10px] font-extrabold px-1.5 py-0.5 rounded shadow-sm uppercase">
-                    {prop.type === 'Land' ? 'Land' : 'House'}
+                <div className="absolute top-1 left-1 bg-white text-gray-800 text-[10px] font-extrabold px-1.5 py-0.5 rounded shadow-sm uppercase flex gap-1">
+                    <span className={prop.listing_type === 'Rent' || prop.type === 'Rent House' || prop.type === 'Rent Villa' ? 'text-purple-600' : prop.listing_type === 'Sold' ? 'text-yellow-600' : 'text-red-600'}>
+                        {(prop.listing_type === 'Rent' || prop.type === 'Rent House' || prop.type === 'Rent Villa') ? 'Rent' : (prop.listing_type || 'Sale')}
+                    </span>
+                    <span>• {prop.type === 'Land' ? 'Land' : 'House'}</span>
                 </div>
-                <button 
+                {prop.seller_role === 'AGENT' && prop.seller_name && (
+                    <div className="absolute bottom-1 right-1 bg-gray-900/80 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center shadow-sm">
+                        <span className="text-yellow-400 mr-1">★</span> By {prop.seller_name}
+                    </div>
+                )}
+                <button aria-label="Accessible interactive control" type="button" 
                     onClick={handleFavoriteClick}
                     className="absolute top-1 right-1 p-1.5 bg-white/80 hover:bg-white rounded-full shadow-sm transition"
                 >
@@ -277,7 +292,7 @@ const PropertyCard = React.memo(({ prop, isActive, onMouseEnter, onMouseLeave, o
                 {isActive && <div className="absolute inset-0 bg-blue-500/10"></div>}
             </div>
             <div className="p-2">
-                <h4 className="font-extrabold text-lg text-gray-900">Rs. {prop.price?.toLocaleString()}</h4>
+                <h4 className="font-extrabold text-lg text-gray-900">Rs. {prop.price?.toLocaleString()}{prop.listing_type === 'Rent' || prop.type === 'Rent House' || prop.type === 'Rent Villa' ? '/mo' : ''}</h4>
                 <div className="flex items-center text-gray-700 text-[11px] mt-0.5 mb-1 truncate">
                     {prop.bedrooms && <span className="font-bold">{prop.bedrooms} <span className="font-normal text-gray-500">bds</span> <span className="text-gray-300 mx-1">|</span></span>}
                     {prop.bathrooms && <span className="font-bold">{prop.bathrooms} <span className="font-normal text-gray-500">ba</span> <span className="text-gray-300 mx-1">|</span></span>}
@@ -290,21 +305,33 @@ const PropertyCard = React.memo(({ prop, isActive, onMouseEnter, onMouseLeave, o
     );
 });
 
+/**
+ * Main MapSearch Component.
+ * Handles the display of the interactive map, property markers, sidebar list, and dynamic filtering.
+ * Connects directly to the Go map-service for optimized geospatial querying.
+ *
+ * @component
+ * @returns {React.ReactElement} Map Search interface
+ */
 const MapSearch = () => {
+    const location = useLocation();
+    const savedSearch = location.state?.savedSearch;
+
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(false);
     const [selectedDistrict, setSelectedDistrict] = useState(null); 
     const [activeMarkerId, setActiveMarkerId] = useState(null);
     const [hoveredPropId, setHoveredPropId] = useState(null);
-    const [searchMode, setSearchMode] = useState('bounds'); 
+    const [searchMode, setSearchMode] = useState(savedSearch ? 'polygon' : 'bounds'); 
     const [isFeasibilityOpen, setIsFeasibilityOpen] = useState(false);
     const [maxPriceFilter, setMaxPriceFilter] = useState(null);
     
-    // New States for Phase 1 Filters
-    const [currentPolygon, setCurrentPolygon] = useState(null);
-    const [bedsFilter, setBedsFilter] = useState('');
-    const [bathsFilter, setBathsFilter] = useState('');
-    const [typeFilter, setTypeFilter] = useState('');
+    // New States for Phase 1 Filters, initialize with savedSearch if provided
+    const [currentPolygon, setCurrentPolygon] = useState(savedSearch?.polygon || null);
+    const [bedsFilter, setBedsFilter] = useState(savedSearch?.beds ? String(savedSearch.beds) : '');
+    const [bathsFilter, setBathsFilter] = useState(savedSearch?.baths ? String(savedSearch.baths) : '');
+    const [typeFilter, setTypeFilter] = useState(savedSearch?.property_type || '');
+    const [listingTypeFilter, setListingTypeFilter] = useState(location.pathname === '/rent' ? 'Rent' : 'Sale');
 
     const drawControlRef = useRef(null);
     const navigate = useNavigate();
@@ -321,9 +348,18 @@ const MapSearch = () => {
                 if (bedsFilter) payload.beds = parseInt(bedsFilter);
                 if (bathsFilter) payload.baths = parseInt(bathsFilter);
                 if (typeFilter) payload.type = typeFilter;
+                
+                // If filtering by Rent, send Rent as the listing_type to backend.
+                if (listingTypeFilter) payload.listing_type = listingTypeFilter;
 
-                const response = await axios.post(apiUrl, payload);
-                setProperties(response.data.properties || []);
+                const res = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+                if (!res.ok) throw new Error('Map service failed');
+                const data = await res.json();
+                setProperties(data.properties || []);
             } catch (error) {
                 console.error("🔥 Search error:", error.response?.data || error.message);
             } finally {
@@ -336,7 +372,7 @@ const MapSearch = () => {
             fetchProps();
         }, 300);
         return () => clearTimeout(timeoutId);
-    }, [currentPolygon, bedsFilter, bathsFilter, typeFilter]);
+    }, [currentPolygon, bedsFilter, bathsFilter, typeFilter, listingTypeFilter]);
 
     const handleBoundsChange = useCallback((bounds) => {
         const boundsWKT = getWKTFromBounds(bounds);
@@ -368,9 +404,19 @@ const MapSearch = () => {
                         Thirasara Map Search
                     </h2>
                     
-                    {/* Zillow-Style Filter Bar */}
+                    {/* Primary Filter Bar */}
                     <div className="hidden md:flex gap-3 ml-4">
-                        <select 
+                        <select aria-label="Listing Type" 
+                            value={listingTypeFilter} 
+                            onChange={(e) => setListingTypeFilter(e.target.value)}
+                            className="bg-white border-2 border-blue-600 text-blue-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 font-bold cursor-pointer"
+                        >
+                            <option value="Sale">For sale</option>
+                            <option value="Rent">For rent</option>
+                            <option value="Sold">Sold</option>
+                        </select>
+
+                        <select aria-label="Accessible interactive control" 
                             value={typeFilter} 
                             onChange={(e) => setTypeFilter(e.target.value)}
                             className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 font-bold cursor-pointer"
@@ -381,7 +427,7 @@ const MapSearch = () => {
                             <option value="Apartment">Apartments</option>
                         </select>
 
-                        <select 
+                        <select aria-label="Accessible interactive control" 
                             value={bedsFilter} 
                             onChange={(e) => setBedsFilter(e.target.value)}
                             className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 font-bold cursor-pointer"
@@ -393,7 +439,7 @@ const MapSearch = () => {
                             <option value="4">4+ bd</option>
                         </select>
 
-                        <select 
+                        <select aria-label="Accessible interactive control" 
                             value={bathsFilter} 
                             onChange={(e) => setBathsFilter(e.target.value)}
                             className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 font-bold cursor-pointer"
@@ -407,7 +453,7 @@ const MapSearch = () => {
                 </div>
 
                 <div className="flex gap-4">
-                    <button 
+                    <button aria-label="Accessible interactive control" type="button" 
                         onClick={async () => {
                             if (!currentPolygon) {
                                 alert("Please draw a boundary on the map first to save your search.");
@@ -417,7 +463,7 @@ const MapSearch = () => {
                             if (!searchTitle) return;
                             
                             try {
-                                await api.post('/api/saved-searches', {
+                                await api.post('/saved-searches', {
                                     title: searchTitle,
                                     polygon: currentPolygon,
                                     beds: bedsFilter ? parseInt(bedsFilter) : null,
@@ -438,14 +484,14 @@ const MapSearch = () => {
                     >
                         Save Search
                     </button>
-                    <button 
+                    <button aria-label="Accessible interactive control" type="button" 
                         onClick={() => setIsFeasibilityOpen(true)}
                         className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 font-bold rounded-lg hover:bg-blue-100 transition"
                     >
                         <Calculator className="h-5 w-5" />
                         Feasibility Engine
                     </button>
-                    <button onClick={() => navigate('/')} className="text-gray-600 hover:text-blue-600 font-bold px-4 py-2">
+                    <button aria-label="Accessible interactive control" type="button" onClick={() => navigate('/')} className="text-gray-600 hover:text-blue-600 font-bold px-4 py-2">
                         Close Map ✕
                     </button>
                 </div>
@@ -462,7 +508,7 @@ const MapSearch = () => {
                     
                     {searchMode === 'polygon' && (
                         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[1000] animate-fade-in">
-                            <button
+                            <button aria-label="Accessible interactive control" type="button"
                                 onClick={clearBoundary}
                                 className="bg-white px-5 py-2.5 rounded-full shadow-lg font-extrabold text-blue-600 hover:bg-blue-50 hover:shadow-xl transition border border-gray-200 flex items-center gap-2"
                             >
@@ -536,7 +582,7 @@ const MapSearch = () => {
                                     <Marker 
                                         key={prop.id} 
                                         position={[prop.latitude, prop.longitude]} 
-                                        icon={createCustomIcon(prop.price, isActive)}
+                                        icon={createCustomIcon(prop.price, isActive, prop.listing_type, prop.type)}
                                         eventHandlers={{
                                             click: (e) => {
                                                 L.DomEvent.stopPropagation(e);
@@ -563,7 +609,7 @@ const MapSearch = () => {
 
                 <div className="w-[450px] bg-white border-l overflow-y-auto flex flex-col z-10 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.1)]">
                     <div className="p-4 border-b sticky top-0 bg-white z-20 shadow-sm">
-                        <h3 className="font-bold text-lg text-gray-900">Real Estate & Homes For Sale</h3>
+                        <h3 className="font-bold text-lg text-gray-900">Real Estate & Homes</h3>
                         <p className="text-sm text-gray-500">{properties.length} results found</p>
                     </div>
                     <div className="p-4 grid grid-cols-2 gap-3 auto-rows-max">

@@ -6,7 +6,7 @@
 
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../context/api';
 import { useAuth } from '../context/UserAuthContext';
 import "./Register.css";
 
@@ -36,7 +36,7 @@ const Register = () => {
 
         try {
             // Dispatch registration payload to the backend API
-            const response = await axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/auth/register`, { 
+            const response = await api.post('/auth/register', { 
                 name: name,
                 email: email, 
                 password: password,
@@ -47,7 +47,15 @@ const Register = () => {
 
             // Persist authentication token and user data to local storage on successful registration
             login(response.data.user);
-            navigate('/');
+            
+            // Role-based redirect
+            if (response.data.user.role === 'SELLER') {
+                navigate('/seller-dashboard');
+            } else if (response.data.user.role === 'AGENT' || response.data.user.role === 'PENDING_AGENT') {
+                navigate('/agent-dashboard');
+            } else {
+                navigate('/');
+            }
             
         } catch (err) {
             setError(err.response?.data?.message || "Registration failed. Please try again.");
@@ -64,7 +72,7 @@ const Register = () => {
             <div className="w-full md:w-[450px] lg:w-[500px] flex flex-col justify-center px-8 sm:px-12 py-10 relative overflow-y-auto">
                 
                 {/* Back to Home Button */}
-                <button 
+                <button type="button" aria-label="Accessible interactive control" 
                     onClick={() => navigate('/')} 
                     className="absolute top-6 left-6 text-gray-500 hover:text-gray-800 transition p-2 rounded-full hover:bg-gray-100"
                 >
@@ -88,23 +96,23 @@ const Register = () => {
                         
                         {/* Role Selection */}
                         <div className="mb-5">
-                            <label className="block text-gray-700 text-sm font-medium mb-2">I want to...</label>
+                            <label htmlFor="z9fqly" className="block text-gray-700 text-sm font-medium mb-2">I want to...</label>
                             <div className="flex space-x-3">
-                                <button
+                                <button aria-label="Accessible interactive control"
                                     type="button"
                                     onClick={() => setRole('BUYER')}
                                     className={`flex-1 py-3 px-4 border rounded-lg font-bold text-sm transition ${role === 'BUYER' ? 'bg-blue-50 border-blue-500 text-blue-700' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'}`}
                                 >
                                     Buy Property
                                 </button>
-                                <button
+                                <button aria-label="Accessible interactive control"
                                     type="button"
                                     onClick={() => setRole('SELLER')}
                                     className={`flex-1 py-3 px-2 border rounded-lg font-bold text-xs sm:text-sm transition ${role === 'SELLER' ? 'bg-green-50 border-green-500 text-green-700' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'}`}
                                 >
                                     Sell Property
                                 </button>
-                                <button
+                                <button aria-label="Accessible interactive control"
                                     type="button"
                                     onClick={() => setRole('AGENT')}
                                     className={`flex-1 py-3 px-2 border rounded-lg font-bold text-xs sm:text-sm transition ${role === 'AGENT' ? 'bg-purple-50 border-purple-500 text-purple-700' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'}`}
@@ -116,9 +124,11 @@ const Register = () => {
 
                         {/* Name Input */}
                         <div className="mb-4">
-                            <label className="block text-gray-700 text-sm font-medium mb-2">Full Name <span className="text-red-500">*</span></label>
-                            <input
+                            <label htmlFor="name" className="block text-gray-700 text-sm font-medium mb-2">Full Name <span className="text-red-500">*</span></label>
+                            <input aria-label="Accessible interactive control"
+                                id="name"
                                 type="text"
+                                autoComplete="name"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 required
@@ -129,9 +139,11 @@ const Register = () => {
 
                         {/* Email Input */}
                         <div className="mb-4">
-                            <label className="block text-gray-700 text-sm font-medium mb-2">Email Address <span className="text-red-500">*</span></label>
-                            <input
+                            <label htmlFor="email" className="block text-gray-700 text-sm font-medium mb-2">Email Address <span className="text-red-500">*</span></label>
+                            <input aria-label="Accessible interactive control"
+                                id="email"
                                 type="email"
+                                autoComplete="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value.toLowerCase())}
                                 required
@@ -145,18 +157,20 @@ const Register = () => {
                             <div className="bg-purple-50 p-4 rounded-lg mb-4 border border-purple-100 animate-fade-in">
                                 <h3 className="text-purple-800 font-semibold mb-3 text-sm">Agent Details</h3>
                                 <div className="mb-3">
-                                    <label className="block text-gray-700 text-xs font-medium mb-1">Agency Name (Optional)</label>
-                                    <input
+                                    <label htmlFor="agencyName" className="block text-gray-700 text-xs font-medium mb-1">Agency Name (Optional)</label>
+                                    <input aria-label="Accessible interactive control"
+                                        id="agencyName"
                                         type="text"
                                         value={agencyName}
                                         onChange={(e) => setAgencyName(e.target.value)}
                                         className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition"
-                                        placeholder="e.g. Zillow Premier, Independent"
+                                        placeholder="e.g. Premier Realty, Independent"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-gray-700 text-xs font-medium mb-1">License Number (Optional)</label>
-                                    <input
+                                    <label htmlFor="licenseNumber" className="block text-gray-700 text-xs font-medium mb-1">License Number (Optional)</label>
+                                    <input aria-label="Accessible interactive control"
+                                        id="licenseNumber"
                                         type="text"
                                         value={licenseNumber}
                                         onChange={(e) => setLicenseNumber(e.target.value)}
@@ -167,12 +181,14 @@ const Register = () => {
                             </div>
                         )}
 
-                        {/* Password Input */}
+                        {/* Password aria-label="Accessible interactive control" Input */}
                         <div className="mb-6">
-                            <label className="block text-gray-700 text-sm font-medium mb-2">Password <span className="text-red-500">*</span></label>
+                            <label htmlFor="password" className="block text-gray-700 text-sm font-medium mb-2">Password <span className="text-red-500">*</span></label>
                             <div className="relative">
-                                <input
+                                <input aria-label="Accessible interactive control"
+                                    id="password"
                                     type={showPassword ? "text" : "password"}
+                                    autoComplete="new-password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
@@ -180,7 +196,7 @@ const Register = () => {
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition pr-12"
                                     placeholder="At least 6 characters"
                                 />
-                                <button
+                                <button aria-label="Accessible interactive control"
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
                                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
@@ -199,7 +215,7 @@ const Register = () => {
                             </div>
                         </div>
 
-                        <button 
+                        <button aria-label="Accessible interactive control" 
                             type="submit" 
                             disabled={loading || !email || !password || !name}
                             className={`w-full text-white font-bold py-3 px-4 rounded-lg transition duration-200 ${loading || !email || !password || !name ? 'bg-blue-400 cursor-not-allowed' : 'bg-[#006aff] hover:bg-blue-700'}`}

@@ -1,72 +1,123 @@
 const request = require('supertest');
-const express = require('express');
-const authRoutes = require('../routes/authRoutes');
+const { createClient } = require('@supabase/supabase-js');
 
-// Mock express app
-const app = express();
-app.use(express.json());
-app.use('/api/auth', authRoutes);
+// Mock Supabase
+jest.mock('@supabase/supabase-js', () => {
+    const mockSupabase = {
+        from: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        single: jest.fn(),
+        insert: jest.fn().mockReturnThis(),
+        select: jest.fn(function(...args) {
+            if (args.length === 0) {
+                return Promise.resolve(this._insertResult || { data: [], error: null });
+            }
+            return this;
+        })
+    };
+    return {
+        createClient: jest.fn(() => mockSupabase)
+    };
+});
 
-// Mock the entire authController to avoid hitting the actual database
-jest.mock('../controllers/authController', () => ({
-    registerUser: (req, res) => res.status(201).json({ message: 'User registered successfully.', user: { id: 1, email: req.body.email } }),
-    loginUser: (req, res) => {
-        res.cookie('token', 'mock_token', { httpOnly: true });
-        res.status(200).json({ message: 'Login successful.', user: { id: 1, email: req.body.email } });
-    },
-    getMe: (req, res) => res.status(200).json({ user: { id: 1, name: "Test User" } }),
-    logoutUser: (req, res) => {
-        res.cookie('token', '', { httpOnly: true, expires: new Date(0) });
-        res.status(200).json({ message: 'Logged out successfully' });
-    },
-    checkEmail: (req, res) => res.status(200).json({ exists: true }),
-    forgotPassword: (req, res) => res.status(200).json({ message: 'Password reset link sent to your email!' }),
-    updateProfile: (req, res) => res.status(200).json({ message: 'Profile updated' })
+// Mock Email Service
+jest.mock('../utils/emailService', () => ({
+    sendWelcomeEmail: jest.fn().mockResolvedValue(true),
+    sendPasswordResetEmail: jest.fn().mockResolvedValue(true)
 }));
 
-describe('Auth API Endpoints', () => {
-    
-    test('POST /api/auth/register - should register a new user', async () => {
-        const res = await request(app)
-            .post('/api/auth/register')
-            .send({
-                name: 'Test User',
-                email: 'test@example.com',
-                password: 'password123',
-                role: 'BUYER'
-            });
+// Now require app
+const app = require('../server');
+const bcrypt = require('bcryptjs');
 
-        expect(res.statusCode).toEqual(201);
-        expect(res.body.message).toEqual('User registered successfully.');
-        expect(res.body.user.email).toEqual('test@example.com');
+describe('Authentication & Security API', () => {
+    let mockSupabase;
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        // Since createClient is mocked, this returns our mockSupabase object
+        mockSupabase = createClient();
     });
 
-    test('POST /api/auth/login - should login and return HttpOnly cookie', async () => {
-        const res = await request(app)
-            .post('/api/auth/login')
-            .send({
-                email: 'test@example.com',
-                password: 'password123'
+    describe('POST /api/auth/register', () => {
+        it('should block Role Spoofing (ADMIN attempt defaults to BUYER)', async () => {
+            mockSupabase.single.mockResolvedValueOnce({ data: null });
+            mockSupabase._insertResult = { 
+                data: [{ id: 1, email: 'hacker@example.com', role: 'BUYER' }], 
+                error: null 
+            };
+
+            const res = await request(app)
+                .post('/api/auth/register')
+                .send({
+                    name: 'Hacker',
+                    email: 'hacker@example.com',
+                    password: 'password123',
+                    role: 'ADMIN' // Malicious attempt
+                });
+
+            expect(res.statusCode).toEqual(201);
+            expect(mockSupabase.insert).toHaveBeenCalledWith(
+                expect.arrayContaining([
+                    expect.objectContaining({ role: 'BUYER' })
+                ])
+            );
+        });
+
+        it('should return 400 if user already exists', async () => {
+            mockSupabase.single.mockResolvedValueOnce({ 
+                data: { id: 1, email: 'test@example.com' } 
             });
 
-        expect(res.statusCode).toEqual(200);
-        expect(res.body.message).toEqual('Login successful.');
-        // Verify that the Set-Cookie header contains 'HttpOnly'
-        const cookies = res.headers['set-cookie'];
-        expect(cookies[0]).toMatch(/HttpOnly/);
+            const res = await request(app)
+                .post('/api/auth/register')
+                .send({
+                    name: 'Test',
+                    email: 'test@example.com',
+                    password: 'password123'
+                });
+
+            expect(res.statusCode).toEqual(400);
+            expect(res.body.message).toBe('User with this email already exists.');
+        });
     });
 
-    test('POST /api/auth/register - should fail validation without email', async () => {
-        // We restore the original validate middleware, but it's loaded in authRoutes
-        // so it actually tests the zod validation!
-        const res = await request(app)
-            .post('/api/auth/register')
-            .send({
-                name: 'Test User',
-                password: 'password123'
+    describe('POST /api/auth/login', () => {
+        it('should return HttpOnly cookie on successful login', async () => {
+            const hashedPassword = await bcrypt.hash('password123', 10);
+            mockSupabase.single.mockResolvedValueOnce({ 
+                data: { id: 1, email: 'test@example.com', password_hash: hashedPassword, role: 'BUYER' },
+                error: null
             });
 
-        expect(res.statusCode).toEqual(400); // Bad Request from Zod Validation
-    });
+            const res = await request(app)
+                .post('/api/auth/login')
+                .send({
+                    email: 'test@example.com',
+                    password: 'password123'
+                });
 
+            expect(res.statusCode).toEqual(200);
+            const cookies = res.headers['set-cookie'];
+            expect(cookies[0]).toMatch(/HttpOnly/);
+        });
+
+        it('should return 400 for invalid credentials', async () => {
+            const hashedPassword = await bcrypt.hash('password123', 10);
+            mockSupabase.single.mockResolvedValueOnce({ 
+                data: { id: 1, email: 'test@example.com', password_hash: hashedPassword, role: 'BUYER' },
+                error: null
+            });
+
+            const res = await request(app)
+                .post('/api/auth/login')
+                .send({
+                    email: 'test@example.com',
+                    password: 'wrongpassword'
+                });
+
+            expect(res.statusCode).toEqual(400);
+            expect(res.body.message).toBe('Invalid email or password.');
+        });
+    });
 });

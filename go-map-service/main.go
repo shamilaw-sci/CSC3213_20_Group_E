@@ -24,9 +24,10 @@ import (
 // It expects a WKT (Well-Known Text) Polygon string.
 type SearchRequest struct {
 	Polygon string  `json:"polygon" binding:"required"`
-	Beds    *int    `json:"beds"`
-	Baths   *int    `json:"baths"`
-	Type    *string `json:"type"`
+	Beds        *int    `json:"beds"`
+	Baths       *int    `json:"baths"`
+	Type        *string `json:"type"`
+	ListingType *string `json:"listing_type"`
 }
 
 // main initializes the environment, connects to the database,
@@ -86,9 +87,10 @@ func main() {
 
 		log.Println("🔍 Searching in Polygon:", req.Polygon)
 
-		query := `SELECT p.id, p.title, p.description, p.price, p.latitude, p.longitude, p.images, p.bedrooms, p.bathrooms, p.land_size, p.type, p.address 
+		query := `SELECT p.id, p.title, p.description, p.price, p.latitude, p.longitude, p.images, p.bedrooms, p.bathrooms, p.land_size, p.type, p.city, p.listing_type, u.name, u.role
 				  FROM search_properties($1) sp
 				  JOIN properties p ON sp.id = p.id
+                  LEFT JOIN users u ON p.seller_id = u.id
 				  WHERE p.status = 'approved'`
 		
 		args := []interface{}{req.Polygon}
@@ -109,6 +111,11 @@ func main() {
 			query += fmt.Sprintf(" AND p.type = $%d", paramCount)
 			args = append(args, *req.Type)
 		}
+		if req.ListingType != nil && *req.ListingType != "" {
+			paramCount++
+			query += fmt.Sprintf(" AND p.listing_type = $%d", paramCount)
+			args = append(args, *req.ListingType)
+		}
 
 		rows, err := pool.Query(context.Background(), query, args...)
 		if err != nil {
@@ -121,12 +128,12 @@ func main() {
 		var properties []map[string]interface{}
 		for rows.Next() {
 			var id string
-			var title, description, propType, address *string
+			var title, description, propType, city, listingType, sellerName, sellerRole *string
 			var price, lat, lng, landSize *float64
 			var beds, baths *int
 			var images *[]string
 
-			err := rows.Scan(&id, &title, &description, &price, &lat, &lng, &images, &beds, &baths, &landSize, &propType, &address)
+			err := rows.Scan(&id, &title, &description, &price, &lat, &lng, &images, &beds, &baths, &landSize, &propType, &city, &listingType, &sellerName, &sellerRole)
 			if err != nil {
 				log.Println("⚠️ Row Scan Error (Skipping property):", err.Error())
 				continue
@@ -142,18 +149,22 @@ func main() {
 			if images != nil { safeImages = *images }
 
 			propData := gin.H{
-				"id":          id,
-				"title":       safeTitle,
-				"description": description,
-				"price":       safePrice,
-				"latitude":    lat,
-				"longitude":   lng,
-				"images":      safeImages,
-				"bedrooms":    beds,
-				"bathrooms":   baths,
-				"land_size":   landSize,
-				"type":        propType,
-				"address":     address,
+				"id":           id,
+				"title":        safeTitle,
+				"description":  description,
+				"price":        safePrice,
+				"latitude":     lat,
+				"longitude":    lng,
+				"images":       safeImages,
+				"bedrooms":     beds,
+				"bathrooms":    baths,
+				"land_size":    landSize,
+				"type":         propType,
+				"city":         city,
+				"listing_type": listingType,
+				"seller_name":  sellerName,
+				"seller_role":  sellerRole,
+				"address":      city, // Mapping city to address for the frontend
 			}
 
 			properties = append(properties, propData)

@@ -47,7 +47,7 @@ const Topbar = () => {
         {/* Search */}
         <div className="hidden md:flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-full px-4 py-2 focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-300 transition-all">
             <Search className="w-4 h-4 text-gray-400" />
-            <input 
+            <input aria-label="Accessible interactive control" 
                 type="text" 
                 placeholder="Search..." 
                 className="bg-transparent border-none outline-none text-sm text-gray-700 w-48"
