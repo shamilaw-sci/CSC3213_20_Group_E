@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/UserAuthContext';
 import { signInWithGoogle, signInWithFacebook, signInWithApple } from '../utils/socialAuth';
+import "./Login.css";
 
 const Login = () => {
     const navigate = useNavigate();
@@ -96,22 +97,22 @@ const Login = () => {
     };
 
     const handleSocialLogin = async (provider) => {
-    setError('');
-    setLoading(true);
-    try {
-        let user;
-        if (provider === 'Google') user = await signInWithGoogle();
-        else if (provider === 'Facebook') user = await signInWithFacebook();
-        else if (provider === 'Apple') user = await signInWithApple();
+        setError('');
+        setLoading(true);
+        try {
+            let user;
+            if (provider === 'Google') user = await signInWithGoogle();
+            else if (provider === 'Facebook') user = await signInWithFacebook();
+            else if (provider === 'Apple') user = await signInWithApple();
 
-        login(user);
-        navigate('/');
-    } catch (err) {
-        setError(err.response?.data?.message || err.message || `${provider} login failed. Please try again.`);
-    } finally {
-        setLoading(false);
-    }
-};
+            login(user);
+            navigate('/');
+        } catch (err) {
+            setError(err.response?.data?.message || err.message || `${provider} login failed. Please try again.`);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <div className="flex min-h-screen bg-white font-sans">
@@ -130,14 +131,7 @@ const Login = () => {
                 </button>
 
                 <div className="max-w-md w-full mx-auto">
-                    {/* Logo */}
-                    <div className="flex items-center mb-8 cursor-pointer" onClick={() => navigate('/')}>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600 mr-1 -rotate-12" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-                        </svg>
-                        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Thirasara</h1>
-                    </div>
-
+                    
                     {/* Dynamic Title based on current step */}
                     {step === 2 ? (
                         <div className="mb-8 animate-fade-in">
@@ -333,11 +327,24 @@ const Login = () => {
                 </div>
             </div>
 
-            {/* --- Right Side: Background Image --- */}
+            {/* --- Right Side: Background Image Section --- */}
+            {/* Added 'relative' here so the logo can anchor inside it */}
             <div
-                className="hidden md:block flex-1 bg-cover bg-center"
+                className="hidden md:block flex-1 bg-cover bg-center relative"
                 style={{ backgroundImage: "url('https://images.unsplash.com/photo-1511895426328-dc8714191300?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')" }}
             >
+                {/* Logo wrapper pinned to top-right corner with absolute positioning */}
+                <div 
+                    
+                    className="absolute top-6 right-8 flex items-center cursor-pointer"                  >
+                    <img
+                        src="/logo.jpeg"
+                        alt="Thirasara Logo"
+                        className="logo mr-2"
+                    />
+                    <h1 className="text-xl font-extrabold text-gray-900 tracking-tight">Thirasara Property</h1>
+                </div>
+
                 <div className="w-full h-full bg-black/5"></div>
             </div>
 
