@@ -25,6 +25,45 @@ const showcaseData = [
     }
 ];
 
+const ShowcaseImage = ({ item, index, scrollYProgress }) => {
+    let inputOpacity, outputOpacity;
+    let inputScale, outputScale;
+
+    if (index === 0) {
+        inputOpacity = [0, 0.25, 0.33];
+        outputOpacity = [1, 1, 0];
+        inputScale = [0, 0.33];
+        outputScale = [1, 1.1];
+    } else if (index === 1) {
+        inputOpacity = [0.25, 0.33, 0.58, 0.66];
+        outputOpacity = [0, 1, 1, 0];
+        inputScale = [0.33, 0.66];
+        outputScale = [1, 1.1];
+    } else {
+        inputOpacity = [0.58, 0.66, 1];
+        outputOpacity = [0, 1, 1];
+        inputScale = [0.66, 1];
+        outputScale = [1, 1.1];
+    }
+    
+    const opacity = useTransform(scrollYProgress, inputOpacity, outputOpacity);
+    const scale = useTransform(scrollYProgress, inputScale, outputScale);
+
+    return (
+        <m.div 
+            style={{ opacity, scale }}
+            className="absolute inset-0 w-full h-full will-change-transform"
+        >
+            <div 
+                className="w-full h-full bg-cover bg-center"
+                style={{ backgroundImage: `url('${item.image}')` }}
+            >
+                <div className="absolute inset-0 bg-black/20"></div>
+            </div>
+        </m.div>
+    );
+};
+
 export default function CinematicShowcase() {
     const containerRef = useRef(null);
     const { scrollYProgress } = useScroll({
@@ -41,51 +80,9 @@ export default function CinematicShowcase() {
                 {/* Images Layer */}
                 <div className="relative w-full lg:w-1/2 h-[60vh] lg:h-[80vh] rounded-3xl overflow-hidden shadow-2xl">
                     
-                    {showcaseData.map((item, index) => {
-                        // We calculate the opacity of each image based on scroll progress
-                        // Total progress is 0 to 1. We have 3 items.
-                        // Item 0: active from 0 to 0.33
-                        // Item 1: active from 0.33 to 0.66
-                        // Item 2: active from 0.66 to 1
-                        
-                        let inputOpacity, outputOpacity;
-                        let inputScale, outputScale;
-
-                        if (index === 0) {
-                            inputOpacity = [0, 0.25, 0.33];
-                            outputOpacity = [1, 1, 0];
-                            inputScale = [0, 0.33];
-                            outputScale = [1, 1.1];
-                        } else if (index === 1) {
-                            inputOpacity = [0.25, 0.33, 0.58, 0.66];
-                            outputOpacity = [0, 1, 1, 0];
-                            inputScale = [0.33, 0.66];
-                            outputScale = [1, 1.1];
-                        } else {
-                            inputOpacity = [0.58, 0.66, 1];
-                            outputOpacity = [0, 1, 1];
-                            inputScale = [0.66, 1];
-                            outputScale = [1, 1.1];
-                        }
-                        
-                        const opacity = useTransform(scrollYProgress, inputOpacity, outputOpacity);
-                        const scale = useTransform(scrollYProgress, inputScale, outputScale);
-
-                        return (
-                            <m.div 
-                                key={item.id}
-                                style={{ opacity, scale }}
-                                className="absolute inset-0 w-full h-full will-change-transform"
-                            >
-                                <div 
-                                    className="w-full h-full bg-cover bg-center"
-                                    style={{ backgroundImage: `url('${item.image}')` }}
-                                >
-                                    <div className="absolute inset-0 bg-black/20"></div>
-                                </div>
-                            </m.div>
-                        );
-                    })}
+                    {showcaseData.map((item, index) => (
+                        <ShowcaseImage key={item.id} item={item} index={index} scrollYProgress={scrollYProgress} />
+                    ))}
 
                     {/* Progress Bar inside image container */}
                     <div className="absolute bottom-0 left-0 w-full h-2 bg-white/20">
@@ -99,7 +96,7 @@ export default function CinematicShowcase() {
 
             {/* Scrolling Content Blocks */}
             <div className="relative z-10 w-full mt-[-100vh]">
-                {showcaseData.map((item, index) => {
+                {showcaseData.map((item) => {
                     return (
                         <section key={item.id} className="h-screen flex flex-col justify-center w-full lg:w-1/2 px-8 lg:px-24">
                             <div className="max-w-xl bg-black/50 lg:bg-transparent backdrop-blur-md lg:backdrop-blur-none p-8 lg:p-0 rounded-2xl">

@@ -8,10 +8,8 @@ import { m } from "framer-motion";
 import { Send, Paperclip, X, Image as ImageIcon, FileText, User, MessageSquare, ShieldAlert } from 'lucide-react';
 
 // axios is globally configured with withCredentials = true
-const apiHeaders = () => ({
-    // Authorization header no longer strictly required for browser if relying on HttpOnly cookies,
-    // but kept here as fallback for any edge case or manual token storage.
-});
+// Authorization header no longer strictly required for browser if relying on HttpOnly cookies,
+// but kept here as fallback for any edge case or manual token storage.
 
 const getConversationTitle = (conversation, user) => {
     if (conversation.type === 'support') return 'Admin Support';

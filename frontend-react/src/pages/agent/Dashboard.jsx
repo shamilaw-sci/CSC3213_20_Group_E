@@ -12,7 +12,7 @@ import { m, AnimatePresence } from "framer-motion";
 import Navbar from '../../components/Navbar';
 
 const AgentDashboard = () => {
-    const { user, logout } = useAuth();
+    const { user } = useAuth();
     const navigate = useNavigate();
     
     // UI State

@@ -30,7 +30,6 @@ const ProfileSettings = () => {
         youtube_video_url: '',
         agency_name: '',
         license_number: '',
-        license_number: '',
         service_areas: '',
         specialization: 'Both'
     });

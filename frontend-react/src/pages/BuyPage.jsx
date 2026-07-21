@@ -62,6 +62,7 @@ const BuyPage = () => {
 
     useEffect(() => {
         fetchProperties();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [filters]);
 
     const fetchProperties = async () => {
