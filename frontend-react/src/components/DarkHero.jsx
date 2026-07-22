@@ -117,34 +117,6 @@ export default function DarkHero() {
                 ))}
             </div>
 
-            {/* Glassmorphism Navbar */}
-            <m.nav 
-                initial={{ y: -100, opacity: 0 }}
-                animate={{ y: isLoading ? -100 : 0, opacity: isLoading ? 0 : 1 }}
-                transition={{ duration: 0.4, delay: 0, ease: "easeOut" }}
-                className="absolute top-0 w-full z-50 flex items-center justify-between px-8 py-6 backdrop-blur-sm bg-black/10 border-b border-white/10"
-            >
-                <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
-                    <img src="/logo.jpeg" alt="Thirasara Logo" className="w-8 h-8 object-contain rounded-md" />
-                    <span className="font-bold tracking-widest uppercase text-sm">Thirasara</span>
-                </div>
-                
-                <div className="hidden md:flex items-center gap-8 text-xs font-semibold tracking-widest uppercase">
-                    <Link to="/buy" className="hover:text-white/60 transition-colors">Buy</Link>
-                    <Link to="/rent" className="hover:text-white/60 transition-colors">Rent</Link>
-                    <Link to="/sell" className="hover:text-white/60 transition-colors">Sell</Link>
-                    <Link to="/agents" className="hover:text-white/60 transition-colors">Find an Agent</Link>
-                </div>
-
-                <div className="flex items-center gap-4">
-                    <Button variant="outline" className="hidden lg:flex border-white/20 hover:bg-white/10 bg-transparent text-white text-xs tracking-widest uppercase rounded-full px-6">
-                        Map Search
-                    </Button>
-                    <Button className="bg-white/10 backdrop-blur-md hover:bg-white/20 text-white text-xs tracking-widest uppercase rounded-full px-6 border border-white/20">
-                        Sign In
-                    </Button>
-                </div>
-            </m.nav>
 
             {/* Hero Typography & Mask Animation */}
             {/* We create a clipping container. The text slides up from the bottom edge of this container */}

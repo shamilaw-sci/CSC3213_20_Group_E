@@ -1,4 +1,6 @@
 import { useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/UserAuthContext";
 import { m, useScroll, useTransform } from "framer-motion";
 
 const showcaseData = [
@@ -66,6 +68,8 @@ const ShowcaseImage = ({ item, index, scrollYProgress }) => {
 
 export default function CinematicShowcase() {
     const containerRef = useRef(null);
+    const navigate = useNavigate();
+    const { user } = useAuth();
     const { scrollYProgress } = useScroll({
         target: containerRef,
         offset: ["start start", "end end"]
@@ -110,7 +114,18 @@ export default function CinematicShowcase() {
                                     {item.description}
                                 </p>
                                 <div className="mt-10">
-                                    <button className="text-sm uppercase tracking-[0.2em] border-b border-white pb-1 hover:text-white/70 hover:border-white/70 transition-colors">
+                                    <button 
+                                        onClick={() => {
+                                            if (item.id === "buy") navigate("/map");
+                                            else if (item.id === "rent") navigate("/rent");
+                                            else if (item.id === "sell") {
+                                                navigate(user?.role === "SELLER" ? "/add-property" : "/login", {
+                                                    state: user?.role === "SELLER" ? null : { message: "Please log in as a Seller to add a property." }
+                                                });
+                                            }
+                                        }}
+                                        className="text-sm uppercase tracking-[0.2em] border-b border-white pb-1 hover:text-white/70 hover:border-white/70 transition-colors"
+                                    >
                                         Explore {item.eyebrow}
                                     </button>
                                 </div>

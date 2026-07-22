@@ -2,15 +2,6 @@ import React, { useState, useEffect } from "react";
 import { fetchUsers, banUser, unbanUser, updateUserRole } from "../api/adminApi";
 import "../styles/admin-global.css";
 
-const MOCK_USERS = [
-  { _id: "u1", name: "Chaminda Perera", email: "chaminda@mail.com", role: "Seller", status: "Active", joinDate: "2026-01-10", listings: 3, location: "Kandy" },
-  { _id: "u2", name: "Nimal Silva", email: "nimal@mail.com", role: "Buyer", status: "Active", joinDate: "2026-02-05", listings: 0, location: "Colombo" },
-  { _id: "u3", name: "Yasith Fernando", email: "yasith@mail.com", role: "Seller", status: "Banned", joinDate: "2025-11-20", listings: 1, location: "Gampaha" },
-  { _id: "u4", name: "Priya Kumari", email: "priya@mail.com", role: "Buyer", status: "Active", joinDate: "2026-03-14", listings: 0, location: "Matara" },
-  { _id: "u5", name: "Bandula Ratne", email: "bandula@mail.com", role: "Seller", status: "Active", joinDate: "2025-12-01", listings: 5, location: "Anuradhapura" },
-  { _id: "u6", name: "Kavindi Jayawardena", email: "kavindi@mail.com", role: "Buyer", status: "Active", joinDate: "2026-04-02", listings: 0, location: "Negombo" },
-  { _id: "u7", name: "Saman Herath", email: "saman@mail.com", role: "Seller", status: "Active", joinDate: "2026-01-25", listings: 2, location: "Badulla" },
-];
 
 const BanModal = ({ user, onConfirm, onCancel }) => {
   const [reason, setReason] = useState("");
@@ -51,7 +42,7 @@ const BanModal = ({ user, onConfirm, onCancel }) => {
 };
 
 const UsersPage = () => {
-  const [users, setUsers] = useState(MOCK_USERS);
+  const [users, setUsers] = useState([]);
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");

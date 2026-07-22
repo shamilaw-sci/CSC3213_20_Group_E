@@ -3,6 +3,7 @@ import DarkHero from '../components/DarkHero';
 import CinematicShowcase from '../components/CinematicShowcase';
 import AgentShowcase from '../components/AgentShowcase';
 import CinematicFooter from '../components/CinematicFooter';
+import Navbar from '../components/Navbar';
 
 const Home = () => {
     
@@ -13,6 +14,7 @@ const Home = () => {
 
     return (
         <div className="bg-black min-h-screen font-sans selection:bg-white/30 selection:text-white">
+            <Navbar transparent={true} />
             
             {/* 1. Preloader & Dark Hero */}
             <DarkHero />

@@ -28,6 +28,9 @@ const registerUser = async(req, res, next) => {
             .single();
 
         if (existingUser) {
+            if (existingUser.role === 'BANNED') {
+                return res.status(403).json({ message: "This email is banned from registration." });
+            }
             return res.status(400).json({ message: "User with this email already exists." });
         }
 
@@ -92,6 +95,10 @@ const loginUser = async(req, res, next) => {
         if (error || !user) {
             // Security best practice: Don't reveal if email exists
             return res.status(400).json({ message: "Invalid email or password." });
+        }
+
+        if (user.role === 'BANNED') {
+            return res.status(403).json({ message: "This account has been banned and removed from access." });
         }
 
         // Verify password

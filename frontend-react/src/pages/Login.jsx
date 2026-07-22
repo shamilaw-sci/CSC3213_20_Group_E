@@ -4,13 +4,16 @@
  */
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../context/api';
 import { useAuth } from '../context/UserAuthContext';
 import { signInWithGoogle, signInWithFacebook, signInWithApple } from '../utils/socialAuth';
+import { ShieldAlert } from 'lucide-react';
 
 const Login = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const stateMessage = location.state?.message;
     const { login } = useAuth();
     
     // UI State Management
@@ -177,6 +180,16 @@ const Login = () => {
                         <h2 className="text-2xl font-bold text-gray-900 mb-2">
                             {step === 1 ? 'Sign in' : 'Reset Password'}
                         </h2>
+                    )}
+                    
+                    {stateMessage && (
+                        <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 text-blue-700 rounded shadow-sm flex items-start">
+                            <ShieldAlert className="w-5 h-5 mr-3 flex-shrink-0 mt-0.5 text-blue-500" />
+                            <div>
+                                <p className="font-semibold text-sm">Action Required</p>
+                                <p className="text-sm mt-1">{stateMessage}</p>
+                            </div>
+                        </div>
                     )}
                     
                     {/* Display email in step 2 with edit option */}
