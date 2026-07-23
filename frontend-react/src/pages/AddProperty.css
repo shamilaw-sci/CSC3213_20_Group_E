@@ -33,19 +33,16 @@
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08), 0 16px 40px rgba(0, 0, 0, 0.15);
 }
 
-/* Property Type Container */
-.proparty_typ {
+.button-group {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 20px; /* Space between buttons */
-  flex-wrap: nowrap;
+  margin-bottom: 20px;
+  gap: 10px; /* Space between buttons */
 }
 
 /* Property Type Card */
 .type {
   width: 250px; /* Same width */
-  height: 120px; /* Smaller height */
+  height: 100px; /* Smaller height */
   display: flex;
   flex-direction: column;
   justify-content: center;
