@@ -612,6 +612,7 @@ const MapSearch = () => {
                             }}
                             onEachFeature={(feature, layer) => {
                                 const districtName = feature.properties.shapeName || feature.properties.name;
+                                // eslint-disable-next-line
                                 layer.on({
                                     click: (e) => {
                                         L.DomEvent.stopPropagation(e);

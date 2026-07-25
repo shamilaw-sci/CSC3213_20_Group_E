@@ -206,10 +206,11 @@ const SellerDashboard = () => {
                                         {[30, 45, 25, 60, 40, 75, 50].map((val, i) => (
                                             <div key={i} className="w-full bg-white/10 rounded-t-sm relative group flex flex-col justify-end">
                                                 <m.div 
-                                                    initial={{ height: 0 }}
-                                                    animate={{ height: `${val}%` }}
+                                                    initial={{ scaleY: 0 }}
+                                                    animate={{ scaleY: val / 100 }}
+                                                    style={{ transformOrigin: "bottom" }}
                                                     transition={{ delay: 0.5 + (i * 0.1), duration: 0.5 }}
-                                                    className="w-full bg-blue-400 rounded-t-sm"
+                                                    className="w-full h-full bg-blue-400 rounded-t-sm"
                                                 ></m.div>
                                             </div>
                                         ))}

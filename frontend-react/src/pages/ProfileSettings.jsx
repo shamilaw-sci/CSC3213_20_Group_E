@@ -404,7 +404,7 @@ const ProfileSettings = () => {
                                             {favorites.map(prop => (
                                                 <div key={prop.id} onClick={() => navigate(`/property/${prop.id}`)} className="group cursor-pointer bg-gray-50 dark:bg-gray-900 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700 hover:shadow-lg transition-all">
                                                     <div className="h-48 relative">
-                                                        <img src={prop.images?.[0] || '/placeholder.jpg'} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                                        <img src={prop.images?.[0] || '/placeholder.jpg'} alt={prop.title || "Property"} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                                         <button aria-label="Accessible interactive control" type="button" 
                                                             onClick={(e) => { e.stopPropagation(); handleRemoveFavorite(prop.id); }}
                                                             className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-full text-red-500 hover:bg-red-50 shadow-sm transition-colors"
