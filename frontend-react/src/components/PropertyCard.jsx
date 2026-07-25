@@ -3,13 +3,17 @@ import { Bed, Bath, Maximize, Heart, MessageCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../context/api';
 import { useAuth } from '../context/UserAuthContext';
+import { useCompare } from '../context/CompareContext';
 import { AnimatePresence, m } from "framer-motion";
 
 const PropertyCard = ({ prop, handleMessageSeller }) => {
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { compareList, addToCompare, removeFromCompare } = useCompare();
     const [isFavorite, setIsFavorite] = useState(false);
     const [showAnimation, setShowAnimation] = useState(false);
+
+    const isCompared = compareList.some(p => p.id === prop.id);
 
     useEffect(() => {
         // Since we are rendering multiple cards, ideally favorites should be fetched globally.
@@ -17,6 +21,7 @@ const PropertyCard = ({ prop, handleMessageSeller }) => {
     }, []);
 
     const toggleFavorite = async (e) => {
+        e.preventDefault();
         e.stopPropagation();
         if (!user) {
             navigate('/login');
@@ -135,14 +140,31 @@ const PropertyCard = ({ prop, handleMessageSeller }) => {
                 <div className="mt-auto pt-4 flex items-center justify-between gap-3">
                     <button aria-label="Accessible interactive control" type="button"
                         onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            isCompared ? removeFromCompare(prop.id) : addToCompare(prop);
+                        }}
+                        className={`flex-1 font-bold py-3 px-4 rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 border shadow-sm ${
+                            isCompared 
+                                ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200' 
+                                : 'bg-white/50 backdrop-blur-md text-gray-700 hover:bg-gray-100 hover:text-gray-900 border-gray-200/50'
+                        }`}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        <span className="text-sm">{isCompared ? 'Added' : 'Compare'}</span>
+                    </button>
+
+                    <button aria-label="Accessible interactive control" type="button"
+                        onClick={(e) => {
                             e.stopPropagation();
                             handleMessageSeller(prop.id);
                         }}
                         className="flex-1 bg-white/50 backdrop-blur-md hover:bg-blue-600 text-gray-700 hover:text-white font-bold py-3 px-4 rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 border border-gray-200/50 hover:border-blue-600 hover:shadow-[0_10px_20px_rgba(37,99,235,0.2)]"
-
                     >
                         <MessageCircle className="w-5 h-5" />
-                        <span>Contact</span>
+                        <span className="text-sm">Contact</span>
                     </button>
                 </div>
             </div>

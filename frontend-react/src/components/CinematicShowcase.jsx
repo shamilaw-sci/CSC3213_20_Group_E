@@ -82,7 +82,7 @@ export default function CinematicShowcase() {
             <div className="sticky top-0 h-screen w-full flex items-center justify-center lg:justify-end overflow-hidden p-8 lg:p-16">
                 
                 {/* Images Layer */}
-                <div className="relative w-full lg:w-1/2 h-[60vh] lg:h-[80vh] rounded-3xl overflow-hidden shadow-2xl">
+                <div className="relative w-full lg:w-1/2 h-[60vh] lg:h-[70vh] rounded-3xl overflow-hidden shadow-2xl">
                     
                     {showcaseData.map((item, index) => (
                         <ShowcaseImage key={item.id} item={item} index={index} scrollYProgress={scrollYProgress} />

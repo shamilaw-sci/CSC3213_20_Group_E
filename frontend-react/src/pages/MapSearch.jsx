@@ -7,7 +7,9 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { MapContainer, TileLayer, useMap, Marker, Popup, GeoJSON } from 'react-leaflet';
 import L from 'leaflet';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Heart, Calculator, Menu, Search } from 'lucide-react';
+import { Heart, Search, Filter, Map, List, Home, Layers, EyeOff, Building, MapPin, Map as MapIcon, Sliders, ChevronDown, Menu, Calculator } from 'lucide-react';
+import PropertyCardFull from '../components/PropertyCard'; // Rename imported PropertyCard to avoid collision
+import { useCompare } from '../context/CompareContext';
 import api from '../context/api';
 import FeasibilityCalculator from './FeasibilityCalculator';
 import AdvancedSearchBar from '../components/AdvancedSearchBar';
@@ -113,7 +115,7 @@ const MapEvents = ({ onBoundsChange, onMapClick, searchMode }) => {
  * 🚀 Freehand Draw Component
  * (Handles freehand drawing logic)
  */
-const FreehandDrawControl = ({ onPolygonComplete, onDrawDelete, controlRef }) => {
+const FreehandDrawControl = ({ onPolygonComplete, onDrawDelete, controlRef, children }) => {
     const map = useMap();
     const [isDrawMode, setIsDrawMode] = useState(false);
     const drawnItemsRef = useRef(new L.FeatureGroup());
@@ -194,20 +196,29 @@ const FreehandDrawControl = ({ onPolygonComplete, onDrawDelete, controlRef }) =>
     }, [map, isDrawMode, onPolygonComplete]);
 
     return (
-        <div className="leaflet-draw-control">
+        <div className="leaflet-draw-control flex flex-col gap-3 z-[1000]">
             <button aria-label="Accessible interactive control" type="button" 
                 onClick={(e) => {
                     e.stopPropagation();
                     setIsDrawMode(!isDrawMode);
                 }}
-                className={`px-4 py-2 font-bold rounded-lg shadow-lg transition-all border-2 ${
+                className={`px-4 py-2 font-bold rounded-lg shadow-lg transition-all border-2 w-full flex items-center justify-center gap-2 ${
                     isDrawMode 
-                        ? 'bg-red-50 text-red-600 border-red-500 animate-pulse' 
-                        : 'bg-white text-blue-600 border-blue-600 hover:bg-blue-50'
+                        ? 'bg-red-50 text-red-600 border-red-500 animate-pulse ring-4 ring-red-200' 
+                        : 'bg-white text-blue-600 border-blue-600 hover:bg-blue-50 hover:scale-105'
                 }`}
             >
-                {isDrawMode ? '✏️ Drawing... (Click & Drag)' : '✏️ Draw Freehand Area'}
+                {isDrawMode ? (
+                    <>
+                        <span className="relative flex h-3 w-3 mr-1">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                        </span>
+                        Drawing...
+                    </>
+                ) : '✏️ Draw Freehand Area'}
             </button>
+            {children}
         </div>
     );
 };
@@ -225,12 +236,16 @@ const getSafeImageUrl = (prop) => {
 // New Component for the sidebar card
 const PropertyCard = React.memo(({ prop, isActive, onMouseEnter, onMouseLeave, onClick }) => {
     const imageUrl = getSafeImageUrl(prop);
+    const { compareList, addToCompare, removeFromCompare } = useCompare();
     const [isFavorite, setIsFavorite] = useState(false); // Initially false, ideally should be fetched from backend per property
     
+    const isCompared = compareList.some(p => p.id === prop.id);
+    
     const handleFavoriteClick = async (e) => {
+        e.preventDefault();
         e.stopPropagation();
         try {
-            await api.post(`/api/favorites/${prop.id}`);
+            await api.post(`/favorites/${prop.id}`);
             setIsFavorite(!isFavorite);
         } catch (error) {
             console.error("Error toggling favorite", error);
@@ -266,10 +281,28 @@ const PropertyCard = React.memo(({ prop, isActive, onMouseEnter, onMouseLeave, o
                     </div>
                 )}
                 <button aria-label="Accessible interactive control" type="button" 
-                    onClick={handleFavoriteClick}
-                    className="absolute top-1 right-1 p-1.5 bg-white/80 hover:bg-white rounded-full shadow-sm transition"
+                    onClick={(e) => {
+                        e.preventDefault();
+                        handleFavoriteClick(e);
+                    }}
+                    className="absolute top-1 right-1 p-1.5 bg-white/80 hover:bg-white rounded-full shadow-sm transition z-50"
                 >
                     <Heart className={`h-4 w-4 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
+                </button>
+                <button aria-label="Accessible interactive control" type="button" 
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        isCompared ? removeFromCompare(prop.id) : addToCompare(prop);
+                    }}
+                    className={`absolute top-9 right-1 p-1.5 rounded-full shadow-sm transition z-50 ${
+                        isCompared ? 'bg-blue-100 text-blue-600 hover:bg-red-100 hover:text-red-600' : 'bg-white/80 text-gray-600 hover:bg-white'
+                    }`}
+                    title={isCompared ? "Remove from Compare" : "Compare"}
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
                 </button>
                 {isActive && <div className="absolute inset-0 bg-blue-500/10"></div>}
             </div>
@@ -310,6 +343,31 @@ const MapSearch = () => {
     
     // New States for Phase 1 Filters, initialize with savedSearch if provided
     const [currentPolygon, setCurrentPolygon] = useState(savedSearch?.polygon || null);
+    
+    // Disaster Risk Map State
+    const [showFloodZones, setShowFloodZones] = useState(false);
+    const [showLandslideZones, setShowLandslideZones] = useState(false);
+    const [floodData, setFloodData] = useState(null);
+    const [landslideData, setLandslideData] = useState(null);
+
+    // Fetch GeoJSON data when layers are toggled
+    useEffect(() => {
+        if (showFloodZones && !floodData) {
+            fetch('/data/flood_zones.json')
+                .then(res => res.json())
+                .then(data => setFloodData(data))
+                .catch(err => console.error("Error loading flood data", err));
+        }
+    }, [showFloodZones, floodData]);
+
+    useEffect(() => {
+        if (showLandslideZones && !landslideData) {
+            fetch('/data/landslide_zones.json')
+                .then(res => res.json())
+                .then(data => setLandslideData(data))
+                .catch(err => console.error("Error loading landslide data", err));
+        }
+    }, [showLandslideZones, landslideData]);
     
     const [filters, setFilters] = useState({
         searchTerm: '',
@@ -566,12 +624,96 @@ const MapSearch = () => {
                             }}
                         />
 
+                        {showFloodZones && floodData && (
+                            <GeoJSON 
+                                data={floodData} 
+                                style={{
+                                    color: "#3b82f6", // blue-500
+                                    weight: 2,
+                                    fillColor: "#3b82f6",
+                                    fillOpacity: 0.3,
+                                }}
+                                onEachFeature={(feature, layer) => {
+                                    if (feature.properties && feature.properties.name) {
+                                        const p = feature.properties;
+                                        layer.bindPopup(`
+                                            <div style="font-family: sans-serif;">
+                                                <strong style="color: #3b82f6; font-size: 14px;">${p.name}</strong><br/>
+                                                <span style="font-size: 12px; color: #555;">Risk Level: <b style="color: red;">${p.risk_level}</b></span><br/>
+                                                <hr style="margin: 4px 0;" />
+                                                <div style="font-size: 12px; line-height: 1.4;">
+                                                    <b>Affected Families:</b> ${p.affectedFamilies?.toLocaleString() || 0}<br/>
+                                                    <b>Deaths:</b> ${p.deaths || 0}<br/>
+                                                    <b>Missing:</b> ${p.missing || 0}
+                                                </div>
+                                            </div>
+                                        `);
+                                    }
+                                }}
+                            />
+                        )}
+
+                        {showLandslideZones && landslideData && (
+                            <GeoJSON 
+                                data={landslideData} 
+                                style={{
+                                    color: "#ef4444", // red-500
+                                    weight: 2,
+                                    fillColor: "#ef4444",
+                                    fillOpacity: 0.3,
+                                    dashArray: '5, 5'
+                                }}
+                                onEachFeature={(feature, layer) => {
+                                    if (feature.properties && feature.properties.name) {
+                                        const p = feature.properties;
+                                        layer.bindPopup(`
+                                            <div style="font-family: sans-serif;">
+                                                <strong style="color: #ef4444; font-size: 14px;">${p.name}</strong><br/>
+                                                <span style="font-size: 12px; color: #555;">Risk Level: <b style="color: red;">${p.risk_level}</b></span><br/>
+                                                <hr style="margin: 4px 0;" />
+                                                <div style="font-size: 12px; line-height: 1.4;">
+                                                    <b>Affected Families:</b> ${p.affectedFamilies?.toLocaleString() || 0}<br/>
+                                                    <b>Deaths:</b> ${p.deaths || 0}<br/>
+                                                    <b>Missing:</b> ${p.missing || 0}
+                                                </div>
+                                            </div>
+                                        `);
+                                    }
+                                }}
+                            />
+                        )}
+
                         {/* 🚀 New Freehand Control Component */ }
                         <FreehandDrawControl 
                             onPolygonComplete={handleFreehandData} 
                             onDrawDelete={clearBoundary} 
                             controlRef={drawControlRef} 
-                        />
+                        >
+                            <div className="bg-white/90 backdrop-blur-sm p-4 rounded-xl shadow-lg border border-gray-200 transition-all hover:shadow-xl w-full">
+                                <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2 text-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                    Disaster Risk Map
+                                </h4>
+                                <div className="flex flex-col space-y-3 mt-3">
+                                    <label className="flex items-center gap-2 cursor-pointer group">
+                                        <input type="checkbox" checked={showFloodZones} onChange={(e) => { e.stopPropagation(); setShowFloodZones(e.target.checked); }} className="form-checkbox h-4 w-4 text-blue-500 rounded border-gray-300 focus:ring-blue-500 transition duration-150 ease-in-out" />
+                                        <span className="text-sm font-medium text-gray-700 group-hover:text-blue-600 transition-colors flex items-center gap-2">
+                                            <div className="w-3 h-3 bg-blue-500 rounded-full shadow-sm"></div>
+                                            Flood Zones
+                                        </span>
+                                    </label>
+                                    <label className="flex items-center gap-2 cursor-pointer group">
+                                        <input type="checkbox" checked={showLandslideZones} onChange={(e) => { e.stopPropagation(); setShowLandslideZones(e.target.checked); }} className="form-checkbox h-4 w-4 text-red-500 rounded border-gray-300 focus:ring-red-500 transition duration-150 ease-in-out" />
+                                        <span className="text-sm font-medium text-gray-700 group-hover:text-red-600 transition-colors flex items-center gap-2">
+                                            <div className="w-3 h-3 bg-red-500 rounded-full shadow-sm"></div>
+                                            Landslide Zones
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                        </FreehandDrawControl>
 
                         <MarkerClusterGroup
                             chunkedLoading

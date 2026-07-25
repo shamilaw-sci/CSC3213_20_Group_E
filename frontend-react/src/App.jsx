@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import axios from 'axios';
 import { UserAuthProvider } from './context/UserAuthContext';
 import { ThemeProvider } from './context/ThemeProvider';
+import { CompareProvider } from './context/CompareContext';
 import { AdminAuthProvider } from './pages/admin/context/AdminAuthContext';
 import { MotionConfig, LazyMotion, domAnimation } from 'framer-motion';
 
@@ -11,6 +12,8 @@ import FloatingAIChat from './components/FloatingAIChat';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminProtectedRoute from './pages/admin/components/AdminProtectedRoute';
 import AdminLayout from './pages/admin/components/AdminLayout';
+import CompareActionBar from './components/CompareActionBar';
+import CompareMatrixModal from './components/CompareMatrixModal';
 
 // Set global axios configuration
 axios.defaults.withCredentials = true;
@@ -57,8 +60,11 @@ function App() {
       <LazyMotion features={domAnimation}>
       <UserAuthProvider>
         <ThemeProvider>
+          <CompareProvider>
           <Router>
           <FloatingAIChat />
+          <CompareActionBar />
+          <CompareMatrixModal />
           <Suspense fallback={<PageLoader />}>
             <Routes>
             {/* Public Routes */}
@@ -112,6 +118,7 @@ function App() {
           </Routes>
           </Suspense>
           </Router>
+          </CompareProvider>
         </ThemeProvider>
       </UserAuthProvider>
       </LazyMotion>

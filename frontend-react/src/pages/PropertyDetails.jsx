@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../context/api';
 import { useAuth } from '../context/UserAuthContext';
+import { useCompare } from '../context/CompareContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import MortgageCalculator from '../components/MortgageCalculator';
-import { Bed, Bath, Maximize, MapPin, Heart, MessageCircle, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { Bed, Bath, Maximize, MapPin, Heart, MessageCircle, ChevronLeft, ChevronRight, Loader2, Scale } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Polygon, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -27,6 +28,7 @@ const PropertyDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { compareList, addToCompare, removeFromCompare } = useCompare();
     
     const [property, setProperty] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -343,6 +345,23 @@ const PropertyDetails = () => {
                             >
                                 <Heart className={`w-5 h-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
                                 {isFavorite ? 'Saved to Favorites' : 'Save Property'}
+                            </button>
+
+                            <button aria-label="Accessible interactive control" type="button" 
+                                onClick={() => {
+                                    const isCompared = compareList.some(p => p.id === property.id);
+                                    isCompared ? removeFromCompare(property.id) : addToCompare(property);
+                                }}
+                                className={`w-full font-bold py-4 rounded-xl transition-all border flex items-center justify-center gap-2 mt-4 ${
+                                    compareList.some(p => p.id === property.id)
+                                        ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200'
+                                        : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                                }`}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                                {compareList.some(p => p.id === property.id) ? 'Added to Compare' : 'Compare Property'}
                             </button>
 
                             {/* Trust badges */}

@@ -3,6 +3,7 @@ const axios = require('axios');
 const jwt = require('jsonwebtoken');
 const appleSignin = require('apple-signin-auth');
 const { setTokenCookie } = require('./authController');
+const { sendWelcomeEmail } = require('../utils/emailService');
 
 // Initialize Supabase client for database operations
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
@@ -64,6 +65,9 @@ const findOrCreateSocialUser = async({ email, name, provider, provider_id, avata
     if (insertError) {
         throw new Error(insertError.message);
     }
+
+    // Send welcome email asynchronously for new social signups
+    sendWelcomeEmail(email, name || email.split('@')[0]).catch(console.error);
 
     return newUser[0];
 };
