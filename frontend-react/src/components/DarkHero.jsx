@@ -49,10 +49,10 @@ export default function DarkHero() {
 
                     {/* Growing Reveal Image in the center */}
                     <m.div 
-                        initial={{ width: "0%", height: "100%", opacity: 0 }}
-                        animate={{ width: "100%", opacity: 1 }}
+                        initial={{ clipPath: "inset(0 50% 0 50%)", opacity: 0 }}
+                        animate={{ clipPath: "inset(0 0% 0 0%)", opacity: 1 }}
                         transition={{ duration: 0.8, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                        className="relative z-10 flex items-center justify-center overflow-hidden h-full"
+                        className="relative z-10 flex items-center justify-center overflow-hidden h-full w-full"
                     >
                         <div className="absolute inset-0 bg-cover bg-center w-[100vw]" style={{ backgroundImage: "url('/images/modern_villa_hero.jpg')" }}></div>
                     </m.div>
@@ -100,12 +100,13 @@ export default function DarkHero() {
                             
                             {/* Label Reveal */}
                             <m.div
-                                initial={{ width: 0, opacity: 0 }}
+                                initial={{ scaleX: 0, opacity: 0 }}
                                 animate={{ 
-                                    width: hoveredHotspot === spot.id ? 'auto' : 0, 
+                                    scaleX: hoveredHotspot === spot.id ? 1 : 0, 
                                     opacity: hoveredHotspot === spot.id ? 1 : 0 
                                 }}
-                                className="overflow-hidden absolute left-2 top-1/2 -translate-y-1/2 flex items-center"
+                                style={{ transformOrigin: 'left' }}
+                                className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center"
                             >
                                 <div className="w-8 h-[1px] bg-white/50 ml-2"></div>
                                 <div className="bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs px-4 py-2 rounded-full whitespace-nowrap ml-2 shadow-xl">

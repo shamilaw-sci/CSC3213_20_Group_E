@@ -72,13 +72,14 @@ const AgentDashboard = () => {
     
     // Fetch Messages when a lead is selected
     useEffect(() => {
+        let timer;
         if (!selectedLead) return;
         
         const fetchMessages = async () => {
             try {
                 const response = await api.get(`/conversations/${selectedLead.id}/messages`);
                 setChatMessages(response.data.messages || []);
-                setTimeout(() => {
+                timer = setTimeout(() => {
                     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
                 }, 100);
             } catch (err) {
@@ -88,7 +89,11 @@ const AgentDashboard = () => {
         
         fetchMessages();
         const interval = setInterval(fetchMessages, 5000);
-        return () => clearInterval(interval);
+        
+        return () => {
+            clearInterval(interval);
+            if (timer) clearTimeout(timer);
+        };
     }, [selectedLead]);
 
     // Send Message
