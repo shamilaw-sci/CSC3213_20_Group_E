@@ -43,6 +43,9 @@ const PropertyDetails = () => {
                 const res = await api.get(`/properties/${id}`);
                 setProperty(res.data.property);
                 
+                // Track view
+                api.post(`/properties/${id}/view`).catch(err => console.error("Error tracking view", err));
+                
                 // If user is logged in, check if it's a favorite
                 if (user) {
                     const favRes = await api.get('/favorites');

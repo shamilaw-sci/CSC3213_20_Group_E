@@ -196,6 +196,7 @@ const Navbar = ({ transparent = false }) => {
                           src={user.avatar_url}
                           alt="Profile"
                           className="w-full h-full object-cover"
+                          referrerPolicy="no-referrer"
                         />
                       ) : (
                         <span className="text-gray-500 font-bold text-sm">

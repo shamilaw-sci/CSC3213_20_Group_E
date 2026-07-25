@@ -1,292 +1,199 @@
-import { useEffect, useMemo, useState } from 'react';
-import api from '../context/api';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navbar from '../components/Navbar';
+import api from '../context/api';
 import { useAuth } from '../context/UserAuthContext';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import { Edit2, Eye, Heart, CheckCircle, Clock, XCircle, Trash2, MapPin, Search } from 'lucide-react';
+import { m } from "framer-motion";
 
-const STATUS_STYLES = {
-    pending: 'bg-amber-100 text-amber-800 border-amber-200',
-    approved: 'bg-green-100 text-green-800 border-green-200',
-    rejected: 'bg-red-100 text-red-800 border-red-200',
-};
-
-const STATUS_LABELS = {
-    pending: 'Pending Approval',
-    approved: 'Approved',
-    rejected: 'Needs Changes',
-};
-
-const EditPropertyModal = ({ property, onCancel, onSaved }) => {
-    const [formData, setFormData] = useState({
-        type: property.type || 'House',
-        title: property.title || '',
-        description: property.description || '',
-        price: property.price || '',
-        address: property.address || '',
-        bedrooms: property.bedrooms || '',
-        bathrooms: property.bathrooms || '',
-        landSize: property.land_size || '',
-    });
-    const [saving, setSaving] = useState(false);
-    const [error, setError] = useState('');
-
-    const handleChange = (event) => {
-        setFormData((prev) => ({ ...prev, [event.target.name]: event.target.value }));
-    };
-
-    const handleSubmit = async (event) => {
-        event.preventDefault();
-        setSaving(true);
-        setError('');
-
-        try {
-            const response = await api.patch(`/properties/my-listings/${property.id}`, formData);
-            onSaved(response.data.property);
-        } catch (err) {
-            setError(err.response?.data?.message || err.response?.data?.error || 'Failed to update property.');
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    return (
-        <div className="fixed inset-0 z-[100] bg-black/40 flex items-center justify-center p-4">
-            <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-                <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-                    <div>
-                        <h2 className="text-xl font-extrabold text-gray-900">Edit Property</h2>
-                        <p className="text-sm text-gray-500">Saving changes will send this back to admin review.</p>
-                    </div>
-                    <button aria-label="Accessible interactive control" type="button" onClick={onCancel} className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 font-bold hover:bg-gray-100">
-                        Close
-                    </button>
-                </div>
-
-                <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
-                    {error && <div className="md:col-span-2 bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm font-medium">{error}</div>}
-
-                    <div className="md:col-span-2">
-                        <label htmlFor="a11y" className="block text-sm font-bold text-gray-700 mb-2">Property Type</label>
-                        <select aria-label="Accessible interactive control" name="type" value={formData.type} onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
-                            <option value="House">House</option>
-                            <option value="Land">Land</option>
-                        </select>
-                    </div>
-
-                    <div className="md:col-span-2">
-                        <label htmlFor="rapvbi" className="block text-sm font-bold text-gray-700 mb-2">Title</label>
-                        <input aria-label="Accessible interactive control" name="title" value={formData.title} onChange={handleChange} required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
-                    </div>
-
-                    <div>
-                        <label htmlFor="sb7h5e" className="block text-sm font-bold text-gray-700 mb-2">Price (Rs.)</label>
-                        <input aria-label="Accessible interactive control" type="number" name="price" value={formData.price} onChange={handleChange} required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
-                    </div>
-
-                    <div>
-                        <label htmlFor="ac6gom" className="block text-sm font-bold text-gray-700 mb-2">Land Size (Perches)</label>
-                        <input aria-label="Accessible interactive control" type="number" name="landSize" value={formData.landSize} onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
-                    </div>
-
-                    <div className="md:col-span-2">
-                        <label htmlFor="88c0s2" className="block text-sm font-bold text-gray-700 mb-2">Address</label>
-                        <input aria-label="Accessible interactive control" name="address" value={formData.address} onChange={handleChange} required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
-                    </div>
-
-                    {formData.type !== 'Land' && (
-                        <>
-                            <div>
-                                <label htmlFor="7x815n" className="block text-sm font-bold text-gray-700 mb-2">Bedrooms</label>
-                                <input aria-label="Accessible interactive control" type="number" name="bedrooms" value={formData.bedrooms} onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
-                            </div>
-
-                            <div>
-                                <label htmlFor="3ssl0e" className="block text-sm font-bold text-gray-700 mb-2">Bathrooms</label>
-                                <input aria-label="Accessible interactive control" type="number" name="bathrooms" value={formData.bathrooms} onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
-                            </div>
-                        </>
-                    )}
-
-                    <div className="md:col-span-2">
-                        <label htmlFor="2k4rsd" className="block text-sm font-bold text-gray-700 mb-2">Description</label>
-                        <textarea aria-label="Accessible interactive control" name="description" value={formData.description} onChange={handleChange} rows={5} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" />
-                    </div>
-                </div>
-
-                <div className="border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
-                    <button aria-label="Accessible interactive control" type="button" onClick={onCancel} className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-bold hover:bg-gray-100">
-                        Cancel
-                    </button>
-                    <button aria-label="Accessible interactive control" type="submit" disabled={saving} className="px-5 py-2.5 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 disabled:bg-blue-300">
-                        {saving ? 'Sending...' : 'Save & Send to Review'}
-                    </button>
-                </div>
-            </form>
-        </div>
-    );
+const STATUS_MAP = {
+    all: { label: 'All Listings', icon: null },
+    approved: { label: 'Live & Approved', icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200' },
+    pending: { label: 'Pending Review', icon: Clock, color: 'text-yellow-600', bg: 'bg-yellow-50', border: 'border-yellow-200' },
+    rejected: { label: 'Needs Changes', icon: XCircle, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200' },
 };
 
 const MyProperties = () => {
-    const navigate = useNavigate();
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
-    const [editTarget, setEditTarget] = useState(null);
-    const [notice, setNotice] = useState('');
-    const [page, setPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
+    const [activeTab, setActiveTab] = useState('all');
 
     useEffect(() => {
         if (!user || user.role !== 'SELLER') {
-            navigate('/login');
-            return;
+            navigate('/');
         }
+    }, [user, navigate]);
 
-        const fetchMyProperties = async () => {
+    useEffect(() => {
+        const fetchProperties = async () => {
             try {
-                const response = await api.get(`/properties/my-listings?page=${page}&limit=12`);
-                if (page === 1) {
-                    setProperties(response.data.properties || []);
-                } else {
-                    setProperties(prev => [...prev, ...(response.data.properties || [])]);
-                }
-                setTotalPages(response.data.totalPages || 1);
+                // Also fetch total favorites if possible, or assume it's calculated in backend 
+                const res = await api.get('/properties/my-listings');
+                setProperties(res.data.properties || []);
             } catch (err) {
-                setError(err.response?.data?.message || err.response?.data?.error || 'Failed to load your properties.');
+                console.error("Failed to load properties", err);
             } finally {
                 setLoading(false);
             }
         };
+        fetchProperties();
+    }, []);
 
-        fetchMyProperties();
-    }, [navigate, user, page]);
-
-    const counts = useMemo(() => {
-        return properties.reduce(
-            (acc, property) => {
-                const status = property.status || 'pending';
-                acc[status] = (acc[status] || 0) + 1;
-                return acc;
-            },
-            { pending: 0, approved: 0, rejected: 0 }
-        );
-    }, [properties]);
-
-    const handleSaved = (updatedProperty) => {
-        setProperties((prev) => prev.map((property) => (property.id === updatedProperty.id ? updatedProperty : property)));
-        setEditTarget(null);
-        setNotice('Updated and sent to admin review.');
-        setTimeout(() => setNotice(''), 3000);
+    const handleDelete = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this listing?')) return;
+        try {
+            await api.delete(`/properties/${id}`); // Assumes you have a delete route, otherwise /my-listings/:id if that's what was used
+            setProperties(prev => prev.filter(p => p.id !== id));
+        } catch (err) {
+            alert('Failed to delete property.');
+        }
     };
 
+    const filteredProperties = useMemo(() => {
+        if (activeTab === 'all') return properties;
+        return properties.filter(p => p.status === activeTab);
+    }, [properties, activeTab]);
+
+    if (!user) return null;
+
     return (
-        <div className="min-h-screen bg-gray-50 font-sans">
+        <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
             <Navbar />
-
-            <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-                <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
-                    <div>
-                        <h1 className="text-3xl font-extrabold text-gray-900">Pending Approvals</h1>
-                        <p className="text-gray-500 mt-1">Track properties you submitted for admin review.</p>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3 min-w-[320px]">
-                        <div className="bg-white border border-gray-200 rounded-lg p-3">
-                            <p className="text-xs text-gray-500 font-bold uppercase">Pending</p>
-                            <p className="text-2xl font-extrabold text-amber-600">{counts.pending}</p>
-                        </div>
-                        <div className="bg-white border border-gray-200 rounded-lg p-3">
-                            <p className="text-xs text-gray-500 font-bold uppercase">Approved</p>
-                            <p className="text-2xl font-extrabold text-green-600">{counts.approved}</p>
-                        </div>
-                        <div className="bg-white border border-gray-200 rounded-lg p-3">
-                            <p className="text-xs text-gray-500 font-bold uppercase">Changes</p>
-                            <p className="text-2xl font-extrabold text-red-600">{counts.rejected}</p>
-                        </div>
+            
+            {/* Header */}
+            <div className="bg-white border-b border-gray-200">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <h1 className="text-3xl font-extrabold text-gray-900 mb-2">Manage My Listings</h1>
+                    <p className="text-gray-500">Track performance and manage your property portfolio.</p>
+                    
+                    {/* Category Tabs */}
+                    <div className="flex flex-wrap gap-2 mt-8">
+                        {Object.entries(STATUS_MAP).map(([key, data]) => {
+                            const count = key === 'all' ? properties.length : properties.filter(p => p.status === key).length;
+                            const isActive = activeTab === key;
+                            return (
+                                <button aria-label="Accessible interactive control" type="button" 
+                                    key={key}
+                                    onClick={() => setActiveTab(key)}
+                                    className={`px-5 py-2.5 rounded-full font-bold text-sm transition flex items-center gap-2 ${
+                                        isActive 
+                                        ? 'bg-gray-900 text-white shadow-md' 
+                                        : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 hover:border-gray-300'
+                                    }`}
+                                >
+                                    {data.icon && <data.icon className="w-4 h-4" />}
+                                    {data.label}
+                                    <span className={`ml-1 px-2 py-0.5 rounded-full text-xs ${isActive ? 'bg-white/20' : 'bg-gray-100 text-gray-500'}`}>
+                                        {count}
+                                    </span>
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
+            </div>
 
-                {loading && <div className="bg-white border border-gray-200 rounded-lg p-8 text-gray-500">Loading your submissions...</div>}
-                {error && <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 font-medium">{error}</div>}
-                {notice && <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-green-700 font-medium mb-6">{notice}</div>}
-
-                {!loading && !error && properties.length === 0 && (
-                    <div className="bg-white border border-gray-200 rounded-lg p-10 text-center">
-                        <h2 className="text-xl font-bold text-gray-900 mb-2">No submitted properties yet</h2>
-                        <p className="text-gray-500 mb-5">Publish a property and it will appear here while admins review it.</p>
-                        <button aria-label="Accessible interactive control" type="button" onClick={() => navigate('/add-property')} className="px-5 py-2 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700">
-                            Add Property
-                        </button>
+            {/* Property List */}
+            <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+                {loading ? (
+                    <div className="flex items-center justify-center py-20">
+                        <div className="w-12 h-12 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
                     </div>
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {properties.map((property) => {
-                        const status = property.status || 'pending';
-                        const image = Array.isArray(property.images) ? property.images[0] : null;
-                        return (
-                            <article key={property.id} className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-                                <div className="h-48 bg-gray-100">
-                                    {image ? (
-                                        <img src={image} alt={property.title} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-gray-400">No Image</div>
-                                    )}
-                                </div>
-                                <div className="p-4">
-                                    <div className="flex items-start justify-between gap-3 mb-3">
-                                        <h2 className="font-extrabold text-lg text-gray-900 leading-tight">{property.title}</h2>
-                                        <span className={`text-xs font-bold border rounded-full px-2.5 py-1 whitespace-nowrap ${STATUS_STYLES[status] || STATUS_STYLES.pending}`}>
-                                            {STATUS_LABELS[status] || status}
-                                        </span>
-                                    </div>
-                                    <p className="text-xl font-extrabold text-blue-600 mb-1">Rs. {Number(property.price || 0).toLocaleString()}</p>
-                                    <p className="text-sm text-gray-600 mb-3">{property.address}</p>
-                                    {status === 'pending' && (
-                                        <p className="text-sm bg-amber-50 text-amber-800 border border-amber-100 rounded-lg p-3">
-                                            Sent to admin review. This property is hidden from public web and map search.
-                                        </p>
-                                    )}
-                                    {status === 'rejected' && (
-                                        <div className="text-sm bg-red-50 text-red-800 border border-red-100 rounded-lg p-3">
-                                            <p className="font-bold mb-1">Admin suggestion</p>
-                                            <p>{property.rejection_reason || 'Please update the details and submit again.'}</p>
+                ) : filteredProperties.length === 0 ? (
+                    <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center flex flex-col items-center">
+                        <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                            <Search className="w-10 h-10 text-gray-300" />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">No listings found</h3>
+                        <p className="text-gray-500 mb-6">You don't have any properties in this category.</p>
+                        {activeTab === 'all' && (
+                            <button aria-label="Accessible interactive control" type="button" 
+                                onClick={() => navigate('/add-property')}
+                                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl transition shadow-lg shadow-blue-500/30"
+                            >
+                                Add Your First Property
+                            </button>
+                        )}
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredProperties.map((prop, index) => {
+                            const statusInfo = STATUS_MAP[prop.status] || STATUS_MAP.pending;
+                            const StatusIcon = statusInfo.icon;
+                            
+                            return (
+                                <m.div 
+                                    key={prop.id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: index * 0.05 }}
+                                    className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-xl transition group flex flex-col"
+                                >
+                                    <div className="relative h-48 bg-gray-200 overflow-hidden">
+                                        {prop.images && prop.images[0] ? (
+                                            <img src={prop.images[0]} alt={prop.title} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-gray-400">No Image</div>
+                                        )}
+                                        <div className={`absolute top-4 left-4 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm backdrop-blur-md ${statusInfo.bg} ${statusInfo.color} ${statusInfo.border} border bg-opacity-90`}>
+                                            <StatusIcon className="w-3.5 h-3.5" /> {statusInfo.label}
                                         </div>
-                                    )}
-                                    {status !== 'approved' && (
-                                        <button aria-label="Accessible interactive control" type="button"
-                                            onClick={() => setEditTarget(property)}
-                                            className="mt-4 w-full px-4 py-2.5 rounded-lg border border-blue-600 text-blue-600 font-bold hover:bg-blue-50"
-                                        >
-                                            Edit & Resubmit
-                                        </button>
-                                    )}
-                                </div>
-                            </article>
-                        );
-                    })}
-                </div>
+                                    </div>
+                                    
+                                    <div className="p-5 flex-1 flex flex-col">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <h3 className="font-extrabold text-lg text-gray-900 line-clamp-1 flex-1 pr-2" title={prop.title}>{prop.title}</h3>
+                                            <div className="font-black text-blue-600">Rs. {prop.price?.toLocaleString()}</div>
+                                        </div>
+                                        <div className="text-gray-500 text-sm flex items-center gap-1 mb-4">
+                                            <MapPin className="w-3.5 h-3.5" /> {prop.address || 'No Address'}
+                                        </div>
 
-                {/* Load More Button */}
-                {page < totalPages && properties.length > 0 && (
-                    <div className="text-center mt-12 mb-8">
-                        <button aria-label="Accessible interactive control" type="button" 
-                            onClick={() => setPage(prev => prev + 1)}
-                            className="bg-white border border-blue-600 text-blue-600 hover:bg-blue-50 font-bold py-3 px-8 rounded-lg transition duration-300"
-                        >
-                            Load More Properties
-                        </button>
+                                        {/* Performance Analytics Bar */}
+                                        <div className="mt-auto bg-gray-50 rounded-xl p-3 border border-gray-100 flex items-center justify-around mb-4">
+                                            <div className="text-center">
+                                                <div className="flex items-center justify-center gap-1 text-gray-500 mb-0.5">
+                                                    <Eye className="w-4 h-4" /> <span className="text-xs font-medium">Views</span>
+                                                </div>
+                                                <div className="font-bold text-gray-900">{prop.views_count || 0}</div>
+                                            </div>
+                                            {/* We can add Saves if the backend returned it, otherwise omit it to prevent 0s, but we'll show it as 0 if absent */}
+                                            <div className="w-px h-8 bg-gray-200"></div>
+                                            <div className="text-center">
+                                                <div className="flex items-center justify-center gap-1 text-gray-500 mb-0.5">
+                                                    <Heart className="w-4 h-4" /> <span className="text-xs font-medium">Saves</span>
+                                                </div>
+                                                <div className="font-bold text-gray-900">{prop.favorites?.[0]?.count || 0}</div>
+                                            </div>
+                                        </div>
+
+                                        {/* Action Buttons */}
+                                        <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                                            <button aria-label="Accessible interactive control" type="button" 
+                                                onClick={() => window.open(`/property/${prop.id}`, '_blank')}
+                                                className="flex-1 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold rounded-lg transition text-sm flex justify-center items-center gap-2"
+                                            >
+                                                <Eye className="w-4 h-4" /> View Page
+                                            </button>
+                                            <button aria-label="Accessible interactive control" type="button" 
+                                                onClick={() => handleDelete(prop.id)}
+                                                className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 font-bold rounded-lg transition text-sm"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </m.div>
+                            );
+                        })}
                     </div>
                 )}
-            </main>
+            </div>
 
-            {editTarget && (
-                <EditPropertyModal
-                    property={editTarget}
-                    onCancel={() => setEditTarget(null)}
-                    onSaved={handleSaved}
-                />
-            )}
+            <Footer />
         </div>
     );
 };

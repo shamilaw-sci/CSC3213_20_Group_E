@@ -22,11 +22,27 @@ const findOrCreateSocialUser = async({ email, name, provider, provider_id, avata
         .single();
 
     if (existingUser) {
-        // Link provider info if not already set, but don't overwrite an existing account
+        const updates = {};
+        let needsUpdate = false;
+
+        // Link provider info if not already set
         if (!existingUser.provider) {
+            updates.provider = provider;
+            updates.provider_id = provider_id;
+            needsUpdate = true;
+        }
+
+        // Always update avatar_url if provided by social login and different
+        if (avatar_url && existingUser.avatar_url !== avatar_url) {
+            updates.avatar_url = avatar_url;
+            needsUpdate = true;
+            existingUser.avatar_url = avatar_url; // Update local object for response
+        }
+
+        if (needsUpdate) {
             await supabase
                 .from('users')
-                .update({ provider, provider_id })
+                .update(updates)
                 .eq('id', existingUser.id);
         }
         return existingUser;

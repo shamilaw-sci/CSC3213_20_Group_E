@@ -627,7 +627,10 @@ const MapSearch = () => {
                                         isActive={isActive}
                                         onMouseEnter={() => setHoveredPropId(prop.id)}
                                         onMouseLeave={() => setHoveredPropId(null)}
-                                        onClick={() => setActiveMarkerId(prop.id)}
+                                        onClick={() => {
+                                            setActiveMarkerId(prop.id);
+                                            window.open(`/property/${prop.id}`, '_blank');
+                                        }}
                                     />
                                 );
                             })}

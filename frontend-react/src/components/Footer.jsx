@@ -70,7 +70,7 @@ const Footer = () => {
                             </li>
                             <li className="flex items-center gap-3">
                                 <div className="w-5 h-5 flex items-center justify-center rounded bg-gray-800 text-blue-400">✉️</div>
-                                <span>hello@thirasara.lk</span>
+                                <span>thirasaraproperty@gmail.com</span>
                             </li>
                         </ul>
                     </div>

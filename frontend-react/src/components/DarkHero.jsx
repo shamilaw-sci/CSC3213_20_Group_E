@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { useNavigate, Link } from 'react-router-dom';
 
 const hotspots = [
-    { id: 1, top: '40%', left: '30%', label: 'Pond Terrace' },
-    { id: 2, top: '55%', left: '60%', label: 'Living Room' },
-    { id: 3, top: '35%', left: '75%', label: 'Master Suite' },
+    { id: 1, top: '75%', left: '30%', label: 'Infinity Pool' },
+    { id: 2, top: '70%', left: '75%', label: 'Living Room' },
+    { id: 3, top: '25%', left: '75%', label: 'Master Suite' },
 ];
 
 export default function DarkHero() {

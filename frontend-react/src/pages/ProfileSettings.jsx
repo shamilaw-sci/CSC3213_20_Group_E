@@ -179,7 +179,7 @@ const ProfileSettings = () => {
                         <div className="relative group">
                             <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 border-4 border-white dark:border-gray-800 shadow-lg">
                                 {avatarUrl ? (
-                                    <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                                    <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                                 ) : (
                                     <User className="w-full h-full p-4 text-gray-400 dark:text-gray-500" />
                                 )}
