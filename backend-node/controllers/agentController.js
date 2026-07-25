@@ -1,43 +1,40 @@
 const { createClient } = require('@supabase/supabase-js');
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Get list of agents (approved only)
+// Get all approved agents with their profiles
 const getAgents = async (req, res) => {
     try {
         const { data, error } = await supabase
             .from('users')
             .select(`
-                id, name, email, avatar_url,
-                agent_profiles (agency_name, total_sales, total_rentals, service_areas, specialization),
-                agent_reviews!agent_reviews_agent_id_fkey (rating)
+                id, name, email, avatar_url, phone, role, created_at,
+                agent_profiles (agency_name, license_number, bio, languages, youtube_video_url, total_sales, total_rentals, service_areas, specialization)
             `)
-            .in('role', ['AGENT', 'SELLER']);
+            .eq('role', 'AGENT');
 
         if (error) throw error;
-        
-        // Calculate average rating for each agent and normalize agent_profiles to an array
-        const agentsWithRatings = data.map(agent => {
-            const reviews = agent.agent_reviews || [];
-            const avgRating = reviews.length > 0 
-                ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1) 
-                : 0;
-                
-            const normalizedProfiles = agent.agent_profiles 
-                ? (Array.isArray(agent.agent_profiles) ? agent.agent_profiles : [agent.agent_profiles]) 
-                : [];
+
+        // Flatten the agent_profiles for easier frontend consumption
+        const formattedAgents = data.map(agent => {
+            const profile = Array.isArray(agent.agent_profiles) 
+                ? agent.agent_profiles[0] 
+                : agent.agent_profiles;
 
             return {
-                ...agent,
-                agent_profiles: normalizedProfiles,
-                average_rating: parseFloat(avgRating),
-                review_count: reviews.length
+                id: agent.id,
+                name: agent.name,
+                email: agent.email,
+                avatar_url: agent.avatar_url,
+                phone: agent.phone,
+                role: agent.role,
+                created_at: agent.created_at,
+                ...profile
             };
         });
 
-        // Optionally, filter to only those who actually have an agent_profile
-        const validAgents = agentsWithRatings.filter(a => a.agent_profiles && a.agent_profiles.length > 0);
-
-        res.status(200).json({ agents: validAgents });
+        res.status(200).json({ agents: formattedAgents });
     } catch (error) {
         res.status(500).json({ message: "Failed to fetch agents", error: error.message });
     }
@@ -142,14 +139,14 @@ const getAgentLeads = async (req, res) => {
         const enrichedLeads = await Promise.all(data.map(async (lead) => {
             const { data: messages } = await supabase
                 .from('messages')
-                .select('content, created_at, sender_id')
+                .select('body, created_at, sender_id')
                 .eq('conversation_id', lead.id)
                 .order('created_at', { ascending: false })
                 .limit(1);
             
             return {
                 ...lead,
-                last_message: messages && messages.length > 0 ? messages[0].content : 'No messages yet'
+                last_message: messages && messages.length > 0 ? messages[0].body : 'No messages yet'
             };
         }));
 
@@ -252,15 +249,86 @@ const resubmitApplication = async (req, res) => {
         // 2. Change role back to PENDING_AGENT
         const { error: userError } = await supabase
             .from('users')
-            .update({ role: 'PENDING_AGENT' })
+            .update({ role: 'PENDING_AGENT', updated_at: new Date().toISOString() })
             .eq('id', agentId);
 
         if (userError) throw userError;
 
-        res.status(200).json({ message: "Application resubmitted successfully" });
+        res.status(200).json({ message: "Application resubmitted successfully. Please wait for admin approval." });
     } catch (error) {
         res.status(500).json({ message: "Failed to resubmit application", error: error.message });
     }
 };
 
-module.exports = { getAgents, getAgentProfile, postReview, getAgentLeads, updateLeadMetadata, updateAgentProfile, resubmitApplication };
+// Get Dashboard Stats for Agent
+const getDashboardStats = async (req, res) => {
+    try {
+        if (req.user.role !== 'AGENT') {
+            return res.status(403).json({ message: "Only approved agents can access dashboard stats" });
+        }
+
+        const agentId = req.user.id;
+
+        // 1. Get active listings count
+        const { count: activeListingsCount, error: propError } = await supabase
+            .from('properties')
+            .select('*', { count: 'exact', head: true })
+            .eq('seller_id', agentId)
+            .eq('status', 'approved');
+
+        if (propError) throw propError;
+
+        // 2. Get leads
+        const { data: leads, error: leadsError } = await supabase
+            .from('conversations')
+            .select('lead_status')
+            .eq('seller_id', agentId)
+            .in('type', ['property', 'agent']);
+
+        if (leadsError) throw leadsError;
+
+        const totalLeads = leads.length;
+        const closedLeads = leads.filter(l => l.lead_status === 'Closed').length;
+        const conversionRate = totalLeads > 0 ? Math.round((closedLeads / totalLeads) * 100) : 0;
+
+        // Pipeline breakdown
+        const pipeline = {
+            'New': leads.filter(l => !l.lead_status || l.lead_status === 'New').length,
+            'Contacted': leads.filter(l => l.lead_status === 'Contacted').length,
+            'Showing': leads.filter(l => l.lead_status === 'Showing').length,
+            'Offer': leads.filter(l => l.lead_status === 'Offer').length,
+            'Closed': closedLeads
+        };
+
+        // Generate mock impression data for the chart (last 7 days)
+        const impressions = Array.from({ length: 7 }).map((_, i) => ({
+            name: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i],
+            views: Math.floor(Math.random() * 50) + 10,
+            leads: Math.floor(Math.random() * 5)
+        }));
+
+        res.status(200).json({
+            stats: {
+                activeListings: activeListingsCount || 0,
+                totalLeads,
+                conversionRate,
+                pipeline,
+                impressions
+            }
+        });
+
+    } catch (error) {
+        res.status(500).json({ message: "Failed to fetch dashboard stats", error: error.message });
+    }
+};
+
+module.exports = {
+    getAgents,
+    getAgentProfile,
+    postReview,
+    getAgentLeads,
+    updateLeadMetadata,
+    updateAgentProfile,
+    resubmitApplication,
+    getDashboardStats
+};

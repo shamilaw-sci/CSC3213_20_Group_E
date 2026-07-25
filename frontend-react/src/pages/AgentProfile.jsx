@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../context/api';
-import { useAuth } from '../context/UserAuthContext';
 import { Star, MapPin, Share, Mail, Award, CheckCircle, ChevronLeft, ChevronRight, PlayCircle } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -17,8 +16,7 @@ import Footer from '../components/Footer';
 const AgentProfile = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { user } = useAuth();
-    
+    // const { user } = useAuth(); // Removed unused user
     const [agentData, setAgentData] = useState(null);
     const [listings, setListings] = useState([]);
     const [reviews, setReviews] = useState([]);

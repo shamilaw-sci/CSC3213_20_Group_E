@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const path = require('path');
 const logger = require('./logger');
 
 const port = parseInt(process.env.EMAIL_PORT || '465', 10);
@@ -25,6 +26,11 @@ const sendEmail = async (to, subject, html) => {
             to,
             subject,
             html,
+            attachments: [{
+                filename: 'logo.jpeg',
+                path: path.join(__dirname, '../../frontend-react/public/logo.jpeg'),
+                cid: 'thirasaralogo' // same cid value as in the html img src
+            }]
         };
 
         const info = await transporter.sendMail(mailOptions);
@@ -34,63 +40,153 @@ const sendEmail = async (to, subject, html) => {
     }
 };
 
+const getBaseHtmlTemplate = (title, content) => {
+    const logoUrl = 'cid:thirasaralogo';
+    
+    return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${title}</title>
+    </head>
+    <body style="margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; color: #334155; -webkit-font-smoothing: antialiased;">
+        <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background-color: #f8fafc; padding: 40px 0;">
+            <tr>
+                <td align="center">
+                    <table width="600" cellpadding="0" cellspacing="0" role="presentation" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.01); margin: 0 auto;">
+                        <!-- Header -->
+                        <tr>
+                            <td style="padding: 40px 40px 20px 40px; text-align: center; border-bottom: 1px solid #f1f5f9;">
+                                <img src="${logoUrl}" alt="Thirasara Property" style="max-height: 70px; width: auto; border-radius: 8px;" />
+                            </td>
+                        </tr>
+                        <!-- Content -->
+                        <tr>
+                            <td style="padding: 40px; line-height: 1.6; font-size: 16px;">
+                                ${content}
+                            </td>
+                        </tr>
+                        <!-- Footer -->
+                        <tr>
+                            <td style="padding: 30px 40px; background-color: #f1f5f9; text-align: center; border-top: 1px solid #e2e8f0;">
+                                <p style="margin: 0 0 10px 0; color: #64748b; font-size: 14px; font-weight: 500;">&copy; ${new Date().getFullYear()} Thirasara Property. All rights reserved.</p>
+                                <p style="margin: 0; color: #94a3b8; font-size: 13px;">Find your dream property in Sri Lanka</p>
+                                <div style="margin-top: 20px;">
+                                    <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}" style="color: #2563eb; text-decoration: none; font-size: 13px; font-weight: 600;">Visit our website</a>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>
+    `;
+};
+
 const sendWelcomeEmail = (email, name) => {
-    const subject = "Welcome to Thirasara Property!";
-    const html = `
-        <div style="font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto;">
-            <h2 style="color: #2563eb;">Welcome to Thirasara Property, ${name}!</h2>
-            <p>Thank you for registering with us. We are thrilled to have you on board.</p>
-            <p>You can now explore premium lands, calculate your financial feasibility, and save your favorite properties.</p>
-            <p>Happy exploring!</p>
-            <p>Best Regards,<br/><strong>The Thirasara Team</strong></p>
+    const subject = "Welcome to Thirasara Property! 🏡";
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    const content = `
+        <h1 style="color: #0f172a; font-size: 24px; margin-top: 0; margin-bottom: 24px; font-weight: 800; letter-spacing: -0.5px;">Welcome to Thirasara, ${name}!</h1>
+        <p style="color: #475569; margin-bottom: 20px;">We are thrilled to have you on board. You've just unlocked access to Sri Lanka's most premium real estate platform.</p>
+        
+        <div style="background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 20px; border-radius: 0 8px 8px 0; margin: 30px 0;">
+            <h3 style="color: #1e3a8a; margin-top: 0; margin-bottom: 10px; font-size: 16px;">What you can do now:</h3>
+            <ul style="margin: 0; padding-left: 20px; color: #1e40af;">
+                <li style="margin-bottom: 8px;">Explore high-end properties on our Interactive Map</li>
+                <li style="margin-bottom: 8px;">Calculate your buying power using our Financial Engine</li>
+                <li>Compare properties side-by-side to make the best decision</li>
+            </ul>
+        </div>
+        
+        <p style="margin-bottom: 30px;">Ready to find your dream property?</p>
+        
+        <div style="text-align: center; margin-bottom: 20px;">
+            <a href="${clientUrl}/buy" style="display: inline-block; padding: 14px 32px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);">Start Exploring</a>
         </div>
     `;
-    return sendEmail(email, subject, html);
+    return sendEmail(email, subject, getBaseHtmlTemplate("Welcome to Thirasara Property", content));
 };
 
 const sendPaymentReceipt = (email, propertyTitle, amount) => {
-    const subject = "Payment Receipt - Thirasara Property Listing";
-    const html = `
-        <div style="font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto;">
-            <h2 style="color: #10b981;">Payment Successful!</h2>
-            <p>We have successfully received your payment of <strong>Rs. ${amount.toLocaleString()}</strong> for listing: <strong>${propertyTitle}</strong>.</p>
-            <p>Your property is now pending administrative approval. We will notify you once it's live on the map.</p>
-            <p>Thank you for doing business with us.</p>
-            <p>Best Regards,<br/><strong>The Thirasara Team</strong></p>
+    const subject = "Payment Receipt - Thirasara Property 🧾";
+    const content = `
+        <h1 style="color: #0f172a; font-size: 24px; margin-top: 0; margin-bottom: 24px; font-weight: 800;">Payment Successful!</h1>
+        <p style="color: #475569; margin-bottom: 20px;">Thank you for your payment. We have successfully received your listing fee.</p>
+        
+        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin: 30px 0;">
+            <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                <tr>
+                    <td style="padding-bottom: 12px; color: #64748b; font-size: 14px;">Property Listing</td>
+                    <td style="padding-bottom: 12px; color: #0f172a; font-weight: 600; text-align: right;">${propertyTitle}</td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 12px; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 14px;">Amount Paid</td>
+                    <td style="padding-top: 12px; border-top: 1px solid #e2e8f0; color: #059669; font-weight: 700; font-size: 18px; text-align: right;">Rs. ${amount.toLocaleString()}</td>
+                </tr>
+            </table>
         </div>
+        
+        <p style="color: #475569; margin-bottom: 10px;"><strong>What happens next?</strong></p>
+        <p style="color: #64748b; font-size: 15px; margin-top: 0;">Your property is now pending administrative review. This usually takes less than 24 hours. We will notify you via email as soon as it goes live on the platform.</p>
     `;
-    return sendEmail(email, subject, html);
+    return sendEmail(email, subject, getBaseHtmlTemplate("Payment Receipt", content));
 };
 
 const sendListingStatusEmail = (email, propertyTitle, status, reason = '') => {
     const isApproved = status === 'Active';
-    const subject = `Your Property Listing is ${isApproved ? 'Approved!' : 'Rejected'}`;
-    const color = isApproved ? '#10b981' : '#ef4444';
+    const subject = `Your Property is ${isApproved ? 'Approved!' : 'Requires Attention'}`;
+    const badgeColor = isApproved ? '#059669' : '#dc2626';
+    const badgeBg = isApproved ? '#d1fae5' : '#fee2e2';
     
-    const html = `
-        <div style="font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto;">
-            <h2 style="color: ${color};">Listing ${status}</h2>
-            <p>Your property listing: <strong>${propertyTitle}</strong> has been <strong>${status}</strong> by our administrators.</p>
-            ${!isApproved && reason ? `<p style="color: #ef4444; padding: 10px; background: #fee2e2; border-radius: 5px;">Reason: ${reason}</p>` : ''}
-            ${isApproved ? '<p>Your property is now live and visible to buyers on the map!</p>' : '<p>Please log in to your dashboard to make the necessary corrections.</p>'}
-            <p>Best Regards,<br/><strong>The Thirasara Team</strong></p>
+    const content = `
+        <h1 style="color: #0f172a; font-size: 24px; margin-top: 0; margin-bottom: 24px; font-weight: 800;">Listing Status Update</h1>
+        <p style="color: #475569; margin-bottom: 20px;">Your property listing <strong>"${propertyTitle}"</strong> has been reviewed by our administrative team.</p>
+        
+        <div style="margin: 30px 0; text-align: center;">
+            <span style="display: inline-block; padding: 8px 16px; background-color: ${badgeBg}; color: ${badgeColor}; border-radius: 20px; font-weight: 700; font-size: 14px; letter-spacing: 0.5px; text-transform: uppercase;">
+                ${status}
+            </span>
+        </div>
+
+        ${!isApproved && reason ? `
+        <div style="background-color: #fff1f2; border-left: 4px solid #e11d48; padding: 20px; border-radius: 0 8px 8px 0; margin: 20px 0;">
+            <h3 style="color: #be123c; margin-top: 0; margin-bottom: 8px; font-size: 15px;">Reason for rejection:</h3>
+            <p style="margin: 0; color: #9f1239;">${reason}</p>
+        </div>
+        ` : ''}
+        
+        <p style="color: #475569;">
+            ${isApproved 
+                ? 'Great news! Your property is now <strong>live</strong> and visible to thousands of potential buyers on our interactive map. Good luck with your sale!' 
+                : 'Please log in to your seller dashboard, make the necessary corrections outlined above, and resubmit your listing.'}
+        </p>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/dashboard" style="display: inline-block; padding: 14px 32px; background-color: #0f172a; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">Go to Dashboard</a>
         </div>
     `;
-    return sendEmail(email, subject, html);
+    return sendEmail(email, subject, getBaseHtmlTemplate("Listing Status Update", content));
 };
 
 const sendPasswordResetEmail = (email, name, resetLink) => {
-    const subject = 'Password Reset - Thirasara Property';
-    const html = `
-        <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto; text-align: center;">
-            <h2 style="color: #006aff;">Password Reset Request</h2>
-            <p>Hi ${name},</p>
-            <p>We received a request to reset your password. Click the button below to choose a new one:</p>
-            <a href="${resetLink}" style="display: inline-block; padding: 12px 24px; background-color: #006aff; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: bold;">Reset Password</a>
-            <p style="color: #666; font-size: 14px;">This link will expire in 15 minutes. If you didn't request this, you can safely ignore this email.</p>
+    const subject = 'Reset Your Password - Thirasara Property 🔒';
+    const content = `
+        <h1 style="color: #0f172a; font-size: 24px; margin-top: 0; margin-bottom: 24px; font-weight: 800;">Password Reset Request</h1>
+        <p style="color: #475569; margin-bottom: 20px;">Hi ${name},</p>
+        <p style="color: #475569; margin-bottom: 20px;">We received a request to reset the password for your Thirasara Property account. If you didn't make this request, you can safely ignore this email.</p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetLink}" style="display: inline-block; padding: 14px 32px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);">Reset Password</a>
         </div>
+        
+        <p style="color: #94a3b8; font-size: 13px; text-align: center;">This link will securely expire in 15 minutes.</p>
     `;
-    return sendEmail(email, subject, html);
+    return sendEmail(email, subject, getBaseHtmlTemplate("Password Reset", content));
 };
 
 module.exports = {

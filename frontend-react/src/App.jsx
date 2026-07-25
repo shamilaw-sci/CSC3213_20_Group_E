@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import axios from 'axios';
 import { UserAuthProvider } from './context/UserAuthContext';
 import { ThemeProvider } from './context/ThemeProvider';
+import { CompareProvider } from './context/CompareContext';
 import { AdminAuthProvider } from './pages/admin/context/AdminAuthContext';
 import { MotionConfig, LazyMotion, domAnimation } from 'framer-motion';
 
@@ -11,6 +12,8 @@ import FloatingAIChat from './components/FloatingAIChat';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminProtectedRoute from './pages/admin/components/AdminProtectedRoute';
 import AdminLayout from './pages/admin/components/AdminLayout';
+import CompareActionBar from './components/CompareActionBar';
+import CompareMatrixModal from './components/CompareMatrixModal';
 
 // Set global axios configuration
 axios.defaults.withCredentials = true;
@@ -18,6 +21,7 @@ axios.defaults.withCredentials = true;
 // Lazy Loaded Pages
 const Home = lazy(() => import('./pages/Home'));
 const MapSearch = lazy(() => import('./pages/MapSearch'));
+const BuyPage = lazy(() => import('./pages/BuyPage'));
 const AddProperty = lazy(() => import('./pages/AddProperty'));
 const Register = lazy(() => import('./pages/Register'));
 const Login = lazy(() => import('./pages/Login'));
@@ -56,8 +60,11 @@ function App() {
       <LazyMotion features={domAnimation}>
       <UserAuthProvider>
         <ThemeProvider>
+          <CompareProvider>
           <Router>
           <FloatingAIChat />
+          <CompareActionBar />
+          <CompareMatrixModal />
           <Suspense fallback={<PageLoader />}>
             <Routes>
             {/* Public Routes */}
@@ -76,6 +83,7 @@ function App() {
               </ProtectedRoute>
             } />
             <Route path="/login" element={<Login />} />
+            <Route path="/buy" element={<BuyPage />} />
             <Route path="/map" element={<MapSearch />} />
             <Route path="/rent" element={<MapSearch />} />
             <Route path="/add-property" element={<AddProperty />} />
@@ -110,6 +118,7 @@ function App() {
           </Routes>
           </Suspense>
           </Router>
+          </CompareProvider>
         </ThemeProvider>
       </UserAuthProvider>
       </LazyMotion>

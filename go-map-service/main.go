@@ -15,6 +15,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
@@ -51,6 +52,9 @@ func main() {
 	fmt.Println("✅ Successfully connected to Supabase Database!")
 
 	r := gin.Default()
+	
+	// Add Gzip compression for faster network transfer
+	r.Use(gzip.Gzip(gzip.DefaultCompression))
 
 	// CORS Setup
 	allowedOrigin := os.Getenv("ALLOWED_ORIGIN")
@@ -88,10 +92,10 @@ func main() {
 		log.Println("🔍 Searching in Polygon:", req.Polygon)
 
 		query := `SELECT p.id, p.title, p.description, p.price, p.latitude, p.longitude, p.images, p.bedrooms, p.bathrooms, p.land_size, p.type, p.city, p.listing_type, u.name, u.role
-				  FROM search_properties($1) sp
-				  JOIN properties p ON sp.id = p.id
+				  FROM properties p
                   LEFT JOIN users u ON p.seller_id = u.id
-				  WHERE p.status = 'approved'`
+				  WHERE p.status = 'approved'
+                  AND ST_Intersects(p.boundary::geometry, ST_GeomFromText($1, 4326))`
 		
 		args := []interface{}{req.Polygon}
 		paramCount := 1
@@ -117,6 +121,9 @@ func main() {
 			args = append(args, *req.ListingType)
 		}
 
+		// Add a reasonable limit to prevent huge payloads and reduce database load
+		query += " LIMIT 500"
+
 		rows, err := pool.Query(context.Background(), query, args...)
 		if err != nil {
 			log.Println("❌ DB Query Error:", err.Error())
@@ -125,7 +132,27 @@ func main() {
 		}
 		defer rows.Close()
 
-		var properties []map[string]interface{}
+		// Define a struct for faster JSON marshaling (faster than map[string]interface{})
+		type PropertyResponse struct {
+			ID          string    `json:"id"`
+			Title       string    `json:"title"`
+			Description *string   `json:"description"`
+			Price       float64   `json:"price"`
+			Latitude    *float64  `json:"latitude"`
+			Longitude   *float64  `json:"longitude"`
+			Images      []string  `json:"images"`
+			Bedrooms    *int      `json:"bedrooms"`
+			Bathrooms   *int      `json:"bathrooms"`
+			LandSize    *float64  `json:"land_size"`
+			Type        *string   `json:"type"`
+			City        *string   `json:"city"`
+			ListingType *string   `json:"listing_type"`
+			SellerName  *string   `json:"seller_name"`
+			SellerRole  *string   `json:"seller_role"`
+			Address     *string   `json:"address"` // Mapping city to address
+		}
+
+		var properties []PropertyResponse
 		for rows.Next() {
 			var id string
 			var title, description, propType, city, listingType, sellerName, sellerRole *string
@@ -148,29 +175,33 @@ func main() {
 			safeImages := []string{}
 			if images != nil { safeImages = *images }
 
-			propData := gin.H{
-				"id":           id,
-				"title":        safeTitle,
-				"description":  description,
-				"price":        safePrice,
-				"latitude":     lat,
-				"longitude":    lng,
-				"images":       safeImages,
-				"bedrooms":     beds,
-				"bathrooms":    baths,
-				"land_size":    landSize,
-				"type":         propType,
-				"city":         city,
-				"listing_type": listingType,
-				"seller_name":  sellerName,
-				"seller_role":  sellerRole,
-				"address":      city, // Mapping city to address for the frontend
+			propData := PropertyResponse{
+				ID:          id,
+				Title:       safeTitle,
+				Description: description,
+				Price:       safePrice,
+				Latitude:    lat,
+				Longitude:   lng,
+				Images:      safeImages,
+				Bedrooms:    beds,
+				Bathrooms:   baths,
+				LandSize:    landSize,
+				Type:        propType,
+				City:        city,
+				ListingType: listingType,
+				SellerName:  sellerName,
+				SellerRole:  sellerRole,
+				Address:     city,
 			}
 
 			properties = append(properties, propData)
 		}
 
 		log.Println("✅ Found Properties:", len(properties))
+		// Pre-allocate empty array for consistent JSON format when no results
+		if properties == nil {
+			properties = []PropertyResponse{}
+		}
 		c.JSON(http.StatusOK, gin.H{"properties": properties})
 	})
 

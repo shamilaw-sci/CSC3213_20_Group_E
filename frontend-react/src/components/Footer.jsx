@@ -1,6 +1,6 @@
-import React from 'react';
-import { Home as HomeIcon } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import React from "react";
+import { Home as HomeIcon } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
     return (
@@ -70,7 +70,7 @@ const Footer = () => {
                             </li>
                             <li className="flex items-center gap-3">
                                 <div className="w-5 h-5 flex items-center justify-center rounded bg-gray-800 text-blue-400">✉️</div>
-                                <span>hello@thirasara.lk</span>
+                                <span>thirasaraproperty@gmail.com</span>
                             </li>
                         </ul>
                     </div>
@@ -85,8 +85,133 @@ const Footer = () => {
                     </div>
                 </div>
             </div>
-        </footer>
-    );
+          </div>
+
+          {/* Quick Links */}
+          <div>
+            <h4 className="text-white font-bold mb-6 text-lg tracking-tight">
+              Quick Links
+            </h4>
+            <ul className="space-y-3 text-sm">
+              <li>
+                <Link
+                  to="/map"
+                  className="hover:text-blue-400 transition-colors"
+                >
+                  Search Map
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/feasibility"
+                  className="hover:text-blue-400 transition-colors"
+                >
+                  Feasibility Engine
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/favorites"
+                  className="hover:text-blue-400 transition-colors"
+                >
+                  Saved Homes
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/login"
+                  className="hover:text-blue-400 transition-colors"
+                >
+                  Sign In
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Services */}
+          <div>
+            <h4 className="text-white font-bold mb-6 text-lg tracking-tight">
+              Services
+            </h4>
+            <ul className="space-y-3 text-sm">
+              <li>
+                <Link
+                  to="/add-property"
+                  className="hover:text-blue-400 transition-colors"
+                >
+                  Sell a property
+                </Link>
+              </li>
+              <li>
+                <a href="#" className="hover:text-blue-400 transition-colors">
+                  Rentals
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-blue-400 transition-colors">
+                  Mortgage Calculator
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-blue-400 transition-colors">
+                  Real Estate Agents
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Contact */}
+          <div>
+            <h4 className="text-white font-bold mb-6 text-lg tracking-tight">
+              Contact Us
+            </h4>
+            <ul className="space-y-3 text-sm">
+              <li className="flex items-start gap-3">
+                <div className="mt-1 w-5 h-5 flex items-center justify-center rounded bg-gray-800 text-blue-400">
+                  📍
+                </div>
+                <span>
+                  puthalan rode,
+                  <br />
+                  Kurunagala, Sri Lanka
+                </span>
+              </li>
+              <li className="flex items-center gap-3">
+                <div className="w-5 h-5 flex items-center justify-center rounded bg-gray-800 text-blue-400">
+                  📞
+                </div>
+                <span>+9477 364 2941</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <div className="w-5 h-5 flex items-center justify-center rounded bg-gray-800 text-blue-400">
+                  ✉️
+                </div>
+                <span>thirasaraproperty@gmail.com</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500">
+          <p>
+            &copy; {new Date().getFullYear()} Thirasara Property Group. All
+            rights reserved.
+          </p>
+          <div className="flex gap-6">
+            <a href="#" className="hover:text-white transition-colors">
+              Privacy Policy
+            </a>
+            <a href="#" className="hover:text-white transition-colors">
+              Terms of Service
+            </a>
+            <a href="#" className="hover:text-white transition-colors">
+              Cookie Settings
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
 };
 
 export default Footer;

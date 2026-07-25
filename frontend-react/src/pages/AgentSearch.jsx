@@ -4,6 +4,7 @@ import { Search, Star, MapPin, Award, User } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import api from '../context/api';
+import { Player } from '@lottiefiles/react-lottie-player';
 
 const AgentSearch = () => {
     const [agents, setAgents] = useState([]);
@@ -43,45 +44,63 @@ const AgentSearch = () => {
             <Navbar />
 
             {/* Hero Section */}
-            <div className="relative h-[400px] w-full bg-slate-900 flex flex-col items-center justify-center">
+            <div className="relative h-[450px] w-full bg-slate-900 flex items-center justify-center overflow-hidden">
                 {/* Background Image Overlay */}
                 <div 
                     className="absolute inset-0 bg-cover bg-center opacity-40 mix-blend-overlay"
                     style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80")' }}
                 ></div>
                 
-                <h1 className="relative z-10 text-4xl md:text-5xl font-extrabold text-white mb-8 text-center px-4">
-                    A great agent makes<br/>all the difference
-                </h1>
-
-                {/* Search Box */}
-                <div className="relative z-10 bg-white rounded-lg p-2 w-11/12 max-w-2xl shadow-2xl flex flex-col">
-                    <div className="flex border-b border-gray-200 mb-2 px-2">
-                        <button aria-label="Accessible interactive control" 
-                            className={`py-2 px-4 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'location' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-800'}`}
-                            onClick={() => setActiveTab('location')}
-                        >
-                            Location
-                        </button>
-                        <button aria-label="Accessible interactive control" 
-                            className={`py-2 px-4 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'name' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-800'}`}
-                            onClick={() => setActiveTab('name')}
-                        >
-                            Name
-                        </button>
+                <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between">
+                    
+                    {/* Left Side Animation */}
+                    <div className="hidden md:flex flex-1 justify-start items-center lg:-ml-20">
+                        <div className="w-80 h-80 lg:w-[380px] lg:h-[380px] relative">
+                            <Player
+                                autoplay
+                                loop
+                                src="/images/agent-animation.json"
+                                style={{ height: '100%', width: '100%' }}
+                            />
+                        </div>
                     </div>
-                    <div className="flex items-center px-4 py-2 bg-gray-50 rounded-md">
-                        {activeTab === 'location' ? <MapPin className="text-gray-400 w-5 h-5 mr-2" /> : <Search className="text-gray-400 w-5 h-5 mr-2" />}
-                        <input 
-                            type="text" 
-                            placeholder={activeTab === 'location' ? "City, neighborhood, or ZIP code" : "Agent or Team Name"}
-                            className="flex-1 bg-transparent border-none focus:ring-0 outline-none text-gray-800 placeholder-gray-500"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                        <button aria-label="Accessible interactive control" className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors">
-                            <Search className="w-5 h-5" />
-                        </button>
+
+                    {/* Right Side Content (Shifted Up) */}
+                    <div className="flex-[1.5] flex flex-col items-center md:items-start md:-mt-12">
+                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-8 text-center md:text-left leading-tight">
+                            A great agent makes<br/>all the difference
+                        </h1>
+
+                        {/* Search Box */}
+                        <div className="bg-white rounded-xl p-2 w-full max-w-xl shadow-2xl flex flex-col">
+                            <div className="flex border-b border-gray-100 mb-2 px-2">
+                                <button aria-label="Accessible interactive control" 
+                                    className={`py-3 px-5 text-sm font-bold border-b-2 transition-colors ${activeTab === 'location' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-800'}`}
+                                    onClick={() => setActiveTab('location')}
+                                >
+                                    Location
+                                </button>
+                                <button aria-label="Accessible interactive control" 
+                                    className={`py-3 px-5 text-sm font-bold border-b-2 transition-colors ${activeTab === 'name' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-800'}`}
+                                    onClick={() => setActiveTab('name')}
+                                >
+                                    Name
+                                </button>
+                            </div>
+                            <div className="flex items-center px-4 py-3 bg-gray-50 rounded-lg border border-gray-200 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition">
+                                {activeTab === 'location' ? <MapPin className="text-blue-500 w-5 h-5 mr-3" /> : <Search className="text-blue-500 w-5 h-5 mr-3" />}
+                                <input 
+                                    type="text" 
+                                    placeholder={activeTab === 'location' ? "City, neighborhood, or ZIP code" : "Agent or Team Name"}
+                                    className="flex-1 bg-transparent border-none focus:ring-0 outline-none text-gray-800 placeholder-gray-400 font-medium text-base"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                                <button aria-label="Accessible interactive control" className="p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md transition-all hover:shadow-lg transform hover:-translate-y-0.5">
+                                    <Search className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

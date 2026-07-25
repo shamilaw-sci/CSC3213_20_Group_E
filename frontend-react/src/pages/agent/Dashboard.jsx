@@ -1,595 +1,548 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-    Inbox, Home, Users, CheckSquare, MoreHorizontal, CheckCircle, 
-    Archive, MessageSquare, Home as HomeIcon, User as UserIcon, 
-    Phone, Mail, LayoutDashboard, Key, Building, BarChart3, 
-    MapPin, PlusCircle, Settings, LogOut, Menu, X, AlertCircle
+    Home, Users, CheckCircle, BarChart3, 
+    MessageSquare, MapPin, PlusCircle, Settings, LogOut, Menu, X,
+    ChevronRight, TrendingUp, Calendar, Inbox, Clock, Phone, Mail
 } from 'lucide-react';
 import { useAuth } from '../../context/UserAuthContext';
 import api from '../../context/api';
 import { m, AnimatePresence } from "framer-motion";
-import Navbar from '../../components/Navbar';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Player } from '@lottiefiles/react-lottie-player';
+
+const PIPELINE_STAGES = ['New', 'Contacted', 'Showing', 'Offer', 'Closed'];
 
 const AgentDashboard = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     
     // UI State
-    const [activeView, setActiveView] = useState('overview'); // 'overview', 'properties', 'crm'
+    const [activeView, setActiveView] = useState('overview'); // 'overview', 'pipeline', 'properties'
     const [sidebarOpen, setSidebarOpen] = useState(false);
-
-    // CRM State
+    
+    // Chat State
     const [selectedLead, setSelectedLead] = useState(null);
-    const [leads, setLeads] = useState([]);
-    const [loadingLeads, setLoadingLeads] = useState(true);
-    const [messages, setMessages] = useState([]);
-    const [draft, setDraft] = useState('');
-    const [sending, setSending] = useState(false);
+    const [chatMessages, setChatMessages] = useState([]);
+    const [messageInput, setMessageInput] = useState('');
     const messagesEndRef = useRef(null);
 
-    // Properties State
+    // Data State
+    const [stats, setStats] = useState(null);
+    const [leads, setLeads] = useState([]);
     const [properties, setProperties] = useState([]);
-    const [loadingProps, setLoadingProps] = useState(true);
+    const [loading, setLoading] = useState(true);
 
-    // Fetch Leads
-    const fetchLeads = async () => {
-        try {
-            const response = await api.get('/agents/leads');
-            const formattedLeads = response.data.leads.map(lead => ({
-                id: lead.id,
-                client_name: lead.buyer?.name || 'Unknown User',
-                client_email: lead.buyer?.email || '',
-                client_phone: lead.buyer?.phone || '',
-                property_id: lead.property_id,
-                property_title: lead.property_id ? (lead.properties?.title || 'Unknown Property') : 'Direct Agent Inquiry',
-                property_image: lead.property_id ? ((lead.properties?.images && lead.properties.images.length > 0) ? lead.properties.images[0] : 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80') : `https://ui-avatars.com/api/?name=${lead.buyer?.name || 'Inquiry'}&size=200&background=e0e7ff&color=4338ca`,
-                timeframe: lead.timeframe || 'Not specified',
-                status: lead.lead_status || 'New',
-                pre_approved: lead.pre_approved || false,
-                last_message: lead.last_message || 'No messages yet',
-                raw: lead
-            }));
-            setLeads(formattedLeads);
-        } catch (error) {
-            console.error("Failed to fetch leads", error);
-        } finally {
-            setLoadingLeads(false);
+    // Fetch Initial Data
+    useEffect(() => {
+        if (!user || user.role !== 'AGENT') {
+            navigate('/profile');
+            return;
+        }
+
+        const fetchDashboardData = async () => {
+            setLoading(true);
+            try {
+                const [statsRes, leadsRes, propsRes] = await Promise.all([
+                    api.get('/agents/dashboard-stats'),
+                    api.get('/agents/leads'),
+                    api.get('/properties/my-listings')
+                ]);
+                
+                setStats(statsRes.data.stats);
+                setLeads(leadsRes.data.leads || []);
+                setProperties(propsRes.data.properties || []);
+            } catch (error) {
+                console.error("Failed to load dashboard data", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDashboardData();
+    }, [user, navigate]);
+
+    // Add Horizontal Scroll Support for Pipeline
+    const pipelineRef = useRef(null);
+    const handlePipelineScroll = (e) => {
+        if (pipelineRef.current) {
+            pipelineRef.current.scrollLeft += e.deltaY;
         }
     };
-
-    // Fetch Properties
-    const fetchProperties = async () => {
-        try {
-            const response = await api.get('/properties/my-listings');
-            setProperties(response.data.properties || []);
-        } catch (error) {
-            console.error("Failed to fetch properties", error);
-        } finally {
-            setLoadingProps(false);
-        }
-    };
-
+    
+    // Fetch Messages when a lead is selected
     useEffect(() => {
-        if (user && user.role === 'AGENT') {
-            fetchLeads();
-            fetchProperties();
-        }
-    }, [user]);
-
-    // Fetch messages for selected lead
-    useEffect(() => {
-        if (!selectedLead || activeView !== 'crm') return;
-        let isMounted = true;
+        if (!selectedLead) return;
+        
         const fetchMessages = async () => {
             try {
                 const response = await api.get(`/conversations/${selectedLead.id}/messages`);
-                if (isMounted) {
-                    setMessages(response.data.messages || []);
-                    setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-                }
+                setChatMessages(response.data.messages || []);
+                setTimeout(() => {
+                    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
             } catch (err) {
                 console.error("Failed to fetch messages", err);
             }
         };
+        
         fetchMessages();
-        const interval = setInterval(fetchMessages, 10000);
-        return () => {
-            isMounted = false;
-            clearInterval(interval);
-        };
-    }, [selectedLead, activeView]);
+        const interval = setInterval(fetchMessages, 5000);
+        return () => clearInterval(interval);
+    }, [selectedLead]);
 
-    const handleSendMessage = async () => {
-        if (!draft.trim() || !selectedLead) return;
-        setSending(true);
+    // Send Message
+    const handleSendMessage = async (e) => {
+        e.preventDefault();
+        if (!messageInput.trim() || !selectedLead) return;
+        
+        const body = messageInput.trim();
+        setMessageInput(''); // Optimistic clear
+        
         try {
-            const response = await api.post(`/conversations/${selectedLead.id}/messages`, {
-                content: draft
-            });
-            setMessages([...messages, response.data.message]);
-            setDraft('');
-            setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-            fetchLeads();
+            const formData = new FormData();
+            formData.append('body', body);
+
+            await api.post(`/conversations/${selectedLead.id}/messages`, formData);
+            // Immediately fetch to show new message
+            const response = await api.get(`/conversations/${selectedLead.id}/messages`);
+            setChatMessages(response.data.messages || []);
+            setTimeout(() => {
+                messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
         } catch (error) {
             console.error("Failed to send message", error);
-        } finally {
-            setSending(false);
         }
     };
 
-    const updateLead = async (field, value) => {
-        if (!selectedLead) return;
+    // Handle Lead Status Change
+    const handleStatusChange = async (leadId, newStatus) => {
         try {
-            const updated = { ...selectedLead, [field]: value };
-            setSelectedLead(updated);
+            // Optimistic Update
+            setLeads(prev => prev.map(l => l.id === leadId ? { ...l, lead_status: newStatus } : l));
             
-            const payload = {
-                lead_status: updated.status,
-                timeframe: updated.timeframe,
-                pre_approved: updated.pre_approved
-            };
+            // Backend Update
+            await api.put(`/agents/leads/${leadId}`, { lead_status: newStatus });
             
-            await api.put(`/agents/leads/${selectedLead.id}`, payload);
-            fetchLeads(); 
+            // Refetch stats to keep metrics accurate
+            const statsRes = await api.get('/agents/dashboard-stats');
+            setStats(statsRes.data.stats);
         } catch (error) {
-            console.error("Failed to update lead", error);
-            setSelectedLead(selectedLead);
+            console.error("Failed to update status", error);
         }
     };
 
-    // Redirect if not an agent or pending/rejected
-    useEffect(() => {
-        if (user && !['AGENT', 'PENDING_AGENT', 'REJECTED_AGENT'].includes(user.role)) {
-            navigate('/');
-        }
-    }, [user, navigate]);
-
-    if (!user) return null;
-
-    if (user.role === 'PENDING_AGENT') {
+    if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-                <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center border border-gray-100">
-                    <div className="w-20 h-20 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <CheckCircle className="w-10 h-10" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Account Under Review</h2>
-                    <p className="text-gray-600 mb-6">
-                        Thank you for registering as an Agent! Your profile is currently being reviewed by our administrators. 
-                        You will gain access to the dashboard once approved.
-                    </p>
-                    <button onClick={() => navigate('/')} className="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 w-full transition">
-                        Return to Homepage
-                    </button>
-                </div>
+            <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+                <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
     }
 
-    if (user.role === 'REJECTED_AGENT') {
-        return <RejectedAgentView user={user} navigate={navigate} />;
-    }
+    return (
+        <div className="min-h-screen bg-[#0a0a0a] text-white flex overflow-hidden font-sans">
+            
+            {/* Sidebar Mobile Toggle */}
+            <button 
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-gray-800 rounded-lg"
+            >
+                {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
 
-    const navItems = [
-        { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-        { id: 'properties', label: 'My Listings', icon: HomeIcon },
-        { id: 'crm', label: 'CRM Inbox', icon: MessageSquare },
-    ];
-
-    const renderOverview = () => (
-        <div className="p-6 md:p-10 max-w-7xl mx-auto w-full">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Agent Dashboard</h1>
-            <p className="text-gray-500 mb-8">Welcome back, {user.name}. Here's your business overview.</p>
-
-            {/* Analytics Summary */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                <m.div whileHover={{ y: -5 }} className="bg-white/70 backdrop-blur-xl p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/50 flex items-center gap-4">
-                    <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
-                        <HomeIcon className="w-7 h-7" />
-                    </div>
-                    <div>
-                        <p className="text-sm font-medium text-gray-500">Active Listings</p>
-                        <h3 className="text-2xl font-bold text-gray-900">{properties.length}</h3>
-                    </div>
-                </m.div>
-                <m.div whileHover={{ y: -5 }} className="bg-white/70 backdrop-blur-xl p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/50 flex items-center gap-4">
-                    <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
-                        <MessageSquare className="w-7 h-7" />
-                    </div>
-                    <div>
-                        <p className="text-sm font-medium text-gray-500">Total Leads</p>
-                        <h3 className="text-2xl font-bold text-gray-900">{leads.length}</h3>
-                    </div>
-                </m.div>
-                <m.div whileHover={{ y: -5 }} className="bg-white/70 backdrop-blur-xl p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/50 flex items-center gap-4">
-                    <div className="w-14 h-14 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center">
-                        <BarChart3 className="w-7 h-7" />
-                    </div>
-                    <div>
-                        <p className="text-sm font-medium text-gray-500">Conversion Rate</p>
-                        <h3 className="text-2xl font-bold text-gray-900">
-                            {leads.length ? Math.round((leads.filter(l => l.status === 'Closed').length / leads.length) * 100) : 0}%
-                        </h3>
-                    </div>
-                </m.div>
-            </div>
-
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Quick Actions</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <m.div 
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => navigate('/add-property')}
-                    className="bg-white/60 backdrop-blur-xl rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(37,99,235,0.1)] border border-white/50 cursor-pointer transition-all group relative overflow-hidden"
-                >
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
-                    <div className="w-16 h-16 bg-blue-100/80 backdrop-blur-md rounded-2xl flex items-center justify-center mb-6 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors relative z-10">
-                        <Key className="w-8 h-8" />
-                    </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2 relative z-10">Sell Property</h3>
-                    <p className="text-gray-500 relative z-10">Add a new property listing for sale.</p>
-                </m.div>
-                <m.div 
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => navigate('/add-property')}
-                    className="bg-white/60 backdrop-blur-xl rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(16,185,129,0.1)] border border-white/50 cursor-pointer transition-all group relative overflow-hidden"
-                >
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
-                    <div className="w-16 h-16 bg-emerald-100/80 backdrop-blur-md rounded-2xl flex items-center justify-center mb-6 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors relative z-10">
-                        <Building className="w-8 h-8" />
-                    </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2 relative z-10">Rent Property</h3>
-                    <p className="text-gray-500 relative z-10">Add a new property listing for rent.</p>
-                </m.div>
-            </div>
-        </div>
-    );
-
-    const renderProperties = () => (
-        <div className="p-6 md:p-10 max-w-7xl mx-auto w-full">
-            <div className="flex justify-between items-center mb-8">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">My Listings</h1>
-                    <p className="text-gray-500">Manage your past lands, houses, and rental properties.</p>
-                </div>
-                <button onClick={() => navigate('/add-property')} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full flex items-center gap-2 transition-all">
-                    <PlusCircle className="w-5 h-5" /> Add New
-                </button>
-            </div>
-
-            {loadingProps ? (
-                <div className="flex justify-center p-20"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div></div>
-            ) : properties.length === 0 ? (
-                <div className="bg-white rounded-3xl border border-dashed border-gray-300 p-20 text-center">
-                    <HomeIcon className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-                    <h2 className="text-xl font-bold text-gray-900 mb-2">No properties found</h2>
-                    <p className="text-gray-500 mb-6">You haven't added any listings yet.</p>
-                    <button onClick={() => navigate('/add-property')} className="text-blue-600 font-bold hover:underline">Add your first property</button>
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {properties.map(prop => (
-                        <div key={prop.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition cursor-pointer" onClick={() => navigate(`/property/${prop.id}`)}>
-                            <img src={prop.images && prop.images[0] ? prop.images[0] : 'https://via.placeholder.com/400x300'} alt={prop.title} className="w-full h-48 object-cover" />
-                            <div className="p-5">
-                                <div className="flex justify-between items-start mb-2">
-                                    <span className={`text-xs font-bold px-3 py-1 rounded-full ${prop.listing_type?.toLowerCase() === 'rent' || prop.type?.includes('Rent') ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
-                                        For {prop.listing_type?.toLowerCase() === 'rent' || prop.type?.includes('Rent') ? 'Rent' : 'Sale'}
-                                    </span>
-                                    <span className={`text-xs font-bold px-3 py-1 rounded-full ${prop.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' : prop.status === 'APPROVED' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                        {prop.status}
-                                    </span>
-                                </div>
-                                <h3 className="font-bold text-lg text-gray-900 mb-1 truncate">{prop.title}</h3>
-                                <p className="text-gray-500 text-sm flex items-center gap-1"><MapPin className="w-4 h-4"/> {prop.city}</p>
-                                <div className="mt-4 pt-4 border-t border-gray-100 font-bold text-blue-600 text-lg">
-                                    LKR {prop.price?.toLocaleString()}
-                                </div>
+            {/* Sidebar */}
+            <AnimatePresence>
+                {(sidebarOpen || window.innerWidth >= 1024) && (
+                    <m.div 
+                        initial={{ x: -300 }}
+                        animate={{ x: 0 }}
+                        exit={{ x: -300 }}
+                        className="fixed lg:static w-72 h-full bg-[#121212] border-r border-gray-800 flex flex-col z-40 transition-transform"
+                    >
+                        <div className="p-8 pb-4 flex items-center space-x-3 cursor-pointer" onClick={() => navigate('/')}>
+                            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center font-bold text-xl">
+                                T
                             </div>
+                            <span className="text-xl font-bold tracking-wider">Thirasara.</span>
                         </div>
-                    ))}
-                </div>
-            )}
-        </div>
-    );
 
-    const renderCRM = () => (
-        <div className="flex w-full h-full bg-white overflow-hidden rounded-t-3xl border-t border-gray-200 lg:border lg:rounded-3xl lg:m-6 shadow-sm">
-            {/* Left Pane: Leads List */}
-            <div className={`w-full lg:w-1/3 bg-white border-r border-gray-200 flex flex-col h-[calc(100vh-100px)] ${selectedLead ? 'hidden lg:flex' : 'flex'}`}>
-                <div className="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-                    <h2 className="font-bold text-gray-900">Inbox</h2>
-                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-bold">{leads.length} Active</span>
-                </div>
-                <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                    {loadingLeads ? (
-                        <div className="flex justify-center p-10"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
-                    ) : leads.length === 0 ? (
-                        <div className="text-center text-gray-500 py-10">No messages yet.</div>
-                    ) : (
-                        leads.map(lead => (
-                            <div 
-                                key={lead.id} 
-                                onClick={() => setSelectedLead(lead)}
-                                className={`border rounded-xl p-4 cursor-pointer hover:shadow-md transition relative overflow-hidden ${selectedLead?.id === lead.id ? 'border-blue-500 ring-1 ring-blue-500 bg-blue-50/50' : 'border-gray-200 bg-white'}`}
-                            >
-                                <div className="flex gap-3">
-                                    <img src={lead.property_image} alt="Property" className="w-14 h-14 rounded-lg object-cover shadow-sm" />
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex justify-between items-start">
-                                            <h3 className="font-bold text-gray-900 text-sm truncate pr-2">{lead.client_name}</h3>
-                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${lead.status === 'New' ? 'bg-green-100 text-green-700' : lead.status === 'Closed' ? 'bg-gray-100 text-gray-700' : 'bg-blue-100 text-blue-700'}`}>
-                                                {lead.status}
-                                            </span>
-                                        </div>
-                                        <p className="text-xs text-gray-500 mt-1 truncate">{lead.property_title}</p>
-                                        <p className="text-xs text-gray-700 mt-1 truncate">"{lead.last_message}"</p>
-                                    </div>
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
-            </div>
-
-            {/* Right Pane: Chat & Details */}
-            <div className={`w-full lg:w-2/3 bg-gray-50 flex flex-col h-[calc(100vh-100px)] ${!selectedLead ? 'hidden lg:flex items-center justify-center' : 'flex'}`}>
-                {!selectedLead ? (
-                    <div className="text-center text-gray-400">
-                        <Inbox className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                        <h2 className="text-xl font-medium">Select a conversation to view</h2>
-                    </div>
-                ) : (
-                    <>
-                        <div className="p-4 bg-white border-b flex justify-between items-center">
-                            <div className="flex items-center gap-3">
-                                <button onClick={() => setSelectedLead(null)} className="lg:hidden text-blue-600 p-2 -ml-2"><Menu className="w-6 h-6"/></button>
+                        <div className="px-6 py-6 border-b border-gray-800/50">
+                            <div className="flex items-center space-x-4">
+                                <img src={user?.avatar_url || `https://ui-avatars.com/api/?name=${user?.name}&background=1e40af&color=fff`} className="w-12 h-12 rounded-full border-2 border-gray-700 object-cover" alt="Avatar" />
                                 <div>
-                                    <h2 className="font-bold text-gray-900 text-lg">{selectedLead.client_name}</h2>
-                                    <p className="text-xs text-gray-500 flex items-center gap-1"><HomeIcon className="w-3 h-3"/> {selectedLead.property_title}</p>
+                                    <h3 className="font-semibold text-gray-200">{user?.name}</h3>
+                                    <p className="text-xs text-blue-400 font-medium uppercase tracking-wider">Premier Agent</p>
                                 </div>
-                            </div>
-                            <div className="flex gap-2 hidden md:flex">
-                                {selectedLead.client_phone && <a href={`tel:${selectedLead.client_phone}`} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 text-gray-600"><Phone className="w-4 h-4"/></a>}
-                                {selectedLead.client_email && <a href={`mailto:${selectedLead.client_email}`} className="p-2 bg-blue-50 rounded-full hover:bg-blue-100 text-blue-600"><Mail className="w-4 h-4"/></a>}
                             </div>
                         </div>
 
-                        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-                            {/* Chat */}
-                            <div className="flex-1 flex flex-col bg-white lg:border-r border-gray-200">
-                                <div className="flex-1 p-4 lg:p-6 overflow-y-auto space-y-4 bg-slate-50/50">
-                                    {messages.map((msg, i) => (
-                                        <div key={i} className={`flex ${msg.sender_id === user.id ? 'justify-end' : 'justify-start'}`}>
-                                            <div className={`${msg.sender_id === user.id ? 'bg-blue-600 text-white rounded-tr-none shadow-sm' : 'bg-white border border-gray-200 text-gray-800 rounded-tl-none shadow-sm'} rounded-2xl px-4 py-3 max-w-[85%] lg:max-w-[70%] text-sm`}>
-                                                {msg.content}
-                                            </div>
-                                        </div>
-                                    ))}
-                                    <div ref={messagesEndRef} />
-                                </div>
-                                <div className="p-4 bg-white border-t border-gray-100">
-                                    <div className="flex gap-2">
-                                        <input 
-                                            type="text" 
-                                            placeholder="Type your message..." 
-                                            className="flex-1 rounded-full border-gray-300 bg-gray-50 px-4 py-3 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:bg-white transition-colors" 
-                                            value={draft}
-                                            onChange={(e) => setDraft(e.target.value)}
-                                            onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                                        />
-                                        <button 
-                                            onClick={handleSendMessage}
-                                            disabled={sending || !draft.trim()}
-                                            className="bg-blue-600 text-white rounded-full px-6 py-3 text-sm font-bold hover:bg-blue-700 disabled:opacity-50 transition-colors shadow-sm"
-                                        >
-                                            {sending ? 'Sending...' : 'Send'}
-                                        </button>
+                        <nav className="flex-1 px-4 py-6 space-y-2">
+                            {[
+                                { id: 'overview', icon: BarChart3, label: 'Overview' },
+                                { id: 'pipeline', icon: Users, label: 'Lead Pipeline', badge: leads.filter(l => (l.lead_status || 'New') === 'New').length },
+                                { id: 'properties', icon: Home, label: 'My Properties' }
+                            ].map((item) => (
+                                <button
+                                    key={item.id}
+                                    onClick={() => { setActiveView(item.id); setSidebarOpen(false); }}
+                                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all ${activeView === item.id ? 'bg-blue-600/10 text-blue-500' : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'}`}
+                                >
+                                    <div className="flex items-center space-x-3">
+                                        <item.icon size={20} className={activeView === item.id ? 'text-blue-500' : 'text-gray-500'} />
+                                        <span className="font-medium">{item.label}</span>
                                     </div>
+                                    {item.badge > 0 && (
+                                        <span className="bg-blue-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                                            {item.badge}
+                                        </span>
+                                    )}
+                                </button>
+                            ))}
+                        </nav>
+
+                        <div className="p-4 border-t border-gray-800">
+                            <button onClick={() => navigate('/')} className="w-full flex items-center space-x-3 px-4 py-3 text-gray-400 hover:bg-gray-800 rounded-xl transition-colors">
+                                <Home size={20} />
+                                <span>Back to Home</span>
+                            </button>
+                        </div>
+                    </m.div>
+                )}
+            </AnimatePresence>
+
+            {/* Main Content */}
+            <div className="flex-1 overflow-y-auto bg-[#0a0a0a]">
+                
+                {/* OVERVIEW VIEW */}
+                {activeView === 'overview' && (
+                    <div className="p-6 lg:p-12 max-w-7xl mx-auto space-y-8 mt-12 lg:mt-0">
+                        
+                        {/* Hero Section */}
+                        <div className="flex flex-col lg:flex-row gap-6 items-stretch">
+                            <div className="flex-1 bg-gradient-to-br from-blue-900/40 to-blue-600/10 border border-blue-500/20 rounded-3xl p-8 relative overflow-hidden flex flex-col justify-center">
+                                <div className="relative z-10">
+                                    <h1 className="text-3xl lg:text-4xl font-bold text-white mb-2">Welcome back, {user?.name.split(' ')[0]}!</h1>
+                                    <p className="text-blue-200/80 mb-6 max-w-md">Here's what's happening with your properties and leads today. You have {leads.filter(l => (l.lead_status || 'New') === 'New').length} new leads waiting.</p>
+                                    <button onClick={() => setActiveView('pipeline')} className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-colors">
+                                        View Pipeline
+                                    </button>
                                 </div>
                             </div>
+                            
+                            {/* Lottie Animation Card */}
+                            <div className="lg:w-1/3 bg-[#121212] border border-gray-800 rounded-3xl p-6 flex flex-col items-center justify-center min-h-[250px]">
+                                {/* 
+                                    Placeholder for User's Lottie Animation. 
+                                    Expected at: /agent_stats_animation.json
+                                */}
+                                <Player
+                                    autoplay
+                                    loop
+                                    src="/images/agent_stats_animation.json"
+                                    style={{ height: '100%', width: '100%', maxWidth: '250px' }}
+                                />
+                            </div>
+                        </div>
 
-                            {/* Details Pane */}
-                            <div className="w-full lg:w-72 bg-gray-50 p-6 overflow-y-auto hidden md:block">
-                                <h3 className="font-bold text-xs uppercase text-gray-500 tracking-wider mb-3">Lead Status</h3>
-                                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6">
-                                    <select 
-                                        className="w-full rounded-lg border-gray-300 text-sm mb-3 bg-gray-50 focus:bg-white"
-                                        value={selectedLead.status}
-                                        onChange={(e) => updateLead('status', e.target.value)}
-                                    >
-                                        <option value="New">New</option>
-                                        <option value="Attempted Contact">Attempted Contact</option>
-                                        <option value="Active">Active</option>
-                                        <option value="Closed">Closed</option>
-                                    </select>
-                                    <input 
-                                        type="text"
-                                        className="w-full rounded-lg border-gray-300 text-sm mb-3 bg-gray-50 focus:bg-white"
-                                        placeholder="Timeframe (e.g. ASAP)"
-                                        value={selectedLead.timeframe}
-                                        onChange={(e) => updateLead('timeframe', e.target.value)}
-                                    />
-                                    <label className="flex items-center gap-2 cursor-pointer mt-1">
-                                        <input 
-                                            type="checkbox"
-                                            className="rounded text-blue-600 focus:ring-blue-500"
-                                            checked={selectedLead.pre_approved}
-                                            onChange={(e) => updateLead('pre_approved', e.target.checked)}
-                                        />
-                                        <span className="text-sm font-medium text-gray-700">Pre-Approved</span>
-                                    </label>
+                        {/* Metric Cards */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {[
+                                { label: 'Active Listings', value: stats?.activeListings, icon: Home, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+                                { label: 'Total Leads', value: stats?.totalLeads, icon: Users, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+                                { label: 'Conversion Rate', value: `${stats?.conversionRate}%`, icon: TrendingUp, color: 'text-purple-400', bg: 'bg-purple-400/10' }
+                            ].map((stat, i) => (
+                                <div key={i} className="bg-[#121212] border border-gray-800 rounded-3xl p-6 flex items-center space-x-6">
+                                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${stat.bg}`}>
+                                        <stat.icon className={stat.color} size={28} />
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-400 font-medium text-sm mb-1">{stat.label}</p>
+                                        <h3 className="text-3xl font-bold text-white">{stat.value}</h3>
+                                    </div>
                                 </div>
+                            ))}
+                        </div>
 
-                                {selectedLead.property_id && (
-                                    <>
-                                        <h3 className="font-bold text-xs uppercase text-gray-500 tracking-wider mb-3">Inquired Property</h3>
-                                        <div onClick={() => navigate(`/property/${selectedLead.property_id}`)} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden cursor-pointer hover:shadow-md transition">
-                                            <img src={selectedLead.property_image} className="w-full h-32 object-cover" alt="Property" />
-                                            <div className="p-3">
-                                                <p className="text-sm font-bold text-gray-900 truncate">{selectedLead.property_title}</p>
-                                                <span className="text-xs text-blue-600 font-medium mt-1">View Listing →</span>
-                                            </div>
-                                        </div>
-                                    </>
+                        {/* Chart Section */}
+                        <div className="bg-[#121212] border border-gray-800 rounded-3xl p-6 lg:p-8">
+                            <h2 className="text-xl font-bold text-white mb-6">Property Views vs Leads (7 Days)</h2>
+                            <div className="h-[300px] w-full">
+                                {stats?.impressions && stats.impressions.length > 0 ? (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <AreaChart data={stats.impressions} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                                            <defs>
+                                                <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                                                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                                                </linearGradient>
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
+                                            <XAxis dataKey="name" stroke="#71717a" tick={{fill: '#71717a'}} axisLine={false} tickLine={false} />
+                                            <YAxis stroke="#71717a" tick={{fill: '#71717a'}} axisLine={false} tickLine={false} />
+                                            <Tooltip 
+                                                contentStyle={{ backgroundColor: '#18181b', border: '1px solid #27272a', borderRadius: '8px' }}
+                                                itemStyle={{ color: '#e4e4e7' }}
+                                            />
+                                            <Area type="monotone" dataKey="views" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorViews)" />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-gray-500">
+                                        No data available for chart
+                                    </div>
                                 )}
                             </div>
                         </div>
-                    </>
+                    </div>
+                )}
+
+
+                {/* LEAD PIPELINE (KANBAN) */}
+                {activeView === 'pipeline' && (
+                    <div className="h-full flex flex-col pt-12 lg:pt-0">
+                        <div className="p-6 lg:p-12 pb-4">
+                            <h1 className="text-3xl font-bold text-white mb-2">Lead Pipeline</h1>
+                            <p className="text-gray-400">Manage your deals and track conversions.</p>
+                        </div>
+                        
+                        <div 
+                            className="flex-1 overflow-x-auto overflow-y-hidden px-6 lg:px-12 pb-12 custom-scrollbar" 
+                            ref={pipelineRef}
+                            onWheel={handlePipelineScroll}
+                        >
+                            <div className="flex space-x-6 h-full items-start min-w-max pb-8">
+                                {PIPELINE_STAGES.map(stage => {
+                                    const stageLeads = leads.filter(l => (l.lead_status || 'New') === stage);
+                                    return (
+                                        <div key={stage} className="w-80 bg-[#121212]/80 backdrop-blur-md rounded-2xl flex flex-col h-full min-h-[60vh] max-h-[75vh] border border-gray-800 flex-shrink-0 shadow-lg">
+                                            <div className="p-4 border-b border-gray-800 flex items-center justify-between sticky top-0 bg-[#121212] rounded-t-2xl z-10">
+                                                <h3 className="font-bold text-gray-200">{stage}</h3>
+                                                <span className="bg-gray-800 text-gray-300 text-xs font-bold px-2 py-1 rounded-lg">
+                                                    {stageLeads.length}
+                                                </span>
+                                            </div>
+                                            <div className="p-4 overflow-y-auto flex-1 space-y-4 custom-scrollbar">
+                                                {stageLeads.map(lead => (
+                                                    <m.div 
+                                                        layoutId={`lead-${lead.id}`}
+                                                        key={lead.id}
+                                                        onClick={() => setSelectedLead(lead)}
+                                                        className="bg-[#1a1a1a] p-4 rounded-xl border border-gray-700 hover:border-blue-500/50 transition-colors cursor-pointer group"
+                                                    >
+                                                        <div className="flex items-center space-x-3 mb-3">
+                                                            <img src={lead.buyer?.avatar_url || `https://ui-avatars.com/api/?name=${lead.buyer?.name || 'User'}&background=333&color=fff`} className="w-10 h-10 rounded-full object-cover" alt="Buyer" />
+                                                            <div>
+                                                                <p className="font-semibold text-gray-100 text-sm truncate max-w-[150px]">{lead.buyer?.name}</p>
+                                                                <p className="text-xs text-gray-500">{lead.timeframe || 'Flexible Timeline'}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="bg-[#121212] rounded-lg p-3 mb-3">
+                                                            <p className="text-xs text-gray-400 line-clamp-1 mb-1">{lead.properties?.title || 'Direct Agent Inquiry'}</p>
+                                                            {lead.properties?.price && (
+                                                                <p className="text-blue-400 font-bold text-sm">Rs. {lead.properties.price.toLocaleString()}</p>
+                                                            )}
+                                                        </div>
+                                                        
+                                                        <div className="flex justify-between items-center mt-2">
+                                                            <div className="flex space-x-2">
+                                                                {lead.buyer?.phone && (
+                                                                    <a 
+                                                                        href={`tel:${lead.buyer?.phone}`} 
+                                                                        onClick={(e) => e.stopPropagation()} 
+                                                                        className="p-1.5 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-300 transition-colors"
+                                                                    >
+                                                                        <Phone size={14}/>
+                                                                    </a>
+                                                                )}
+                                                                <button 
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setSelectedLead(lead);
+                                                                    }} 
+                                                                    className="p-1.5 bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 rounded-lg transition-colors flex items-center space-x-1 px-2"
+                                                                >
+                                                                    <MessageSquare size={14}/>
+                                                                    <span className="text-xs font-semibold">Chat</span>
+                                                                </button>
+                                                            </div>
+                                                            
+                                                            <select 
+                                                                className="text-xs bg-gray-800 border border-gray-700 rounded-lg text-gray-300 focus:ring-1 focus:ring-blue-500 cursor-pointer px-2 py-1 outline-none"
+                                                                value={lead.lead_status || 'New'}
+                                                                onClick={(e) => e.stopPropagation()} // Prevent opening chat when changing status
+                                                                onChange={(e) => handleStatusChange(lead.id, e.target.value)}
+                                                            >
+                                                                {PIPELINE_STAGES.map(s => <option key={s} value={s}>{s}</option>)}
+                                                            </select>
+                                                        </div>
+                                                    </m.div>
+                                                ))}
+                                                {stageLeads.length === 0 && (
+                                                    <div className="h-full flex flex-col items-center justify-center p-8 text-gray-500 border-2 border-dashed border-gray-800 rounded-xl bg-gray-900/20">
+                                                        <Inbox className="w-10 h-10 mb-3 opacity-50" />
+                                                        <span className="text-sm font-medium">Drop leads here</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* MY PROPERTIES VIEW */}
+                {activeView === 'properties' && (
+                    <div className="p-6 lg:p-12 max-w-7xl mx-auto mt-12 lg:mt-0 pb-12">
+                        <div className="flex justify-between items-center mb-8">
+                            <div>
+                                <h1 className="text-3xl font-bold text-white mb-2">My Properties</h1>
+                                <p className="text-gray-400">Manage your active listings and track impressions.</p>
+                            </div>
+                            <button onClick={() => navigate('/add-property')} className="flex items-center space-x-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium transition-colors">
+                                <PlusCircle size={20} />
+                                <span className="hidden sm:inline">Add Property</span>
+                            </button>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {properties.map(property => (
+                                <div key={property.id} className="bg-[#121212] border border-gray-800 rounded-2xl overflow-hidden hover:border-gray-700 transition-colors group cursor-pointer" onClick={() => navigate(`/property/${property.id}`)}>
+                                    <div className="relative h-48 overflow-hidden">
+                                        <img 
+                                            src={property.images?.[0] || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3'} 
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                            alt={property.title}
+                                        />
+                                        <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold flex items-center space-x-1">
+                                            <span className={`w-2 h-2 rounded-full ${property.status === 'approved' ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
+                                            <span className="capitalize text-white">{property.status}</span>
+                                        </div>
+                                    </div>
+                                    <div className="p-5">
+                                        <h3 className="font-bold text-lg text-gray-100 mb-1 truncate">{property.title}</h3>
+                                        <p className="text-gray-400 text-sm flex items-center space-x-1 mb-4">
+                                            <MapPin size={14} />
+                                            <span className="truncate">{property.city}</span>
+                                        </p>
+                                        <div className="flex justify-between items-end border-t border-gray-800/50 pt-4 mt-2">
+                                            <div>
+                                                <p className="text-xs text-gray-500 mb-1">Price</p>
+                                                <p className="font-bold text-blue-400 text-lg">Rs. {property.price?.toLocaleString()}</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-xs text-gray-500 mb-1">Impressions</p>
+                                                <p className="font-semibold text-gray-200 flex items-center justify-end space-x-1">
+                                                    <BarChart3 size={14} className="text-emerald-500"/>
+                                                    <span>{Math.floor(Math.random() * 500) + 100}</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                            
+                            {properties.length === 0 && (
+                                <div className="col-span-full py-20 text-center border border-dashed border-gray-800 rounded-3xl">
+                                    <Home className="mx-auto h-12 w-12 text-gray-600 mb-4" />
+                                    <h3 className="text-lg font-medium text-gray-300">No properties listed</h3>
+                                    <p className="mt-1 text-gray-500">Get started by creating a new property listing.</p>
+                                    <button onClick={() => navigate('/add-property')} className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-xl">Add Property</button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 )}
             </div>
-        </div>
-    );
+            
+            {/* Chat Slide-Over */}
+            <AnimatePresence>
+                {selectedLead && (
+                    <>
+                        <m.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setSelectedLead(null)}
+                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+                        />
+                        <m.div 
+                            initial={{ x: '100%' }}
+                            animate={{ x: 0 }}
+                            exit={{ x: '100%' }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                            className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-[#121212] border-l border-gray-800 z-50 flex flex-col shadow-2xl"
+                        >
+                            <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-[#1a1a1a]">
+                                <div className="flex items-center space-x-3">
+                                    <img src={selectedLead.buyer?.avatar_url || `https://ui-avatars.com/api/?name=${selectedLead.buyer?.name}&background=333&color=fff`} className="w-10 h-10 rounded-full object-cover border border-gray-700" alt="Avatar"/>
+                                    <div>
+                                        <h3 className="font-bold text-white leading-tight">{selectedLead.buyer?.name}</h3>
+                                        <p className="text-xs text-blue-400">{selectedLead.properties?.title || 'Direct Inquiry'}</p>
+                                    </div>
+                                </div>
+                                <button onClick={() => setSelectedLead(null)} className="p-2 hover:bg-gray-800 rounded-full text-gray-400 transition-colors">
+                                    <X size={20} />
+                                </button>
+                            </div>
+                            
+                            <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-[#0a0a0a]">
+                                {chatMessages.length === 0 ? (
+                                    <div className="h-full flex flex-col items-center justify-center text-gray-500 space-y-3">
+                                        <MessageSquare size={40} className="text-gray-700"/>
+                                        <p>No messages yet. Say hello!</p>
+                                    </div>
+                                ) : (
+                                    chatMessages.map(msg => {
+                                        const isMine = msg.sender_id === user.id;
+                                        return (
+                                            <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+                                                <div className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${isMine ? 'bg-blue-600 text-white rounded-tr-sm' : 'bg-gray-800 text-gray-200 rounded-tl-sm'}`}>
+                                                    <p>{msg.body}</p>
+                                                    <span className={`text-[10px] block mt-1 ${isMine ? 'text-blue-200' : 'text-gray-500'}`}>
+                                                        {new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                )}
+                                <div ref={messagesEndRef} />
+                            </div>
+                            
+                            <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-800 bg-[#121212] flex space-x-2">
+                                <input 
+                                    type="text"
+                                    value={messageInput}
+                                    onChange={(e) => setMessageInput(e.target.value)}
+                                    placeholder="Type your message..."
+                                    className="flex-1 bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
+                                />
+                                <button type="submit" disabled={!messageInput.trim()} className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white p-2.5 rounded-xl transition-colors">
+                                    <ChevronRight size={20} />
+                                </button>
+                            </form>
+                        </m.div>
+                    </>
+                )}
+            </AnimatePresence>
 
-    return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/30 flex font-sans">
-            {/* Sidebar Navigation */}
-            <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-gray-900/95 backdrop-blur-2xl text-white transition-transform transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:block border-r border-white/10 shadow-2xl`}>
-                <div className="flex items-center justify-between p-6 border-b border-gray-800">
-                    <span className="text-2xl font-black tracking-tight text-white cursor-pointer" onClick={() => navigate('/')}>
-                        Thirasara<span className="text-blue-500">.</span>
-                    </span>
-                    <button className="lg:hidden text-gray-400 hover:text-white" onClick={() => setSidebarOpen(false)}>
-                        <X className="w-6 h-6" />
-                    </button>
-                </div>
-                <div className="p-6">
-                    <p className="text-xs uppercase font-bold text-gray-500 tracking-wider mb-4">Agent Panel</p>
-                    <nav className="space-y-2">
-                        {navItems.map(item => (
-                            <button
-                                key={item.id}
-                                onClick={() => {
-                                    setActiveView(item.id);
-                                    setSidebarOpen(false);
-                                }}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 font-medium text-left ${activeView === item.id ? 'bg-blue-600/90 shadow-[0_4px_15px_rgba(37,99,235,0.4)] text-white' : 'text-gray-400 hover:bg-white/10 hover:text-white'}`}
-                            >
-                                <item.icon className="w-5 h-5" />
-                                {item.label}
-                            </button>
-                        ))}
-                    </nav>
-                </div>
-                <div className="absolute bottom-0 w-full p-6 border-t border-gray-800">
-                    <button onClick={() => { navigate('/'); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors font-medium text-left mb-2">
-                        <HomeIcon className="w-5 h-5" /> Back to Home
-                    </button>
-                </div>
-            </aside>
-
-            {/* Main Content Area */}
-            <main className="flex-1 flex flex-col h-screen overflow-hidden">
-                {/* Mobile Header */}
-                <header className="lg:hidden bg-white border-b border-gray-200 p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <button onClick={() => setSidebarOpen(true)} className="text-gray-600"><Menu className="w-6 h-6"/></button>
-                        <span className="font-bold text-gray-900">{navItems.find(i => i.id === activeView)?.label}</span>
-                    </div>
-                </header>
-
-                {/* Content Views */}
-                <div className="flex-1 overflow-y-auto">
-                    {activeView === 'overview' && renderOverview()}
-                    {activeView === 'properties' && renderProperties()}
-                    {activeView === 'crm' && renderCRM()}
-                </div>
-            </main>
+            <style>{`
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 6px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background-color: #27272a;
+                    border-radius: 20px;
+                }
+            `}</style>
         </div>
     );
 };
 
 export default AgentDashboard;
-
-const RejectedAgentView = ({ user, navigate }) => {
-    const [profile, setProfile] = useState({ agency_name: '', license_number: '', bio: '', rejection_reason: '' });
-    const [loading, setLoading] = useState(true);
-    const [submitting, setSubmitting] = useState(false);
-
-    useEffect(() => {
-        const fetchProfile = async () => {
-            try {
-                const response = await api.get(`/agents/${user.id}`);
-                const rawData = response.data.agent?.agent_profiles || [];
-                const data = Array.isArray(rawData) ? rawData[0] || {} : rawData;
-                setProfile({
-                    agency_name: data.agency_name || '',
-                    license_number: data.license_number || '',
-                    bio: data.bio || '',
-                    rejection_reason: data.rejection_reason || 'Please update your details.'
-                });
-            } catch (err) {
-                console.error("Failed to fetch profile", err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchProfile();
-    }, [user.id]);
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setSubmitting(true);
-        try {
-            await api.post('/agents/resubmit', {
-                agency_name: profile.agency_name,
-                license_number: profile.license_number,
-                bio: profile.bio
-            });
-            alert('Application resubmitted successfully! Please log in again to see changes or wait for approval.');
-            // Usually we'd want to refresh the user context here, but reloading the page is a quick way to force a re-check if they log in again.
-            window.location.reload();
-        } catch (err) {
-            console.error("Resubmit failed", err);
-            alert("Failed to resubmit application.");
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
-    if (loading) return <div className="min-h-screen flex justify-center items-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>;
-
-    return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-            <div className="bg-white p-8 rounded-2xl shadow-xl max-w-xl w-full border border-gray-100">
-                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-                    <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center">
-                        <AlertCircle className="w-6 h-6" />
-                    </div>
-                    <div>
-                        <h2 className="text-xl font-bold text-gray-900">Application Needs Attention</h2>
-                        <p className="text-gray-500 text-sm">Your agent application was reviewed and requires updates.</p>
-                    </div>
-                </div>
-
-                <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-lg mb-6 text-sm">
-                    <strong>Admin Feedback:</strong> {profile.rejection_reason}
-                </div>
-
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Agency Name</label>
-                        <input type="text" required value={profile.agency_name} onChange={(e) => setProfile({...profile, agency_name: e.target.value})} className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">License Number</label>
-                        <input type="text" value={profile.license_number} onChange={(e) => setProfile({...profile, license_number: e.target.value})} className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Professional Bio</label>
-                        <textarea required value={profile.bio} onChange={(e) => setProfile({...profile, bio: e.target.value})} className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none min-h-[100px]"></textarea>
-                    </div>
-
-                    <div className="flex gap-3 pt-4">
-                        <button type="button" onClick={() => navigate('/')} className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition">Cancel</button>
-                        <button type="submit" disabled={submitting} className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50">
-                            {submitting ? 'Submitting...' : 'Resubmit Application'}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    );
-};

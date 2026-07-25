@@ -3,6 +3,7 @@ const axios = require('axios');
 const jwt = require('jsonwebtoken');
 const appleSignin = require('apple-signin-auth');
 const { setTokenCookie } = require('./authController');
+const { sendWelcomeEmail } = require('../utils/emailService');
 
 // Initialize Supabase client for database operations
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
@@ -22,11 +23,27 @@ const findOrCreateSocialUser = async({ email, name, provider, provider_id, avata
         .single();
 
     if (existingUser) {
-        // Link provider info if not already set, but don't overwrite an existing account
+        const updates = {};
+        let needsUpdate = false;
+
+        // Link provider info if not already set
         if (!existingUser.provider) {
+            updates.provider = provider;
+            updates.provider_id = provider_id;
+            needsUpdate = true;
+        }
+
+        // Always update avatar_url if provided by social login and different
+        if (avatar_url && existingUser.avatar_url !== avatar_url) {
+            updates.avatar_url = avatar_url;
+            needsUpdate = true;
+            existingUser.avatar_url = avatar_url; // Update local object for response
+        }
+
+        if (needsUpdate) {
             await supabase
                 .from('users')
-                .update({ provider, provider_id })
+                .update(updates)
                 .eq('id', existingUser.id);
         }
         return existingUser;
@@ -48,6 +65,9 @@ const findOrCreateSocialUser = async({ email, name, provider, provider_id, avata
     if (insertError) {
         throw new Error(insertError.message);
     }
+
+    // Send welcome email asynchronously for new social signups
+    sendWelcomeEmail(email, name || email.split('@')[0]).catch(console.error);
 
     return newUser[0];
 };

@@ -1,12 +1,14 @@
 /**
  * @file Register.jsx
  * @description User registration component facilitating account creation for Buyers and Sellers.
+ * Swapped layout: Picture on the left, Form on the right.
  */
 
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../context/api';
 import { useAuth } from '../context/UserAuthContext';
+import "./Register.css";
 
 const Register = () => {
     const navigate = useNavigate();
@@ -63,9 +65,10 @@ const Register = () => {
     };
 
     return (
-        <div className="flex min-h-screen bg-white font-sans">
+        /* 'flex-row-reverse' places the form on the right and background image on the left */
+        <div className="flex min-h-screen bg-white font-sans flex-row-reverse">
             
-            {/* --- Left Side: Register Form --- */}
+            {/* --- Right Side: Register Form --- */}
             <div className="w-full md:w-[450px] lg:w-[500px] flex flex-col justify-center px-8 sm:px-12 py-10 relative overflow-y-auto">
                 
                 {/* Back to Home Button */}
@@ -79,14 +82,7 @@ const Register = () => {
                 </button>
 
                 <div className="max-w-md w-full mx-auto mt-8">
-                    {/* Logo */}
-                    <div className="flex items-center mb-6 cursor-pointer" onClick={() => navigate('/')}>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600 mr-1 -rotate-12" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-                        </svg>
-                        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Thirasara</h1>
-                    </div>
-
+                   
                     <h2 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">Create an account</h2>
                     <p className="text-gray-500 text-sm mb-6">Join us to buy or sell properties easily.</p>
 
@@ -158,7 +154,7 @@ const Register = () => {
 
                         {/* Extra fields for Agent */}
                         {role === 'AGENT' && (
-                            <div className="bg-purple-50 p-4 rounded-lg mb-4 border border-purple-100">
+                            <div className="bg-purple-50 p-4 rounded-lg mb-4 border border-purple-100 animate-fade-in">
                                 <h3 className="text-purple-800 font-semibold mb-3 text-sm">Agent Details</h3>
                                 <div className="mb-3">
                                     <label htmlFor="agencyName" className="block text-gray-700 text-xs font-medium mb-1">Agency Name (Optional)</label>
@@ -234,11 +230,22 @@ const Register = () => {
                 </div>
             </div>
 
-            {/* --- Right Side: Background Image --- */}
+            {/* --- Left Side: Background Image --- */}
             <div
                 className="hidden md:block flex-1 bg-cover bg-center"
                 style={{ backgroundImage: "url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')" }}
             >
+                {/* Logo wrapper pinned to top-right corner with absolute positioning */}
+                <div 
+                    
+                    className="absolute top-6 left-8 flex items-center cursor-pointer"                  >
+                    <img
+                        src="/logo.jpeg"
+                        alt="Thirasara Logo"
+                        className="logo mr-2"
+                    />
+                    <h1 className="text-xl font-extrabold text-gray-900 tracking-tight">Thirasara Property</h1>
+                </div>
                 <div className="w-full h-full bg-black/10"></div>
             </div>
 

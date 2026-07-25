@@ -1,7 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { getAgents, getAgentProfile, postReview, getAgentLeads, updateLeadMetadata, updateAgentProfile, resubmitApplication } = require('../controllers/agentController');
+const { getAgents, getAgentProfile, postReview, getAgentLeads, updateLeadMetadata, updateAgentProfile, resubmitApplication, getDashboardStats } = require('../controllers/agentController');
 const { protect } = require('../middleware/authMiddleware');
+
+// Dashboard Stats for Agent
+router.get('/dashboard-stats', protect, getDashboardStats);
 
 // CRM: Get agent leads (conversations about their properties)
 router.get('/leads', protect, getAgentLeads);
