@@ -3,13 +3,13 @@ const { createClient } = require('@supabase/supabase-js');
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
 const isAdmin = (user) => user.role === 'ADMIN';
-const isBuyer = (user) => user.role === 'BUYER';
-const isSeller = (user) => user.role === 'SELLER';
+const isBuyer = (user) => ['BUYER', 'SELLER', 'AGENT'].includes(user.role);
+const isSeller = (user) => ['SELLER', 'AGENT'].includes(user.role);
 
 const canAccessConversation = (user, conversation) => {
-    if (isAdmin(user)) return conversation.support_requested === true || conversation.type === 'support';
-    if (isBuyer(user)) return conversation.buyer_id === user.id;
-    if (isSeller(user)) return conversation.seller_id === user.id;
+    if (isAdmin(user)) return true; // Admins can access all conversations
+    if (conversation.buyer_id === user.id) return true;
+    if (conversation.seller_id === user.id) return true;
     return false;
 };
 
@@ -35,8 +35,8 @@ const getConversationOr403 = async (req, res) => {
 
 const startPropertyConversation = async (req, res) => {
     try {
-        // Fix: Allow anyone (Buyer or Seller) to inquire about a property
-        if (!req.user || !['BUYER', 'SELLER'].includes(req.user.role)) {
+        // Fix: Allow anyone (Buyer, Seller, Agent) to inquire about a property
+        if (!req.user || !['BUYER', 'SELLER', 'AGENT'].includes(req.user.role)) {
             return res.status(403).json({ message: "Only registered users can message sellers about a property." });
         }
 
@@ -131,8 +131,8 @@ const startSupportConversation = async (req, res) => {
 
 const startAgentConversation = async (req, res) => {
     try {
-        if (!req.user || !['BUYER', 'SELLER'].includes(req.user.role)) {
-            return res.status(403).json({ message: "Only registered users can message agents directly." });
+        if (!req.user || !['BUYER', 'SELLER', 'AGENT'].includes(req.user.role)) {
+            return res.status(403).json({ message: "Only registered users can message agents." });
         }
 
         const agentId = req.params.agentId;
@@ -325,7 +325,7 @@ const sendMessage = async (req, res) => {
             .insert([{
                 conversation_id: conversation.id,
                 sender_id: req.user.id,
-                sender_role: req.user.role,
+                sender_role: req.user.role === 'AGENT' ? 'SELLER' : req.user.role,
                 body: body?.trim() || '',
                 created_at: new Date(),
                 ...attachment
@@ -358,7 +358,6 @@ const requestSupport = async (req, res) => {
 
         if (error) throw error;
 
-        // Also add a system message so both parties know support was requested
         await supabase
             .from('messages')
             .insert([{

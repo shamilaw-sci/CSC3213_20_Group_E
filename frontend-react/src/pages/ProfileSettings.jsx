@@ -30,7 +30,6 @@ const ProfileSettings = () => {
         youtube_video_url: '',
         agency_name: '',
         license_number: '',
-        license_number: '',
         service_areas: '',
         specialization: 'Both'
     });
@@ -58,8 +57,8 @@ const ProfileSettings = () => {
                 setSavedSearches(searchRes.data.savedSearches || []);
                 setFavorites(favRes.data.favorites || []);
                 
-                // Fetch agent profile if they are an agent or seller
-                if (user?.role === 'AGENT' || user?.role === 'SELLER') {
+                // Fetch agent profile if they are an agent or pending agent
+                if (user?.role === 'AGENT' || user?.role === 'PENDING_AGENT') {
                     const agentRes = await api.get(`/agents/${user.id}`).catch(() => null);
                     if (agentRes && agentRes.data && agentRes.data.agent && agentRes.data.agent.agent_profiles) {
                         const p = agentRes.data.agent.agent_profiles[0] || {};
@@ -180,7 +179,7 @@ const ProfileSettings = () => {
                         <div className="relative group">
                             <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 border-4 border-white dark:border-gray-800 shadow-lg">
                                 {avatarUrl ? (
-                                    <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                                    <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                                 ) : (
                                     <User className="w-full h-full p-4 text-gray-400 dark:text-gray-500" />
                                 )}
@@ -204,7 +203,7 @@ const ProfileSettings = () => {
             {/* Navigation Tabs */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full mt-8">
                 <div className="flex space-x-2 border-b border-gray-200 dark:border-gray-700 mb-8 overflow-x-auto pb-[1px]">
-                    {['profile', 'preferences', 'favorites', 'searches', ...(user?.role === 'AGENT' || user?.role === 'SELLER' ? ['agentSettings'] : [])].map((tab) => (
+                    {['profile', 'preferences', 'favorites', 'searches', ...(user?.role === 'AGENT' || user?.role === 'PENDING_AGENT' ? ['agentSettings'] : [])].map((tab) => (
                         <button aria-label="Accessible interactive control" type="button"
                             key={tab}
                             onClick={() => setActiveTab(tab)}

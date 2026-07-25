@@ -3,15 +3,18 @@
  * @description Multi-step authentication component handling email verification, password sign-in, and password resets.
  */
 
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../context/api';
 import { useAuth } from '../context/UserAuthContext';
-import { signInWithGoogle, signInWithFacebook, signInWithApple } from '../utils/socialAuth';
-import "./Login.css";
+import { signInWithFacebook, signInWithApple } from '../utils/socialAuth';
+import { ShieldAlert } from 'lucide-react';
+import { Player } from '@lottiefiles/react-lottie-player';
+import { m } from 'framer-motion';
 
 const Login = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { login } = useAuth();
     
     // UI State Management
@@ -23,6 +26,58 @@ const Login = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [resetMessage, setResetMessage] = useState(''); 
+    const [stateMessage, setStateMessage] = useState(location.state?.message || '');
+    const googleBtnRef = useRef(null);
+
+    // Render Google Button when step is 1
+    useEffect(() => {
+        if (step !== 1) return;
+
+        const renderGoogleButton = () => {
+            if (window.google && googleBtnRef.current && !googleBtnRef.current.hasChildNodes()) {
+                window.google.accounts.id.initialize({
+                    client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+                    callback: async (response) => {
+                        setError('');
+                        setLoading(true);
+                        try {
+                            const res = await api.post('/auth/google', {
+                                credential: response.credential
+                            });
+                            const user = res.data.user;
+                            login(user);
+                            if (user.role === 'SELLER') navigate('/seller-dashboard');
+                            else if (user.role === 'AGENT' || user.role === 'PENDING_AGENT') navigate('/agent-dashboard');
+                            else navigate('/');
+                        } catch (err) {
+                            setError(err.response?.data?.message || err.message || "Google login failed.");
+                        } finally {
+                            setLoading(false);
+                        }
+                    }
+                });
+                window.google.accounts.id.renderButton(googleBtnRef.current, {
+                    theme: 'outline',
+                    size: 'large',
+                    width: 350,
+                    text: 'continue_with',
+                    locale: 'en'
+                });
+            }
+        };
+
+        if (window.google) {
+            renderGoogleButton();
+        } else {
+            const intervalId = setInterval(() => {
+                if (window.google) {
+                    clearInterval(intervalId);
+                    renderGoogleButton();
+                }
+            }, 100);
+            return () => clearInterval(intervalId);
+        }
+    }, [step, navigate, login]);
 
     /**
      * Step 1: Validate if the email exists in the system.
@@ -105,13 +160,15 @@ const Login = () => {
     };
 
     const handleSocialLogin = async (provider) => {
-        setError('');
-        setLoading(true);
-        try {
-            let user;
-            if (provider === 'Google') user = await signInWithGoogle();
-            else if (provider === 'Facebook') user = await signInWithFacebook();
-            else if (provider === 'Apple') user = await signInWithApple();
+    if (provider === 'Apple') {
+        setStateMessage('Apple Login is coming soon! Stay tuned.');
+        return;
+    }
+    setError('');
+    setLoading(true);
+    try {
+        let user;
+        if (provider === 'Facebook') user = await signInWithFacebook();
 
             login(user);
             navigate('/');
@@ -143,18 +200,19 @@ const Login = () => {
                     {/* Dynamic Title based on current step */}
                     {step === 2 ? (
                         <div className="mb-8 animate-fade-in">
-                            <div className="flex items-end">
+                            <div className="flex items-center justify-between">
                                 <div className="z-10">
-                                    <h2 className="text-4xl font-extrabold text-gray-900 tracking-tight flex items-center">
-                                        Hi, {userName}! <span className="animate-wave ml-2 drop-shadow-md">👋</span>
+                                    <h2 className="text-4xl font-extrabold text-gray-900 tracking-tight">
+                                        Hi, {userName}!
                                     </h2>
                                     <p className="text-gray-500 mt-2 text-sm font-medium">Welcome back to Thirasara Property</p>
                                 </div>
-                                <div className="relative w-20 h-20 -ml-2 -mb-2">
-                                    <img 
-                                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}&backgroundColor=transparent&style=circle`} 
-                                        alt="User Avatar" 
-                                        className="w-full h-full object-contain animate-pop-lean drop-shadow-xl"
+                                <div className="relative w-40 h-40 lg:w-48 lg:h-48 flex-shrink-0 -mr-4">
+                                    <Player
+                                        autoplay
+                                        loop
+                                        src="/images/avatar-animation.json"
+                                        style={{ height: '100%', width: '100%' }}
                                     />
                                 </div>
                             </div>
@@ -163,6 +221,16 @@ const Login = () => {
                         <h2 className="text-2xl font-bold text-gray-900 mb-2">
                             {step === 1 ? 'Sign in' : 'Reset Password'}
                         </h2>
+                    )}
+                    
+                    {stateMessage && (
+                        <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 text-blue-700 rounded shadow-sm flex items-start">
+                            <ShieldAlert className="w-5 h-5 mr-3 flex-shrink-0 mt-0.5 text-blue-500" />
+                            <div>
+                                <p className="font-semibold text-sm">Action Required</p>
+                                <p className="text-sm mt-1">{stateMessage}</p>
+                            </div>
+                        </div>
                     )}
                     
                     {/* Display email in step 2 with edit option */}
@@ -318,18 +386,17 @@ const Login = () => {
                                 <div className="flex-grow border-t border-gray-300"></div>
                             </div>
 
-                            <div className="space-y-3">
-                                <button aria-label="Accessible interactive control" type="button" onClick={() => handleSocialLogin('Google')} className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium text-gray-700">
-                                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="h-5 w-5 mr-2" />
-                                    Continue with Google
-                                </button>
-                                <button aria-label="Accessible interactive control" type="button" onClick={() => handleSocialLogin('Apple')} className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium text-gray-700">
-                                    <img src="https://www.svgrepo.com/show/511330/apple-173.svg" alt="Apple" className="h-5 w-5 mr-2" />
-                                    Continue with Apple
-                                </button>
-                                <button aria-label="Accessible interactive control" type="button" onClick={() => handleSocialLogin('Facebook')} className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium text-gray-700">
+                            <div className="space-y-3 flex flex-col items-center">
+                                {/* Google Sign In Button Container */}
+                                <div ref={googleBtnRef} className="w-full flex justify-center"></div>
+
+                                <button aria-label="Accessible interactive control" type="button" onClick={() => handleSocialLogin('Facebook')} className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium text-gray-700 h-10" style={{ maxWidth: '350px' }}>
                                     <img src="https://www.svgrepo.com/show/475647/facebook-color.svg" alt="Facebook" className="h-5 w-5 mr-2" />
                                     Continue with Facebook
+                                </button>
+                                <button aria-label="Accessible interactive control" type="button" onClick={() => handleSocialLogin('Apple')} className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium text-gray-700 h-10" style={{ maxWidth: '350px' }}>
+                                    <img src="https://www.svgrepo.com/show/511330/apple-173.svg" alt="Apple" className="h-5 w-5 mr-2" />
+                                    Continue with Apple
                                 </button>
                             </div>
 
@@ -341,25 +408,46 @@ const Login = () => {
                 </div>
             </div>
 
-            {/* --- Right Side: Background Image Section --- */}
-            {/* Added 'relative' here so the logo can anchor inside it */}
-            <div
-                className="hidden md:block flex-1 bg-cover bg-center relative"
-                style={{ backgroundImage: "url('https://images.unsplash.com/photo-1511895426328-dc8714191300?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')" }}
-            >
-                {/* Logo wrapper pinned to top-right corner with absolute positioning */}
-                <div 
-                    
-                    className="absolute top-6 right-8 flex items-center cursor-pointer"                  >
-                    <img
-                        src="/logo.jpeg"
-                        alt="Thirasara Logo"
-                        className="logo mr-2"
-                    />
-                    <h1 className="text-xl font-extrabold text-gray-900 tracking-tight">Thirasara Property</h1>
+            {/* --- Right Side: Premium Mesh Gradient & Animation --- */}
+            <div className="hidden md:flex flex-1 relative items-center justify-center overflow-hidden bg-slate-950">
+                {/* Premium Ambient Glow (Apple/Stripe style) */}
+                <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+                    <div className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] rounded-full bg-blue-600/30 blur-[120px]"></div>
+                    <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-purple-600/30 blur-[120px]"></div>
+                    <div className="absolute top-[20%] right-[20%] w-[40%] h-[40%] rounded-full bg-cyan-500/20 blur-[100px]"></div>
                 </div>
 
-                <div className="w-full h-full bg-black/5"></div>
+                <div className="relative z-10 w-full max-w-2xl flex flex-col items-center justify-center p-8">
+                    {/* Lottie Animation */}
+                    <m.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.7 }}
+                        className="w-[300px] h-[300px] lg:w-[400px] lg:h-[400px] mb-4 lg:-mt-10 drop-shadow-2xl"
+                    >
+                        <Player
+                            autoplay
+                            loop
+                            src="/images/login-animation.json"
+                            style={{ height: '100%', width: '100%' }}
+                        />
+                    </m.div>
+                    
+                    {/* Typography Hook */}
+                    <m.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3, duration: 0.6 }}
+                        className="text-center text-white z-20"
+                    >
+                        <h2 className="text-3xl lg:text-4xl font-black mb-3 tracking-tight">
+                            Welcome to the Future<br/>of Real Estate
+                        </h2>
+                        <p className="text-blue-100/70 text-base max-w-md mx-auto font-medium leading-relaxed">
+                            Join thousands of buyers, sellers, and top-tier agents making smarter property decisions every day.
+                        </p>
+                    </m.div>
+                </div>
             </div>
 
         </div>

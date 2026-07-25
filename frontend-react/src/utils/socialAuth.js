@@ -53,16 +53,13 @@ export const signInWithFacebook = () => {
             fbInitialized = true;
         }
 
-        window.FB.login(async(response) => {
+        window.FB.login((response) => {
             if (response.authResponse) {
-                try {
-                    const res = await axios.post(`${API_URL}/api/auth/facebook`, {
-                        accessToken: response.authResponse.accessToken
-                    }, { withCredentials: true });
-                    resolve(res.data.user);
-                } catch (err) {
-                    reject(err);
-                }
+                axios.post(`${API_URL}/api/auth/facebook`, {
+                    accessToken: response.authResponse.accessToken
+                }, { withCredentials: true })
+                .then(res => resolve(res.data.user))
+                .catch(err => reject(err));
             } else {
                 reject(new Error("Facebook login was cancelled."));
             }
