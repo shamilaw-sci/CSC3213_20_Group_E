@@ -188,13 +188,18 @@ const AddProperty = () => {
     setFormData({
       ...formData,
       type,
-      listingType: type === "Rent House" || type === "Rent Villa" ? "Rent" : "Sale",
+      listingType:
+        type === "Rent House" || type === "Rent Villa" ? "Rent" : "Sale",
       bedrooms: type === "Land" ? "" : formData.bedrooms,
       bathrooms: type === "Land" ? "" : formData.bathrooms,
-      houseSize: type === "Rent House" || type === "Rent Villa" ? formData.houseSize : "",
+      houseSize:
+        type === "Rent House" || type === "Rent Villa"
+          ? formData.houseSize
+          : "",
       landSize:
         type === "Rent House" || type === "Rent Villa" ? "" : formData.landSize,
-      pricePeriod: type === "Rent House" || type === "Rent Villa" ? "Month" : "",
+      pricePeriod:
+        type === "Rent House" || type === "Rent Villa" ? "Month" : "",
     });
   };
 
@@ -343,7 +348,13 @@ const AddProperty = () => {
           type: "success",
           text: `Payment successful for Property: ${orderId}. Property is sent to admin approval. Please stay alert, it will be listed soon.`,
         });
-        setTimeout(() => navigate(user.role === 'SELLER' ? "/seller-dashboard" : "/agent-dashboard"), 3000);
+        setTimeout(
+          () =>
+            navigate(
+              user.role === "SELLER" ? "/seller-dashboard" : "/agent-dashboard",
+            ),
+          3000,
+        );
       };
 
       window.payhere.onDismissed = function onDismissed() {
@@ -351,12 +362,24 @@ const AddProperty = () => {
           type: "error",
           text: "Payment cancelled. You can pay later from your dashboard.",
         });
-        setTimeout(() => navigate(user.role === 'SELLER' ? "/seller-dashboard" : "/agent-dashboard"), 3000);
+        setTimeout(
+          () =>
+            navigate(
+              user.role === "SELLER" ? "/seller-dashboard" : "/agent-dashboard",
+            ),
+          3000,
+        );
       };
 
       window.payhere.onError = function onError(error) {
         setMessage({ type: "error", text: `Payment Error: ${error}` });
-        setTimeout(() => navigate(user.role === 'SELLER' ? "/seller-dashboard" : "/agent-dashboard"), 3000);
+        setTimeout(
+          () =>
+            navigate(
+              user.role === "SELLER" ? "/seller-dashboard" : "/agent-dashboard",
+            ),
+          3000,
+        );
       };
 
       // Start Payment
@@ -367,7 +390,13 @@ const AddProperty = () => {
         type: "error",
         text: "Property saved, but failed to start payment. Please try paying from the dashboard.",
       });
-      setTimeout(() => navigate(user.role === 'SELLER' ? "/seller-dashboard" : "/agent-dashboard"), 3000);
+      setTimeout(
+        () =>
+          navigate(
+            user.role === "SELLER" ? "/seller-dashboard" : "/agent-dashboard",
+          ),
+        3000,
+      );
     }
   };
 
