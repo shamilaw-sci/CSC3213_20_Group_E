@@ -13,10 +13,11 @@ const BarChart = ({ data = [], colorClass = "bg-blue-500" }) => {
         <div key={i} className="flex flex-col items-center flex-1 group">
           <div className="w-full relative flex items-end justify-center h-full rounded-t-lg bg-gray-50 overflow-hidden">
             <m.div
-              initial={{ height: 0 }}
-              animate={{ height: `${(d.value / max) * 100}%` }}
+              initial={{ scaleY: 0 }}
+              animate={{ scaleY: d.value / max }}
+              style={{ transformOrigin: "bottom" }}
               transition={{ duration: 1, ease: "easeOut", delay: i * 0.1 }}
-              className={`w-full ${colorClass} rounded-t-md opacity-80 group-hover:opacity-100 transition-opacity min-h-[4px]`}
+              className={`w-full h-full ${colorClass} rounded-t-md opacity-80 group-hover:opacity-100 transition-opacity min-h-[4px]`}
             />
             {/* Tooltip on hover */}
             <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-[10px] py-1 px-2 rounded font-bold whitespace-nowrap z-10 pointer-events-none">

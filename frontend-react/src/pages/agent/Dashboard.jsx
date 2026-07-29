@@ -71,6 +71,7 @@ const AgentDashboard = () => {
     };
     
     // Fetch Messages when a lead is selected
+    // eslint-disable-next-line
     useEffect(() => {
         let timer;
         if (!selectedLead) return;
