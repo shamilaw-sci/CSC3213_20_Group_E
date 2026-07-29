@@ -208,7 +208,7 @@ const ProfileSettings = () => {
                             key={tab}
                             onClick={() => setActiveTab(tab)}
                             className={`px-6 py-3 font-semibold text-sm capitalize transition-colors relative whitespace-nowrap
-                                ${activeTab === tab ? 'text-black-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'}
+                                ${activeTab === tab ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'}
                             `}
                         >
                             {tab === 'profile' && 'My Profile'}

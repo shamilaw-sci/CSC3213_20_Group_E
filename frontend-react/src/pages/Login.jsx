@@ -170,14 +170,22 @@ const Login = () => {
         let user;
         if (provider === 'Facebook') user = await signInWithFacebook();
 
-            login(user);
+        login(user);
+        
+        // Role-based redirect
+        if (user.role === 'SELLER') {
+            navigate('/seller-dashboard');
+        } else if (user.role === 'AGENT' || user.role === 'PENDING_AGENT') {
+            navigate('/agent-dashboard');
+        } else {
             navigate('/');
-        } catch (err) {
-            setError(err.response?.data?.message || err.message || `${provider} login failed. Please try again.`);
-        } finally {
-            setLoading(false);
         }
-    };
+    } catch (err) {
+        setError(err.response?.data?.message || err.message || `${provider} login failed. Please try again.`);
+    } finally {
+        setLoading(false);
+    }
+};
 
     return (
         <div className="flex min-h-screen bg-white font-sans">
@@ -196,7 +204,14 @@ const Login = () => {
                 </button>
 
                 <div className="max-w-md w-full mx-auto">
-                    
+                    {/* Logo */}
+                    <div className="flex items-center mb-8 cursor-pointer" onClick={() => navigate('/')}>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600 mr-1 -rotate-12" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                        </svg>
+                        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Thirasara</h1>
+                    </div>
+
                     {/* Dynamic Title based on current step */}
                     {step === 2 ? (
                         <div className="mb-8 animate-fade-in">

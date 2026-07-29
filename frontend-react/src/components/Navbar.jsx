@@ -139,7 +139,7 @@ const Navbar = ({ transparent = false }) => {
                           key={msg.id}
                           onClick={() =>
                             navigate(
-                              `/messages?conversation=${msg.conversation_id}`,
+                              `/messages?conversation=${msg.conversation_id}`
                             )
                           }
                           className="px-4 py-3 border-b border-gray-50 hover:bg-gray-50 cursor-pointer flex gap-3 items-start"

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { fetchDashboardStats, fetchRevenueData, fetchUserGrowth, fetchListings } from "../api/adminApi";
 import { m } from "framer-motion";
 import { Home, Clock, Users, DollarSign, ArrowUpRight, ArrowDownRight, ChevronRight } from "lucide-react";
@@ -34,7 +33,6 @@ const BarChart = ({ data = [], colorClass = "bg-blue-500" }) => {
 // Removed mock data
 
 const DashboardPage = () => {
-  const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalListings: 0,
     pendingApproval: 0,
@@ -83,10 +81,10 @@ const DashboardPage = () => {
   const fmtCur = (n) => `LKR ${new Intl.NumberFormat("en-LK").format(n)}`;
 
   const statCards = [
-    { title: "Total Listings",   value: fmt(stats.totalListings || 0),    icon: Home,        trend: "up",      desc: "Active & Pending",  color: "blue",    link: "/admin/listings" },
-    { title: "Pending Approval", value: fmt(stats.pendingApproval || 0),   icon: Clock,       trend: "neutral", desc: "Requires action",  color: "orange",  link: "/admin/listings?status=pending" },
-    { title: "Total Users",      value: fmt(stats.totalUsers || 0),        icon: Users,       trend: "up",      desc: "Buyers & Sellers", color: "indigo",  link: "/admin/users" },
-    { title: "Total Revenue",    value: fmtCur(stats.revenue || 0),        icon: DollarSign,  trend: "up",      desc: "Overall Income",   color: "emerald", link: "/admin/analytics" },
+    { title: "Total Listings", value: fmt(stats.totalListings || 0), icon: Home, trend: "up", desc: "Active & Pending", color: "blue" },
+    { title: "Pending Approval", value: fmt(stats.pendingApproval || 0), icon: Clock, trend: "neutral", desc: "Requires action", color: "orange" },
+    { title: "Total Users", value: fmt(stats.totalUsers || 0), icon: Users, trend: "up", desc: "Buyers & Sellers", color: "indigo" },
+    { title: "Total Revenue", value: fmtCur(stats.revenue || 0), icon: DollarSign, trend: "up", desc: "Overall Income", color: "emerald" }
   ];
 
   const getColorClasses = (color) => {
@@ -104,44 +102,30 @@ const DashboardPage = () => {
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((stat, idx) => (
-          <m.div
+          <m.div 
             key={idx}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
-            onClick={() => navigate(stat.link)}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => e.key === "Enter" && navigate(stat.link)}
-            aria-label={`Go to ${stat.title}`}
-            className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group cursor-pointer select-none active:scale-[0.98]"
+            className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group"
           >
-            {/* Background orb */}
-            <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-${stat.color}-500/5 to-${stat.color}-500/10 rounded-full -mr-10 -mt-10 transition-transform group-hover:scale-125`} />
-
-            {/* Top row: label + icon */}
+            <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-${stat.color}-500/5 to-${stat.color}-500/10 rounded-full -mr-10 -mt-10 transition-transform group-hover:scale-110`} />
+            
             <div className="flex justify-between items-start mb-4 relative z-10">
                 <div className="flex flex-col">
                     <span className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">{stat.title}</span>
-                    <span className={`text-3xl font-black text-gray-900 mt-2 ${stat.title === 'Total Revenue' ? 'text-2xl' : ''}`}>{stat.value}</span>
+                    <span className={`text-3xl font-black text-gray-900 mt-2 ${stat.title === 'Monthly Revenue' ? 'text-2xl' : ''}`}>{stat.value}</span>
                 </div>
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm border transition-transform group-hover:scale-110 ${getColorClasses(stat.color)}`}>
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm border ${getColorClasses(stat.color)}`}>
                     <stat.icon className="w-6 h-6" />
                 </div>
             </div>
 
-            {/* Bottom row: trend + nav hint */}
-            <div className="flex items-center justify-between mt-4 relative z-10">
-                <div className="flex items-center gap-1.5">
-                    {stat.trend === 'up' ? <ArrowUpRight className="w-4 h-4 text-emerald-500" /> :
-                     stat.trend === 'down' ? <ArrowDownRight className="w-4 h-4 text-red-500" /> : null}
-                    <span className={`text-xs font-bold ${stat.trend === 'up' ? 'text-emerald-600' : stat.trend === 'down' ? 'text-red-600' : 'text-gray-400'}`}>
-                        {stat.desc}
-                    </span>
-                </div>
-                {/* "Go" arrow — appears on hover */}
-                <span className={`flex items-center gap-0.5 text-[10px] font-black uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-all duration-200 translate-x-1 group-hover:translate-x-0 text-${stat.color}-600`}>
-                    View <ChevronRight className="w-3 h-3" />
+            <div className="flex items-center gap-1.5 mt-4 relative z-10">
+                {stat.trend === 'up' ? <ArrowUpRight className="w-4 h-4 text-emerald-500" /> : 
+                 stat.trend === 'down' ? <ArrowDownRight className="w-4 h-4 text-red-500" /> : null}
+                <span className={`text-xs font-bold ${stat.trend === 'up' ? 'text-emerald-600' : stat.trend === 'down' ? 'text-red-600' : 'text-gray-400'}`}>
+                    {stat.desc}
                 </span>
             </div>
           </m.div>
