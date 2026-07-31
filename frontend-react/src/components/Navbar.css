@@ -8,6 +8,11 @@ nav {
   transition-duration: 250ms;
 }
 
+.dark nav {
+  background: rgba(17, 17, 17, 0.75);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
 /* --- Navigation Bar Tweaks --- */
 .navbar-logo {
   width: 42px;

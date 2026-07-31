@@ -48,12 +48,12 @@ const Navbar = () => {
         <div className="flex justify-between h-20 items-center">
           <div className="hidden md:flex items-center space-x-6 h-full">
             <div className="group h-full flex items-center relative cursor-pointer">
-              <span className="text-white-800 hover:text-blue-600 font-medium px-2 py-8 transition duration-200 border-b-4 border-transparent group-hover:border-blue-600">
+              <span className="text-gray-800 dark:text-gray-100 hover:text-blue-600 font-medium px-2 py-8 transition duration-200 border-b-4 border-transparent group-hover:border-blue-600">
                 Buy
               </span>
             </div>
             <div className="h-full flex items-center cursor-pointer">
-              <span className="text-white-800 hover:text-blue-600 font-medium px-2 transition duration-200">
+              <span className="text-gray-800 dark:text-gray-100 hover:text-blue-600 font-medium px-2 transition duration-200">
                 Rent
               </span>
             </div>
@@ -63,7 +63,7 @@ const Navbar = () => {
                 navigate(user?.role === "SELLER" ? "/add-property" : "/login")
               }
             >
-              <span className="text-white-800 hover:text-blue-600 font-medium px-2 transition duration-200">
+              <span className="text-gray-800 dark:text-gray-100 hover:text-blue-600 font-medium px-2 transition duration-200">
                 Sell
               </span>
             </div>
@@ -81,7 +81,7 @@ const Navbar = () => {
             className="absolute left-1/2 transform -translate-x-1/2 flex-shrink-0 cursor-pointer"
             onClick={() => navigate("/")}
           >
-            <h1 className="text-2xl font-extrabold text-black-600 tracking-tight flex items-center gap-2 text-blue-600">
+            <h1 className="text-2xl font-extrabold text-blue-600 tracking-tight flex items-center gap-2">
               <img
                 src="/logo.jpeg"
                 alt="Thirasara Logo"
@@ -94,14 +94,14 @@ const Navbar = () => {
           <div className="flex items-center space-x-6 h-full">
             <button
               onClick={() => navigate("/map")}
-              className="text-white-800 hover:text-blue-600 font-medium transition hidden md:block"
+              className="text-gray-800 dark:text-gray-100 hover:text-blue-600 font-medium transition hidden md:block"
             >
               Map Search
             </button>
 
             {user && (
               <div className="group h-full flex items-center relative cursor-pointer ml-4">
-                <div className="relative p-2 text-white-600 hover:text-blue-600 transition">
+                <div className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 transition">
                   <Bell className="w-6 h-6" />
                   {unreadCount > 0 && (
                     <span className="absolute top-1 right-1 flex h-3 w-3 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white">
@@ -196,7 +196,7 @@ const Navbar = () => {
                   </div>
 
                   <div className="flex flex-col">
-                    <span className="text-white-800 hover:text-blue-600 font-medium transition flex items-center gap-1">
+                    <span className="text-gray-800 dark:text-gray-100 hover:text-blue-600 font-medium transition flex items-center gap-1">
                       Hi, {user.name.split(" ")[0]}
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
