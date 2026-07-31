@@ -34,6 +34,33 @@
   transform: translateY(-2px);
 }
 
+.dark .min-h-screen {
+  background: linear-gradient(
+    135deg,
+    #1f2937 0%,
+    #312e52 50%,
+    #1e3a2f 100%
+  );
+}
+
+.dark .from_backgroung {
+  background: rgba(17, 24, 39, 0.72);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.dark .from_backgroung input,
+.dark .from_backgroung select,
+.dark .from_backgroung textarea {
+  background-color: #1f2937;
+  color: #f3f4f6;
+  border-color: #4b5563;
+}
+
+.dark .from_backgroung select option {
+  background-color: #1f2937;
+  color: #f3f4f6;
+}
+
 .button-group {
   display: flex;
   margin-bottom: 20px;
