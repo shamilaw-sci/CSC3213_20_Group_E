@@ -6,6 +6,7 @@ import { useCompare } from '../context/CompareContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import MortgageCalculator from '../components/MortgageCalculator';
+import PropertyCard from '../components/PropertyCard';
 import { Bed, Bath, Maximize, MapPin, Heart, MessageCircle, ChevronLeft, ChevronRight, Loader2, Scale } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Polygon, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -37,6 +38,8 @@ const PropertyDetails = () => {
     const [isFavorite, setIsFavorite] = useState(false);
     const [isFavLoading, setIsFavLoading] = useState(false);
     const [showAnimation, setShowAnimation] = useState(false);
+    const [similarProperties, setSimilarProperties] = useState([]);
+    const [similarLoading, setSimilarLoading] = useState(true);
 
     useEffect(() => {
         const fetchProperty = async () => {
@@ -47,6 +50,12 @@ const PropertyDetails = () => {
                 
                 // Track view
                 api.post(`/properties/${id}/view`).catch(err => console.error("Error tracking view", err));
+
+                // Fetch similar properties (independent of the main fetch failing)
+                api.get(`/properties/${id}/similar`)
+                    .then(simRes => setSimilarProperties(simRes.data.properties || []))
+                    .catch(err => console.error("Error loading similar properties", err))
+                    .finally(() => setSimilarLoading(false));
                 
                 // If user is logged in, check if it's a favorite
                 if (user) {
@@ -379,6 +388,18 @@ const PropertyDetails = () => {
                     </div>
 
                 </div>
+
+                {/* Similar Properties */}
+                {!similarLoading && similarProperties.length > 0 && (
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
+                        <h2 className="text-2xl font-bold text-gray-900 mb-6">Similar Properties You May Like</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            {similarProperties.map((simProp) => (
+                                <PropertyCard key={simProp.id} prop={simProp} />
+                            ))}
+                        </div>
+                    </div>
+                )}
             </main>
 
             <Footer />
