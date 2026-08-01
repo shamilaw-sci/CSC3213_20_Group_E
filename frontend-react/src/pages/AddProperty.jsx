@@ -112,6 +112,8 @@ const AddProperty = () => {
         });
 
         setGpsActive(true); // ✅ activate blue style
+        setLocationMode("point");
+        setBoundaryCoordinates([]);
       },
       () => {
         alert("Unable to retrieve your location.");
@@ -531,8 +533,8 @@ const AddProperty = () => {
                   onClick={() => handleTypeChange("House")}
                   className={`flex flex-col items-center justify-center p-6 border-2 rounded-2xl cursor-pointer transition-all duration-200 ${
                     formData.type === "House"
-                      ? "border-blue-600 bg-blue-50 text-blue-700 shadow-md transform scale-[1.02]"
-                      : "border-gray-200 hover:border-blue-300 text-gray-500 hover:bg-gray-50"
+                      ? "border-blue-600 bg-blue-50 text-blue-700 shadow-md transform scale-[1.02] dark:border-blue-400 dark:bg-blue-900/40 dark:text-blue-300"
+                      : "border-gray-200 hover:border-blue-300 text-gray-500 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:border-blue-400 dark:hover:bg-gray-800"
                   }`}
                 >
                   <svg
@@ -555,8 +557,8 @@ const AddProperty = () => {
                   onClick={() => handleTypeChange("Land")}
                   className={`flex flex-col items-center justify-center p-6 border-2 rounded-2xl cursor-pointer transition-all duration-200 ${
                     formData.type === "Land"
-                      ? "border-green-600 bg-green-50 text-green-700 shadow-md transform scale-[1.02]"
-                      : "border-gray-200 hover:border-green-300 text-gray-500 hover:bg-gray-50"
+                      ? "border-green-600 bg-green-50 text-green-700 shadow-md transform scale-[1.02] dark:border-green-400 dark:bg-green-900/40 dark:text-green-300"
+                      : "border-gray-200 hover:border-green-300 text-gray-500 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:border-green-400 dark:hover:bg-gray-800"
                   }`}
                 >
                   <svg
@@ -580,8 +582,8 @@ const AddProperty = () => {
                   onClick={() => handleTypeChange("Rent House")}
                   className={`flex flex-col items-center justify-center p-6 border-2 rounded-2xl cursor-pointer transition-all duration-200 ${
                     formData.type === "Rent House"
-                      ? "border-purple-600 bg-purple-50 text-purple-700 shadow-md transform scale-[1.02]"
-                      : "border-gray-200 hover:border-purple-300 text-gray-500 hover:bg-gray-50"
+                      ? "border-purple-600 bg-purple-50 text-purple-700 shadow-md transform scale-[1.02] dark:border-purple-400 dark:bg-purple-900/40 dark:text-purple-300"
+                      : "border-gray-200 hover:border-purple-300 text-gray-500 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:border-purple-400 dark:hover:bg-gray-800"
                   }`}
                 >
                   <svg
@@ -606,8 +608,8 @@ const AddProperty = () => {
                   onClick={() => handleTypeChange("Rent Villa")}
                   className={`flex flex-col items-center justify-center p-6 border-2 rounded-2xl cursor-pointer transition-all duration-200 ${
                     formData.type === "Rent Villa"
-                      ? "border-orange-600 bg-orange-50 text-orange-700 shadow-md transform scale-[1.02]"
-                      : "border-gray-200 hover:border-orange-300 text-gray-500 hover:bg-gray-50"
+                      ? "border-orange-600 bg-orange-50 text-orange-700 shadow-md transform scale-[1.02] dark:border-orange-400 dark:bg-orange-900/40 dark:text-orange-300"
+                      : "border-gray-200 hover:border-orange-300 text-gray-500 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:border-orange-400 dark:hover:bg-gray-800"
                   }`}
                 >
                   <svg
@@ -801,9 +803,10 @@ const AddProperty = () => {
                 onClick={() => {
                   setLocationMode("point");
                   setBoundaryCoordinates([]);
+                  setGpsActive(false);
                 }}
                 className={`px-4 py-2 rounded-lg text-sm font-bold transition ${
-                  locationMode === "point"
+                  locationMode === "point" && !gpsActive
                     ? "bg-blue-600 text-white"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
@@ -825,7 +828,10 @@ const AddProperty = () => {
               </button>
               <button
                 type="button"
-                onClick={() => setLocationMode("boundary")}
+                onClick={() => {
+                  setLocationMode("boundary");
+                  setGpsActive(false);
+                }}
                 className={`px-4 py-2 rounded-lg text-sm font-bold transition ${
                   locationMode === "boundary"
                     ? "bg-blue-600 text-white"

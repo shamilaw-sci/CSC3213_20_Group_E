@@ -62,9 +62,16 @@
 }
 
 .button-group {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   margin-bottom: 20px;
   gap: 10px; /* Space between buttons */
+}
+
+@media (max-width: 768px) {
+  .button-group {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 /* Property Type Card */
