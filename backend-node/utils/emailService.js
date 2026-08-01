@@ -189,10 +189,25 @@ const sendPasswordResetEmail = (email, name, resetLink) => {
     return sendEmail(email, subject, getBaseHtmlTemplate("Password Reset", content));
 };
 
+const sendSavedSearchAlertEmail = (email, searchTitle, property) => {
+    const subject = `New match for your saved search "${searchTitle}"`;
+    const content = `
+        <h2 style="color: #1e293b;">A new property matches your saved search!</h2>
+        <p style="color: #475569;">Your saved search "<strong>${searchTitle}</strong>" has a new match:</p>
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin: 16px 0;">
+            <p style="margin: 0; font-weight: bold; color: #0f172a;">${property.title}</p>
+            <p style="margin: 4px 0 0; color: #64748b; font-size: 14px;">${property.type || ''} &middot; Rs. ${Number(property.price || 0).toLocaleString()}</p>
+        </div>
+        <p style="color: #94a3b8; font-size: 13px;">Log in to Thirasara to view the full listing and photos.</p>
+    `;
+    return sendEmail(email, subject, getBaseHtmlTemplate("New Match Found", content));
+};
+
 module.exports = {
     sendEmail,
     sendWelcomeEmail,
     sendPaymentReceipt,
     sendListingStatusEmail,
-    sendPasswordResetEmail
+    sendPasswordResetEmail,
+    sendSavedSearchAlertEmail,
 };
