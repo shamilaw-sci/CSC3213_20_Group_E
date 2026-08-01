@@ -4,6 +4,7 @@
  */
 
 const { createClient } = require("@supabase/supabase-js");
+const { findSimilarProperties } = require("../utils/similarityEngine");
 
 // Initialize Supabase client using environment variables
 const supabase = createClient(
@@ -394,6 +395,49 @@ const getPropertyById = async (req, res, next) => {
   }
 };
 
+/**
+ * Find properties similar to a given property, using a weighted blend of
+ * type, price, bedrooms, bathrooms, and distance (see utils/similarityEngine.js).
+ * Only considers other approved, currently-listed properties as candidates.
+ */
+const getSimilarProperties = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 6, 20);
+
+    const { data: target, error: targetError } = await supabase
+      .from("properties")
+      .select("id, type, price, bedrooms, bathrooms, latitude, longitude")
+      .eq("id", id)
+      .single();
+
+    if (targetError || !target) {
+      return res.status(404).json({ message: "Property not found." });
+    }
+
+    // Pull a reasonably-sized pool of approved candidates to rank locally.
+    // (For a much larger catalog this would move to a DB-side pre-filter,
+    // but ranking in JS keeps the scoring logic simple and fully testable.)
+    const { data: candidates, error: candidatesError } = await supabase
+      .from("properties")
+      .select("*, users(name, role)")
+      .eq("status", "approved")
+      .neq("id", id)
+      .limit(200);
+
+    if (candidatesError) throw candidatesError;
+
+    const similarProperties = findSimilarProperties(target, candidates || [], limit);
+
+    res.status(200).json({
+      message: "Similar properties fetched successfully",
+      properties: similarProperties,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   addProperty,
   getProperties,
@@ -402,4 +446,5 @@ module.exports = {
   deleteMyProperty,
   incrementViews,
   getPropertyById,
+  getSimilarProperties,
 };
