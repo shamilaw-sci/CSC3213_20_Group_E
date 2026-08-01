@@ -65,7 +65,7 @@ const Home = () => {
   });
 
   return (
-    <div className="min-h-screen bg-[#191918] text-white font-sans">
+    <div className="home-page min-h-screen bg-[#191918] text-white font-sans">
       <Navbar />
 
       {/* HERO SECTION */}
@@ -261,7 +261,7 @@ const Home = () => {
                   duration: 0.5,
                   delay: (idx % 3) * 0.1,
                 }}
-                className=" bg-[#5e5e5d] rounded-2xl overflow-hidden"
+                className=" bg-[#1f1f1e] rounded-2xl overflow-hidden"
               >
                 <PropertyCard
                   prop={prop}
