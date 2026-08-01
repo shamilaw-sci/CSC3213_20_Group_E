@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../context/api';
 import { useAuth } from '../context/UserAuthContext';
+import { useCompare } from '../context/CompareContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import MortgageCalculator from '../components/MortgageCalculator';
-import { Bed, Bath, Maximize, MapPin, Heart, MessageCircle, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import PropertyCard from '../components/PropertyCard';
+import { Bed, Bath, Maximize, MapPin, Heart, MessageCircle, ChevronLeft, ChevronRight, Loader2, Scale } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Polygon, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -27,6 +29,7 @@ const PropertyDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { compareList, addToCompare, removeFromCompare } = useCompare();
     
     const [property, setProperty] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -35,6 +38,8 @@ const PropertyDetails = () => {
     const [isFavorite, setIsFavorite] = useState(false);
     const [isFavLoading, setIsFavLoading] = useState(false);
     const [showAnimation, setShowAnimation] = useState(false);
+    const [similarProperties, setSimilarProperties] = useState([]);
+    const [similarLoading, setSimilarLoading] = useState(true);
 
     useEffect(() => {
         const fetchProperty = async () => {
@@ -42,6 +47,15 @@ const PropertyDetails = () => {
                 // Fetch property details
                 const res = await api.get(`/properties/${id}`);
                 setProperty(res.data.property);
+                
+                // Track view
+                api.post(`/properties/${id}/view`).catch(err => console.error("Error tracking view", err));
+
+                // Fetch similar properties (independent of the main fetch failing)
+                api.get(`/properties/${id}/similar`)
+                    .then(simRes => setSimilarProperties(simRes.data.properties || []))
+                    .catch(err => console.error("Error loading similar properties", err))
+                    .finally(() => setSimilarLoading(false));
                 
                 // If user is logged in, check if it's a favorite
                 if (user) {
@@ -342,6 +356,23 @@ const PropertyDetails = () => {
                                 {isFavorite ? 'Saved to Favorites' : 'Save Property'}
                             </button>
 
+                            <button aria-label="Accessible interactive control" type="button" 
+                                onClick={() => {
+                                    const isCompared = compareList.some(p => p.id === property.id);
+                                    isCompared ? removeFromCompare(property.id) : addToCompare(property);
+                                }}
+                                className={`w-full font-bold py-4 rounded-xl transition-all border flex items-center justify-center gap-2 mt-4 ${
+                                    compareList.some(p => p.id === property.id)
+                                        ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200'
+                                        : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                                }`}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                                {compareList.some(p => p.id === property.id) ? 'Added to Compare' : 'Compare Property'}
+                            </button>
+
                             {/* Trust badges */}
                             <div className="mt-8 pt-6 border-t border-gray-100 space-y-4 text-sm text-gray-500">
                                 <div className="flex items-center gap-3">
@@ -357,6 +388,18 @@ const PropertyDetails = () => {
                     </div>
 
                 </div>
+
+                {/* Similar Properties */}
+                {!similarLoading && similarProperties.length > 0 && (
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
+                        <h2 className="text-2xl font-bold text-gray-900 mb-6">Similar Properties You May Like</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            {similarProperties.map((simProp) => (
+                                <PropertyCard key={simProp.id} prop={simProp} />
+                            ))}
+                        </div>
+                    </div>
+                )}
             </main>
 
             <Footer />

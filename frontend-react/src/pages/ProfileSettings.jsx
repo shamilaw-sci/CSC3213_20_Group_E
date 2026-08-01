@@ -30,7 +30,6 @@ const ProfileSettings = () => {
         youtube_video_url: '',
         agency_name: '',
         license_number: '',
-        license_number: '',
         service_areas: '',
         specialization: 'Both'
     });
@@ -58,8 +57,8 @@ const ProfileSettings = () => {
                 setSavedSearches(searchRes.data.savedSearches || []);
                 setFavorites(favRes.data.favorites || []);
                 
-                // Fetch agent profile if they are an agent or seller
-                if (user?.role === 'AGENT' || user?.role === 'SELLER') {
+                // Fetch agent profile if they are an agent or pending agent
+                if (user?.role === 'AGENT' || user?.role === 'PENDING_AGENT') {
                     const agentRes = await api.get(`/agents/${user.id}`).catch(() => null);
                     if (agentRes && agentRes.data && agentRes.data.agent && agentRes.data.agent.agent_profiles) {
                         const p = agentRes.data.agent.agent_profiles[0] || {};
@@ -161,6 +160,18 @@ const ProfileSettings = () => {
         }
     };
 
+    const handleToggleSearchAlerts = async (id, currentlyEnabled) => {
+        // Optimistic update so the switch feels instant
+        setSavedSearches(prev => prev.map(s => s.id === id ? { ...s, email_alerts_enabled: !currentlyEnabled } : s));
+        try {
+            await api.patch(`/saved-searches/${id}/alerts`, { emailAlertsEnabled: !currentlyEnabled });
+        } catch (err) {
+            // Roll back on failure
+            setSavedSearches(prev => prev.map(s => s.id === id ? { ...s, email_alerts_enabled: currentlyEnabled } : s));
+            console.error("Failed to update alert preference");
+        }
+    };
+
     const handleRemoveFavorite = async (id) => {
         try {
             await api.post(`/favorites/${id}`);
@@ -180,7 +191,7 @@ const ProfileSettings = () => {
                         <div className="relative group">
                             <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 border-4 border-white dark:border-gray-800 shadow-lg">
                                 {avatarUrl ? (
-                                    <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                                    <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                                 ) : (
                                     <User className="w-full h-full p-4 text-gray-400 dark:text-gray-500" />
                                 )}
@@ -204,12 +215,12 @@ const ProfileSettings = () => {
             {/* Navigation Tabs */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full mt-8">
                 <div className="flex space-x-2 border-b border-gray-200 dark:border-gray-700 mb-8 overflow-x-auto pb-[1px]">
-                    {['profile', 'preferences', 'favorites', 'searches', ...(user?.role === 'AGENT' || user?.role === 'SELLER' ? ['agentSettings'] : [])].map((tab) => (
+                    {['profile', 'preferences', 'favorites', 'searches', ...(user?.role === 'AGENT' || user?.role === 'PENDING_AGENT' ? ['agentSettings'] : [])].map((tab) => (
                         <button aria-label="Accessible interactive control" type="button"
                             key={tab}
                             onClick={() => setActiveTab(tab)}
                             className={`px-6 py-3 font-semibold text-sm capitalize transition-colors relative whitespace-nowrap
-                                ${activeTab === tab ? 'text-black-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'}
+                                ${activeTab === tab ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'}
                             `}
                         >
                             {tab === 'profile' && 'My Profile'}
@@ -405,7 +416,7 @@ const ProfileSettings = () => {
                                             {favorites.map(prop => (
                                                 <div key={prop.id} onClick={() => navigate(`/property/${prop.id}`)} className="group cursor-pointer bg-gray-50 dark:bg-gray-900 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700 hover:shadow-lg transition-all">
                                                     <div className="h-48 relative">
-                                                        <img src={prop.images?.[0] || '/placeholder.jpg'} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                                        <img src={prop.images?.[0] || '/placeholder.jpg'} alt={prop.title || "Property"} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                                         <button aria-label="Accessible interactive control" type="button" 
                                                             onClick={(e) => { e.stopPropagation(); handleRemoveFavorite(prop.id); }}
                                                             className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-full text-red-500 hover:bg-red-50 shadow-sm transition-colors"
@@ -459,6 +470,20 @@ const ProfileSettings = () => {
                                                             {search.beds && <span className="bg-white dark:bg-gray-800 px-2.5 py-1 rounded-md shadow-sm border border-gray-100 dark:border-gray-700">{search.beds}+ Beds</span>}
                                                             {search.baths && <span className="bg-white dark:bg-gray-800 px-2.5 py-1 rounded-md shadow-sm border border-gray-100 dark:border-gray-700">{search.baths}+ Baths</span>}
                                                         </div>
+                                                        <button aria-label="Toggle email alerts for this saved search" type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleToggleSearchAlerts(search.id, search.email_alerts_enabled !== false);
+                                                            }}
+                                                            className={`mt-3 flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors ${
+                                                                search.email_alerts_enabled !== false
+                                                                    ? 'text-green-700 bg-green-50 dark:bg-green-900/30 dark:text-green-400'
+                                                                    : 'text-gray-400 bg-gray-100 dark:bg-gray-800'
+                                                            }`}
+                                                        >
+                                                            <Bell className="h-3.5 w-3.5" />
+                                                            {search.email_alerts_enabled !== false ? 'Email alerts on' : 'Email alerts off'}
+                                                        </button>
                                                     </div>
                                                     <button aria-label="Accessible interactive control" type="button" 
                                                         onClick={(e) => {

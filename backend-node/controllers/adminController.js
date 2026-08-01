@@ -6,6 +6,7 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY
 
 const bcrypt = require('bcryptjs');
 const { sendListingStatusEmail } = require('../utils/emailService');
+const { checkSavedSearchMatches } = require('./savedSearchController');
 
 // Admin login - Secure implementation against database
 const login = async (req, res) => {
@@ -264,7 +265,7 @@ const approveListing = async (req, res) => {
             .from('properties')
             .update({ status: 'approved' })
             .eq('id', req.params.id)
-            .select('title, seller_id, users(email)')
+            .select('id, title, type, price, bedrooms, bathrooms, latitude, longitude, seller_id, users(email)')
             .single();
 
         if (error) throw error;
@@ -272,6 +273,11 @@ const approveListing = async (req, res) => {
         if (listing && listing.users && listing.users.email) {
             sendListingStatusEmail(listing.users.email, listing.title, 'Active').catch(console.error);
         }
+
+        // Fire-and-forget: notify anyone with a matching saved search that
+        // this newly-live listing matches their criteria. Never blocks the
+        // approval response, and never throws (see checkSavedSearchMatches).
+        checkSavedSearchMatches(listing).catch(console.error);
 
         res.status(200).json({ message: "Listing approved", listing });
     } catch (error) {

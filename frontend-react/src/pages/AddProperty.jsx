@@ -5,7 +5,6 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../context/api";
 import axios from "axios";
 import imageCompression from "browser-image-compression";
 import {

@@ -1,48 +1,16 @@
-/**
- * @file Home.jsx
- * @description Main landing page displaying a searchable list of properties.
- */
-
-import { useState, useEffect } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
-import PropertyCard from "../components/PropertyCard";
-import { useAuth } from "../context/UserAuthContext";
-import { motion } from "framer-motion";
-import { Search, Home as HomeIcon, Key, MapPin } from "lucide-react";
-import "./Home.css";
+import React, { useEffect } from 'react';
+import DarkHero from '../components/DarkHero';
+import CinematicShowcase from '../components/CinematicShowcase';
+import AgentShowcase from '../components/AgentShowcase';
+import CinematicFooter from '../components/CinematicFooter';
+import Navbar from '../components/Navbar';
 
 const Home = () => {
-  // Component State
-  const [properties, setProperties] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const navigate = useNavigate();
-  const { user } = useAuth();
-
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-
-  // Fetch property data on component mount or page change
-  useEffect(() => {
-    const fetchProperties = async () => {
-      try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/properties?page=${page}&limit=12`,
-        );
-        if (page === 1) {
-          setProperties(response.data.properties);
-        } else {
-          setProperties((prev) => [...prev, ...response.data.properties]);
-        }
-        setTotalPages(response.data.totalPages);
-      } catch (error) {
-        console.error("Error fetching properties:", error);
-      }
-    };
-    fetchProperties();
-  }, [page]);
+    
+    // Ensure scroll is at the top on mount, especially since we have complex scroll animations
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
 
   const handleMessageSeller = async (propertyId) => {
     if (!user) {
@@ -77,10 +45,22 @@ const Home = () => {
 
     const searchLower = searchTerm.toLowerCase();
     return (
-      (prop.title && prop.title.toLowerCase().includes(searchLower)) ||
-      (prop.description &&
-        prop.description.toLowerCase().includes(searchLower)) ||
-      (prop.address && prop.address.toLowerCase().includes(searchLower))
+        <div className="bg-black min-h-screen font-sans selection:bg-white/30 selection:text-white">
+            <Navbar transparent={true} />
+            
+            {/* 1. Preloader & Dark Hero */}
+            <DarkHero />
+
+            {/* 2. Sticky Scroll Show (Buy, Rent, Sell) */}
+            <CinematicShowcase />
+
+            {/* 3. The Agents Showcase */}
+            <AgentShowcase />
+
+            {/* 4. Cinematic Footer */}
+            <CinematicFooter />
+
+        </div>
     );
   });
 

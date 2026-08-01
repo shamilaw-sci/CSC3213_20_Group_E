@@ -4,6 +4,7 @@
  */
 
 const { createClient } = require("@supabase/supabase-js");
+const { findSimilarProperties } = require("../utils/similarityEngine");
 
 // Initialize Supabase client using environment variables
 const supabase = createClient(
@@ -303,6 +304,72 @@ const updateMyProperty = async (req, res, next) => {
 };
 
 /**
+ * Delete a seller's own property submission.
+ */
+const deleteMyProperty = async (req, res, next) => {
+  try {
+    if (req.user.role !== "SELLER" && req.user.role !== "AGENT") {
+      return res.status(403).json({ message: "Only sellers and agents can delete properties." });
+    }
+
+    const { id } = req.params;
+
+    // First check if property belongs to seller
+    const { data: prop, error: checkError } = await supabase
+      .from("properties")
+      .select("id")
+      .eq("id", id)
+      .eq("seller_id", req.user.id)
+      .single();
+
+    if (checkError || !prop) {
+      return res.status(404).json({ message: "Property not found or unauthorized." });
+    }
+
+    const { error } = await supabase.from("properties").delete().eq("id", id);
+    if (error) throw error;
+
+    res.status(200).json({ message: "Property deleted successfully." });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Increment the view count for a specific property.
+ */
+const incrementViews = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    
+    // Use RPC function if available, or fetch and increment
+    // Since we don't have an RPC function right now, fetch and increment
+    const { data: prop, error: fetchError } = await supabase
+      .from("properties")
+      .select("views_count")
+      .eq("id", id)
+      .single();
+      
+    if (fetchError) {
+      return res.status(404).json({ message: "Property not found" });
+    }
+
+    const newCount = (prop.views_count || 0) + 1;
+    
+    const { error: updateError } = await supabase
+      .from("properties")
+      .update({ views_count: newCount })
+      .eq("id", id);
+      
+    if (updateError) throw updateError;
+    
+    res.status(200).json({ message: "View recorded", views_count: newCount });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * Retrieve a specific property by its ID.
  */
 const getPropertyById = async (req, res, next) => {
@@ -328,10 +395,56 @@ const getPropertyById = async (req, res, next) => {
   }
 };
 
+/**
+ * Find properties similar to a given property, using a weighted blend of
+ * type, price, bedrooms, bathrooms, and distance (see utils/similarityEngine.js).
+ * Only considers other approved, currently-listed properties as candidates.
+ */
+const getSimilarProperties = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 6, 20);
+
+    const { data: target, error: targetError } = await supabase
+      .from("properties")
+      .select("id, type, price, bedrooms, bathrooms, latitude, longitude")
+      .eq("id", id)
+      .single();
+
+    if (targetError || !target) {
+      return res.status(404).json({ message: "Property not found." });
+    }
+
+    // Pull a reasonably-sized pool of approved candidates to rank locally.
+    // (For a much larger catalog this would move to a DB-side pre-filter,
+    // but ranking in JS keeps the scoring logic simple and fully testable.)
+    const { data: candidates, error: candidatesError } = await supabase
+      .from("properties")
+      .select("*, users(name, role)")
+      .eq("status", "approved")
+      .neq("id", id)
+      .limit(200);
+
+    if (candidatesError) throw candidatesError;
+
+    const similarProperties = findSimilarProperties(target, candidates || [], limit);
+
+    res.status(200).json({
+      message: "Similar properties fetched successfully",
+      properties: similarProperties,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   addProperty,
   getProperties,
   getMyProperties,
   updateMyProperty,
+  deleteMyProperty,
+  incrementViews,
   getPropertyById,
+  getSimilarProperties,
 };
