@@ -85,7 +85,7 @@ const Home = () => {
   });
 
   return (
-    <div className="min-h-screen bg-[#191918] text-white font-sans">
+    <div className="home-page min-h-screen bg-[#191918] text-white font-sans">
       <Navbar />
 
       {/* HERO SECTION */}
