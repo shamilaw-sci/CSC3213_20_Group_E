@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/UserAuthContext';
 import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import { m } from "framer-motion";
 import { Home, Key, MapPin, Building, PlusCircle, LayoutDashboard } from 'lucide-react';
 
@@ -116,7 +115,6 @@ const SellerDashboard = () => {
                 </div>
             </div>
 
-            <Footer />
         </div>
     );
 };
