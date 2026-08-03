@@ -40,6 +40,7 @@ const PropertyDetails = () => {
     const [showAnimation, setShowAnimation] = useState(false);
     const [similarProperties, setSimilarProperties] = useState([]);
     const [similarLoading, setSimilarLoading] = useState(true);
+    const [priceInsight, setPriceInsight] = useState(null);
 
     useEffect(() => {
         const fetchProperty = async () => {
@@ -56,6 +57,11 @@ const PropertyDetails = () => {
                     .then(simRes => setSimilarProperties(simRes.data.properties || []))
                     .catch(err => console.error("Error loading similar properties", err))
                     .finally(() => setSimilarLoading(false));
+
+                // Fetch the statistical price insight (great deal / fair / above market)
+                api.get(`/properties/${id}/price-insight`)
+                    .then(priceRes => setPriceInsight(priceRes.data.insight || null))
+                    .catch(err => console.error("Error loading price insight", err));
                 
                 // If user is logged in, check if it's a favorite
                 if (user) {
@@ -337,6 +343,21 @@ const PropertyDetails = () => {
                                     Rs. {property.price?.toLocaleString()}
                                     {(property.listing_type?.toLowerCase() === 'rent' || property.type?.includes('Rent')) && <span className="text-xl text-gray-500 font-medium">/mo</span>}
                                 </h2>
+                                {priceInsight && (
+                                    <div className={`inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 rounded-full text-xs font-bold ${
+                                        priceInsight.level === 'great_deal'
+                                            ? 'bg-emerald-50 text-emerald-700'
+                                            : priceInsight.level === 'above_market'
+                                                ? 'bg-red-50 text-red-600'
+                                                : 'bg-amber-50 text-amber-700'
+                                    }`}>
+                                        {priceInsight.level === 'great_deal' ? '🟢' : priceInsight.level === 'above_market' ? '🔴' : '🟡'}
+                                        {priceInsight.label}
+                                        <span className="font-medium opacity-70">
+                                            ({priceInsight.percentVsAverage > 0 ? '+' : ''}{priceInsight.percentVsAverage}% vs similar listings)
+                                        </span>
+                                    </div>
+                                )}
                             </div>
                             
                             <button aria-label="Accessible interactive control" type="button" 
