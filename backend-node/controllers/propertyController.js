@@ -5,6 +5,7 @@
 
 const { createClient } = require("@supabase/supabase-js");
 const { findSimilarProperties } = require("../utils/similarityEngine");
+const { calculatePriceInsight } = require("../utils/priceInsightEngine");
 
 // Initialize Supabase client using environment variables
 const supabase = createClient(
@@ -438,6 +439,55 @@ const getSimilarProperties = async (req, res, next) => {
   }
 };
 
+/**
+ * Statistically compares a property's price-per-sqft against similar
+ * properties (via similarityEngine) and classifies it as a Great Deal,
+ * Fair Price, or Above Market, using a z-score (see utils/priceInsightEngine.js).
+ */
+const getPriceInsight = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const { data: target, error: targetError } = await supabase
+      .from("properties")
+      .select("id, type, price, bedrooms, bathrooms, latitude, longitude, house_size, land_size")
+      .eq("id", id)
+      .single();
+
+    if (targetError || !target) {
+      return res.status(404).json({ message: "Property not found." });
+    }
+
+    const { data: candidates, error: candidatesError } = await supabase
+      .from("properties")
+      .select("id, type, price, bedrooms, bathrooms, latitude, longitude, house_size, land_size")
+      .eq("status", "approved")
+      .neq("id", id)
+      .limit(200);
+
+    if (candidatesError) throw candidatesError;
+
+    // Reuse the same similarity ranking as "Similar Properties" so the price
+    // comparison is against genuinely comparable listings, not the whole catalog.
+    const comparableProperties = findSimilarProperties(target, candidates || [], 15);
+    const insight = calculatePriceInsight(target, comparableProperties);
+
+    if (!insight) {
+      return res.status(200).json({
+        message: "Not enough comparable data yet",
+        insight: null,
+      });
+    }
+
+    res.status(200).json({
+      message: "Price insight calculated successfully",
+      insight,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   addProperty,
   getProperties,
@@ -447,4 +497,5 @@ module.exports = {
   incrementViews,
   getPropertyById,
   getSimilarProperties,
+  getPriceInsight,
 };
