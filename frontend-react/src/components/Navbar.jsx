@@ -43,17 +43,6 @@ const Navbar = ({ transparent = false }) => {
   }, [user]);
 
   return (
-    <nav className="border-b border-gray-200 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        <div className="flex justify-between h-20 items-center">
-          <div className="hidden md:flex items-center space-x-6 h-full">
-            <div className="group h-full flex items-center relative cursor-pointer">
-              <span className="text-gray-800 dark:text-gray-100 hover:text-blue-600 font-medium px-2 py-8 transition duration-200 border-b-4 border-transparent group-hover:border-blue-600">
-                Buy
-              </span>
-            </div>
-            <div className="h-full flex items-center cursor-pointer">
-              <span className="text-gray-800 dark:text-gray-100 hover:text-blue-600 font-medium px-2 transition duration-200">
     <nav className={`sticky top-0 z-50 transition-all duration-300 ${transparent ? 'bg-transparent text-white' : 'bg-white/80 backdrop-blur-xl border-b border-gray-100/50 shadow-sm'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="flex justify-between h-20 items-center">
@@ -82,7 +71,6 @@ const Navbar = ({ transparent = false }) => {
                 })
               }
             >
-              <span className="text-gray-800 dark:text-gray-100 hover:text-blue-600 font-medium px-2 transition duration-200">
               <span className={`font-medium px-2 transition duration-200 ${transparent ? 'text-white hover:text-gray-300' : 'text-gray-800 hover:text-blue-600'}`}>
                 Sell
               </span>
@@ -114,7 +102,6 @@ const Navbar = ({ transparent = false }) => {
           <div className="flex items-center space-x-6 h-full">
             <button
               onClick={() => navigate("/map")}
-              className="text-gray-800 dark:text-gray-100 hover:text-blue-600 font-medium transition hidden md:block"
               className={`font-medium transition hidden md:block ${transparent ? 'text-white hover:text-gray-300' : 'text-gray-800 hover:text-blue-600'}`}
             >
               Map Search
@@ -122,7 +109,6 @@ const Navbar = ({ transparent = false }) => {
 
             {user && (
               <div className="group h-full flex items-center relative cursor-pointer ml-4">
-                <div className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 transition">
                 <div className={`relative p-2 transition ${transparent ? 'text-white hover:text-gray-300' : 'text-gray-600 hover:text-blue-600'}`}>
                   <Bell className="w-6 h-6" />
                   {unreadCount > 0 && (
@@ -221,7 +207,6 @@ const Navbar = ({ transparent = false }) => {
                   </div>
 
                   <div className="flex flex-col">
-                    <span className="text-gray-800 dark:text-gray-100 hover:text-blue-600 font-medium transition flex items-center gap-1">
                     <span className={`font-medium transition flex items-center gap-1 ${transparent ? 'text-white' : 'text-gray-800 hover:text-blue-600'}`}>
                       Hi, {user.name.split(" ")[0]}
                       <svg
