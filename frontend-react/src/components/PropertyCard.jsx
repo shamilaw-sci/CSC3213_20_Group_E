@@ -49,6 +49,7 @@ const PropertyCard = ({ prop, handleMessageSeller }) => {
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
             style={{ perspective: 1000, transformStyle: "preserve-3d" }}
             onClick={() => navigate(`/property/${prop.id}`)}
+            className="bg-[#242423] backdrop-blur-xl rounded-3xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.4)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.6)] transition-all duration-500 group cursor-pointer flex flex-col border border-white/10 relative"
             className="bg-white/70 backdrop-blur-2xl rounded-3xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-[0_30px_60px_rgb(0,0,0,0.2)] transition-shadow duration-500 group cursor-pointer flex flex-col border border-white/60 relative"
         >
             <div className="h-64 w-full bg-gray-100 relative overflow-hidden flex items-center justify-center">
@@ -77,7 +78,7 @@ const PropertyCard = ({ prop, handleMessageSeller }) => {
                         className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-1000 ease-out" 
                     />
                 ) : (
-                    <div className="flex items-center justify-center h-full bg-gray-100 text-gray-400 font-medium w-full">No Image Available</div>
+                    <div className="flex items-center justify-center h-full bg-white/5 text-gray-400 font-medium w-full">No Image Available</div>
                 )}
                 
                 {/* Top Gradient & Labels */}
@@ -94,7 +95,7 @@ const PropertyCard = ({ prop, handleMessageSeller }) => {
                 </div>
             </div>
 
-            <div className="p-6 flex flex-col flex-grow bg-gradient-to-b from-white/40 to-white/80 relative">
+            <div className="p-6 flex flex-col flex-grow bg-gradient-to-b from-white/10 to-white/5 relative">
                 
                 {/* Agent Tag */}
                 {prop.users?.role === 'AGENT' && prop.users?.name && (
@@ -103,39 +104,39 @@ const PropertyCard = ({ prop, handleMessageSeller }) => {
                     </div>
                 )}
 
-                <h3 className="text-3xl font-black text-gray-900 tracking-tight mb-2">
+                <h3 className="text-3xl font-black text-white tracking-tight mb-2">
                     Rs. {prop.price?.toLocaleString()}
-                    {(prop.listing_type?.toLowerCase() === 'rent' || prop.type?.includes('Rent')) && <span className="text-lg text-gray-500 font-medium">/mo</span>}
+                    {(prop.listing_type?.toLowerCase() === 'rent' || prop.type?.includes('Rent')) && <span className="text-lg text-gray-400 font-medium">/mo</span>}
                 </h3>
                 
-                <div className="flex items-center gap-4 text-gray-600 text-sm mb-4 mt-2">
+                <div className="flex items-center gap-4 text-gray-300 text-sm mb-4 mt-2">
                     {prop.bedrooms && (
-                        <div className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1.5 rounded-lg border border-gray-100">
-                            <Bed className="w-4 h-4 text-blue-600" />
-                            <span className="font-bold text-gray-900">{prop.bedrooms}</span>
+                        <div className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1.5 rounded-lg border border-white/10">
+                            <Bed className="w-4 h-4 text-blue-400" />
+                            <span className="font-bold text-white">{prop.bedrooms}</span>
                             <span className="text-xs font-medium">Beds</span>
                         </div>
                     )}
                     {prop.bathrooms && (
-                        <div className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1.5 rounded-lg border border-gray-100">
-                            <Bath className="w-4 h-4 text-blue-600" />
-                            <span className="font-bold text-gray-900">{prop.bathrooms}</span>
+                        <div className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1.5 rounded-lg border border-white/10">
+                            <Bath className="w-4 h-4 text-blue-400" />
+                            <span className="font-bold text-white">{prop.bathrooms}</span>
                             <span className="text-xs font-medium">Baths</span>
                         </div>
                     )}
                     {prop.land_size && (
-                        <div className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1.5 rounded-lg border border-gray-100">
-                            <Maximize className="w-4 h-4 text-blue-600" />
-                            <span className="font-bold text-gray-900">{prop.land_size}</span>
+                        <div className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1.5 rounded-lg border border-white/10">
+                            <Maximize className="w-4 h-4 text-blue-400" />
+                            <span className="font-bold text-white">{prop.land_size}</span>
                             <span className="text-xs font-medium">Perches</span>
                         </div>
                     )}
                     {!prop.bedrooms && !prop.bathrooms && !prop.land_size && (
-                        <span className="font-bold text-gray-500 bg-gray-50 px-3 py-1 rounded-lg">{prop.type || 'Property'}</span>
+                        <span className="font-bold text-gray-300 bg-white/10 px-3 py-1 rounded-lg">{prop.type || 'Property'}</span>
                     )}
                 </div>
                 
-                <p className="text-gray-500 text-sm truncate mb-4 font-medium">{prop.address || prop.title}</p>
+                <p className="text-gray-400 text-sm truncate mb-4 font-medium">{prop.address || prop.title}</p>
                 
                 <div className="mt-auto pt-4 flex items-center justify-between gap-3">
                     <button aria-label="Accessible interactive control" type="button"
@@ -161,6 +162,8 @@ const PropertyCard = ({ prop, handleMessageSeller }) => {
                             e.stopPropagation();
                             handleMessageSeller(prop.id);
                         }}
+                        className="flex-1 bg-white/10 backdrop-blur-md hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 border border-white/20 hover:border-blue-600 hover:shadow-[0_10px_20px_rgba(37,99,235,0.2)]"
+
                         className="flex-1 bg-white/50 backdrop-blur-md hover:bg-blue-600 text-gray-700 hover:text-white font-bold py-3 px-4 rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 border border-gray-200/50 hover:border-blue-600 hover:shadow-[0_10px_20px_rgba(37,99,235,0.2)]"
                     >
                         <MessageCircle className="w-5 h-5" />

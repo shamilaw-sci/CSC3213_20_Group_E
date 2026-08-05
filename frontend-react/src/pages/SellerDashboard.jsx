@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/UserAuthContext';
 import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import { m } from "framer-motion";
 import { Home, Key, Building, CheckCircle, Clock, XCircle, MessageSquare, TrendingUp, ArrowRight, Eye, Heart, BarChart3, Lightbulb } from 'lucide-react';
 import api from '../context/api';
@@ -343,7 +342,6 @@ const SellerDashboard = () => {
                 </div>
             </div>
 
-            <Footer />
         </div>
     );
 };

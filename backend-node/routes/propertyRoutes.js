@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 
-const { addProperty, getProperties, getMyProperties, updateMyProperty, getPropertyById, incrementViews, getSimilarProperties } = require('../controllers/propertyController');
+const { addProperty, getProperties, getMyProperties, updateMyProperty, getPropertyById, incrementViews, getSimilarProperties, getPriceInsight } = require('../controllers/propertyController');
 const { protect } = require('../middleware/authMiddleware');
 const validate = require('../middleware/validate');
 const { addPropertySchema, updatePropertySchema, getPropertiesSchema } = require('../validators/propertyValidator');
@@ -27,6 +27,9 @@ router.post('/:id/view', incrementViews);
 
 // 5. Get properties similar to a given property (must be before /:id)
 router.get('/:id/similar', getSimilarProperties);
+
+// 6. Get statistical price insight (great deal / fair / above market) for a property
+router.get('/:id/price-insight', getPriceInsight);
 
 // 1.5 Get specific property by ID
 // Must be after /my-listings to prevent overriding
