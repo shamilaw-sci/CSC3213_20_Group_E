@@ -6,6 +6,7 @@
 const { createClient } = require("@supabase/supabase-js");
 const { findSimilarProperties } = require("../utils/similarityEngine");
 const { calculatePriceInsight } = require("../utils/priceInsightEngine");
+const { rankPropertiesByRelevance } = require("../utils/searchRelevance");
 
 // Initialize Supabase client using environment variables
 const supabase = createClient(
@@ -488,6 +489,40 @@ const getPriceInsight = async (req, res, next) => {
   }
 };
 
+/**
+ * Free-text keyword search across approved property listings, ranked by
+ * TF-IDF relevance (see utils/searchRelevance.js) rather than just recency.
+ * Searches title, description, city, district, and type.
+ */
+const searchProperties = async (req, res, next) => {
+  try {
+    const { q, limit } = req.query;
+    const resultLimit = Number(limit) || 20;
+
+    // Pull a pool of approved listings to rank locally. For a much larger
+    // catalog this would move to a DB-side full-text index, but ranking in
+    // JS keeps the scoring logic simple, transparent, and fully testable.
+    const { data: candidates, error } = await supabase
+      .from("properties")
+      .select("id, title, description, type, price, city, district, bedrooms, bathrooms")
+      .eq("status", "approved")
+      .limit(300);
+
+    if (error) throw error;
+
+    const ranked = rankPropertiesByRelevance(q, candidates || []).slice(0, resultLimit);
+
+    res.status(200).json({
+      message: "Search results fetched successfully",
+      query: q,
+      count: ranked.length,
+      properties: ranked,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   addProperty,
   getProperties,
@@ -498,4 +533,5 @@ module.exports = {
   getPropertyById,
   getSimilarProperties,
   getPriceInsight,
+  searchProperties,
 };
