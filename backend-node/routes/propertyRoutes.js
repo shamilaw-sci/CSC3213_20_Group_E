@@ -2,10 +2,11 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 
-const { addProperty, getProperties, getMyProperties, updateMyProperty, getPropertyById, incrementViews, getSimilarProperties, getPriceInsight } = require('../controllers/propertyController');
+const { addProperty, getProperties, getMyProperties, updateMyProperty, getPropertyById, incrementViews, getSimilarProperties, getPriceInsight, searchProperties } = require('../controllers/propertyController');
 const { protect } = require('../middleware/authMiddleware');
 const validate = require('../middleware/validate');
 const { addPropertySchema, updatePropertySchema, getPropertiesSchema } = require('../validators/propertyValidator');
+const { searchPropertiesSchema } = require('../validators/searchValidator');
 
 // Configure multer for temporary image storage in memory
 const upload = multer({ storage: multer.memoryStorage() });
@@ -21,6 +22,9 @@ router.post('/', protect, upload.array('images', 10), validate(addPropertySchema
 router.get('/my-listings', protect, validate(getPropertiesSchema), getMyProperties);
 
 router.patch('/my-listings/:id', protect, validate(updatePropertySchema), updateMyProperty);
+
+// 3.5 Free-text keyword search, ranked by TF-IDF relevance (must be before /:id)
+router.get('/search', validate(searchPropertiesSchema), searchProperties);
 
 // 4. Increment property views
 router.post('/:id/view', incrementViews);
