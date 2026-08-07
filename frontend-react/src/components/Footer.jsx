@@ -1,6 +1,6 @@
-import React from "react";
-import { Home as HomeIcon } from "lucide-react";
-import { Link } from "react-router-dom";
+import React from 'react';
+import { Home as HomeIcon } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
     return (
@@ -19,7 +19,7 @@ const Footer = () => {
                             Reimagining real estate in Sri Lanka. Find your perfect home, calculate your feasibility, and seamlessly connect with top sellers.
                         </p>
                         <div className="flex gap-4">
-                            <a aria-label="Social link" href="#" className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all">
+<a aria-label="Social link" href="#" className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all">
                                 <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"></path></svg>
                             </a>
                             <a aria-label="Social link" href="#" className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-blue-400 hover:text-white transition-all">
