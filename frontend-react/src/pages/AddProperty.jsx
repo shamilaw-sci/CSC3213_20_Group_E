@@ -323,10 +323,9 @@ const AddProperty = () => {
       const payment = {
         sandbox: true,
         merchant_id: paymentConfig.merchantId,
-        return_url: "http://localhost:5173/my-properties", // Redirect after success
-        cancel_url: "http://localhost:5173/my-properties", // Redirect after cancellation
-        notify_url:
-          "https://strep-reenact-rocket.ngrok-free.dev/api/payment/notify",
+        return_url: `${window.location.origin}/my-properties`, // Redirect after success
+        cancel_url: `${window.location.origin}/my-properties`, // Redirect after cancellation
+        notify_url: `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/payment/notify`,
         order_id: propertyId,
         items: "Thirasara Property Listing Fee",
         amount: amount,
