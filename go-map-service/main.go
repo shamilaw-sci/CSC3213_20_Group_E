@@ -95,7 +95,7 @@ func main() {
 				  FROM properties p
                   LEFT JOIN users u ON p.seller_id = u.id
 				  WHERE p.status = 'approved'
-                  AND ST_Intersects(p.boundary::geometry, ST_GeomFromText($1, 4326))`
+                  AND ST_Intersects(COALESCE(p.boundary::geometry, ST_SetSRID(ST_MakePoint(p.longitude, p.latitude), 4326)), ST_GeomFromText($1, 4326))`
 		
 		args := []interface{}{req.Polygon}
 		paramCount := 1
