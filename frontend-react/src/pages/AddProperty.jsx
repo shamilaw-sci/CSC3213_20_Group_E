@@ -135,7 +135,7 @@ const AddProperty = () => {
     title: "",
     description: "",
     price: "",
-    pricePeriod: "Month", // rent price catagery
+    pricePeriod: "", // rent price catagery
     district: "",
     city: "",
     contactNumber: "",
@@ -674,7 +674,7 @@ const AddProperty = () => {
                   />
 
                   {(formData.type === "Rent House" ||
-                    formData.type === "Rent Wela") && (
+                    formData.type === "Rent Villa") && (
                     <select
                       name="pricePeriod"
                       value={formData.pricePeriod}
