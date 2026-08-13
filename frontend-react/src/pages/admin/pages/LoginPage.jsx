@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAdminAuth } from "../context/AdminAuthContext";
 import { adminLogin } from "../api/adminApi";
 import { m } from "framer-motion";
-import { ShieldAlert, ArrowRight, Loader2, Eye, EyeOff } from "lucide-react";
+import { ArrowRight, Loader2, Eye, EyeOff } from "lucide-react";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -45,9 +45,11 @@ const LoginPage = () => {
         <div className="p-8 sm:p-10">
             
             <div className="flex justify-center mb-8">
-                <div className="w-16 h-16 bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl flex items-center justify-center shadow-lg transform rotate-3">
-                    <ShieldAlert className="w-8 h-8 text-white -rotate-3" />
-                </div>
+                <img
+                    src="/logo.jpeg"
+                    alt="Thirasara Property logo"
+                    className="w-20 h-20 object-cover rounded-2xl shadow-lg"
+                />
             </div>
 
             <div className="text-center mb-8">
