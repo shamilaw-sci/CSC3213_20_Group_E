@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAdminAuth } from "../context/AdminAuthContext";
+import { useAdminTheme } from "../context/AdminThemeContext";
 import { adminLogin } from "../api/adminApi";
 import { m } from "framer-motion";
 import { ArrowRight, Loader2, Eye, EyeOff } from "lucide-react";
@@ -12,6 +13,7 @@ const LoginPage = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAdminAuth();
+  const { isDark } = useAdminTheme();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -30,7 +32,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center font-sans p-4 relative overflow-hidden">
+    <div className={`min-h-screen flex items-center justify-center font-sans p-4 relative overflow-hidden transition-colors ${isDark ? "dark bg-[#0f172a]" : "bg-white"}`}>
       
       {/* Background Decor */}
       <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-500/10 blur-3xl rounded-full mix-blend-multiply pointer-events-none" />
@@ -40,7 +42,7 @@ const LoginPage = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-white/20 relative z-10"
+        className={`w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border relative z-10 transition-colors ${isDark ? "bg-[#1e293b] border-gray-700/60" : "bg-white border-white/20"}`}
       >
         <div className="p-8 sm:p-10">
             

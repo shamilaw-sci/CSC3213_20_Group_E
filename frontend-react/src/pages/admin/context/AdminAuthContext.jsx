@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
 import { Outlet } from "react-router-dom";
+import { AdminThemeProvider } from "./AdminThemeContext";
 
 const AdminAuthContext = createContext(null);
 
@@ -36,7 +37,9 @@ export const AdminAuthProvider = () => {
 
   return (
     <AdminAuthContext.Provider value={{ admin, isAuthenticated: !!admin, loading, login, logout }}>
-      <Outlet />
+      <AdminThemeProvider>
+        <Outlet />
+      </AdminThemeProvider>
     </AdminAuthContext.Provider>
   );
 };

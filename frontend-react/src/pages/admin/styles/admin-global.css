@@ -1,6 +1,81 @@
 @reference "../../../index.css";
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
+/* ===== Admin Theme Tokens ===== */
+:root {
+  --admin-bg-primary: #ffffff;
+  --admin-bg-secondary: #f9fafb;
+  --admin-bg-card: #ffffff;
+  --admin-bg-hover: #f3f4f6;
+  --admin-bg: #ffffff;
+  --admin-surface: #f8fafc;
+  --admin-border: #e5e7eb;
+  --admin-border-light: #f3f4f6;
+
+  --admin-text-primary: #111827;
+  --admin-text-secondary: #6b7280;
+  --admin-text-muted: #9ca3af;
+
+  --admin-gold: #006aff;
+  --admin-gold-light: #1e40af;
+  --admin-gold-dim: rgba(0, 106, 255, 0.1);
+  --admin-gold-border: rgba(0, 106, 255, 0.2);
+
+  --admin-success: #10b981;
+  --admin-success-dim: rgba(16, 185, 129, 0.1);
+  --admin-danger: #ef4444;
+  --admin-danger-dim: rgba(239, 68, 68, 0.1);
+  --admin-warning: #f59e0b;
+  --admin-warning-dim: rgba(245, 158, 11, 0.1);
+  --admin-info: #3b82f6;
+  --admin-info-dim: rgba(59, 130, 246, 0.1);
+  --admin-error: #ef4444;
+  --admin-bg-success: rgba(16, 185, 129, 0.1);
+  --admin-bg-warning: rgba(245, 158, 11, 0.1);
+  --admin-bg-error: rgba(239, 68, 68, 0.1);
+
+  --admin-sidebar-width: 260px;
+  --admin-topbar-height: 64px;
+  --admin-border-radius: 8px;
+  --admin-border-radius-lg: 12px;
+  --admin-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  --admin-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --admin-transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark {
+  --admin-bg-primary: #0f172a;
+  --admin-bg-secondary: #16233a;
+  --admin-bg-card: #1e293b;
+  --admin-bg-hover: #27364f;
+  --admin-bg: #1e293b;
+  --admin-surface: #16233a;
+  --admin-border: #334155;
+  --admin-border-light: #27364f;
+
+  --admin-text-primary: #f1f5f9;
+  --admin-text-secondary: #94a3b8;
+  --admin-text-muted: #64748b;
+
+  --admin-gold: #60a5fa;
+  --admin-gold-light: #93c5fd;
+  --admin-gold-dim: rgba(96, 165, 250, 0.12);
+  --admin-gold-border: rgba(96, 165, 250, 0.3);
+
+  --admin-success: #34d399;
+  --admin-success-dim: rgba(16, 185, 129, 0.15);
+  --admin-danger: #f87171;
+  --admin-danger-dim: rgba(239, 68, 68, 0.15);
+  --admin-warning: #fbbf24;
+  --admin-warning-dim: rgba(245, 158, 11, 0.15);
+  --admin-info: #60a5fa;
+  --admin-info-dim: rgba(59, 130, 246, 0.15);
+  --admin-error: #f87171;
+  --admin-bg-success: rgba(16, 185, 129, 0.15);
+  --admin-bg-warning: rgba(245, 158, 11, 0.15);
+  --admin-bg-error: rgba(239, 68, 68, 0.15);
+}
+
 /* Basic Admin Utilities mapped to modern Tailwind */
 .admin-card {
   @apply bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300;
@@ -124,3 +199,83 @@
 .admin-empty-state-icon { @apply text-5xl mb-4 opacity-30 text-gray-400; }
 .admin-empty-state h3 { @apply text-lg font-bold text-gray-900 mb-2; }
 .admin-empty-state p { @apply text-sm max-w-md; }
+
+/* ===== Dark Mode Overrides (scoped under .dark on the admin layout) ===== */
+.dark .admin-card {
+  @apply bg-[#1e293b] border-gray-700/60;
+}
+.dark .admin-card-title {
+  @apply text-gray-100;
+}
+.dark .admin-stat-card {
+  @apply bg-[#1e293b] border-gray-700/60;
+}
+.dark .admin-stat-label {
+  @apply text-gray-400;
+}
+.dark .admin-stat-value {
+  @apply text-gray-50;
+}
+.dark .admin-btn-secondary {
+  @apply text-gray-200 border-gray-600 hover:bg-gray-700/60 hover:border-gray-500;
+}
+.dark .admin-btn-success {
+  @apply bg-green-900/40 text-green-300 border-green-700/60 hover:bg-green-800/40;
+}
+.dark .admin-btn-danger {
+  @apply bg-red-900/40 text-red-300 border-red-700/60 hover:bg-red-800/40;
+}
+.dark .admin-badge-pending { @apply bg-orange-900/40 text-orange-300; }
+.dark .admin-badge-approved, .dark .admin-badge-active { @apply bg-green-900/40 text-green-300; }
+.dark .admin-badge-rejected, .dark .admin-badge-banned { @apply bg-red-900/40 text-red-300; }
+.dark .admin-data-table-wrap {
+  @apply border-gray-700/60;
+}
+.dark .admin-data-table th {
+  @apply bg-[#16233a] text-gray-400 border-gray-700/60;
+}
+.dark .admin-data-table td {
+  @apply border-gray-800 text-gray-200;
+}
+.dark .admin-data-table tbody tr:hover {
+  @apply bg-blue-900/20;
+}
+.dark .admin-form-label {
+  @apply text-gray-400;
+}
+.dark .admin-form-control {
+  @apply bg-[#0f172a] border-gray-700 text-gray-100 focus:bg-[#1e293b];
+}
+.dark .admin-search-bar {
+  @apply bg-[#1e293b] border-gray-700;
+}
+.dark .admin-search-bar input {
+  @apply text-gray-100;
+}
+.dark .admin-page-header h1 {
+  @apply text-gray-50;
+}
+.dark .admin-page-header p {
+  @apply text-gray-400;
+}
+.dark .admin-modal {
+  @apply bg-[#1e293b] border-gray-700/60;
+}
+.dark .admin-modal-close {
+  @apply text-gray-400 hover:text-gray-100 hover:bg-gray-700/60;
+}
+.dark .admin-toast {
+  @apply bg-[#1e293b] border-gray-700 text-gray-100;
+}
+.dark .admin-filter-select {
+  @apply bg-[#1e293b] border-gray-700 text-gray-200;
+}
+.dark .admin-loading-screen {
+  @apply bg-[#0f172a] text-gray-400;
+}
+.dark .admin-empty-state {
+  @apply text-gray-400;
+}
+.dark .admin-empty-state h3 {
+  @apply text-gray-100;
+}

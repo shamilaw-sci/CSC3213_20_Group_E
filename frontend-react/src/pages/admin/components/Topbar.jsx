@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { fetchDashboardStats } from "../api/adminApi";
+import { useAdminTheme } from "../context/AdminThemeContext";
 import { Bell, Search } from "lucide-react";
 
 const PAGE_TITLES = {
@@ -16,6 +17,7 @@ const PAGE_TITLES = {
 
 const Topbar = () => {
   const { pathname } = useLocation();
+  const { isDark } = useAdminTheme();
   const [pendingCount, setPendingCount] = useState(0);
   const { title, subtitle } = PAGE_TITLES[pathname] || { title: "Admin Panel", subtitle: "" };
   
@@ -33,7 +35,7 @@ const Topbar = () => {
   }, []);
 
   return (
-    <header className="h-20 px-8 flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-gray-100">
+    <header className={`h-20 px-8 flex items-center justify-between backdrop-blur-md sticky top-0 z-40 border-b border-gray-100 transition-colors ${isDark ? "bg-[#1e293b]/90" : "bg-white/80"}`}>
       
       {/* Left: Title */}
       <div>
@@ -45,7 +47,7 @@ const Topbar = () => {
       <div className="flex items-center gap-6">
         
         {/* Search */}
-        <div className="hidden md:flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-full px-4 py-2 focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-300 transition-all">
+        <div className={`hidden md:flex items-center gap-2 border border-gray-200 rounded-full px-4 py-2 focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-300 transition-all ${isDark ? "bg-[#0f172a]" : "bg-gray-50"}`}>
             <Search className="w-4 h-4 text-gray-400" />
             <input aria-label="Accessible interactive control" 
                 type="text" 
@@ -67,11 +69,11 @@ const Topbar = () => {
 
         {/* Notifications */}
         <div className="relative cursor-pointer">
-            <div className="p-2.5 bg-gray-50 text-gray-600 rounded-full hover:bg-gray-100 transition-colors">
+            <div className={`p-2.5 text-gray-600 rounded-full transition-colors ${isDark ? "bg-[#0f172a] hover:bg-[#1e293b]" : "bg-gray-50 hover:bg-gray-100"}`}>
                 <Bell className="w-5 h-5" />
             </div>
             {pendingCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full shadow-md border-2 border-white">
+                <span className={`absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full shadow-md border-2 ${isDark ? "border-[#1e293b]" : "border-white"}`}>
                     {pendingCount}
                 </span>
             )}
