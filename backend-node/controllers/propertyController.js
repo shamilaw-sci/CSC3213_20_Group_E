@@ -3,14 +3,8 @@
  * @description Controller responsible for handling property-related API requests including adding, fetching, and updating properties.
  */
 
-const { createClient } = require("@supabase/supabase-js");
-
 // Initialize Supabase client using environment variables
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_KEY
-);
-
+const supabase = require('../config/supabase');
 /**
  * Add a new property listing to the database.
  * Processes uploaded images concurrently, formats property data, and saves it into Supabase.

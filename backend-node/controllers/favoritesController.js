@@ -1,5 +1,4 @@
-const { createClient } = require('@supabase/supabase-js');
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+const favoritesRepository = require('../repositories/favoritesRepository');
 
 const toggleFavorite = async (req, res, next) => {
     try {
@@ -7,36 +6,20 @@ const toggleFavorite = async (req, res, next) => {
         const userId = req.user.id;
 
         // Check if it's already favorited
-        const { data: existing, error: checkError } = await supabase
-            .from('favorites')
-            .select('*')
-            .eq('user_id', userId)
-            .eq('property_id', propertyId)
-            .single();
+        const { data: existing, error: checkError } = await favoritesRepository.findFavorite(userId, propertyId);
 
         if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "No rows found"
-            // If table doesn't exist, it will throw a different error
             if (checkError.message.includes('relation "public.favorites" does not exist')) {
-                 return res.status(500).json({ message: "Favorites table does not exist in the database. Please create it with user_id and property_id columns." });
+                 return next(new Error("Favorites table does not exist in the database. Please create it with user_id and property_id columns."));
             }
             throw checkError;
         }
 
         if (existing) {
-            // Remove from favorites
-            const { error: deleteError } = await supabase
-                .from('favorites')
-                .delete()
-                .eq('user_id', userId)
-                .eq('property_id', propertyId);
-            if (deleteError) throw deleteError;
+            await favoritesRepository.deleteFavorite(userId, propertyId);
             return res.status(200).json({ message: "Removed from favorites", isFavorite: false });
         } else {
-            // Add to favorites
-            const { error: insertError } = await supabase
-                .from('favorites')
-                .insert([{ user_id: userId, property_id: propertyId }]);
-            if (insertError) throw insertError;
+            await favoritesRepository.insertFavorite(userId, propertyId);
             return res.status(200).json({ message: "Added to favorites", isFavorite: true });
         }
     } catch (error) {
@@ -48,10 +31,7 @@ const getFavorites = async (req, res, next) => {
     try {
         const userId = req.user.id;
 
-        const { data: favorites, error } = await supabase
-            .from('favorites')
-            .select('property_id, properties(*)')
-            .eq('user_id', userId);
+        const { data: favorites, error } = await favoritesRepository.getUserFavorites(userId);
 
         if (error) {
             if (error.message.includes('relation "public.favorites" does not exist')) {

@@ -2,29 +2,16 @@ const express = require('express');
 const router = express.Router();
 const { getAgents, getAgentProfile, postReview, getAgentLeads, updateLeadMetadata, updateAgentProfile, resubmitApplication, getDashboardStats } = require('../controllers/agentController');
 const { protect } = require('../middleware/authMiddleware');
+const validate = require('../middleware/validate');
+const { reviewSchema, updateLeadSchema, updateProfileSchema } = require('../validators/agentValidator');
 
-// Dashboard Stats for Agent
 router.get('/dashboard-stats', protect, getDashboardStats);
-
-// CRM: Get agent leads (conversations about their properties)
 router.get('/leads', protect, getAgentLeads);
-
-// CRM: Update lead metadata
-router.put('/leads/:id', protect, updateLeadMetadata);
-
-// Update agent profile (Bio, Youtube, etc)
-router.put('/profile', protect, updateAgentProfile);
-
-// Get all approved agents
+router.put('/leads/:id', protect, validate(updateLeadSchema), updateLeadMetadata);
+router.put('/profile', protect, validate(updateProfileSchema), updateAgentProfile);
 router.get('/', getAgents);
-
-// Get specific agent profile by user ID
 router.get('/:id', getAgentProfile);
-
-// Post a review for an agent (must be logged in)
-router.post('/:id/reviews', protect, postReview);
-
-// Resubmit application after rejection
+router.post('/:id/reviews', protect, validate(reviewSchema), postReview);
 router.post('/resubmit', protect, resubmitApplication);
 
 module.exports = router;

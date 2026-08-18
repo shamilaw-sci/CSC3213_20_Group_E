@@ -1,6 +1,4 @@
 const request = require('supertest');
-const { createClient } = require('@supabase/supabase-js');
-
 // Mock Supabase
 jest.mock('@supabase/supabase-js', () => {
     const mockSupabase = {

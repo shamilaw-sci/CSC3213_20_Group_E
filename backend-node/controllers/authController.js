@@ -1,4 +1,4 @@
-const { createClient } = require('@supabase/supabase-js');
+
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { sendWelcomeEmail, sendPasswordResetEmail } = require('../utils/emailService');
@@ -13,7 +13,7 @@ const setTokenCookie = (res, token) => {
 };
 
 // Initialize Supabase client for database operations
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+const userRepository = require('../repositories/userRepository');
 
 // 1. User Registration - Create new user account
 const registerUser = async(req, res, next) => {
@@ -21,11 +21,7 @@ const registerUser = async(req, res, next) => {
         const { name, email, password, role } = req.body;
 
         // Check if user with this email already exists
-        const { data: existingUser } = await supabase
-            .from('users')
-            .select('*')
-            .eq('email', email)
-            .single();
+        const existingUser = await userRepository.findByEmail(email);
 
         if (existingUser) {
             if (existingUser.role === 'BANNED') {
@@ -44,24 +40,21 @@ const registerUser = async(req, res, next) => {
         if (role === 'AGENT') safeRole = 'PENDING_AGENT';
 
         // Insert new user into database
-        const { data: newUser, error } = await supabase
-            .from('users')
-            .insert([{ name, email, password_hash, role: safeRole }])
-            .select();
+        const newUser = await userRepository.createUser({ name, email, password_hash, role: safeRole });
 
         if (error) {
-            return res.status(500).json({ message: "Database error during registration.", error: error.message });
+            return next(error);
         }
 
         // If registering as an agent, create an initial agent_profiles record
         if (safeRole === 'PENDING_AGENT') {
             const { agency_name, license_number } = req.body;
-            await supabase.from('agent_profiles').insert([{
+            await userRepository.createAgentProfile({
                 agent_id: newUser[0].id,
                 agency_name: agency_name || 'Independent Agent',
                 license_number: license_number || null,
                 bio: `Hello, I am ${name}.`,
-            }]);
+            });
         }
 
         const token = jwt.sign({ id: newUser[0].id, role: newUser[0].role },
@@ -86,11 +79,8 @@ const loginUser = async(req, res, next) => {
         const { email, password } = req.body;
 
         // Find user in database
-        const { data: user, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('email', email)
-            .single();
+        const user = await userRepository.findByEmail(email);
+        const error = null;
 
         if (error || !user) {
             // Security best practice: Don't reveal if email exists
@@ -139,11 +129,8 @@ const checkEmail = async(req, res, next) => {
         const { email } = req.body;
 
         // Query database to check if user exists
-        const { data, error } = await supabase
-            .from('users')
-            .select('id,name')
-            .eq('email', email)
-            .single();
+        const data = await userRepository.findByEmail(email);
+        const error = null;
 
         if (error || !data) {
             return res.status(404).json({ exists: false, message: "User not found" });
@@ -163,11 +150,8 @@ const forgotPassword = async(req, res, next) => {
         const { email } = req.body;
 
         // 1. Check if email exists in database
-        const { data, error } = await supabase
-            .from('users')
-            .select('id, name')
-            .eq('email', email)
-            .single();
+        const data = await userRepository.findByEmail(email);
+        const error = null;
 
         if (error || !data) {
             return res.status(404).json({ message: "If that email exists, a reset link will be sent." }); // Security best practice
@@ -200,11 +184,8 @@ const getMe = async(req, res, next) => {
         if (!token) return res.status(401).json({ message: "Not authenticated" });
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const { data: user, error } = await supabase
-            .from('users')
-            .select('id, name, email, role, phone, avatar_url, theme_preference, email_notifications')
-            .eq('id', decoded.id)
-            .single();
+        const user = await userRepository.findById(decoded.id);
+        const error = null;
 
         if (error || !user) return res.status(404).json({ message: "User not found" });
 
@@ -219,11 +200,8 @@ const updateProfile = async(req, res, next) => {
         const { name, phone, password, avatar_url, theme_preference, email_notifications } = req.body;
 
         // 1. Find user to update
-        const { data: user, error: fetchError } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', req.user.id)
-            .single();
+        const user = await userRepository.findFullUserById(req.user.id);
+        const fetchError = null;
 
         if (fetchError || !user) {
             return res.status(404).json({ message: "User not found" });
@@ -243,20 +221,7 @@ const updateProfile = async(req, res, next) => {
                         const ext = mimeType.split('/')[1] || 'png';
                         const fileName = `${req.user.id}_${Date.now()}.${ext}`;
 
-                        const { error: uploadError } = await supabase.storage
-                            .from('avatars')
-                            .upload(fileName, buffer, {
-                                contentType: mimeType,
-                                upsert: true
-                            });
-
-                        if (uploadError) throw uploadError;
-
-                        const { data: publicUrlData } = supabase.storage
-                            .from('avatars')
-                            .getPublicUrl(fileName);
-
-                        updates.avatar_url = publicUrlData.publicUrl;
+                        updates.avatar_url = await userRepository.uploadAvatar(fileName, buffer, mimeType);
                     }
                 } catch (err) {
                     console.error("Avatar upload error:", err);
@@ -274,12 +239,7 @@ const updateProfile = async(req, res, next) => {
             updates.password_hash = await bcrypt.hash(password, salt);
         }
 
-        const { data: updatedUser, error: updateError } = await supabase
-            .from('users')
-            .update(updates)
-            .eq('id', req.user.id)
-            .select('id, name, email, role, phone, avatar_url, theme_preference, email_notifications')
-            .single();
+        const { data: updatedUser, error: updateError } = await userRepository.updateProfile(req.user.id, updates);
 
         if (updateError) {
             // Fallback if 'phone' column doesn't exist yet, try updating without it
@@ -289,12 +249,7 @@ const updateProfile = async(req, res, next) => {
                 delete updates.theme_preference;
                 delete updates.email_notifications;
 
-                const { data: fallbackUser, error: fallbackError } = await supabase
-                    .from('users')
-                    .update(updates)
-                    .eq('id', req.user.id)
-                    .select('id, name, email, role, phone')
-                    .single();
+                const { data: fallbackUser, error: fallbackError } = await userRepository.updateProfile(req.user.id, updates);
 
                 if (fallbackError) throw fallbackError;
                 return res.status(200).json({ message: "Profile updated (without new columns, please run SQL script)", user: fallbackUser });

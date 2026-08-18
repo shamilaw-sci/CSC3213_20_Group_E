@@ -1,26 +1,22 @@
-const { createClient } = require('@supabase/supabase-js');
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+const savedSearchRepository = require('../repositories/savedSearchRepository');
 
 const saveSearch = async (req, res, next) => {
     try {
         const userId = req.user.id;
         const { title, polygon, beds, baths, property_type } = req.body;
 
-        const { data, error } = await supabase
-            .from('saved_searches')
-            .insert([{ 
-                user_id: userId, 
-                title: title || 'My Saved Search',
-                polygon, 
-                beds, 
-                baths, 
-                property_type 
-            }])
-            .select();
+        const { data, error } = await savedSearchRepository.insertSavedSearch({ 
+            user_id: userId, 
+            title: title || 'My Saved Search',
+            polygon, 
+            beds, 
+            baths, 
+            property_type 
+        });
 
         if (error) {
             if (error.message.includes('relation "public.saved_searches" does not exist')) {
-                return res.status(500).json({ message: "saved_searches table does not exist in the database." });
+                return next(new Error("saved_searches table does not exist in the database."));
             }
             throw error;
         }
@@ -35,11 +31,7 @@ const getSavedSearches = async (req, res, next) => {
     try {
         const userId = req.user.id;
 
-        const { data, error } = await supabase
-            .from('saved_searches')
-            .select('*')
-            .eq('user_id', userId)
-            .order('created_at', { ascending: false });
+        const { data, error } = await savedSearchRepository.getSavedSearchesByUser(userId);
 
         if (error) {
             if (error.message.includes('relation "public.saved_searches" does not exist')) {
@@ -59,13 +51,7 @@ const deleteSavedSearch = async (req, res, next) => {
         const { id } = req.params;
         const userId = req.user.id;
 
-        const { error } = await supabase
-            .from('saved_searches')
-            .delete()
-            .eq('id', id)
-            .eq('user_id', userId);
-
-        if (error) throw error;
+        await savedSearchRepository.deleteSavedSearchById(id, userId);
 
         res.status(200).json({ message: "Saved search deleted" });
     } catch (error) {

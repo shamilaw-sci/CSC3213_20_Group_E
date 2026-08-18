@@ -1,7 +1,4 @@
-const { createClient } = require('@supabase/supabase-js');
-
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
-
+const supabase = require('../config/supabase');
 const isAdmin = (user) => user.role === 'ADMIN';
 const isBuyer = (user) => ['BUYER', 'SELLER', 'AGENT'].includes(user.role);
 const isSeller = (user) => ['SELLER', 'AGENT'].includes(user.role);
@@ -13,7 +10,7 @@ const canAccessConversation = (user, conversation) => {
     return false;
 };
 
-const getConversationOr403 = async (req, res) => {
+const getConversationOr403 = async (req, res, next) => {
     const { data: conversation, error } = await supabase
         .from('conversations')
         .select('*')
@@ -33,7 +30,7 @@ const getConversationOr403 = async (req, res) => {
     return conversation;
 };
 
-const startPropertyConversation = async (req, res) => {
+const startPropertyConversation = async (req, res, next) => {
     try {
         // Fix: Allow anyone (Buyer, Seller, Agent) to inquire about a property
         if (!req.user || !['BUYER', 'SELLER', 'AGENT'].includes(req.user.role)) {
@@ -85,11 +82,11 @@ const startPropertyConversation = async (req, res) => {
 
         res.status(201).json({ conversation });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        next(error);
     }
 };
 
-const startSupportConversation = async (req, res) => {
+const startSupportConversation = async (req, res, next) => {
     try {
         if (!isBuyer(req.user) && !isSeller(req.user)) {
             return res.status(403).json({ message: "Only buyers and sellers can contact support." });
@@ -125,11 +122,11 @@ const startSupportConversation = async (req, res) => {
 
         res.status(201).json({ conversation });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        next(error);
     }
 };
 
-const startAgentConversation = async (req, res) => {
+const startAgentConversation = async (req, res, next) => {
     try {
         if (!req.user || !['BUYER', 'SELLER', 'AGENT'].includes(req.user.role)) {
             return res.status(403).json({ message: "Only registered users can message agents." });
@@ -183,11 +180,11 @@ const startAgentConversation = async (req, res) => {
 
         res.status(201).json({ conversation });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        next(error);
     }
 };
 
-const getConversations = async (req, res) => {
+const getConversations = async (req, res, next) => {
     try {
         let query = supabase
             .from('conversations')
@@ -254,11 +251,11 @@ const getConversations = async (req, res) => {
 
         res.status(200).json({ conversations: enriched });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        next(error);
     }
 };
 
-const getMessages = async (req, res) => {
+const getMessages = async (req, res, next) => {
     try {
         const conversation = await getConversationOr403(req, res);
         if (!conversation) return;
@@ -280,11 +277,11 @@ const getMessages = async (req, res) => {
 
         res.status(200).json({ conversation, messages });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        next(error);
     }
 };
 
-const sendMessage = async (req, res) => {
+const sendMessage = async (req, res, next) => {
     try {
         const { body } = req.body;
         const file = req.file;
@@ -342,11 +339,11 @@ const sendMessage = async (req, res) => {
 
         res.status(201).json({ message });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        next(error);
     }
 };
 
-const requestSupport = async (req, res) => {
+const requestSupport = async (req, res, next) => {
     try {
         const conversation = await getConversationOr403(req, res);
         if (!conversation) return;
@@ -370,11 +367,11 @@ const requestSupport = async (req, res) => {
 
         res.status(200).json({ message: "Support requested successfully." });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        next(error);
     }
 };
 
-const getUnreadMessages = async (req, res) => {
+const getUnreadMessages = async (req, res, next) => {
     try {
         let convQuery = supabase.from('conversations').select('id');
         if (req.user.role === 'ADMIN') {
@@ -417,7 +414,7 @@ const getUnreadMessages = async (req, res) => {
             recentMessages: enrichedMessages.slice(0, 5) // Last 5 for dropdown
         });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        next(error);
     }
 };
 
