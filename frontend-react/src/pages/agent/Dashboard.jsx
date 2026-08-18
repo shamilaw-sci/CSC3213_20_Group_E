@@ -71,10 +71,7 @@ const AgentDashboard = () => {
     };
     
     // Fetch Messages when a lead is selected
-<<<<<<< Updated upstream
-=======
      
->>>>>>> Stashed changes
     useEffect(() => {
         let timer;
         if (!selectedLead) return;

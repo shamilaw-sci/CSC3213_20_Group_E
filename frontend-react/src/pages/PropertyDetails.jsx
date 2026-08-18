@@ -3,16 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../context/api';
 import { useAuth } from '../context/UserAuthContext';
 import { useCompare } from '../context/CompareContext';
-<<<<<<< Updated upstream
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
-import MortgageCalculator from '../components/MortgageCalculator';
-=======
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import MortgageCalculator from '../components/property/MortgageCalculator';
 import PropertyCard from '../components/property/PropertyCard';
->>>>>>> Stashed changes
 import { Bed, Bath, Maximize, MapPin, Heart, MessageCircle, ChevronLeft, ChevronRight, Loader2, Scale } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Polygon, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -44,6 +38,9 @@ const PropertyDetails = () => {
     const [isFavorite, setIsFavorite] = useState(false);
     const [isFavLoading, setIsFavLoading] = useState(false);
     const [showAnimation, setShowAnimation] = useState(false);
+    const [similarProperties, setSimilarProperties] = useState([]);
+    const [similarLoading, setSimilarLoading] = useState(true);
+    const [priceInsight, setPriceInsight] = useState(null);
 
     useEffect(() => {
         const fetchProperty = async () => {
@@ -54,6 +51,17 @@ const PropertyDetails = () => {
                 
                 // Track view
                 api.post(`/properties/${id}/view`).catch(err => console.error("Error tracking view", err));
+
+                // Fetch similar properties (independent of the main fetch failing)
+                api.get(`/properties/${id}/similar`)
+                    .then(simRes => setSimilarProperties(simRes.data.properties || []))
+                    .catch(err => console.error("Error loading similar properties", err))
+                    .finally(() => setSimilarLoading(false));
+
+                // Fetch the statistical price insight (great deal / fair / above market)
+                api.get(`/properties/${id}/price-insight`)
+                    .then(priceRes => setPriceInsight(priceRes.data.insight || null))
+                    .catch(err => console.error("Error loading price insight", err));
                 
                 // If user is logged in, check if it's a favorite
                 if (user) {
@@ -335,6 +343,21 @@ const PropertyDetails = () => {
                                     Rs. {property.price?.toLocaleString()}
                                     {(property.listing_type?.toLowerCase() === 'rent' || property.type?.includes('Rent')) && <span className="text-xl text-gray-500 font-medium">/mo</span>}
                                 </h2>
+                                {priceInsight && (
+                                    <div className={`inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 rounded-full text-xs font-bold ${
+                                        priceInsight.level === 'great_deal'
+                                            ? 'bg-emerald-50 text-emerald-700'
+                                            : priceInsight.level === 'above_market'
+                                                ? 'bg-red-50 text-red-600'
+                                                : 'bg-amber-50 text-amber-700'
+                                    }`}>
+                                        {priceInsight.level === 'great_deal' ? '🟢' : priceInsight.level === 'above_market' ? '🔴' : '🟡'}
+                                        {priceInsight.label}
+                                        <span className="font-medium opacity-70">
+                                            ({priceInsight.percentVsAverage > 0 ? '+' : ''}{priceInsight.percentVsAverage}% vs similar listings)
+                                        </span>
+                                    </div>
+                                )}
                             </div>
                             
                             <button aria-label="Accessible interactive control" type="button" 
@@ -386,6 +409,18 @@ const PropertyDetails = () => {
                     </div>
 
                 </div>
+
+                {/* Similar Properties */}
+                {!similarLoading && similarProperties.length > 0 && (
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
+                        <h2 className="text-2xl font-bold text-gray-900 mb-6">Similar Properties You May Like</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            {similarProperties.map((simProp) => (
+                                <PropertyCard key={simProp.id} prop={simProp} />
+                            ))}
+                        </div>
+                    </div>
+                )}
             </main>
 
             <Footer />

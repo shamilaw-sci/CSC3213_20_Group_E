@@ -65,15 +65,12 @@ body {
   }
 }
 
-<<<<<<< Updated upstream
-=======
 .dark {
   color-scheme: dark;
 }
 
 
 
->>>>>>> Stashed changes
 /* Custom Map Tooltip */
 .map-tooltip {
     background-color: #006aff !important;
