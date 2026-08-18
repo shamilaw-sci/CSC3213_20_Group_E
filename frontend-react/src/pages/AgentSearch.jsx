@@ -1,35 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Star, MapPin, Award, User } from 'lucide-react';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
-import api from '../context/api';
+import Navbar from '../components/layout/Navbar';
+import Footer from '../components/layout/Footer';
 import { Player } from '@lottiefiles/react-lottie-player';
+import useFetch from '../hooks/useFetch';
+import useDebounce from '../hooks/useDebounce';
 
 const AgentSearch = () => {
-    const [agents, setAgents] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState('location');
     const navigate = useNavigate();
 
-    useEffect(() => {
-        const fetchAgents = async () => {
-            try {
-                const res = await api.get('/agents');
-                setAgents(res.data.agents || []);
-            } catch (err) {
-                console.error("Failed to fetch agents", err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchAgents();
-    }, []);
+    // Fetches all approved agents. To change the source endpoint, update '/agents' below.
+    const { data, loading } = useFetch('/agents');
+    const agents = data?.agents || [];
+
+    // Debounces the search input by 300ms to avoid filtering on every keystroke.
+    const debouncedSearch = useDebounce(searchQuery, 300);
+
 
     const filteredAgents = agents.filter(agent => {
-        if (!searchQuery) return true;
-        const query = searchQuery.toLowerCase();
+        if (!debouncedSearch) return true;
+        const query = debouncedSearch.toLowerCase();
         if (activeTab === 'location') {
             return agent.agent_profiles?.[0]?.service_areas?.toLowerCase()?.includes(query) || false;
         } else {

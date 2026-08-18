@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from '../context/api';
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -18,9 +18,9 @@ export const signInWithGoogle = () => {
             client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
             callback: async(response) => {
                 try {
-                    const res = await axios.post(`${API_URL}/api/auth/google`, {
+                    const res = await api.post('/auth/google', {
                         credential: response.credential
-                    }, { withCredentials: true });
+                    });
                     resolve(res.data.user);
                 } catch (err) {
                     reject(err);
@@ -55,9 +55,9 @@ export const signInWithFacebook = () => {
 
         window.FB.login((response) => {
             if (response.authResponse) {
-                axios.post(`${API_URL}/api/auth/facebook`, {
+                api.post('/auth/facebook', {
                     accessToken: response.authResponse.accessToken
-                }, { withCredentials: true })
+                })
                 .then(res => resolve(res.data.user))
                 .catch(err => reject(err));
             } else {
@@ -87,11 +87,11 @@ export const signInWithApple = () => {
         window.AppleID.auth.signIn()
             .then(async(data) => {
                 try {
-                    const res = await axios.post(`${API_URL}/api/auth/apple`, {
+                    const res = await api.post('/auth/apple', {
                         id_token: data.authorization.id_token,
                         name: data.user ?
                             `${data.user.name?.firstName || ''} ${data.user.name?.lastName || ''}`.trim() : undefined
-                    }, { withCredentials: true });
+                    });
                     resolve(res.data.user);
                 } catch (err) {
                     reject(err);

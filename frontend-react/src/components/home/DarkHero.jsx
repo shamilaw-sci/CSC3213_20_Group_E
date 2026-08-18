@@ -11,7 +11,6 @@ const hotspots = [
 ];
 
 export default function DarkHero() {
-    const navigate = useNavigate();
     const [hoveredHotspot, setHoveredHotspot] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 

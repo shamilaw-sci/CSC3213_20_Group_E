@@ -3,9 +3,16 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../context/api';
 import { useAuth } from '../context/UserAuthContext';
 import { useCompare } from '../context/CompareContext';
+<<<<<<< Updated upstream
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import MortgageCalculator from '../components/MortgageCalculator';
+=======
+import Navbar from '../components/layout/Navbar';
+import Footer from '../components/layout/Footer';
+import MortgageCalculator from '../components/property/MortgageCalculator';
+import PropertyCard from '../components/property/PropertyCard';
+>>>>>>> Stashed changes
 import { Bed, Bath, Maximize, MapPin, Heart, MessageCircle, ChevronLeft, ChevronRight, Loader2, Scale } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Polygon, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';

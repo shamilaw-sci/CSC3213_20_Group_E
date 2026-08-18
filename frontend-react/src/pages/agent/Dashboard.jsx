@@ -14,7 +14,7 @@ import { Player } from '@lottiefiles/react-lottie-player';
 const PIPELINE_STAGES = ['New', 'Contacted', 'Showing', 'Offer', 'Closed'];
 
 const AgentDashboard = () => {
-    const { user, logout } = useAuth();
+    const { user } = useAuth();
     const navigate = useNavigate();
     
     // UI State
@@ -71,6 +71,10 @@ const AgentDashboard = () => {
     };
     
     // Fetch Messages when a lead is selected
+<<<<<<< Updated upstream
+=======
+     
+>>>>>>> Stashed changes
     useEffect(() => {
         let timer;
         if (!selectedLead) return;

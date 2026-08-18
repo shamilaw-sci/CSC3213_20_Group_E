@@ -8,16 +8,14 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/80",
-        outline:
-          "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
-        secondary:
-          "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
-        ghost:
-          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
-        destructive:
-          "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
-        link: "text-primary underline-offset-4 hover:underline",
+        default: "bg-blue-600 text-white hover:bg-blue-700 shadow-sm",
+        primary: "bg-blue-600 text-white hover:bg-blue-700 shadow-sm",
+        outline: "border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 hover:text-gray-900",
+        secondary: "bg-gray-100 text-gray-900 hover:bg-gray-200",
+        ghost: "hover:bg-gray-100 text-gray-600 hover:text-gray-900",
+        destructive: "bg-red-600 text-white hover:bg-red-700 shadow-sm",
+        success: "bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm",
+        link: "text-blue-600 underline-offset-4 hover:underline",
       },
       size: {
         default:

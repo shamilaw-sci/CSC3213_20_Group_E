@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/UserAuthContext';
+<<<<<<< Updated upstream
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+=======
+import Navbar from '../components/layout/Navbar';
+>>>>>>> Stashed changes
 import { m } from "framer-motion";
 import { Home, Key, Building, CheckCircle, Clock, XCircle, MessageSquare, TrendingUp, ArrowRight, Eye, Heart, BarChart3, Lightbulb } from 'lucide-react';
 import api from '../context/api';
