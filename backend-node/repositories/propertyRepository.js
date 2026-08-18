@@ -20,7 +20,18 @@ const getApprovedPropertiesForAI = async () => {
     return data;
 };
 
+const getPropertyById = async (id) => {
+    const { data, error } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('id', id)
+        .single();
+    if (error && error.code !== 'PGRST116') throw error;
+    return data;
+};
+
 module.exports = {
+    getPropertyById,
     getApprovedPropertiesForAI,
     updatePaymentStatus
 };
