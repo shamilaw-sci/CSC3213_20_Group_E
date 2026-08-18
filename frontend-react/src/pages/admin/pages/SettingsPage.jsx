@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { fetchSettings, updateSettings } from "../api/adminApi";
+import { useAdminTheme } from "../context/AdminThemeContext";
+import { Sun, Moon, Monitor } from "lucide-react";
 import "../styles/admin-global.css";
 
 const DEFAULT_SETTINGS = {
@@ -22,6 +24,7 @@ const SettingsPage = () => {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
   const [newCategory, setNewCategory] = useState("");
+  const { theme, changeTheme } = useAdminTheme();
 
   useEffect(() => {
     fetchSettings()
@@ -83,6 +86,46 @@ const SettingsPage = () => {
       </div>
 
       <div className="admin-grid admin-grid-2" style={{ gap: 24 }}>
+        {/* Appearance */}
+        <div className="admin-card" style={{ gridColumn: "1 / -1" }}>
+          <div className="admin-card-header">
+            <span className="admin-card-title">Appearance</span>
+            <span className="admin-badge admin-badge-active">Theme</span>
+          </div>
+          <p style={{ fontSize: "0.85rem", color: "var(--admin-text-secondary)", marginBottom: 16 }}>
+            Choose how the admin panel looks. System follows your device preference.
+          </p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+            {[
+              { key: "light", label: "Light", icon: Sun, desc: "Bright, clean interface" },
+              { key: "dark", label: "Dark", icon: Moon, desc: "Easy on the eyes" },
+              { key: "system", label: "System", icon: Monitor, desc: "Follow device setting" },
+            ].map(({ key, label, icon: Icon, desc }) => (
+              <button aria-label="Accessible interactive control" type="button" key={key} onClick={() => changeTheme(key)}
+                style={{
+                  flex: "1 1 180px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: "20px 16px",
+                  borderRadius: 16,
+                  cursor: "pointer",
+                  border: theme === key ? "2px solid #2563eb" : "1px solid var(--admin-border)",
+                  background: theme === key ? "rgba(37, 99, 235, 0.08)" : "transparent",
+                  color: "var(--admin-text-primary)",
+                  transition: "0.2s ease",
+                  fontFamily: "inherit",
+                }}
+              >
+                <Icon className="w-6 h-6" style={{ color: theme === key ? "#2563eb" : "var(--admin-text-secondary)" }} />
+                <span style={{ fontWeight: 700, fontSize: "0.95rem" }}>{label}</span>
+                <span style={{ fontSize: "0.75rem", color: "var(--admin-text-secondary)" }}>{desc}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Financial Parameters */}
         <div className="admin-card">
           <div className="admin-card-header">

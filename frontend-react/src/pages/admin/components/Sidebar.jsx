@@ -39,9 +39,11 @@ const Sidebar = () => {
       
       {/* Brand */}
       <div className="h-20 px-6 flex items-center border-b border-gray-100">
-        <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-500 rounded-xl flex items-center justify-center text-white font-black text-xl shadow-md mr-3">
-          T
-        </div>
+        <img
+          src="/logo.jpeg"
+          alt="Thirasara Property logo"
+          className="w-10 h-10 object-cover rounded-xl shadow-md mr-3"
+        />
         <div className="flex flex-col">
           <span className="font-black text-gray-900 tracking-tight leading-tight">Thirasara</span>
           <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Admin Panel</span>
