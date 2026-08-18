@@ -212,10 +212,14 @@ const AgentDashboard = () => {
                             ))}
                         </nav>
 
-                        <div className="p-4 border-t border-gray-800">
+                                                <div className="p-4 border-t border-gray-800 space-y-1">
                             <button onClick={() => navigate('/')} className="w-full flex items-center space-x-3 px-4 py-3 text-gray-400 hover:bg-gray-800 rounded-xl transition-colors">
                                 <Home size={20} />
                                 <span>Back to Home</span>
+                            </button>
+                            <button onClick={handleLogout} className="w-full flex items-center space-x-3 px-4 py-3 text-gray-400 hover:bg-gray-800 rounded-xl transition-colors">
+                                <LogOut size={20} />
+                                <span>Log Out</span>
                             </button>
                         </div>
                     </m.div>
