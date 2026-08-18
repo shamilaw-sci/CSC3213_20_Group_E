@@ -14,8 +14,13 @@ import { Player } from '@lottiefiles/react-lottie-player';
 const PIPELINE_STAGES = ['New', 'Contacted', 'Showing', 'Offer', 'Closed'];
 
 const AgentDashboard = () => {
-    const { user, logout } = useAuth();
+        const { user, logout } = useAuth();
     const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        await logout();
+        navigate('/login');
+    };
     
     // UI State
     const [activeView, setActiveView] = useState('overview'); // 'overview', 'pipeline', 'properties'
