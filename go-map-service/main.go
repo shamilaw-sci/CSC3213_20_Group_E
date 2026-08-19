@@ -53,8 +53,8 @@ func main() {
 	repo := repository.NewMapRepository(pool)
 	mapHandler := handlers.NewMapHandler(repo)
 
-	// Setup router
-	r := routes.SetupRouter(mapHandler)
+	// Setup router with database pool for readiness probes
+	r := routes.SetupRouter(mapHandler, pool)
 
 	port := os.Getenv("PORT")
 	if port == "" {

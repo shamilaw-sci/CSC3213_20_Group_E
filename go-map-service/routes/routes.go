@@ -1,17 +1,20 @@
 package routes
 
 import (
+	"context"
 	"os"
 	"strings"
+	"time"
 
 	"go-map-service/handlers"
 	"go-map-service/middleware"
 
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func SetupRouter(mapHandler *handlers.MapHandler) *gin.Engine {
+func SetupRouter(mapHandler *handlers.MapHandler, pool ...*pgxpool.Pool) *gin.Engine {
 	r := gin.Default()
 
 	// 1. Max Request Body Size (1 MB) to prevent OOM
@@ -31,10 +34,10 @@ func SetupRouter(mapHandler *handlers.MapHandler) *gin.Engine {
 	}
 
 	if allowedOriginsEnv != "" {
-		for _, o := range strings.Split(allowedOriginsEnv, ",") {
-			cleaned := strings.TrimSpace(o)
-			if cleaned != "" {
-				allowedOrigins[cleaned] = true
+		for _, origin := range strings.Split(allowedOriginsEnv, ",") {
+			trimmed := strings.TrimSpace(origin)
+			if trimmed != "" {
+				allowedOrigins[trimmed] = true
 			}
 		}
 	}
@@ -42,11 +45,11 @@ func SetupRouter(mapHandler *handlers.MapHandler) *gin.Engine {
 	r.Use(func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
 
-		if origin != "" && allowedOrigins[origin] {
+		if allowedOrigins[origin] {
 			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
 			c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-			c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
-			c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+			c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+			c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET")
 			c.Writer.Header().Set("Vary", "Origin")
 		}
 
@@ -62,15 +65,38 @@ func SetupRouter(mapHandler *handlers.MapHandler) *gin.Engine {
 		c.Next()
 	})
 
-	// Health check endpoint for Docker / Kubernetes / Load Balancers
+	// 5. Health check / Liveness Probe (Docker, Kubernetes, Uptime monitors)
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"status":  "ok",
-			"service": "go-map-service",
+			"status":    "healthy",
+			"service":   "go-map-service",
+			"timestamp": time.Now().UTC().Format(time.RFC3339),
 		})
 	})
 
-	// Register routes with Rate Limiting
+	// 6. Readiness Probe (Deep database connection ping)
+	r.GET("/health/ready", func(c *gin.Context) {
+		if len(pool) > 0 && pool[0] != nil {
+			ctx, cancel := context.WithTimeout(c.Request.Context(), 2*time.Second)
+			defer cancel()
+			if err := pool[0].Ping(ctx); err != nil {
+				c.JSON(503, gin.H{
+					"status":   "unready",
+					"service":  "go-map-service",
+					"database": "disconnected",
+					"error":    "Database ping failed",
+				})
+				return
+			}
+		}
+		c.JSON(200, gin.H{
+			"status":   "ready",
+			"service":  "go-map-service",
+			"database": "connected",
+		})
+	})
+
+	// 7. Register routes with Rate Limiting
 	r.POST("/api/map/search", middleware.RateLimitMiddleware(searchLimiter), mapHandler.SearchMap)
 
 	return r
