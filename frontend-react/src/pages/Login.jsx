@@ -7,7 +7,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../context/api';
 import { useAuth } from '../context/UserAuthContext';
-import { signInWithFacebook, signInWithApple } from '../utils/socialAuth';
+import { signInWithFacebook } from '../utils/socialAuth';
 import { ShieldAlert } from 'lucide-react';
 import { Player } from '@lottiefiles/react-lottie-player';
 import { m } from 'framer-motion';
@@ -227,7 +227,7 @@ const Login = () => {
                                         autoplay
                                         loop
                                         src="/images/avatar-animation.json"
-                                        style={{ height: '100%', width: '100%' }}
+                                        className="h-full w-full"
                                     />
                                 </div>
                             </div>
@@ -405,11 +405,13 @@ const Login = () => {
                                 {/* Google Sign In Button Container */}
                                 <div ref={googleBtnRef} className="w-full flex justify-center"></div>
 
-                                <button aria-label="Accessible interactive control" type="button" onClick={() => handleSocialLogin('Facebook')} className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium text-gray-700 h-10" style={{ maxWidth: '350px' }}>
-                                    <img src="https://www.svgrepo.com/show/475647/facebook-color.svg" alt="Facebook" className="h-5 w-5 mr-2" />
+                                <button aria-label="Accessible interactive control" type="button" onClick={() => handleSocialLogin('Facebook')} className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium text-gray-700 h-10 max-w-[350px]">
+                                    <svg className="w-5 h-5 mr-3 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" />
+                                    </svg>
                                     Continue with Facebook
                                 </button>
-                                <button aria-label="Accessible interactive control" type="button" onClick={() => handleSocialLogin('Apple')} className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium text-gray-700 h-10" style={{ maxWidth: '350px' }}>
+                                <button aria-label="Accessible interactive control" type="button" onClick={() => handleSocialLogin('Apple')} className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium text-gray-700 h-10 max-w-[350px]">
                                     <img src="https://www.svgrepo.com/show/511330/apple-173.svg" alt="Apple" className="h-5 w-5 mr-2" />
                                     Continue with Apple
                                 </button>

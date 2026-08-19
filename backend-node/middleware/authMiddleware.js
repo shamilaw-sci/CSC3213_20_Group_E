@@ -1,7 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { createClient } = require('@supabase/supabase-js');
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
-
+const supabase = require('../config/supabase');
 // Middleware to protect routes by verifying JWT token
 const protect = async (req, res, next) => {
     let token = req.cookies?.token; // Extract token from HttpOnly cookie

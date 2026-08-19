@@ -2,8 +2,8 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../context/api';
 import { useAuth } from '../context/UserAuthContext';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
+import Navbar from '../components/layout/Navbar';
+import Footer from '../components/layout/Footer';
 import { Edit2, Eye, Heart, CheckCircle, Clock, XCircle, Trash2, MapPin, Search } from 'lucide-react';
 import { m } from "framer-motion";
 
@@ -21,11 +21,7 @@ const MyProperties = () => {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('all');
 
-    useEffect(() => {
-        if (!user || user.role !== 'SELLER') {
-            navigate('/');
-        }
-    }, [user, navigate]);
+
 
     useEffect(() => {
         const fetchProperties = async () => {

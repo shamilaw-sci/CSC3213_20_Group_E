@@ -3,9 +3,9 @@ import { useSearchParams } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { m } from 'framer-motion';
 import api from '../context/api';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
-import PropertyCard from '../components/PropertyCard';
+import Navbar from '../components/layout/Navbar';
+import Footer from '../components/layout/Footer';
+import PropertyCard from '../components/property/PropertyCard';
 
 /**
  * Smart Property Search results page.

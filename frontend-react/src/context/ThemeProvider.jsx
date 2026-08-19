@@ -42,7 +42,7 @@ export const ThemeProvider = ({ children }) => {
         // If user is logged in, save to backend
         if (user) {
             try {
-                await api.put('/api/auth/profile', { theme_preference: newTheme });
+                await api.put('/auth/profile', { theme_preference: newTheme }); // baseURL already includes /api
             } catch (error) {
                 console.error("Failed to save theme preference:", error);
             }

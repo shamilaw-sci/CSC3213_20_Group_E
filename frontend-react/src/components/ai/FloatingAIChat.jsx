@@ -2,8 +2,8 @@ import React, { useState, useRef } from 'react';
 import { AnimatePresence, m } from "framer-motion";
 import { Bot, X, Send, Loader, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import api from '../context/api';
-import { useAuth } from '../context/UserAuthContext';
+import api from '../../context/api';
+import { useAuth } from '../../context/UserAuthContext';
 
 const FloatingAIChat = () => {
     const { user } = useAuth();

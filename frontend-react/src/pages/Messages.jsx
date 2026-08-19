@@ -3,7 +3,7 @@ import api from '../context/api';
 import axios from 'axios';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/UserAuthContext';
-import Navbar from '../components/Navbar';
+import Navbar from '../components/layout/Navbar';
 import { m } from "framer-motion";
 import { Send, Paperclip, X, Image as ImageIcon, FileText, User, MessageSquare, ShieldAlert } from 'lucide-react';
 
@@ -51,7 +51,6 @@ const getInitials = (name) => {
 };
 
 const Messages = () => {
-    const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const { user } = useAuth();
     const messagesEndRef = useRef(null);
@@ -64,11 +63,7 @@ const Messages = () => {
     const [messagesLoading, setMessagesLoading] = useState(false);
     const [error, setError] = useState('');
 
-    useEffect(() => {
-        if (!user) {
-            navigate('/login');
-        }
-    }, [navigate, user]);
+
 
     const selectedConversation = useMemo(
         () => conversations.find((conversation) => conversation.id === selectedId),

@@ -8,12 +8,12 @@ import { AdminAuthProvider } from './pages/admin/context/AdminAuthContext';
 import { MotionConfig, LazyMotion, domAnimation } from 'framer-motion';
 
 // Components that should load immediately
-import FloatingAIChat from './components/FloatingAIChat';
-import ProtectedRoute from './components/ProtectedRoute';
+import FloatingAIChat from './components/ai/FloatingAIChat';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 import AdminProtectedRoute from './pages/admin/components/AdminProtectedRoute';
 import AdminLayout from './pages/admin/components/AdminLayout';
-import CompareActionBar from './components/CompareActionBar';
-import CompareMatrixModal from './components/CompareMatrixModal';
+import CompareActionBar from './components/compare/CompareActionBar';
+import CompareMatrixModal from './components/compare/CompareMatrixModal';
 
 // Set global axios configuration
 axios.defaults.withCredentials = true;
@@ -88,11 +88,31 @@ function App() {
             <Route path="/buy" element={<BuyPage />} />
             <Route path="/map" element={<MapSearch />} />
             <Route path="/rent" element={<MapSearch />} />
-            <Route path="/add-property" element={<AddProperty />} />
-            <Route path="/my-properties" element={<MyProperties />} />
-            <Route path="/messages" element={<Messages />} />
-            <Route path="/profile" element={<ProfileSettings />} />
-            <Route path="/favorites" element={<MyFavorites />} />
+            <Route path="/add-property" element={
+              <ProtectedRoute allowedRoles={['SELLER', 'AGENT']}>
+                <AddProperty />
+              </ProtectedRoute>
+            } />
+            <Route path="/my-properties" element={
+              <ProtectedRoute allowedRoles={['SELLER']}>
+                <MyProperties />
+              </ProtectedRoute>
+            } />
+            <Route path="/messages" element={
+              <ProtectedRoute>
+                <Messages />
+              </ProtectedRoute>
+            } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <ProfileSettings />
+              </ProtectedRoute>
+            } />
+            <Route path="/favorites" element={
+              <ProtectedRoute>
+                <MyFavorites />
+              </ProtectedRoute>
+            } />
             <Route path="/register" element={<Register />} />
 
             

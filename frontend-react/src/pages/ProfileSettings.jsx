@@ -5,7 +5,7 @@ import { User, Lock, Phone, Save, Loader, Search, Trash2, Heart, Moon, Sun, Moni
 import { AnimatePresence, m } from "framer-motion";
 import { useNavigate } from 'react-router-dom';
 import api from '../context/api';
-import Navbar from '../components/Navbar';
+import Navbar from '../components/layout/Navbar';
 
 const ProfileSettings = () => {
     const { user, login } = useAuth();

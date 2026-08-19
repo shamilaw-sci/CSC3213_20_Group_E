@@ -1,10 +1,8 @@
-const { createClient } = require('@supabase/supabase-js');
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
-
+const supabase = require('../config/supabase');
 // Get all approved agents with their profiles
-const getAgents = async (req, res) => {
+const getAgents = async (req, res, next) => {
     try {
         const { data, error } = await supabase
             .from('users')
@@ -36,12 +34,12 @@ const getAgents = async (req, res) => {
 
         res.status(200).json({ agents: formattedAgents });
     } catch (error) {
-        res.status(500).json({ message: "Failed to fetch agents", error: error.message });
+        next(error);
     }
 };
 
 // Get a single agent's profile by ID
-const getAgentProfile = async (req, res) => {
+const getAgentProfile = async (req, res, next) => {
     try {
         const { id } = req.params;
         
@@ -86,12 +84,12 @@ const getAgentProfile = async (req, res) => {
             reviews: reviews || []
         });
     } catch (error) {
-        res.status(500).json({ message: "Failed to fetch agent profile", error: error.message });
+        next(error);
     }
 };
 
 // Post a review for an agent
-const postReview = async (req, res) => {
+const postReview = async (req, res, next) => {
     try {
         const { id } = req.params; // Agent ID
         const { rating, comment } = req.body;
@@ -110,12 +108,12 @@ const postReview = async (req, res) => {
 
         res.status(201).json({ message: "Review posted successfully", review: data[0] });
     } catch (error) {
-        res.status(500).json({ message: "Failed to post review", error: error.message });
+        next(error);
     }
 };
 
 // Get CRM Leads for an Agent (Conversations where the agent is the seller)
-const getAgentLeads = async (req, res) => {
+const getAgentLeads = async (req, res, next) => {
     try {
         if (req.user.role !== 'AGENT') {
             return res.status(403).json({ message: "Only approved agents can access the CRM" });
@@ -152,12 +150,12 @@ const getAgentLeads = async (req, res) => {
 
         res.status(200).json({ leads: enrichedLeads });
     } catch (error) {
-        res.status(500).json({ message: "Failed to fetch leads", error: error.message });
+        next(error);
     }
 };
 
 // Update Lead CRM Metadata
-const updateLeadMetadata = async (req, res) => {
+const updateLeadMetadata = async (req, res, next) => {
     try {
         if (req.user.role !== 'AGENT') {
             return res.status(403).json({ message: "Only approved agents can update CRM leads" });
@@ -178,12 +176,12 @@ const updateLeadMetadata = async (req, res) => {
 
         res.status(200).json({ message: "Lead updated successfully", lead: data });
     } catch (error) {
-        res.status(500).json({ message: "Failed to update lead", error: error.message });
+        next(error);
     }
 };
 
 // Update agent profile (Bio, Youtube, etc.)
-const updateAgentProfile = async (req, res) => {
+const updateAgentProfile = async (req, res, next) => {
     try {
         const { bio, youtube_video_url, languages, agency_name, license_number, service_areas, specialization } = req.body;
         const agentId = req.user.id; // From protect middleware
@@ -216,12 +214,12 @@ const updateAgentProfile = async (req, res) => {
 
         res.status(200).json({ message: "Agent profile updated successfully", profile: data[0] });
     } catch (error) {
-        res.status(500).json({ message: "Failed to update agent profile", error: error.message });
+        next(error);
     }
 };
 
 // Resubmit application after rejection
-const resubmitApplication = async (req, res) => {
+const resubmitApplication = async (req, res, next) => {
     try {
         const agentId = req.user.id;
         
@@ -256,12 +254,12 @@ const resubmitApplication = async (req, res) => {
 
         res.status(200).json({ message: "Application resubmitted successfully. Please wait for admin approval." });
     } catch (error) {
-        res.status(500).json({ message: "Failed to resubmit application", error: error.message });
+        next(error);
     }
 };
 
 // Get Dashboard Stats for Agent
-const getDashboardStats = async (req, res) => {
+const getDashboardStats = async (req, res, next) => {
     try {
         if (req.user.role !== 'AGENT') {
             return res.status(403).json({ message: "Only approved agents can access dashboard stats" });
@@ -318,7 +316,7 @@ const getDashboardStats = async (req, res) => {
         });
 
     } catch (error) {
-        res.status(500).json({ message: "Failed to fetch dashboard stats", error: error.message });
+        next(error);
     }
 };
 

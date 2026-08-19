@@ -9,11 +9,7 @@ const { calculatePriceInsight } = require("../utils/priceInsightEngine");
 const { rankPropertiesByRelevance } = require("../utils/searchRelevance");
 
 // Initialize Supabase client using environment variables
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_KEY
-);
-
+const supabase = require('../config/supabase');
 /**
  * Add a new property listing to the database.
  * Processes uploaded images concurrently, formats property data, and saves it into Supabase.

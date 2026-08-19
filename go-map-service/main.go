@@ -112,8 +112,8 @@ func main() {
 		}
 		if req.Type != nil && *req.Type != "" {
 			paramCount++
-			query += fmt.Sprintf(" AND p.type = $%d", paramCount)
-			args = append(args, *req.Type)
+			query += fmt.Sprintf(" AND p.type ILIKE $%d", paramCount)
+			args = append(args, fmt.Sprintf("%%%s%%", *req.Type))
 		}
 		if req.ListingType != nil && *req.ListingType != "" {
 			paramCount++

@@ -1,4 +1,3 @@
-const { createClient } = require('@supabase/supabase-js');
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
 const appleSignin = require('apple-signin-auth');
@@ -6,8 +5,7 @@ const { setTokenCookie } = require('./authController');
 const { sendWelcomeEmail } = require('../utils/emailService');
 
 // Initialize Supabase client for database operations
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
-
+const userRepository = require('../repositories/userRepository');
 /**
  * Finds an existing user by email, or creates a new one for a social login.
  * If a user already registered with email/password and then signs in with

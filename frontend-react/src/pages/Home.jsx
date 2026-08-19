@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
-import DarkHero from '../components/DarkHero';
-import CinematicShowcase from '../components/CinematicShowcase';
-import AgentShowcase from '../components/AgentShowcase';
-import CinematicFooter from '../components/CinematicFooter';
-import Navbar from '../components/Navbar';
+import DarkHero from '../components/home/DarkHero';
+import CinematicShowcase from '../components/home/CinematicShowcase';
+import AgentShowcase from '../components/agent/AgentShowcase';
+import CinematicFooter from '../components/layout/CinematicFooter';
+import Navbar from '../components/layout/Navbar';
 
 const Home = () => {
 
