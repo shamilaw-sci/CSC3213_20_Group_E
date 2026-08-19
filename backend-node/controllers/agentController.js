@@ -1,88 +1,32 @@
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
-const supabase = require('../config/supabase');
-// Get all approved agents with their profiles
+﻿const agentRepository = require('../repositories/agentRepository');
+
+// Get a list of agents
 const getAgents = async (req, res, next) => {
     try {
-        const { data, error } = await supabase
-            .from('users')
-            .select(`
-                id, name, email, avatar_url, phone, role, created_at,
-                agent_profiles (agency_name, license_number, bio, languages, youtube_video_url, total_sales, total_rentals, service_areas, specialization)
-            `)
-            .eq('role', 'AGENT');
-
-        if (error) throw error;
-
-        // Flatten the agent_profiles for easier frontend consumption
-        const formattedAgents = data.map(agent => {
-            const profile = Array.isArray(agent.agent_profiles) 
-                ? agent.agent_profiles[0] 
-                : agent.agent_profiles;
-
-            return {
-                id: agent.id,
-                name: agent.name,
-                email: agent.email,
-                avatar_url: agent.avatar_url,
-                phone: agent.phone,
-                role: agent.role,
-                created_at: agent.created_at,
-                ...profile
-            };
-        });
-
-        res.status(200).json({ agents: formattedAgents });
+        const { limit } = req.query;
+        const agents = await agentRepository.getAgents(limit ? parseInt(limit) : null);
+        res.status(200).json({ agents });
     } catch (error) {
         next(error);
     }
 };
 
-// Get a single agent's profile by ID
+// Get a single agent profile
 const getAgentProfile = async (req, res, next) => {
     try {
         const { id } = req.params;
-        
-        // 1. Get user details + agent profile
-        const { data: agent, error: agentError } = await supabase
-            .from('users')
-            .select(`
-                id, name, email, avatar_url, phone, role,
-                agent_profiles (agency_name, license_number, bio, languages, youtube_video_url, total_sales, total_rentals, service_areas, specialization, rejection_reason)
-            `)
-            .eq('id', id)
-            .single();
+        const agent = await agentRepository.getAgentProfile(id);
 
-        if (agentError || !agent || !['AGENT', 'SELLER', 'PENDING_AGENT', 'REJECTED_AGENT'].includes(agent.role)) {
+        if (!agent) {
             return res.status(404).json({ message: "Agent not found" });
         }
-
-        // Normalize agent_profiles to array
-        if (agent.agent_profiles && !Array.isArray(agent.agent_profiles)) {
-            agent.agent_profiles = [agent.agent_profiles];
-        } else if (!agent.agent_profiles) {
-            agent.agent_profiles = [];
+        
+        // Filter out unapproved properties safely in memory
+        if (agent.properties) {
+            agent.properties = agent.properties.filter(p => p.status === 'approved');
         }
 
-        // 2. Get agent's active listings
-        const { data: listings } = await supabase
-            .from('properties')
-            .select('*, users(name, role)')
-            .eq('seller_id', id)
-            .eq('status', 'approved');
-
-        // 3. Get reviews
-        const { data: reviews } = await supabase
-            .from('agent_reviews')
-            .select('*, reviewer:users!reviewer_id(name, avatar_url)')
-            .eq('agent_id', id)
-            .order('created_at', { ascending: false });
-
-        res.status(200).json({
-            agent,
-            listings: listings || [],
-            reviews: reviews || []
-        });
+        res.status(200).json({ agent });
     } catch (error) {
         next(error);
     }
@@ -99,52 +43,28 @@ const postReview = async (req, res, next) => {
             return res.status(400).json({ message: "Rating must be between 1 and 5" });
         }
 
-        const { data, error } = await supabase
-            .from('agent_reviews')
-            .insert([{ agent_id: id, reviewer_id, rating, comment }])
-            .select();
-
-        if (error) throw error;
-
-        res.status(201).json({ message: "Review posted successfully", review: data[0] });
+        const review = await agentRepository.postReview(id, reviewer_id, rating, comment);
+        res.status(201).json({ message: "Review posted successfully", review });
     } catch (error) {
         next(error);
     }
 };
 
-// Get CRM Leads for an Agent (Conversations where the agent is the seller)
+// Get CRM Leads for an Agent
 const getAgentLeads = async (req, res, next) => {
     try {
         if (req.user.role !== 'AGENT') {
             return res.status(403).json({ message: "Only approved agents can access the CRM" });
         }
 
-        const { data, error } = await supabase
-            .from('conversations')
-            .select(`
-                id, type, property_id, buyer_id, seller_id, created_at, updated_at,
-                lead_status, timeframe, pre_approved,
-                properties (title, images, price),
-                buyer:users!buyer_id (name, avatar_url, email, phone)
-            `)
-            .eq('seller_id', req.user.id)
-            .in('type', ['property', 'agent'])
-            .order('updated_at', { ascending: false });
-
-        if (error) throw error;
+        const data = await agentRepository.getAgentLeads(req.user.id);
 
         // Fetch the last message for each conversation
         const enrichedLeads = await Promise.all(data.map(async (lead) => {
-            const { data: messages } = await supabase
-                .from('messages')
-                .select('body, created_at, sender_id')
-                .eq('conversation_id', lead.id)
-                .order('created_at', { ascending: false })
-                .limit(1);
-            
+            const lastMessage = await agentRepository.getLastMessage(lead.id);
             return {
                 ...lead,
-                last_message: messages && messages.length > 0 ? messages[0].body : 'No messages yet'
+                last_message: lastMessage
             };
         }));
 
@@ -164,29 +84,19 @@ const updateLeadMetadata = async (req, res, next) => {
         const { id } = req.params;
         const { lead_status, timeframe, pre_approved } = req.body;
 
-        const { data, error } = await supabase
-            .from('conversations')
-            .update({ lead_status, timeframe, pre_approved })
-            .eq('id', id)
-            .eq('seller_id', req.user.id)
-            .select()
-            .single();
-
-        if (error) throw error;
-
-        res.status(200).json({ message: "Lead updated successfully", lead: data });
+        const lead = await agentRepository.updateLeadMetadata(id, req.user.id, lead_status, timeframe, pre_approved);
+        res.status(200).json({ message: "Lead updated successfully", lead });
     } catch (error) {
         next(error);
     }
 };
 
-// Update agent profile (Bio, Youtube, etc.)
+// Update agent profile
 const updateAgentProfile = async (req, res, next) => {
     try {
         const { bio, youtube_video_url, languages, agency_name, license_number, service_areas, specialization } = req.body;
-        const agentId = req.user.id; // From protect middleware
+        const agentId = req.user.id;
 
-        // Validate user is allowed to have an agent profile
         if (!['AGENT', 'SELLER', 'PENDING_AGENT', 'REJECTED_AGENT'].includes(req.user.role)) {
             return res.status(403).json({ message: "Not authorized to update agent profile" });
         }
@@ -202,17 +112,8 @@ const updateAgentProfile = async (req, res, next) => {
             updated_at: new Date().toISOString()
         };
 
-        const { data, error } = await supabase
-            .from('agent_profiles')
-            .upsert({ 
-                agent_id: agentId, 
-                ...updates 
-            }, { onConflict: 'agent_id' })
-            .select();
-
-        if (error) throw error;
-
-        res.status(200).json({ message: "Agent profile updated successfully", profile: data[0] });
+        const profile = await agentRepository.updateAgentProfile(agentId, updates);
+        res.status(200).json({ message: "Agent profile updated successfully", profile });
     } catch (error) {
         next(error);
     }
@@ -223,35 +124,21 @@ const resubmitApplication = async (req, res, next) => {
     try {
         const agentId = req.user.id;
         
-        // Ensure they are currently a REJECTED_AGENT
         if (req.user.role !== 'REJECTED_AGENT') {
             return res.status(403).json({ message: "Only rejected agents can resubmit applications" });
         }
 
         const { agency_name, license_number, bio } = req.body;
+        
+        const profileUpdates = {
+            agency_name,
+            license_number,
+            bio,
+            rejection_reason: null, // Clear reason
+            updated_at: new Date().toISOString()
+        };
 
-        // 1. Update the profile and clear the rejection reason
-        const { error: profileError } = await supabase
-            .from('agent_profiles')
-            .update({ 
-                agency_name, 
-                license_number, 
-                bio,
-                rejection_reason: null, // Clear reason
-                updated_at: new Date().toISOString()
-            })
-            .eq('agent_id', agentId);
-
-        if (profileError) throw profileError;
-
-        // 2. Change role back to PENDING_AGENT
-        const { error: userError } = await supabase
-            .from('users')
-            .update({ role: 'PENDING_AGENT', updated_at: new Date().toISOString() })
-            .eq('id', agentId);
-
-        if (userError) throw userError;
-
+        await agentRepository.resubmitApplication(agentId, profileUpdates);
         res.status(200).json({ message: "Application resubmitted successfully. Please wait for admin approval." });
     } catch (error) {
         next(error);
@@ -268,28 +155,15 @@ const getDashboardStats = async (req, res, next) => {
         const agentId = req.user.id;
 
         // 1. Get active listings count
-        const { count: activeListingsCount, error: propError } = await supabase
-            .from('properties')
-            .select('*', { count: 'exact', head: true })
-            .eq('seller_id', agentId)
-            .eq('status', 'approved');
-
-        if (propError) throw propError;
+        const activeListingsCount = await agentRepository.getActiveListingsCount(agentId);
 
         // 2. Get leads
-        const { data: leads, error: leadsError } = await supabase
-            .from('conversations')
-            .select('lead_status')
-            .eq('seller_id', agentId)
-            .in('type', ['property', 'agent']);
-
-        if (leadsError) throw leadsError;
+        const leads = await agentRepository.getLeadsForDashboard(agentId);
 
         const totalLeads = leads.length;
         const closedLeads = leads.filter(l => l.lead_status === 'Closed').length;
         const conversionRate = totalLeads > 0 ? Math.round((closedLeads / totalLeads) * 100) : 0;
 
-        // Pipeline breakdown
         const pipeline = {
             'New': leads.filter(l => !l.lead_status || l.lead_status === 'New').length,
             'Contacted': leads.filter(l => l.lead_status === 'Contacted').length,
