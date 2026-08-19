@@ -1,4 +1,6 @@
+const path = require('path');
 const conversationRepository = require('../repositories/conversationRepository');
+const { generateSafeFileName } = require('../middleware/uploadMiddleware');
 
 const isAdmin = (user) => user.role === 'ADMIN';
 const isBuyer = (user) => ['BUYER', 'SELLER', 'AGENT'].includes(user.role);
@@ -222,15 +224,15 @@ const sendMessage = async (req, res, next) => {
 
         let attachment = {};
         if (file) {
-            const safeName = file.originalname.replace(/\s/g, '_');
-            const fileName = `${conversation.id}/${Date.now()}-${safeName}`;
+            const safeName = generateSafeFileName(file.originalname);
+            const fileName = `${conversation.id}/${safeName}`;
 
             const publicUrl = await conversationRepository.uploadAttachment(fileName, file.buffer, file.mimetype);
 
             attachment = {
                 attachment_url: publicUrl,
                 attachment_type: file.mimetype,
-                attachment_name: file.originalname
+                attachment_name: path.basename(file.originalname)
             };
         }
 

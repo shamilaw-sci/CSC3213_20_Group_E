@@ -1,21 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
+const { propertyImageUpload } = require('../middleware/uploadMiddleware');
 
 const { addProperty, getProperties, getMyProperties, updateMyProperty, getPropertyById, incrementViews } = require('../controllers/propertyController');
 const { protect } = require('../middleware/authMiddleware');
 const validate = require('../middleware/validate');
 const { addPropertySchema, updatePropertySchema, getPropertiesSchema } = require('../validators/propertyValidator');
 
-// Configure multer for temporary image storage in memory
-const upload = multer({ storage: multer.memoryStorage() });
-
 // 1. Get all properties (Public route - no authentication required)
 router.get('/', validate(getPropertiesSchema), getProperties);
 
 // 2. Add new property (Protected route - requires authentication)
-// Accepts single image file with field name 'image'
-router.post('/', protect, upload.array('images', 10), validate(addPropertySchema), addProperty);
+// Accepts up to 10 images with 5MB limit each and strict MIME validation
+router.post('/', protect, propertyImageUpload.array('images', 10), validate(addPropertySchema), addProperty);
 
 // 3. Get properties submitted by the logged-in seller
 router.get('/my-listings', protect, validate(getPropertiesSchema), getMyProperties);

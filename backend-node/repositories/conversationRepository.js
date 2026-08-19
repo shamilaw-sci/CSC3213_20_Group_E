@@ -90,7 +90,9 @@ const conversationRepository = {
         if (role === 'ADMIN') {
             convQuery = convQuery.or('support_requested.eq.true,type.eq.support');
         } else {
-            convQuery = convQuery.or(`buyer_id.eq.${userId},seller_id.eq.${userId}`);
+            // Validate UUID to prevent PostgREST filter injection (M7 fix)
+            const cleanId = String(userId).replace(/[^a-zA-Z0-9-]/g, '');
+            convQuery = convQuery.or(`buyer_id.eq.${cleanId},seller_id.eq.${cleanId}`);
         }
 
         const { data, error } = await convQuery.order('updated_at', { ascending: false });
@@ -205,7 +207,9 @@ const conversationRepository = {
         if (role === 'ADMIN') {
             convQuery = convQuery.or('support_requested.eq.true,type.eq.support');
         } else {
-            convQuery = convQuery.or(`buyer_id.eq.${userId},seller_id.eq.${userId}`);
+            // Validate UUID to prevent PostgREST filter injection (M7 fix)
+            const cleanId = String(userId).replace(/[^a-zA-Z0-9-]/g, '');
+            convQuery = convQuery.or(`buyer_id.eq.${cleanId},seller_id.eq.${cleanId}`);
         }
         
         const { data, error } = await convQuery;

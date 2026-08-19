@@ -34,7 +34,7 @@ const createUser = async (userData) => {
     const { data, error } = await supabase
         .from('users')
         .insert([userData])
-        .select();
+        .select('id, name, email, role, phone, avatar_url, theme_preference, email_notifications, created_at');
     if (error) throw error;
     return data;
 };

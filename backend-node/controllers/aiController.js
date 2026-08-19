@@ -1,6 +1,6 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const propertyRepository = require('../repositories/propertyRepository');
-const userRepository = require('../repositories/userRepository');
+const supabase = require('../config/supabase');
+
 const chatWithAI = async (req, res, next) => {
     try {
         const { message, history } = req.body;
@@ -28,7 +28,7 @@ const chatWithAI = async (req, res, next) => {
         if (agentsError) console.error("Could not fetch agents for AI context", agentsError);
 
         // Create a compact context for properties
-        const propertyContext = properties.map(p => 
+        const propertyContext = (properties || []).map(p => 
             `[ID: ${p.id}] ${p.title} - ${p.type} in ${p.city || p.district || 'Unknown location'}. Price: LKR ${p.price}. ${p.bedrooms || 0} Beds, ${p.bathrooms || 0} Baths, ${p.land_size || 0} perches. Image: ${p.images?.[0]}`
         ).join('\n');
         

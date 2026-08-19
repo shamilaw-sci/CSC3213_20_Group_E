@@ -36,6 +36,9 @@ const unwrap = (promise) => promise.then((res) => res.data);
 export const adminLogin = (email, password) =>
   unwrap(adminApi.post('/admin/login', { email, password }));
 
+export const verifyAdminSession = () =>
+  unwrap(adminApi.get('/admin/verify'));
+
 // ─── Dashboard Stats ──────────────────────────────────────────────────────────
 export const fetchDashboardStats = () =>
   unwrap(adminApi.get('/admin/dashboard/stats'));

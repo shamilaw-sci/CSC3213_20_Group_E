@@ -1,19 +1,16 @@
 const express = require('express');
 const router = express.Router();
+const validate = require('../middleware/validate');
+const { calculateFeasibilitySchema } = require('../validators/feasibilityValidator');
 
 /**
  * @desc Calculate maximum buying power based on financial inputs
  * @route POST /api/feasibility/calculate
  * @access Public
  */
-router.post('/calculate', (req, res) => {
+router.post('/calculate', validate(calculateFeasibilitySchema), (req, res, next) => {
     try {
-        const { salary, savings, loanDeductions, tenureYears } = req.body;
-
-        // Input validation
-        if (salary < 0 || savings < 0 || loanDeductions < 0 || tenureYears <= 0) {
-            return res.status(400).json({ message: "Invalid positive numeric inputs required." });
-        }
+        const { salary, savings = 0, loanDeductions = 0, tenureYears = 20 } = req.body;
 
         // 1. Net Disposable Income Calculation
         // Assuming 40% of salary goes to living expenses as a safety buffer
@@ -22,7 +19,9 @@ router.post('/calculate', (req, res) => {
 
         if (netDisposableIncome <= 0) {
             return res.status(200).json({ 
-                maxBuyingPower: savings, 
+                maxBuyingPower: Math.floor(savings), 
+                loanCapacity: 0,
+                monthlyInstallment: 0,
                 message: "Based on your deductions and living expenses, you do not qualify for a loan. You can only purchase properties using your existing savings." 
             });
         }
@@ -50,7 +49,7 @@ router.post('/calculate', (req, res) => {
         });
 
     } catch (error) {
-        res.status(500).json({ message: "Server error during calculation", error: error.message });
+        next(error);
     }
 });
 

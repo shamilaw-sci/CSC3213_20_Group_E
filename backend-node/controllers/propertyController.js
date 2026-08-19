@@ -1,4 +1,5 @@
 const propertyRepository = require('../repositories/propertyRepository');
+const { generateSafeFileName } = require('../middleware/uploadMiddleware');
 
 const addProperty = async (req, res, next) => {
   let uploadedFiles = [];
@@ -32,7 +33,7 @@ const addProperty = async (req, res, next) => {
 
     if (files && files.length > 0) {
       const uploadPromises = files.map(async (file) => {
-        const fileName = `${Date.now()}-${file.originalname.replace(/\s/g, "_")}`;
+        const fileName = generateSafeFileName(file.originalname);
         const filePath = `public/${fileName}`;
 
         const publicUrl = await propertyRepository.uploadImage(filePath, file.buffer, file.mimetype);

@@ -1,4 +1,4 @@
-﻿const agentRepository = require('../repositories/agentRepository');
+const agentRepository = require('../repositories/agentRepository');
 
 // Get a list of agents
 const getAgents = async (req, res, next) => {
@@ -97,8 +97,9 @@ const updateAgentProfile = async (req, res, next) => {
         const { bio, youtube_video_url, languages, agency_name, license_number, service_areas, specialization } = req.body;
         const agentId = req.user.id;
 
-        if (!['AGENT', 'SELLER', 'PENDING_AGENT', 'REJECTED_AGENT'].includes(req.user.role)) {
-            return res.status(403).json({ message: "Not authorized to update agent profile" });
+        // Only approved AGENT role can update active public agent profiles (M9 fix)
+        if (req.user.role !== 'AGENT') {
+            return res.status(403).json({ message: "Only verified and approved agents can update public agent profiles." });
         }
 
         const updates = {

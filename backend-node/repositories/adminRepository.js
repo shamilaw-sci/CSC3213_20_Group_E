@@ -138,7 +138,7 @@ const adminRepository = {
     getUserById: async (id) => {
         const { data, error } = await supabase
             .from('users')
-            .select('*')
+            .select('id, name, email, role, verified, phone, avatar_url, theme_preference, email_notifications, created_at')
             .eq('id', id)
             .single();
         if (error) throw error;

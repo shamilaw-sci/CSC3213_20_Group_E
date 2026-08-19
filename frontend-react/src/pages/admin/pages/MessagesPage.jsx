@@ -2,6 +2,16 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { fetchConversationMessages, fetchConversations, sendConversationMessage } from "../api/adminApi";
 import "../styles/admin-global.css";
 
+const isSafeAttachmentUrl = (url) => {
+  if (!url || typeof url !== 'string') return false;
+  try {
+    const parsed = new URL(url, window.location.origin);
+    return ['http:', 'https:'].includes(parsed.protocol);
+  } catch {
+    return false;
+  }
+};
+
 const getTitle = (conversation) => {
   if (!conversation) return "";
   if (conversation.type === "support") {
@@ -223,11 +233,11 @@ const MessagesPage = () => {
                               {getSenderName(message, selected)}
                             </div>
                             {message.body && <div style={{ fontSize: "0.9rem", whiteSpace: "pre-wrap" }}>{message.body}</div>}
-                            {message.attachment_url && (
+                            {message.attachment_url && isSafeAttachmentUrl(message.attachment_url) && (
                               <a aria-label="Accessible interactive control"
                                 href={message.attachment_url}
                                 target="_blank"
-                                rel="noreferrer"
+                                rel="noopener noreferrer"
                                 style={{
                                   display: "block",
                                   marginTop: 10,

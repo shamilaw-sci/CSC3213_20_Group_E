@@ -1,10 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
+const validate = require('../middleware/validate');
+const { saveSearchSchema, deleteSavedSearchSchema } = require('../validators/savedSearchValidator');
 const { saveSearch, getSavedSearches, deleteSavedSearch } = require('../controllers/savedSearchController');
 
-router.post('/', protect, saveSearch);
+router.post('/', protect, validate(saveSearchSchema), saveSearch);
 router.get('/', protect, getSavedSearches);
-router.delete('/:id', protect, deleteSavedSearch);
+router.delete('/:id', protect, validate(deleteSavedSearchSchema), deleteSavedSearch);
 
 module.exports = router;

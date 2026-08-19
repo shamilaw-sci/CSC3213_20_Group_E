@@ -1,18 +1,17 @@
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
 const appleSignin = require('apple-signin-auth');
+const supabase = require('../config/supabase');
 const { setTokenCookie } = require('./authController');
 const { sendWelcomeEmail } = require('../utils/emailService');
 
-// Initialize Supabase client for database operations
-const userRepository = require('../repositories/userRepository');
 /**
  * Finds an existing user by email, or creates a new one for a social login.
  * If a user already registered with email/password and then signs in with
- * a social provider using the same email, we just link the provider onto
- * the existing account (login), instead of creating a duplicate.
+ * a social provider using the same email, we link the provider onto
+ * the existing account, unless the account is banned.
  */
-const findOrCreateSocialUser = async({ email, name, provider, provider_id, avatar_url }) => {
+const findOrCreateSocialUser = async ({ email, name, provider, provider_id, avatar_url }) => {
     // 1. Check if user already exists
     const { data: existingUser, error: findError } = await supabase
         .from('users')
@@ -21,6 +20,13 @@ const findOrCreateSocialUser = async({ email, name, provider, provider_id, avata
         .single();
 
     if (existingUser) {
+        // Enforce account ban check (H7 fix)
+        if (existingUser.role === 'BANNED') {
+            const err = new Error("Your account has been banned. Please contact support.");
+            err.statusCode = 403;
+            throw err;
+        }
+
         const updates = {};
         let needsUpdate = false;
 
@@ -31,11 +37,11 @@ const findOrCreateSocialUser = async({ email, name, provider, provider_id, avata
             needsUpdate = true;
         }
 
-        // Always update avatar_url if provided by social login and different
+        // Update avatar_url if provided by social login and different
         if (avatar_url && existingUser.avatar_url !== avatar_url) {
             updates.avatar_url = avatar_url;
             needsUpdate = true;
-            existingUser.avatar_url = avatar_url; // Update local object for response
+            existingUser.avatar_url = avatar_url;
         }
 
         if (needsUpdate) {
@@ -58,25 +64,28 @@ const findOrCreateSocialUser = async({ email, name, provider, provider_id, avata
             provider_id,
             avatar_url: avatar_url || null
         }])
-        .select();
+        .select('id, name, email, role, phone, avatar_url, theme_preference, email_notifications, created_at');
 
     if (insertError) {
         throw new Error(insertError.message);
     }
 
     // Send welcome email asynchronously for new social signups
-    sendWelcomeEmail(email, name || email.split('@')[0]).catch(console.error);
+    sendWelcomeEmail(email, name || email.split('@')[0]).catch((e) => {
+        console.error("Welcome email failed:", e.message || e);
+    });
 
     return newUser[0];
 };
 
 /**
  * Signs a JWT, sets the auth cookie, and sends the standard login response.
- * Mirrors the response shape used by loginUser() in authController.js.
  */
 const sendAuthResponse = (res, user) => {
-    const token = jwt.sign({ id: user.id, role: user.role },
-        process.env.JWT_SECRET, { expiresIn: '1d' }
+    const token = jwt.sign(
+        { id: user.id, role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: '1d' }
     );
 
     setTokenCookie(res, token);
@@ -97,21 +106,26 @@ const sendAuthResponse = (res, user) => {
 };
 
 // --- Google Login ---
-// Expects: { credential } -> the Google ID token (JWT) from Google Identity Services
-const googleLogin = async(req, res, next) => {
+const googleLogin = async (req, res, next) => {
     try {
         const { credential } = req.body;
         if (!credential) {
             return res.status(400).json({ message: "Missing Google credential." });
         }
 
-        // Verify the ID token with Google (no client secret needed for this check)
+        // Verify the ID token with Google
         const { data: payload } = await axios.get(
             `https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`
         );
 
-        if (process.env.VITE_GOOGLE_CLIENT_ID && payload.aud !== process.env.VITE_GOOGLE_CLIENT_ID) {
+        // Verify token audience against Google Client ID (C5 fix)
+        const expectedClientId = process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID;
+        if (expectedClientId && payload.aud !== expectedClientId) {
             return res.status(401).json({ message: "Invalid Google token audience." });
+        }
+
+        if (!payload.email) {
+            return res.status(400).json({ message: "Google account has no verified email." });
         }
 
         const user = await findOrCreateSocialUser({
@@ -124,21 +138,23 @@ const googleLogin = async(req, res, next) => {
 
         sendAuthResponse(res, user);
     } catch (error) {
+        if (error.statusCode === 403) {
+            return res.status(403).json({ message: error.message });
+        }
         console.error("Google login error:", error.response?.data || error.message);
         res.status(401).json({ message: "Google login failed. Please try again." });
     }
 };
 
 // --- Facebook Login ---
-// Expects: { accessToken } -> the access token from the FB JS SDK's FB.login()
-const facebookLogin = async(req, res, next) => {
+const facebookLogin = async (req, res, next) => {
     try {
         const { accessToken } = req.body;
         if (!accessToken) {
             return res.status(400).json({ message: "Missing Facebook access token." });
         }
 
-        // Verify the token and fetch profile info directly from Facebook's Graph API
+        // Verify token and fetch profile from Facebook Graph API
         const { data: profile } = await axios.get('https://graph.facebook.com/me', {
             params: {
                 fields: 'id,name,email,picture',
@@ -160,16 +176,16 @@ const facebookLogin = async(req, res, next) => {
 
         sendAuthResponse(res, user);
     } catch (error) {
+        if (error.statusCode === 403) {
+            return res.status(403).json({ message: error.message });
+        }
         console.error("Facebook login error:", error.response?.data || error.message);
         res.status(401).json({ message: "Facebook login failed. Please try again." });
     }
 };
 
 // --- Apple Login ---
-// Expects: { id_token, name? } -> id_token from AppleID.auth.signIn(); Apple only
-// sends the user's name on the very first authorization, so the frontend
-// forwards it separately if present.
-const appleLogin = async(req, res, next) => {
+const appleLogin = async (req, res, next) => {
     try {
         const { id_token, name } = req.body;
         if (!id_token) {
@@ -190,6 +206,9 @@ const appleLogin = async(req, res, next) => {
 
         sendAuthResponse(res, user);
     } catch (error) {
+        if (error.statusCode === 403) {
+            return res.status(403).json({ message: error.message });
+        }
         console.error("Apple login error:", error.message);
         res.status(401).json({ message: "Apple login failed. Please try again." });
     }

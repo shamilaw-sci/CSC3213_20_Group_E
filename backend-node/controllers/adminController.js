@@ -34,22 +34,24 @@ const login = async (req, res, next) => {
 };
 
 const requireAdmin = (req, res, next) => {
-    try {
-        const token = req.headers.authorization?.split(' ')[1];
-        if (!token) {
-            return res.status(401).json({ message: "No token provided" });
-        }
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        if (decoded.role !== 'ADMIN') {
-            return res.status(403).json({ message: "Unauthorized - Admin access required" });
-        }
-
-        req.admin = decoded;
-        next();
-    } catch (error) {
-        res.status(401).json({ message: "Invalid token" });
+    // req.user is populated by protect middleware from fresh DB lookup
+    if (!req.user || req.user.role !== 'ADMIN') {
+        return res.status(403).json({ message: "Unauthorized - Admin access required" });
     }
+    req.admin = req.user;
+    next();
+};
+
+const verifyAdmin = (req, res) => {
+    res.status(200).json({
+        valid: true,
+        admin: {
+            id: req.user.id,
+            email: req.user.email,
+            name: req.user.name,
+            role: req.user.role
+        }
+    });
 };
 
 const getDashboardStats = async (req, res, next) => {
@@ -328,12 +330,20 @@ const exportReport = async (req, res, next) => {
 
         const { dataToExport, headers } = await adminRepository.getExportData(type);
 
+        // Sanitize cells against CSV / Spreadsheet Formula Injection (M6 fix)
+        const sanitizeCsvCell = (val) => {
+            if (val === null || val === undefined) return '""';
+            let str = String(val);
+            // Prepend single quote if value starts with formula triggers (=, +, -, @, \t, \r)
+            if (/^[=+\-@\t\r]/.test(str)) {
+                str = "'" + str;
+            }
+            return `"${str.replace(/"/g, '""')}"`;
+        };
+
         let csvContent = headers.join(',') + '\n';
         dataToExport.forEach(row => {
-            const values = headers.map(header => {
-                const val = row[header] !== null && row[header] !== undefined ? row[header] : '';
-                return `"${String(val).replace(/"/g, '""')}"`;
-            });
+            const values = headers.map(header => sanitizeCsvCell(row[header]));
             csvContent += values.join(',') + '\n';
         });
 
@@ -417,6 +427,7 @@ const resolveReport = async (req, res, next) => {
 
 module.exports = {
     login,
+    verifyAdmin,
     requireAdmin,
     getDashboardStats,
     getRevenueData,

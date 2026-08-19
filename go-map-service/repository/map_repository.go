@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"go-map-service/models"
 
@@ -19,9 +20,9 @@ func NewMapRepository(pool *pgxpool.Pool) *MapRepository {
 }
 
 func (r *MapRepository) SearchProperties(ctx context.Context, req models.SearchRequest) ([]models.PropertyResponse, error) {
-	query := `SELECT p.id, p.title, p.description, p.price, p.latitude, p.longitude, p.images, p.bedrooms, p.bathrooms, p.land_size, p.type, p.city, p.listing_type, u.name, u.role
+	// Query only essential public property columns without leaking seller PII (M3 fix)
+	query := `SELECT p.id, p.title, p.description, p.price, p.latitude, p.longitude, p.images, p.bedrooms, p.bathrooms, p.land_size, p.type, p.city, p.listing_type
 			  FROM properties p
-			  LEFT JOIN users u ON p.seller_id = u.id
 			  WHERE p.status = 'approved'
 			  AND ST_Intersects(p.boundary::geometry, ST_GeomFromText($1, 4326))`
 	
@@ -40,8 +41,11 @@ func (r *MapRepository) SearchProperties(ctx context.Context, req models.SearchR
 	}
 	if req.Type != nil && *req.Type != "" {
 		paramCount++
+		// Escape SQL LIKE wildcard characters (_, %) to prevent unexpected wildcard matching (L3 fix)
+		escapedType := strings.ReplaceAll(*req.Type, "%", "\\%")
+		escapedType = strings.ReplaceAll(escapedType, "_", "\\_")
 		query += fmt.Sprintf(" AND p.type ILIKE $%d", paramCount)
-		args = append(args, fmt.Sprintf("%%%s%%", *req.Type))
+		args = append(args, fmt.Sprintf("%%%s%%", escapedType))
 	}
 	if req.ListingType != nil && *req.ListingType != "" {
 		paramCount++
@@ -49,7 +53,8 @@ func (r *MapRepository) SearchProperties(ctx context.Context, req models.SearchR
 		args = append(args, *req.ListingType)
 	}
 
-	query += " LIMIT 500"
+	// Limit results to 100 properties per spatial request to prevent bulk scraping (M3 fix)
+	query += " LIMIT 100"
 
 	rows, err := r.Pool.Query(ctx, query, args...)
 	if err != nil {
@@ -61,25 +66,31 @@ func (r *MapRepository) SearchProperties(ctx context.Context, req models.SearchR
 	var properties []models.PropertyResponse
 	for rows.Next() {
 		var id string
-		var title, description, propType, city, listingType, sellerName, sellerRole *string
+		var title, description, propType, city, listingType *string
 		var price, lat, lng, landSize *float64
 		var beds, baths *int
 		var images *[]string
 
-		err := rows.Scan(&id, &title, &description, &price, &lat, &lng, &images, &beds, &baths, &landSize, &propType, &city, &listingType, &sellerName, &sellerRole)
+		err := rows.Scan(&id, &title, &description, &price, &lat, &lng, &images, &beds, &baths, &landSize, &propType, &city, &listingType)
 		if err != nil {
 			zap.L().Warn("Row Scan Error (Skipping property)", zap.Error(err))
 			continue
 		}
 
 		safeTitle := "Untitled Property"
-		if title != nil { safeTitle = *title }
+		if title != nil {
+			safeTitle = *title
+		}
 
 		safePrice := float64(0)
-		if price != nil { safePrice = *price }
+		if price != nil {
+			safePrice = *price
+		}
 
 		safeImages := []string{}
-		if images != nil { safeImages = *images }
+		if images != nil {
+			safeImages = *images
+		}
 
 		propData := models.PropertyResponse{
 			ID:          id,
@@ -95,8 +106,6 @@ func (r *MapRepository) SearchProperties(ctx context.Context, req models.SearchR
 			Type:        propType,
 			City:        city,
 			ListingType: listingType,
-			SellerName:  sellerName,
-			SellerRole:  sellerRole,
 			Address:     city,
 		}
 

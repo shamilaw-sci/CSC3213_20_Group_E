@@ -33,12 +33,21 @@ func main() {
 		zap.L().Fatal("DATABASE_URL is not set!")
 	}
 
-	pool, err := pgxpool.New(context.Background(), dbUrl)
+	config, err := pgxpool.ParseConfig(dbUrl)
 	if err != nil {
-		zap.L().Fatal("Unable to connect to Supabase database", zap.Error(err))
+		zap.L().Fatal("Invalid database configuration URL")
+	}
+	config.MaxConns = 25
+	config.MinConns = 5
+	config.MaxConnLifetime = 30 * time.Minute
+	config.MaxConnIdleTime = 5 * time.Minute
+
+	pool, err := pgxpool.NewWithConfig(context.Background(), config)
+	if err != nil {
+		zap.L().Fatal("Unable to establish Supabase database connection pool")
 	}
 	defer pool.Close()
-	zap.L().Info("Successfully connected to Supabase Database!")
+	zap.L().Info("Successfully connected to Supabase Database with connection pooling!")
 
 	// Initialize dependencies
 	repo := repository.NewMapRepository(pool)
@@ -53,8 +62,13 @@ func main() {
 	}
 
 	srv := &http.Server{
-		Addr:    ":" + port,
-		Handler: r,
+		Addr:              ":" + port,
+		Handler:           r,
+		ReadHeaderTimeout: 2 * time.Second,  // Defends against Slowloris attack
+		ReadTimeout:       5 * time.Second,  // Maximum time to read entire request
+		WriteTimeout:      10 * time.Second, // Maximum time to write response
+		IdleTimeout:       60 * time.Second, // Maximum keep-alive idle connection time
+		MaxHeaderBytes:    1 << 20,          // 1 MB max header size
 	}
 
 	go func() {

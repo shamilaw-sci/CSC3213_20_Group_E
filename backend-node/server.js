@@ -8,7 +8,13 @@ const rateLimit = require('express-rate-limit');
 const app = express();
 
 // Security Middlewares
-app.use(helmet());
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    hsts: { maxAge: 31536000, includeSubDomains: true },
+    frameguard: { action: 'deny' },
+    noSniff: true,
+    hidePoweredBy: true
+}));
 app.use(cors({
     origin: process.env.CLIENT_URL || 'http://localhost:5173',
     credentials: true,
@@ -23,6 +29,13 @@ const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100, // limit each IP to 100 requests per window
     message: { message: 'Too many requests from this IP, please try again after 15 minutes' }
+});
+
+// Rate Limiting for AI Chat (protect Gemini API quotas and resource abuse)
+const aiLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minute
+    max: 20, // max 20 requests per minute per IP
+    message: { message: 'Too many AI chat requests. Please wait a minute before sending another message.' }
 });
 
 // --- Authentication Routes ---
@@ -55,7 +68,7 @@ app.use('/api/conversations', conversationRoutes);
 
 // --- AI Chat Routes ---
 const aiRoutes = require('./routes/aiRoutes');
-app.use('/api/ai', aiRoutes);
+app.use('/api/ai', aiLimiter, aiRoutes);
 // Routes: /api/ai/chat
 // ----------------------------------------
 

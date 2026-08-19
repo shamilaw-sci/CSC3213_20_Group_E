@@ -9,6 +9,9 @@ router.post("/login", adminController.login);
 // All routes below require admin auth
 router.use(protect, adminController.requireAdmin);
 
+// Verify admin session validity with database
+router.get("/verify", adminController.verifyAdmin);
+
 // ─── Dashboard Stats ────────────────────────────────────────
 router.get("/dashboard/stats", adminController.getDashboardStats);
 router.get("/dashboard/revenue", adminController.getRevenueData);

@@ -11,6 +11,16 @@ import { Send, Paperclip, X, Image as ImageIcon, FileText, User, MessageSquare, 
 // Authorization header no longer strictly required for browser if relying on HttpOnly cookies,
 // but kept here as fallback for any edge case or manual token storage.
 
+const isSafeAttachmentUrl = (url) => {
+    if (!url || typeof url !== 'string') return false;
+    try {
+        const parsed = new URL(url, window.location.origin);
+        return ['http:', 'https:'].includes(parsed.protocol);
+    } catch {
+        return false;
+    }
+};
+
 const getConversationTitle = (conversation, user) => {
     if (conversation.type === 'support') return 'Admin Support';
     if (user?.role === 'BUYER') return conversation.seller?.name || 'Seller';
@@ -380,11 +390,11 @@ const Messages = () => {
                                                     }`}>
                                                         {message.body && <p className="text-[15px] whitespace-pre-wrap leading-snug">{message.body}</p>}
                                                         
-                                                        {message.attachment_url && (
+                                                        {message.attachment_url && isSafeAttachmentUrl(message.attachment_url) && (
                                                             <a aria-label="Accessible interactive control"
                                                                 href={message.attachment_url}
                                                                 target="_blank"
-                                                                rel="noreferrer"
+                                                                rel="noopener noreferrer"
                                                                 className={`block mt-2 rounded-xl overflow-hidden border ${mine ? 'border-blue-400/30 bg-blue-500/20' : 'border-gray-200 bg-gray-50'} hover:opacity-90 transition-opacity`}
                                                             >
                                                                 {message.attachment_type?.startsWith('image/') ? (

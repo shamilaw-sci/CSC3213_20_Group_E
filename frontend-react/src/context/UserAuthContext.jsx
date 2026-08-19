@@ -27,9 +27,22 @@ export const UserAuthProvider = ({ children }) => {
         verifyUser();
     }, []);
 
-    // Login function updates the state after successful authentication
-    const login = (userData) => {
-        setUser(userData);
+    // Login with email and password
+    const login = async (emailOrUserData, password) => {
+        if (typeof emailOrUserData === 'object' && emailOrUserData !== null) {
+            setUser(emailOrUserData);
+            return emailOrUserData;
+        }
+        const response = await api.post('/auth/login', { email: emailOrUserData, password });
+        setUser(response.data.user);
+        return response.data;
+    };
+
+    // Login with Google ID Token credential
+    const loginWithGoogle = async (credential) => {
+        const response = await api.post('/auth/google', { credential });
+        setUser(response.data.user);
+        return response.data;
     };
 
     // Logout function hits the backend to clear the cookie and resets state
@@ -37,15 +50,18 @@ export const UserAuthProvider = ({ children }) => {
         try {
             await api.post('/auth/logout');
         } catch (error) {
-            (toast.error('Logout error:'), console.error('Logout error:', error));
+            console.error('Logout error:', error.response?.data?.message || error.message);
         } finally {
             setUser(null);
-            // Optionally redirect to home or login here if not handled in the component
         }
     };
 
+    const setUserData = (userData) => {
+        setUser(userData);
+    };
+
     return (
-        <UserAuthContext.Provider value={{ user, loading, login, logout }}>
+        <UserAuthContext.Provider value={{ user, loading, login, loginWithGoogle, logout, setUserData }}>
             {!loading && children}
         </UserAuthContext.Provider>
     );

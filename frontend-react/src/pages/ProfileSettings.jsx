@@ -19,6 +19,7 @@ const ProfileSettings = () => {
     const [formData, setFormData] = useState({
         name: user?.name || '',
         phone: user?.phone || '',
+        currentPassword: '',
         password: '',
         confirmPassword: '',
         email_notifications: user?.email_notifications ?? true
@@ -75,7 +76,8 @@ const ProfileSettings = () => {
                     }
                 }
             } catch (err) {
-                (toast.error("Failed to load user data"), console.error("Failed to load user data"));
+                toast.error("Failed to load user data");
+                console.error("Failed to load user data", err);
             } finally {
                 setLoadingData(false);
             }
@@ -95,7 +97,6 @@ const ProfileSettings = () => {
     const handleAvatarChange = (e) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            // Convert to base64 to send to backend
             const reader = new FileReader();
             reader.onloadend = () => {
                 setAvatarUrl(reader.result);
@@ -112,12 +113,16 @@ const ProfileSettings = () => {
             return;
         }
 
+        if (formData.password && !formData.currentPassword) {
+            setError("Please enter your current password to set a new password");
+            return;
+        }
+
         setLoading(true);
         setMessage(null);
         setError(null);
 
         try {
-            // (In a full implementation, you'd upload `avatarFile` to Supabase storage and get a public URL back).
             const updatePayload = { 
                 ...formData,
                 avatar_url: avatarUrl
@@ -126,7 +131,7 @@ const ProfileSettings = () => {
             const res = await api.put('/auth/profile', updatePayload);
             login(res.data.user);
             setMessage("Profile updated successfully!");
-            setFormData(prev => ({ ...prev, password: '', confirmPassword: '' }));
+            setFormData(prev => ({ ...prev, currentPassword: '', password: '', confirmPassword: '' }));
         } catch (err) {
             setError(err.response?.data?.message || "Failed to update profile");
         } finally {
@@ -157,7 +162,8 @@ const ProfileSettings = () => {
             await api.delete(`/saved-searches/${id}`);
             setSavedSearches(savedSearches.filter(s => s.id !== id));
         } catch (err) {
-            (toast.error("Failed to delete search"), console.error("Failed to delete search"));
+            toast.error("Failed to delete search");
+            console.error("Failed to delete search", err);
         }
     };
 
@@ -166,7 +172,8 @@ const ProfileSettings = () => {
             await api.post(`/favorites/${id}`);
             setFavorites(favorites.filter(f => f.id !== id));
         } catch (err) {
-            (toast.error("Failed to remove favorite"), console.error("Failed to remove favorite"));
+            toast.error("Failed to remove favorite");
+            console.error("Failed to remove favorite", err);
         }
     };
 
@@ -313,19 +320,28 @@ const ProfileSettings = () => {
 
                                         <div className="pt-6 border-t border-gray-100 dark:border-gray-700">
                                             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Change Password</h3>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-4">
                                                 <div>
-                                                    <label htmlFor="3u5wza" className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">New Password</label>
+                                                    <label htmlFor="curr_pass" className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Current Password</label>
                                                     <div className="relative">
                                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Lock className="h-5 w-5 text-gray-400" /></div>
-                                                        <input aria-label="Accessible interactive control" type="password" name="password" value={formData.password} onChange={handleChange} placeholder="Leave blank to keep current" className="pl-10 w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all outline-none font-medium" />
+                                                        <input aria-label="Accessible interactive control" id="curr_pass" type="password" name="currentPassword" autoComplete="current-password" value={formData.currentPassword} onChange={handleChange} placeholder="Enter your current password" className="pl-10 w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all outline-none font-medium" />
                                                     </div>
                                                 </div>
-                                                <div>
-                                                    <label htmlFor="6bj885" className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Confirm Password</label>
-                                                    <div className="relative">
-                                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Lock className="h-5 w-5 text-gray-400" /></div>
-                                                        <input aria-label="Accessible interactive control" type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder="Confirm new password" className="pl-10 w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all outline-none font-medium" />
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                    <div>
+                                                        <label htmlFor="3u5wza" className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">New Password</label>
+                                                        <div className="relative">
+                                                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Lock className="h-5 w-5 text-gray-400" /></div>
+                                                            <input aria-label="Accessible interactive control" id="3u5wza" type="password" name="password" autoComplete="new-password" value={formData.password} onChange={handleChange} placeholder="Leave blank to keep current" className="pl-10 w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all outline-none font-medium" />
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <label htmlFor="6bj885" className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Confirm New Password</label>
+                                                        <div className="relative">
+                                                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Lock className="h-5 w-5 text-gray-400" /></div>
+                                                            <input aria-label="Accessible interactive control" id="6bj885" type="password" name="confirmPassword" autoComplete="new-password" value={formData.confirmPassword} onChange={handleChange} placeholder="Confirm new password" className="pl-10 w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all outline-none font-medium" />
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -377,7 +393,7 @@ const ProfileSettings = () => {
                                                 </div>
                                             </div>
                                             <label htmlFor="6awq8f" className="relative inline-flex items-center cursor-pointer">
-                                                <input aria-label="Accessible interactive control" type="checkbox" name="email_notifications" checked={formData.email_notifications} onChange={(e) => { handleChange(e); handleSubmit(e); }} className="sr-only peer" />
+                                                <input aria-label="Accessible interactive control" id="6awq8f" type="checkbox" name="email_notifications" checked={formData.email_notifications} onChange={(e) => { handleChange(e); handleSubmit(e); }} className="sr-only peer" />
                                                 <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
                                             </label>
                                         </div>
@@ -462,8 +478,8 @@ const ProfileSettings = () => {
                                                     </div>
                                                     <button aria-label="Accessible interactive control" type="button" 
                                                         onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleDeleteSearch(search.id);
+                                                             e.stopPropagation();
+                                                             handleDeleteSearch(search.id);
                                                         }}
                                                         className="p-3 text-gray-400 hover:text-red-500 hover:bg-white dark:hover:bg-gray-800 rounded-xl transition-all shadow-sm opacity-0 group-hover:opacity-100"
                                                     >

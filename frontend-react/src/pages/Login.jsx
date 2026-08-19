@@ -92,7 +92,7 @@ const Login = () => {
             navigate(from, { replace: true });
         } catch (err) {
             toast.error(err.response?.data?.message || err.message || 'Google sign-in failed');
-            console.error(err);
+            console.error("Google sign-in failed:", err.response?.data?.message || err.message);
         }
     };
 
@@ -107,7 +107,7 @@ const Login = () => {
             navigate(from, { replace: true });
         } catch (err) {
             toast.error(err.response?.data?.message || err.message || 'Failed to sign in');
-            console.error(err);
+            console.error("Sign-in failed:", err.response?.data?.message || err.message);
         } finally {
             setLoading(false);
         }
@@ -121,7 +121,7 @@ const Login = () => {
             toast.success('Reset link sent!');
         } catch (err) {
             toast.error(err.response?.data?.message || err.message || 'Failed to send reset link');
-            console.error(err);
+            console.error("Reset link error:", err.response?.data?.message || err.message);
         } finally {
             setLoading(false);
         }

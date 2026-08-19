@@ -1,22 +1,19 @@
-
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { sendWelcomeEmail, sendPasswordResetEmail } = require('../utils/emailService');
+const userRepository = require('../repositories/userRepository');
 
 const setTokenCookie = (res, token) => {
     res.cookie('token', token, {
         httpOnly: true,
-        secure: true, // Always true for cross-domain
-        sameSite: 'none', // Must be 'none' for cross-domain
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: 24 * 60 * 60 * 1000 // 1 day
     });
 };
 
-// Initialize Supabase client for database operations
-const userRepository = require('../repositories/userRepository');
-
 // 1. User Registration - Create new user account
-const registerUser = async(req, res, next) => {
+const registerUser = async (req, res, next) => {
     try {
         const { name, email, password, role } = req.body;
 
@@ -34,7 +31,7 @@ const registerUser = async(req, res, next) => {
         const salt = await bcrypt.genSalt(10);
         const password_hash = await bcrypt.hash(password, salt);
 
-        // Security Fix: Prevent Role Spoofing
+        // Security Fix: Prevent Role Spoofing (Admin cannot be self-assigned)
         let safeRole = 'BUYER';
         if (role === 'SELLER') safeRole = 'SELLER';
         if (role === 'AGENT') safeRole = 'PENDING_AGENT';
@@ -42,12 +39,8 @@ const registerUser = async(req, res, next) => {
         // Insert new user into database
         const newUser = await userRepository.createUser({ name, email, password_hash, role: safeRole });
 
-        if (error) {
-            return next(error);
-        }
-
         // If registering as an agent, create an initial agent_profiles record
-        if (safeRole === 'PENDING_AGENT') {
+        if (safeRole === 'PENDING_AGENT' && newUser && newUser[0]) {
             const { agency_name, license_number } = req.body;
             await userRepository.createAgentProfile({
                 agent_id: newUser[0].id,
@@ -57,16 +50,30 @@ const registerUser = async(req, res, next) => {
             });
         }
 
-        const token = jwt.sign({ id: newUser[0].id, role: newUser[0].role },
-            process.env.JWT_SECRET, { expiresIn: '1d' }
+        const registeredUser = newUser[0];
+        const token = jwt.sign(
+            { id: registeredUser.id, role: registeredUser.role },
+            process.env.JWT_SECRET,
+            { expiresIn: '1d' }
         );
 
         setTokenCookie(res, token);
 
-        // Send welcome email asynchronously (don't await to avoid blocking)
-        sendWelcomeEmail(email, name).catch(console.error);
+        // Send welcome email asynchronously (non-blocking)
+        sendWelcomeEmail(email, name).catch((e) => {
+            console.error("Welcome email failed:", e.message || e);
+        });
 
-        res.status(201).json({ message: "User registered successfully.", user: newUser[0] });
+        res.status(201).json({
+            message: "User registered successfully.",
+            user: {
+                id: registeredUser.id,
+                name: registeredUser.name,
+                email: registeredUser.email,
+                role: registeredUser.role,
+                created_at: registeredUser.created_at
+            }
+        });
 
     } catch (error) {
         next(error);
@@ -74,16 +81,14 @@ const registerUser = async(req, res, next) => {
 };
 
 // 2. User Login - Authenticate existing user
-const loginUser = async(req, res, next) => {
+const loginUser = async (req, res, next) => {
     try {
         const { email, password } = req.body;
 
         // Find user in database
         const user = await userRepository.findByEmail(email);
-        const error = null;
 
-        if (error || !user) {
-            // Security best practice: Don't reveal if email exists
+        if (!user) {
             return res.status(400).json({ message: "Invalid email or password." });
         }
 
@@ -98,8 +103,10 @@ const loginUser = async(req, res, next) => {
         }
 
         // Generate JWT token
-        const token = jwt.sign({ id: user.id, role: user.role },
-            process.env.JWT_SECRET, { expiresIn: '1d' } // Token expires in 1 day
+        const token = jwt.sign(
+            { id: user.id, role: user.role },
+            process.env.JWT_SECRET,
+            { expiresIn: '1d' }
         );
 
         setTokenCookie(res, token);
@@ -123,71 +130,115 @@ const loginUser = async(req, res, next) => {
     }
 };
 
-// Check if email exists for two-step login process
-const checkEmail = async(req, res, next) => {
+// 3. Check if email exists (Safe - does NOT leak names or PII)
+const checkEmail = async (req, res, next) => {
     try {
         const { email } = req.body;
-
-        // Query database to check if user exists
-        const data = await userRepository.findByEmail(email);
-        const error = null;
-
-        if (error || !data) {
-            return res.status(404).json({ exists: false, message: "User not found" });
+        if (!email) {
+            return res.status(400).json({ message: "Email is required" });
         }
 
-        res.status(200).json({ exists: true, name: data.name });
+        const user = await userRepository.findByEmail(email);
+
+        if (!user) {
+            return res.status(200).json({ exists: false });
+        }
+
+        // Return boolean exists only, without leaking user name or personal details
+        res.status(200).json({ exists: true });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// 4. Handle forgot password requests
+const forgotPassword = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ message: "Email is required" });
+        }
+
+        const user = await userRepository.findByEmail(email);
+
+        // Security best practice: Always return same message regardless of whether email exists
+        if (user && user.role !== 'BANNED') {
+            const resetToken = jwt.sign(
+                { id: user.id, type: 'password_reset' },
+                process.env.JWT_SECRET,
+                { expiresIn: '15m' }
+            );
+            const resetLink = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}`;
+
+            sendPasswordResetEmail(email, user.name, resetLink).catch((e) => {
+                console.error("Password reset email failed:", e.message || e);
+            });
+        }
+
+        res.status(200).json({ message: "If an account with that email exists, a password reset link has been sent." });
 
     } catch (error) {
         next(error);
     }
 };
 
-// Handle forgot password requests
-
-const forgotPassword = async(req, res, next) => {
+// 5. Complete Password Reset (C6 Fix)
+const resetPassword = async (req, res, next) => {
     try {
-        const { email } = req.body;
-
-        // 1. Check if email exists in database
-        const data = await userRepository.findByEmail(email);
-        const error = null;
-
-        if (error || !data) {
-            return res.status(404).json({ message: "If that email exists, a reset link will be sent." }); // Security best practice
+        const { token, newPassword } = req.body;
+        if (!token || !newPassword) {
+            return res.status(400).json({ message: "Reset token and new password are required." });
         }
 
-        // 2. Generate Reset Token
-        const resetToken = jwt.sign({ id: data.id }, process.env.JWT_SECRET, { expiresIn: '15m' });
-        const resetLink = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}`;
+        if (newPassword.length < 6) {
+            return res.status(400).json({ message: "Password must be at least 6 characters." });
+        }
 
-        // 3. Send email using refactored service (non-blocking)
-        sendPasswordResetEmail(email, data.name, resetLink).catch(console.error);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        if (!decoded || !decoded.id || decoded.type !== 'password_reset') {
+            return res.status(400).json({ message: "Invalid or expired password reset token." });
+        }
 
-        // 4. Return success response
-        res.status(200).json({ message: "Password reset link sent to your email!" });
+        const user = await userRepository.findFullUserById(decoded.id);
+        if (!user) {
+            return res.status(404).json({ message: "User account not found." });
+        }
 
+        const salt = await bcrypt.genSalt(10);
+        const password_hash = await bcrypt.hash(newPassword, salt);
+
+        await userRepository.updateProfile(user.id, { password_hash });
+
+        res.status(200).json({ message: "Password reset successful. You can now log in with your new password." });
     } catch (error) {
-        console.error("Forgot Password Error:", error);
+        if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+            return res.status(400).json({ message: "Invalid or expired password reset token." });
+        }
         next(error);
     }
 };
 
+// 6. User Logout (M8 Fix - clear cookies with matching attributes)
 const logoutUser = (req, res) => {
-    res.cookie('token', '', { httpOnly: true, expires: new Date(0) });
+    res.clearCookie('token', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        path: '/'
+    });
     res.status(200).json({ message: "Logged out successfully" });
 };
 
-const getMe = async(req, res, next) => {
+// 7. Get Current User Profile
+const getMe = async (req, res, next) => {
     try {
         const token = req.cookies.token;
         if (!token) return res.status(401).json({ message: "Not authenticated" });
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const user = await userRepository.findById(decoded.id);
-        const error = null;
 
-        if (error || !user) return res.status(404).json({ message: "User not found" });
+        if (!user) return res.status(404).json({ message: "User not found" });
 
         res.status(200).json({ user });
     } catch (error) {
@@ -195,21 +246,19 @@ const getMe = async(req, res, next) => {
     }
 };
 
-const updateProfile = async(req, res, next) => {
+// 8. Update User Profile
+const updateProfile = async (req, res, next) => {
     try {
         const { name, phone, password, avatar_url, theme_preference, email_notifications } = req.body;
 
-        // 1. Find user to update
         const user = await userRepository.findFullUserById(req.user.id);
-        const fetchError = null;
-
-        if (fetchError || !user) {
+        if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
 
         const updates = {};
         if (name) updates.name = name;
-        if (phone !== undefined) updates.phone = phone; // Allow clearing phone
+        if (phone !== undefined) updates.phone = phone;
         if (avatar_url !== undefined) {
             if (avatar_url.startsWith('data:image')) {
                 try {
@@ -234,7 +283,22 @@ const updateProfile = async(req, res, next) => {
         if (email_notifications !== undefined) updates.email_notifications = email_notifications;
 
         if (password) {
-            // Hash new password
+            const { currentPassword } = req.body;
+            if (!currentPassword) {
+                return res.status(400).json({ message: "Current password is required to change your password." });
+            }
+
+            if (user.password_hash) {
+                const isCurrentValid = await bcrypt.compare(currentPassword, user.password_hash);
+                if (!isCurrentValid) {
+                    return res.status(400).json({ message: "Incorrect current password." });
+                }
+            }
+
+            if (password.length < 6) {
+                return res.status(400).json({ message: "New password must be at least 6 characters long." });
+            }
+
             const salt = await bcrypt.genSalt(10);
             updates.password_hash = await bcrypt.hash(password, salt);
         }
@@ -242,7 +306,6 @@ const updateProfile = async(req, res, next) => {
         const { data: updatedUser, error: updateError } = await userRepository.updateProfile(req.user.id, updates);
 
         if (updateError) {
-            // Fallback if 'phone' column doesn't exist yet, try updating without it
             if (updateError.message.includes('column') && updateError.message.includes('does not exist')) {
                 delete updates.phone;
                 delete updates.avatar_url;
@@ -250,9 +313,8 @@ const updateProfile = async(req, res, next) => {
                 delete updates.email_notifications;
 
                 const { data: fallbackUser, error: fallbackError } = await userRepository.updateProfile(req.user.id, updates);
-
                 if (fallbackError) throw fallbackError;
-                return res.status(200).json({ message: "Profile updated (without new columns, please run SQL script)", user: fallbackUser });
+                return res.status(200).json({ message: "Profile updated", user: fallbackUser });
             }
             throw updateError;
         }
@@ -264,4 +326,14 @@ const updateProfile = async(req, res, next) => {
     }
 };
 
-module.exports = { registerUser, loginUser, checkEmail, forgotPassword, logoutUser, getMe, updateProfile, setTokenCookie };
+module.exports = {
+    registerUser,
+    loginUser,
+    checkEmail,
+    forgotPassword,
+    resetPassword,
+    logoutUser,
+    getMe,
+    updateProfile,
+    setTokenCookie
+};
