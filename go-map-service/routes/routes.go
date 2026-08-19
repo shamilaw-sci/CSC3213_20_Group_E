@@ -62,6 +62,14 @@ func SetupRouter(mapHandler *handlers.MapHandler) *gin.Engine {
 		c.Next()
 	})
 
+	// Health check endpoint for Docker / Kubernetes / Load Balancers
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"status":  "ok",
+			"service": "go-map-service",
+		})
+	})
+
 	// Register routes with Rate Limiting
 	r.POST("/api/map/search", middleware.RateLimitMiddleware(searchLimiter), mapHandler.SearchMap)
 

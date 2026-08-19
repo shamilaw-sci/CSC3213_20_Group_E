@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # 1. Go Spatial Map Microservice
+  # ==========================================
+  go-map-service:
+    build:
+      context: ./go-map-service
+      dockerfile: Dockerfile
+    container_name: thirasara-go-map-service
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - GIN_MODE=release
+      - DATABASE_URL=${DATABASE_URL}
+      - ALLOWED_ORIGIN=${ALLOWED_ORIGIN:-http://localhost:5173,http://localhost:3000}
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - thirasara-network
+
+  # ==========================================
+  # 2. Node.js Express Backend API
+  # ==========================================
+  backend-node:
+    build:
+      context: ./backend-node
+      dockerfile: Dockerfile
+    container_name: thirasara-backend-node
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - CLIENT_URL=${CLIENT_URL:-http://localhost:5173}
+      - JWT_SECRET=${JWT_SECRET}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - PAYHERE_MERCHANT_ID=${PAYHERE_MERCHANT_ID}
+      - PAYHERE_MERCHANT_SECRET=${PAYHERE_MERCHANT_SECRET}
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_PASS=${EMAIL_PASS}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      go-map-service:
+        condition: service_healthy
+    networks:
+      - thirasara-network
+
+  # ==========================================
+  # 3. React SPA Frontend (Nginx)
+  # ==========================================
+  frontend-react:
+    build:
+      context: ./frontend-react
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:5000}
+        - VITE_MAP_API_URL=${VITE_MAP_API_URL:-http://localhost:8080/api/map/search}
+        - VITE_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+        - VITE_FACEBOOK_APP_ID=${FACEBOOK_APP_ID}
+    container_name: thirasara-frontend-react
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    depends_on:
+      backend-node:
+        condition: service_healthy
+    networks:
+      - thirasara-network
+
+# ==========================================
+# Network Configuration
+# ==========================================
+networks:
+  thirasara-network:
+    driver: bridge

@@ -100,6 +100,15 @@ app.get('/', (req, res) => {
     res.json({ message: "Thirasara Property API is running!" });
 });
 
+// Health check endpoint for Docker / Kubernetes / Uptime monitors
+app.get('/health', (req, res) => {
+    res.status(200).json({
+        status: "ok",
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString()
+    });
+});
+
 // Global Error Handler
 const errorHandler = require('./middleware/errorHandler');
 app.use(errorHandler);

@@ -2,7 +2,8 @@ const { z } = require('zod');
 
 const saveSearchSchema = z.object({
   body: z.object({
-    name: z.string().trim().min(1, "Search name is required").max(100),
+    title: z.string().trim().max(100).optional(),
+    name: z.string().trim().max(100).optional(),
     polygon: z.string().max(4096).optional(),
     beds: z.union([z.number().int().min(0).max(50), z.string()]).optional(),
     baths: z.union([z.number().int().min(0).max(50), z.string()]).optional(),

@@ -1,10 +1,18 @@
 const express = require("express");
 const router = express.Router();
+const rateLimit = require("express-rate-limit");
 const { protect } = require("../middleware/authMiddleware");
 const adminController = require("../controllers/adminController");
 
-// Admin login (no auth needed)
-router.post("/login", adminController.login);
+// Dedicated rate limiter for admin login to prevent brute force attacks
+const adminLoginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 10, // max 10 failed/successful attempts per IP per 15 minutes
+    message: { message: "Too many admin login attempts. Please try again after 15 minutes." }
+});
+
+// Admin login
+router.post("/login", adminLoginLimiter, adminController.login);
 
 // All routes below require admin auth
 router.use(protect, adminController.requireAdmin);
