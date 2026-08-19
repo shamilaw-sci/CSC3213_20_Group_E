@@ -6,6 +6,17 @@ import { ThemeProvider } from './context/ThemeProvider';
 import { CompareProvider } from './context/CompareContext';
 import { AdminAuthProvider } from './pages/admin/context/AdminAuthContext';
 import { MotionConfig, LazyMotion, domAnimation } from 'framer-motion';
+import { Toaster } from 'react-hot-toast';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false, // Prevents excessive refetching when switching tabs
+      retry: 1, // Only retry failed requests once
+    },
+  },
+});
 
 // Components that should load immediately
 import FloatingAIChat from './components/ai/FloatingAIChat';
@@ -58,10 +69,12 @@ function App() {
   return (
     <MotionConfig reducedMotion="user">
       <LazyMotion features={domAnimation}>
+      <QueryClientProvider client={queryClient}>
       <UserAuthProvider>
         <ThemeProvider>
           <CompareProvider>
           <Router>
+          <Toaster position="bottom-right" toastOptions={{ className: 'dark:bg-slate-800 dark:text-slate-200' }} />
           <FloatingAIChat />
           <CompareActionBar />
           <CompareMatrixModal />
@@ -141,6 +154,7 @@ function App() {
           </CompareProvider>
         </ThemeProvider>
       </UserAuthProvider>
+      </QueryClientProvider>
       </LazyMotion>
     </MotionConfig>
   );

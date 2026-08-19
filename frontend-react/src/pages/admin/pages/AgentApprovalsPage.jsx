@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Check, X, ShieldAlert, FileText, Building } from 'lucide-react';
 import * as adminApi from '../api/adminApi';
+import toast from 'react-hot-toast';
 
 const AgentApprovalsPage = () => {
   const [agents, setAgents] = useState([]);
@@ -19,7 +20,7 @@ const AgentApprovalsPage = () => {
         setAgents(data.agents || []);
         setError(null);
       } catch (err) {
-        console.error('Error fetching pending agents:', err);
+        (toast.error('Error fetching pending agents:'), console.error('Error fetching pending agents:', err));
         setError('Failed to load pending agents.');
       } finally {
         setLoading(false);
@@ -38,7 +39,7 @@ const AgentApprovalsPage = () => {
           setRejectReason('');
       }
     } catch (err) {
-      console.error(`Failed to update role to ${newRole}:`, err);
+      (toast.error(`Failed to update role to ${newRole}:`), console.error(`Failed to update role to ${newRole}:`, err));
       alert(`Error: ${err.message || 'Update failed'}`);
     }
   };

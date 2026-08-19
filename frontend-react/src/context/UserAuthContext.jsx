@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from './api';
+import toast from 'react-hot-toast';
 
 // Create Context
 const UserAuthContext = createContext();
@@ -36,7 +37,7 @@ export const UserAuthProvider = ({ children }) => {
         try {
             await api.post('/auth/logout');
         } catch (error) {
-            console.error('Logout error:', error);
+            (toast.error('Logout error:'), console.error('Logout error:', error));
         } finally {
             setUser(null);
             // Optionally redirect to home or login here if not handled in the component

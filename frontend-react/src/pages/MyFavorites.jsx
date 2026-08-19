@@ -4,6 +4,7 @@ import { m } from "framer-motion";
 import { useNavigate } from 'react-router-dom';
 import api from '../context/api';
 import useFetch from '../hooks/useFetch';
+import toast from 'react-hot-toast';
 
 const MyFavorites = () => {
     const navigate = useNavigate();
@@ -21,7 +22,7 @@ const MyFavorites = () => {
                 favorites: prev.favorites.filter(p => p.id !== propertyId)
             }));
         } catch (err) {
-            console.error("Failed to remove favorite", err);
+            (toast.error("Failed to remove favorite"), console.error("Failed to remove favorite", err));
         }
     };
 

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { fetchDashboardStats, fetchRevenueData, fetchUserGrowth } from "../api/adminApi";
 import "../styles/admin-global.css";
+import toast from 'react-hot-toast';
 
 // Simple SVG Donut Chart
 const DonutChart = ({ segments, size = 120 }) => {
@@ -59,7 +60,7 @@ const AnalyticsPage = () => {
       if (r?.data) setRevenue(r.data);
       if (u?.data) setUserGrowth(u.data);
     } catch (err) {
-      console.error("Failed to load analytics:", err);
+      (toast.error("Failed to load analytics:"), console.error("Failed to load analytics:", err));
     } finally {
       setLoading(false);
     }

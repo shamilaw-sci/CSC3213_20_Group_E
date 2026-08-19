@@ -4,6 +4,7 @@ import api from '../context/api';
 import { Star, MapPin, Share, Mail, Award, CheckCircle, ChevronLeft, ChevronRight, PlayCircle } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
+import toast from 'react-hot-toast';
 
 /**
  * Agent Profile View Component.
@@ -30,7 +31,7 @@ const AgentProfile = () => {
                 setListings(response.data.listings || []);
                 setReviews(response.data.reviews || []);
             } catch (error) {
-                console.error("Error fetching agent profile", error);
+                (toast.error("Error fetching agent profile"), console.error("Error fetching agent profile", error));
             } finally {
                 setLoading(false);
             }
@@ -91,7 +92,7 @@ const AgentProfile = () => {
             const response = await api.post(`/conversations/agent/${agentData.id}`);
             navigate(`/messages?conversation=${response.data.conversation.id}`);
         } catch (error) {
-            console.error("Error creating/fetching conversation:", error);
+            (toast.error("Error creating/fetching conversation:"), console.error("Error creating/fetching conversation:", error));
             if (error.response?.status === 401 || error.response?.status === 403) {
                 navigate('/login');
             } else {

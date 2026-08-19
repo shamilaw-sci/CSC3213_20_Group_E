@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { fetchTransactionHistory, exportReport } from "../api/adminApi";
 import "../styles/admin-global.css";
+import toast from 'react-hot-toast';
 
 const ReportsPage = () => {
   const [transactions, setTransactions] = useState([]);
@@ -27,7 +28,7 @@ const ReportsPage = () => {
           setTransactions(mapped);
         }
       })
-      .catch((err) => console.error("Failed to load transactions", err));
+      .catch((err) => (toast.error("Failed to load transactions"), console.error("Failed to load transactions", err)));
   }, []);
 
   const handleExport = async (type) => {

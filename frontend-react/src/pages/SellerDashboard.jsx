@@ -6,6 +6,7 @@ import { m } from "framer-motion";
 import { Home, Key, Building, CheckCircle, Clock, XCircle, MessageSquare, TrendingUp, ArrowRight, Eye, Heart, BarChart3, Lightbulb } from 'lucide-react';
 import api from '../context/api';
 import { Player } from '@lottiefiles/react-lottie-player';
+import toast from 'react-hot-toast';
 
 const StatCard = ({ icon: Icon, label, value, colorClass, delay }) => (
     <m.div
@@ -76,7 +77,7 @@ const SellerDashboard = () => {
                     saves: totalSaves
                 });
             } catch (error) {
-                console.error("Error fetching seller stats:", error);
+                (toast.error("Error fetching seller stats:"), console.error("Error fetching seller stats:", error));
             } finally {
                 setLoading(false);
             }

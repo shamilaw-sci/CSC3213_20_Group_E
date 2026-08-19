@@ -10,6 +10,7 @@ import api from '../../context/api';
 import { m, AnimatePresence } from "framer-motion";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Player } from '@lottiefiles/react-lottie-player';
+import toast from 'react-hot-toast';
 
 const PIPELINE_STAGES = ['New', 'Contacted', 'Showing', 'Offer', 'Closed'];
 
@@ -53,7 +54,7 @@ const AgentDashboard = () => {
                 setLeads(leadsRes.data.leads || []);
                 setProperties(propsRes.data.properties || []);
             } catch (error) {
-                console.error("Failed to load dashboard data", error);
+                (toast.error("Failed to load dashboard data"), console.error("Failed to load dashboard data", error));
             } finally {
                 setLoading(false);
             }
@@ -84,7 +85,7 @@ const AgentDashboard = () => {
                     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
                 }, 100);
             } catch (err) {
-                console.error("Failed to fetch messages", err);
+                (toast.error("Failed to fetch messages"), console.error("Failed to fetch messages", err));
             }
         };
         
@@ -117,7 +118,7 @@ const AgentDashboard = () => {
                 messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
             }, 100);
         } catch (error) {
-            console.error("Failed to send message", error);
+            (toast.error("Failed to send message"), console.error("Failed to send message", error));
         }
     };
 
@@ -134,7 +135,7 @@ const AgentDashboard = () => {
             const statsRes = await api.get('/agents/dashboard-stats');
             setStats(statsRes.data.stats);
         } catch (error) {
-            console.error("Failed to update status", error);
+            (toast.error("Failed to update status"), console.error("Failed to update status", error));
         }
     };
 

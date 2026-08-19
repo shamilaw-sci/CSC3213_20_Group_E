@@ -16,6 +16,7 @@ import { AnimatePresence, m } from "framer-motion";
 import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png';
 import iconUrl from 'leaflet/dist/images/marker-icon.png';
 import shadowUrl from 'leaflet/dist/images/marker-shadow.png';
+import toast from 'react-hot-toast';
 
 // Fix for default Leaflet markers
 delete L.Icon.Default.prototype._getIconUrl;
@@ -50,18 +51,18 @@ const PropertyDetails = () => {
                 setProperty(res.data.property);
                 
                 // Track view
-                api.post(`/properties/${id}/view`).catch(err => console.error("Error tracking view", err));
+                api.post(`/properties/${id}/view`).catch(err => (toast.error("Error tracking view"), console.error("Error tracking view", err)));
 
                 // Fetch similar properties (independent of the main fetch failing)
                 api.get(`/properties/${id}/similar`)
                     .then(simRes => setSimilarProperties(simRes.data.properties || []))
-                    .catch(err => console.error("Error loading similar properties", err))
+                    .catch(err => (toast.error("Error loading similar properties"), console.error("Error loading similar properties", err)))
                     .finally(() => setSimilarLoading(false));
 
                 // Fetch the statistical price insight (great deal / fair / above market)
                 api.get(`/properties/${id}/price-insight`)
                     .then(priceRes => setPriceInsight(priceRes.data.insight || null))
-                    .catch(err => console.error("Error loading price insight", err));
+                    .catch(err => (toast.error("Error loading price insight"), console.error("Error loading price insight", err)));
                 
                 // If user is logged in, check if it's a favorite
                 if (user) {
@@ -98,7 +99,7 @@ const PropertyDetails = () => {
                 setTimeout(() => setShowAnimation(false), 1000);
             }
         } catch (err) {
-            console.error('Error toggling favorite:', err);
+            (toast.error('Error toggling favorite:'), console.error('Error toggling favorite:', err));
         } finally {
             setIsFavLoading(false);
         }
@@ -121,7 +122,7 @@ const PropertyDetails = () => {
             );
             navigate(`/messages?conversation=${response.data.conversation.id}`);
         } catch (error) {
-            console.error("Error creating/fetching conversation:", error);
+            (toast.error("Error creating/fetching conversation:"), console.error("Error creating/fetching conversation:", error));
             alert("Failed to start conversation");
         }
     };

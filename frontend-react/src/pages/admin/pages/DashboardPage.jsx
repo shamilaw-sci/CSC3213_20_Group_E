@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { fetchDashboardStats, fetchRevenueData, fetchUserGrowth, fetchListings } from "../api/adminApi";
 import { m } from "framer-motion";
 import { Home, Clock, Users, DollarSign, ArrowUpRight, ArrowDownRight, ChevronRight } from "lucide-react";
+import toast from 'react-hot-toast';
 
 // Simple bar chart using Tailwind utilities
 const BarChart = ({ data = [], colorClass = "bg-blue-500" }) => {
@@ -71,7 +72,7 @@ const DashboardPage = () => {
           );
         }
       } catch (err) {
-        console.error("Failed to load dashboard data:", err);
+        (toast.error("Failed to load dashboard data:"), console.error("Failed to load dashboard data:", err));
       }
     };
     load();

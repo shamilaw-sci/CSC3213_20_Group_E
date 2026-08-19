@@ -6,6 +6,7 @@ import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import { Edit2, Eye, Heart, CheckCircle, Clock, XCircle, Trash2, MapPin, Search } from 'lucide-react';
 import { m } from "framer-motion";
+import toast from 'react-hot-toast';
 
 const STATUS_MAP = {
     all: { label: 'All Listings', icon: null },
@@ -30,7 +31,7 @@ const MyProperties = () => {
                 const res = await api.get('/properties/my-listings');
                 setProperties(res.data.properties || []);
             } catch (err) {
-                console.error("Failed to load properties", err);
+                (toast.error("Failed to load properties"), console.error("Failed to load properties", err));
             } finally {
                 setLoading(false);
             }

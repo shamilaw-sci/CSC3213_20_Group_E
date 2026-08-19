@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Bell, MessageSquare, User } from "lucide-react";
 import api from "../context/api";
 import "./Navbar.css";
+import toast from 'react-hot-toast';
 
 /**
  * Global Navigation Bar Component.
@@ -33,7 +34,7 @@ const Navbar = ({ transparent = false }) => {
         setUnreadCount(res.data.unreadCount || 0);
         setRecentMessages(res.data.recentMessages || []);
       } catch (err) {
-        console.error("Failed to fetch unread messages", err);
+        (toast.error("Failed to fetch unread messages"), console.error("Failed to fetch unread messages", err));
       }
     };
 

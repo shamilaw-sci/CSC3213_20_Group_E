@@ -4,6 +4,7 @@ import { AnimatePresence, m } from "framer-motion";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import api from '../../context/api';
 import { useAuth } from '../../context/UserAuthContext';
+import toast from 'react-hot-toast';
 
 const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
     const { user } = useAuth();
@@ -30,7 +31,7 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
             const res = await api.get('/feasibility/history');
             setHistory(res.data.history || []);
         } catch (err) {
-            console.error('Failed to load feasibility history', err);
+            (toast.error('Failed to load feasibility history'), console.error('Failed to load feasibility history', err));
         } finally {
             setHistoryLoading(false);
         }
@@ -100,7 +101,7 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
             await api.delete(`/feasibility/history/${id}`);
             setHistory((prev) => prev.filter((entry) => entry.id !== id));
         } catch (err) {
-            console.error('Failed to delete history entry', err);
+            (toast.error('Failed to delete history entry'), console.error('Failed to delete history entry', err));
         }
     };
 

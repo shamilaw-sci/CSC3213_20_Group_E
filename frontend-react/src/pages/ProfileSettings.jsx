@@ -6,6 +6,7 @@ import { AnimatePresence, m } from "framer-motion";
 import { useNavigate } from 'react-router-dom';
 import api from '../context/api';
 import Navbar from '../components/layout/Navbar';
+import toast from 'react-hot-toast';
 
 const ProfileSettings = () => {
     const { user, login } = useAuth();
@@ -74,7 +75,7 @@ const ProfileSettings = () => {
                     }
                 }
             } catch (err) {
-                console.error("Failed to load user data");
+                (toast.error("Failed to load user data"), console.error("Failed to load user data"));
             } finally {
                 setLoadingData(false);
             }
@@ -156,7 +157,7 @@ const ProfileSettings = () => {
             await api.delete(`/saved-searches/${id}`);
             setSavedSearches(savedSearches.filter(s => s.id !== id));
         } catch (err) {
-            console.error("Failed to delete search");
+            (toast.error("Failed to delete search"), console.error("Failed to delete search"));
         }
     };
 
@@ -165,7 +166,7 @@ const ProfileSettings = () => {
             await api.post(`/favorites/${id}`);
             setFavorites(favorites.filter(f => f.id !== id));
         } catch (err) {
-            console.error("Failed to remove favorite");
+            (toast.error("Failed to remove favorite"), console.error("Failed to remove favorite"));
         }
     };
 

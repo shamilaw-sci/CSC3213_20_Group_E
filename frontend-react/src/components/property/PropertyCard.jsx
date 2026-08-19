@@ -5,6 +5,7 @@ import api from '../../context/api';
 import { useAuth } from '../../context/UserAuthContext';
 import { useCompare } from '../../context/CompareContext';
 import { AnimatePresence, m } from "framer-motion";
+import toast from 'react-hot-toast';
 
 const PropertyCard = ({ prop, handleMessageSeller }) => {
     const navigate = useNavigate();
@@ -39,7 +40,7 @@ const PropertyCard = ({ prop, handleMessageSeller }) => {
                 setTimeout(() => setShowAnimation(false), 1000);
             }
         } catch (err) {
-            console.error('Error toggling favorite:', err);
+            (toast.error('Error toggling favorite:'), console.error('Error toggling favorite:', err));
         }
     };
 

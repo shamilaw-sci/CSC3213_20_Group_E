@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import imageCompression from "browser-image-compression";
+import toast from 'react-hot-toast';
 
 /**
  * ImageUploader handles image selection, browser-side compression, and preview rendering.
@@ -54,7 +55,7 @@ const ImageUploader = ({
       newCompressedImages.push(...compressedResults.map((res) => res.file));
       newPreviewUrls.push(...compressedResults.map((res) => res.url));
     } catch (error) {
-      console.error("Error compressing images:", error);
+      (toast.error("Error compressing images:"), console.error("Error compressing images:", error));
       setMessage({ type: "error", text: "Failed to compress some images." });
     }
 
