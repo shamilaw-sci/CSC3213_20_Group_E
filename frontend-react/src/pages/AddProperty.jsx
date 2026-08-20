@@ -602,11 +602,11 @@ const AddProperty = () => {
                   <span className="font-bold text-lg">Rent House</span>
                 </div>
 
-                {/*rent villa */}
+                {/*rent bulding */}
                 <div
                   onClick={() => handleTypeChange("Rent Villa")}
                   className={`flex flex-col items-center justify-center p-6 border-2 rounded-2xl cursor-pointer transition-all duration-200 ${
-                    formData.type === "Rent Villa"
+                    formData.type === "Rent bulding"
                       ? "border-orange-600 bg-orange-50 text-orange-700 shadow-md transform scale-[1.02] dark:border-orange-400 dark:bg-orange-900/40 dark:text-orange-300"
                       : "border-gray-200 hover:border-orange-300 text-gray-500 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:border-orange-400 dark:hover:bg-gray-800"
                   }`}
@@ -672,6 +672,18 @@ const AddProperty = () => {
                     placeholder="Enter Price"
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg"
                   />
+                  {formData.type === "Land" && (
+                    <select
+                      name="pricePeriod"
+                      value={formData.pricePeriod}
+                      onChange={handleChange}
+                      className="px-4 py-3 border border-gray-300 rounded-lg"
+                    >
+                      <option value="totle">Totle</option>
+                      <option value="perch">Perches</option>
+                      <option value="area">Area(Akkara)</option>
+                    </select>
+                  )}
 
                   {(formData.type === "Rent House" ||
                     formData.type === "Rent Villa") && (
