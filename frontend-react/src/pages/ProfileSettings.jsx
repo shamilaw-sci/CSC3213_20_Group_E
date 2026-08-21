@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/UserAuthContext';
 import { useTheme } from '../context/ThemeProvider';
-import { User, Lock, Phone, Save, Loader, Search, Trash2, Heart, Moon, Sun, Monitor, ImagePlus, Bell, MapPin, Bed, Bath, Maximize } from 'lucide-react';
+import { User, Lock, Phone, Mail, Save, Loader, Search, Trash2, Heart, Moon, Sun, Monitor, ImagePlus, Bell, MapPin, Bed, Bath, Maximize } from 'lucide-react';
 import { AnimatePresence, m } from "framer-motion";
 import { useNavigate } from 'react-router-dom';
 import api from '../context/api';
@@ -18,12 +18,26 @@ const ProfileSettings = () => {
     // Form State
     const [formData, setFormData] = useState({
         name: user?.name || '',
+        email: user?.email || '',
         phone: user?.phone || '',
         currentPassword: '',
         password: '',
         confirmPassword: '',
         email_notifications: user?.email_notifications ?? true
     });
+
+    useEffect(() => {
+        if (user) {
+            setFormData(prev => ({
+                ...prev,
+                name: user.name || '',
+                email: user.email || '',
+                phone: user.phone || '',
+                email_notifications: user.email_notifications ?? true
+            }));
+            setAvatarUrl(user.avatar_url || '');
+        }
+    }, [user]);
     
     // Agent Specific State
     const [agentFormData, setAgentFormData] = useState({
@@ -303,17 +317,24 @@ const ProfileSettings = () => {
                                     <form onSubmit={handleSubmit} className="space-y-6">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div>
-                                                <label htmlFor="a11y" className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Full Name</label>
+                                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Full Name</label>
                                                 <div className="relative">
                                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><User className="h-5 w-5 text-gray-400" /></div>
-                                                    <input aria-label="Accessible interactive control" type="text" name="name" value={formData.name} onChange={handleChange} className="pl-10 w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all outline-none font-medium" required />
+                                                    <input aria-label="Full Name" type="text" name="name" value={formData.name} onChange={handleChange} className="pl-10 w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all outline-none font-medium" required />
                                                 </div>
                                             </div>
                                             <div>
-                                                <label htmlFor="p6s1d8" className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Phone Number</label>
+                                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Email Address</label>
+                                                <div className="relative">
+                                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Mail className="h-5 w-5 text-gray-400" /></div>
+                                                    <input aria-label="Email Address" type="email" name="email" value={formData.email} onChange={handleChange} placeholder="your.email@example.com" className="pl-10 w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all outline-none font-medium" required />
+                                                </div>
+                                            </div>
+                                            <div className="md:col-span-2">
+                                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Contact Phone Number</label>
                                                 <div className="relative">
                                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Phone className="h-5 w-5 text-gray-400" /></div>
-                                                    <input aria-label="Accessible interactive control" type="text" name="phone" value={formData.phone} onChange={handleChange} placeholder="0712345678" className="pl-10 w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all outline-none font-medium" />
+                                                    <input aria-label="Phone Number" type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="e.g. 0771234567" className="pl-10 w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all outline-none font-medium" />
                                                 </div>
                                             </div>
                                         </div>

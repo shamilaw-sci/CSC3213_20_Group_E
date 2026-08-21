@@ -6,7 +6,7 @@ const supabase = require('./config/supabase');
 const BASE_URL = 'http://localhost:5000/api';
 const timestamp = Date.now();
 const testAdminEmail = 'admin@gmail.com';
-const testAdminPassword = 'AdminPassword123!';
+const testAdminPassword = 'admin123';
 
 async function runAdminE2ETests() {
     console.log('🚀 Starting Phase 5: Super Admin Portal E2E Automated Tests...\n');

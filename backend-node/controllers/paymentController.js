@@ -147,8 +147,61 @@ const processWebhook = async (req, res, next) => {
     }
 };
 
+/**
+ * Endpoint for client-side confirmed payments (e.g. sandbox callback or direct user session completion).
+ */
+const confirmPayment = async (req, res, next) => {
+    try {
+        const { property_id, payment_id } = req.body;
+        if (!property_id) {
+            return res.status(400).json({ error: "property_id is required" });
+        }
+
+        const property = await propertyRepository.getPropertyById(property_id);
+        if (!property) {
+            return res.status(404).json({ error: "Property not found" });
+        }
+
+        // Verify that the user owns the property or is an admin
+        if (property.seller_id !== req.user.id && req.user.role !== 'ADMIN') {
+            return res.status(403).json({ error: "Access denied" });
+        }
+
+        const rawFee = await settingsRepository.getSettingValue('listing_fee', '500.00');
+        const amount = parseFloat(rawFee);
+
+        // Record transaction
+        try {
+            await transactionRepository.insertTransaction({
+                property_id: property_id,
+                amount: amount,
+                currency: 'LKR',
+                payment_method: 'PayHere',
+                status: 'SUCCESS',
+                transaction_id: payment_id || `PAY-${Date.now()}`
+            });
+        } catch (txErr) {
+            logger.warn('Transaction record creation note:', txErr.message);
+        }
+
+        // Transition property from 'draft' to 'pending'
+        await propertyRepository.updatePaymentStatus(property_id, 'Paid', 'pending');
+        logger.info('Property promoted from draft to pending after payment confirmation', { property_id });
+
+        res.status(200).json({
+            message: "Payment confirmed successfully. Property is now pending admin inspection.",
+            status: "pending",
+            payment_status: "Paid"
+        });
+    } catch (err) {
+        logger.error('Error in confirmPayment:', err);
+        next(err);
+    }
+};
+
 module.exports = {
     getPaymentConfig,
     generateHash,
-    processWebhook
+    processWebhook,
+    confirmPayment
 };

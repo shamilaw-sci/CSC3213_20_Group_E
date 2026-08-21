@@ -249,7 +249,7 @@ const getMe = async (req, res, next) => {
 // 8. Update User Profile
 const updateProfile = async (req, res, next) => {
     try {
-        const { name, phone, password, avatar_url, theme_preference, email_notifications } = req.body;
+        const { name, email, phone, password, avatar_url, theme_preference, email_notifications } = req.body;
 
         const user = await userRepository.findFullUserById(req.user.id);
         if (!user) {
@@ -258,6 +258,21 @@ const updateProfile = async (req, res, next) => {
 
         const updates = {};
         if (name) updates.name = name;
+
+        if (email && email.toLowerCase().trim() !== user.email?.toLowerCase().trim()) {
+            const cleanEmail = email.toLowerCase().trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(cleanEmail)) {
+                return res.status(400).json({ message: "Please provide a valid email address." });
+            }
+
+            const existingUser = await userRepository.findByEmail(cleanEmail);
+            if (existingUser && existingUser.id !== user.id) {
+                return res.status(409).json({ message: "This email address is already in use by another account." });
+            }
+            updates.email = cleanEmail;
+        }
+
         if (phone !== undefined) updates.phone = phone;
         if (avatar_url !== undefined) {
             if (avatar_url.startsWith('data:image')) {

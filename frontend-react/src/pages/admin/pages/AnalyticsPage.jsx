@@ -8,9 +8,9 @@ const DonutChart = ({ segments, size = 120 }) => {
   if (!segments || segments.length === 0) return null;
   const r = 46; const cx = 60; const cy = 60;
   const circ = 2 * Math.PI * r;
-  const total = segments.reduce((s, g) => s + g.value, 0) || 1;
+  const total = segments.reduce((s, g) => s + (g.value || 0), 0) || 1;
   const arcs = segments.reduce((items, seg, i) => {
-    if (seg.value === 0) return items;
+    if (!seg.value) return items;
     const dash = (seg.value / total) * circ;
     const gap = circ - dash;
     const previousOffset = items.reduce((sum, item) => sum + item.dash, 0);
@@ -60,7 +60,7 @@ const AnalyticsPage = () => {
       if (r?.data) setRevenue(r.data);
       if (u?.data) setUserGrowth(u.data);
     } catch (err) {
-      (toast.error("Failed to load analytics:"), console.error("Failed to load analytics:", err));
+      console.error("Failed to load analytics:", err);
     } finally {
       setLoading(false);
     }
@@ -70,8 +70,8 @@ const AnalyticsPage = () => {
     loadAnalytics(period);
   }, [period, loadAnalytics]);
 
-  const maxRevenue = Math.max(...revenue.map((d) => d.value), 1);
-  const maxGrowth = Math.max(...userGrowth.map((d) => d.value), 1);
+  const maxRevenue = Math.max(...revenue.map((d) => Number(d.value || 0)), 1);
+  const maxGrowth = Math.max(...userGrowth.map((d) => Number(d.value ?? d.users ?? 0)), 1);
 
   const listingTypeSegments = stats?.listingTypes?.map((t, i) => ({
     label: t.label,
@@ -135,17 +135,20 @@ const AnalyticsPage = () => {
                 <span style={{ fontSize: "0.75rem", color: "var(--admin-text-secondary)" }}>Monthly Revenue (LKR)</span>
               </div>
               <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 140 }}>
-                {revenue.map(({ label, value }) => (
-                  <div key={label} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, height: "100%", justifyContent: "flex-end" }}>
-                    <span style={{ fontSize: "0.6rem", color: "var(--admin-text-secondary)" }}>{value > 0 ? (value/1000).toFixed(1)+'k' : '0'}</span>
-                    <div style={{
-                      width: "100%", borderRadius: "4px 4px 0 0",
-                      background: "var(--admin-gold)", height: `${(value / maxRevenue) * 100}%`,
-                      minHeight: 4, transition: "height 0.5s ease"
-                    }} />
-                    <span style={{ fontSize: "0.7rem", color: "var(--admin-text-secondary)" }}>{label}</span>
-                  </div>
-                ))}
+                {revenue.map(({ label, value }) => {
+                  const num = Number(value || 0);
+                  return (
+                    <div key={label} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, height: "100%", justifyContent: "flex-end" }}>
+                      <span style={{ fontSize: "0.6rem", color: "var(--admin-text-secondary)" }}>{num > 0 ? (num/1000).toFixed(1)+'k' : '0'}</span>
+                      <div style={{
+                        width: "100%", borderRadius: "4px 4px 0 0",
+                        background: "var(--admin-gold)", height: `${(num / maxRevenue) * 100}%`,
+                        minHeight: 4, transition: "height 0.5s ease"
+                      }} />
+                      <span style={{ fontSize: "0.7rem", color: "var(--admin-text-secondary)" }}>{label}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -155,17 +158,21 @@ const AnalyticsPage = () => {
                 <span style={{ fontSize: "0.75rem", color: "var(--admin-text-secondary)" }}>Cumulative registrations</span>
               </div>
               <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 140 }}>
-                {userGrowth.map(({ label, value }) => (
-                  <div key={label} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, height: "100%", justifyContent: "flex-end" }}>
-                    <span style={{ fontSize: "0.7rem", color: "var(--admin-text-secondary)" }}>{value}</span>
-                    <div style={{
-                      width: "100%", borderRadius: "4px 4px 0 0",
-                      background: "var(--admin-info)", height: `${(value / maxGrowth) * 100}%`,
-                      minHeight: 4, transition: "height 0.5s ease"
-                    }} />
-                    <span style={{ fontSize: "0.7rem", color: "var(--admin-text-secondary)" }}>{label}</span>
-                  </div>
-                ))}
+                {userGrowth.map((d) => {
+                  const label = d.label;
+                  const val = Number(d.value ?? d.users ?? 0);
+                  return (
+                    <div key={label} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, height: "100%", justifyContent: "flex-end" }}>
+                      <span style={{ fontSize: "0.7rem", color: "var(--admin-text-secondary)" }}>{val}</span>
+                      <div style={{
+                        width: "100%", borderRadius: "4px 4px 0 0",
+                        background: "var(--admin-info)", height: `${(val / maxGrowth) * 100}%`,
+                        minHeight: 4, transition: "height 0.5s ease"
+                      }} />
+                      <span style={{ fontSize: "0.7rem", color: "var(--admin-text-secondary)" }}>{label}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -180,8 +187,8 @@ const AnalyticsPage = () => {
                 <DonutChart segments={listingTypeSegments} />
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {listingTypeSegments.map(({ label, value, color }) => {
-                    const total = listingTypeSegments.reduce((s, g) => s + g.value, 0) || 1;
-                    const pct = Math.round((value / total) * 100);
+                    const total = listingTypeSegments.reduce((s, g) => s + (g.value || 0), 0) || 1;
+                    const pct = Math.round(((value || 0) / total) * 100);
                     return (
                       <div key={label} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <div style={{ width: 10, height: 10, borderRadius: 2, background: color }} />
@@ -204,8 +211,8 @@ const AnalyticsPage = () => {
                 <DonutChart segments={roleSegments} />
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {roleSegments.map(({ label, value, color }) => {
-                    const total = roleSegments.reduce((s, g) => s + g.value, 0) || 1;
-                    const pct = Math.round((value / total) * 100);
+                    const total = roleSegments.reduce((s, g) => s + (g.value || 0), 0) || 1;
+                    const pct = Math.round(((value || 0) / total) * 100);
                     return (
                       <div key={label} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <div style={{ width: 10, height: 10, borderRadius: 2, background: color }} />

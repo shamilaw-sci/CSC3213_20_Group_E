@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { m } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Bed, Bath, Maximize2, MapPin, Sparkles } from 'lucide-react';
+import { ArrowRight, Bed, Bath, Maximize2, MapPin } from 'lucide-react';
 import api from '../../context/api';
 
 const fallbackResidences = [
@@ -97,9 +97,9 @@ export default function FeaturedResidences() {
                     className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6"
                 >
                     <div className="max-w-2xl">
-                        <div className="flex items-center gap-2 text-blue-400 text-xs font-bold uppercase tracking-[0.2em] mb-3">
-                            <Sparkles className="w-3.5 h-3.5" /> (The Curated Collection)
-                        </div>
+                        <p className="text-sm font-semibold tracking-[0.2em] uppercase text-gray-500 mb-4">
+                            (The Curated Collection)
+                        </p>
                         <h2 className="text-3xl sm:text-5xl lg:text-6xl font-medium tracking-tight leading-[1.15]">
                             Exceptional residences across the island.
                         </h2>

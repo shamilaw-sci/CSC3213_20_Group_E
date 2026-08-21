@@ -8,5 +8,6 @@ const { generateHashSchema, notifyWebhookSchema } = require('../validators/payme
 router.get('/config', paymentController.getPaymentConfig);
 router.post('/generate-hash', protect, validate(generateHashSchema), paymentController.generateHash);
 router.post('/notify', validate(notifyWebhookSchema), paymentController.processWebhook);
+router.post('/confirm-client-success', protect, paymentController.confirmPayment);
 
 module.exports = router;

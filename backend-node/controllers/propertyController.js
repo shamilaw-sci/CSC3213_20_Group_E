@@ -65,11 +65,12 @@ const addProperty = async (req, res, next) => {
       images: imageUrls,
       seller_id: req.user.id,
       status: "pending",
+      payment_status: "Unpaid",
       created_at: new Date(),
     });
 
     res.status(201).json({
-      message: "Property added successfully",
+      message: "Property created and awaiting payment",
       property,
     });
   } catch (error) {

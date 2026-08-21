@@ -27,6 +27,7 @@ const SellerDashboard = () => {
         approved: 0,
         pending: 0,
         rejected: 0,
+        draft: 0,
         messages: 0,
         views: 0,
         saves: 0,
@@ -54,11 +55,13 @@ const SellerDashboard = () => {
                 const properties = propertiesRes.data.properties || [];
                 const conversations = conversationsRes.data.conversations || [];
                 
-                let approved = 0, pending = 0, rejected = 0;
+                let approved = 0, pending = 0, rejected = 0, draft = 0;
                 let totalViews = 0, totalSaves = 0, portfolioValue = 0;
                 
                 properties.forEach(p => {
-                    if (p.status === 'approved') approved++;
+                    const isPaid = p.payment_status === 'Paid' || p.payment_status === 'paid';
+                    if (!isPaid) draft++;
+                    else if (p.status === 'approved') approved++;
                     else if (p.status === 'pending') pending++;
                     else if (p.status === 'rejected') rejected++;
                     
@@ -72,6 +75,7 @@ const SellerDashboard = () => {
                     approved,
                     pending,
                     rejected,
+                    draft,
                     messages: conversations.length,
                     views: totalViews,
                     saves: totalSaves,
@@ -159,6 +163,24 @@ const SellerDashboard = () => {
             {/* Main Content Area */}
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 w-full flex-1">
                 
+                {/* Unpaid Drafts Banner */}
+                {stats.draft > 0 && (
+                    <div className="mb-6 p-4 rounded-2xl bg-amber-500/15 border border-amber-500/40 text-amber-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                            <AlertCircle className="w-5 h-5 text-amber-400 shrink-0" />
+                            <span className="text-xs sm:text-sm font-semibold">
+                                You have <strong>{stats.draft} unpaid draft listing{stats.draft > 1 ? 's' : ''}</strong> saved. Complete payment to submit for Admin review.
+                            </span>
+                        </div>
+                        <button
+                            onClick={() => navigate('/my-properties')}
+                            className="px-4 py-1.5 rounded-xl bg-amber-500 text-slate-950 text-xs font-black hover:bg-amber-400 transition cursor-pointer self-start sm:self-auto shrink-0"
+                        >
+                            View Drafts →
+                        </button>
+                    </div>
+                )}
+
                 {/* 1. Top Executive KPI Cards (5 Columns) */}
                 <section aria-label="Key Performance Indicators" className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 sm:gap-4 mb-8">
                     

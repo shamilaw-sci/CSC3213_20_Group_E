@@ -12,18 +12,18 @@ const adminRepository = {
         return { data, error };
     },
 
-    // 2. Dashboard Stats
+    // 2. Dashboard Stats (Excludes unpaid listings)
     getDashboardStats: async () => {
         return await Promise.all([
             supabase.from('users').select('*', { count: 'exact', head: true }),
-            supabase.from('properties').select('*', { count: 'exact', head: true }),
-            supabase.from('properties').select('*', { count: 'exact', head: true }).eq('status', 'approved'),
-            supabase.from('properties').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+            supabase.from('properties').select('*', { count: 'exact', head: true }).eq('payment_status', 'Paid'),
+            supabase.from('properties').select('*', { count: 'exact', head: true }).eq('status', 'approved').eq('payment_status', 'Paid'),
+            supabase.from('properties').select('*', { count: 'exact', head: true }).eq('status', 'pending').eq('payment_status', 'Paid'),
             supabase.from('properties').select('*', { count: 'exact', head: true }).eq('status', 'rejected'),
             supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'BUYER'),
             supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'SELLER'),
             supabase.from('transactions').select('amount').eq('status', 'SUCCESS'),
-            supabase.from('properties').select('type')
+            supabase.from('properties').select('type').eq('payment_status', 'Paid')
         ]);
     },
 
@@ -48,26 +48,39 @@ const adminRepository = {
         return data;
     },
 
-    // 5. Get Listings
+    // 5. Get Listings (Only returns paid listings to admins with seller info)
     getListings: async (statusFilter) => {
         let query = supabase
             .from('properties')
-            .select('*')
+            .select(`
+                *,
+                seller:users!properties_seller_id_fkey(id, name, email, role, phone)
+            `)
             .order('created_at', { ascending: false })
             .limit(50);
         
-        if (statusFilter) query.eq('status', statusFilter);
+        if (statusFilter) {
+            query.eq('status', statusFilter);
+            if (statusFilter === 'pending') {
+                query.eq('payment_status', 'Paid');
+            }
+        } else {
+            query.eq('payment_status', 'Paid');
+        }
 
         const { data, error } = await query;
         if (error) throw error;
         return data;
     },
 
-    // 6. Get Listing By ID with Transactions
+    // 6. Get Listing By ID with Transactions and Seller info
     getListingByIdWithTransactions: async (id) => {
         const { data: listing, error: listingError } = await supabase
             .from('properties')
-            .select('*')
+            .select(`
+                *,
+                seller:users!properties_seller_id_fkey(id, name, email, role, phone)
+            `)
             .eq('id', id)
             .single();
         if (listingError) throw listingError;
@@ -75,7 +88,8 @@ const adminRepository = {
         const { data: txData } = await supabase
             .from('transactions')
             .select('*')
-            .eq('property_id', id);
+            .eq('property_id', id)
+            .order('created_at', { ascending: false });
 
         listing.transactions = txData || [];
         return listing;
