@@ -6,7 +6,7 @@ const agentRepository = {
         let query = supabase
             .from('users')
             .select(`
-                id, name, avatar_url, role, verified,
+                id, name, avatar_url, role,
                 agent_profiles(agency_name, specialization, bio)
             `)
             .eq('role', 'AGENT');
@@ -25,10 +25,10 @@ const agentRepository = {
         const { data, error } = await supabase
             .from('users')
             .select(`
-                id, name, email, phone, avatar_url, role, verified, created_at,
+                id, name, email, phone, avatar_url, role, created_at,
                 agent_profiles (*),
                 properties:properties (id, title, price, bedrooms, bathrooms, images, city, status),
-                agent_reviews (id, reviewer_id, rating, comment, created_at, reviewer:users!reviewer_id(name, avatar_url))
+                agent_reviews:agent_reviews!agent_reviews_agent_id_fkey (id, reviewer_id, rating, comment, created_at, reviewer:users!reviewer_id(name, avatar_url))
             `)
             .eq('id', id)
             .single();

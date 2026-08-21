@@ -70,12 +70,12 @@ const Register = () => {
     };
 
     return (
-        <div className="flex min-h-screen bg-gray-50">
-            {/* --- Right Side: Form Container --- */}
-            <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-20 xl:px-24">
-                <div className="mx-auto w-full max-w-md pt-8 md:pt-0">
-                    <h2 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">Create an account</h2>
-                    <p className="text-gray-500 text-sm mb-6">Join us to buy or sell properties easily.</p>
+        <div className="flex h-screen max-h-screen w-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
+            {/* --- Form Container (Height-Fitted & Scroll-Safe) --- */}
+            <div className="w-full md:w-[480px] lg:w-[500px] xl:w-[520px] flex-shrink-0 flex flex-col justify-center px-6 sm:px-10 lg:px-12 py-6 bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 relative z-10 shadow-lg md:shadow-none h-full overflow-y-auto">
+                <div className="mx-auto w-full max-w-sm sm:max-w-md my-auto py-2">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-1 tracking-tight">Create an account</h2>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm mb-4">Join us to buy or sell properties easily.</p>
 
                     <form onSubmit={handleSubmit(onSubmit)} className="animate-fade-in">
                         

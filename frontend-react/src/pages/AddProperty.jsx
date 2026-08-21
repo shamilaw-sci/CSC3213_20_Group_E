@@ -11,6 +11,7 @@ import { useAuth } from "../context/UserAuthContext";
 import Navbar from "../components/layout/Navbar";
 import usePropertyForm from "../hooks/usePropertyForm";
 import { Button } from "../components/ui/button";
+import { ArrowLeft } from "lucide-react";
 import "./AddProperty.css";
 
 const AddProperty = () => {
@@ -38,7 +39,18 @@ const AddProperty = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 font-sans pb-12 text-gray-900 dark:text-gray-100">
       <Navbar />
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+        <div className="flex items-center justify-between mb-4">
+          <button
+            type="button"
+            onClick={() => navigate('/seller-dashboard')}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition shadow-xs cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>← Back to Dashboard</span>
+          </button>
+          <span className="text-xs font-semibold text-gray-400">New Listing Studio</span>
+        </div>
         <div className="from_backgroung dark:bg-gray-800">
           <form onSubmit={handleSubmit} className="p-8">
             <PropertyBasicInfo 

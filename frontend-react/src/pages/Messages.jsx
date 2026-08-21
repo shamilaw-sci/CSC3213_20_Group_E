@@ -5,7 +5,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/UserAuthContext';
 import Navbar from '../components/layout/Navbar';
 import { m } from "framer-motion";
-import { Send, Paperclip, X, Image as ImageIcon, FileText, User, MessageSquare, ShieldAlert } from 'lucide-react';
+import { Send, Paperclip, X, Image as ImageIcon, FileText, User, MessageSquare, ShieldAlert, ArrowLeft } from 'lucide-react';
 
 // axios is globally configured with withCredentials = true
 // Authorization header no longer strictly required for browser if relying on HttpOnly cookies,
@@ -206,15 +206,47 @@ const Messages = () => {
     };
 
     return (
-        <div className="flex flex-col h-[100dvh] bg-[#f8f9fa] font-sans overflow-hidden">
+        <div className="flex flex-col h-[100dvh] bg-[#f8f9fa] dark:bg-gray-950 font-sans overflow-hidden">
             <Navbar />
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 w-full flex-1 flex flex-col min-h-0">
-                <div className="mb-4 flex justify-between items-end">
-                    <div>
-                        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Messages</h1>
-                        <p className="text-gray-500 mt-1">Talk with sellers, buyers, and admin support.</p>
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 w-full flex-1 flex flex-col min-h-0">
+                <div className="mb-3 flex items-center justify-between flex-wrap gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-3">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                if (user?.role === 'SELLER') navigate('/seller-dashboard');
+                                else if (user?.role === 'AGENT') navigate('/agent-dashboard');
+                                else navigate(-1);
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition shadow-xs cursor-pointer"
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                            <span>{user?.role === 'SELLER' ? '← Dashboard' : user?.role === 'AGENT' ? '← Agent Hub' : '← Back'}</span>
+                        </button>
+                        <div>
+                            <h1 className="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">Messages & Inquiries</h1>
+                        </div>
                     </div>
+                    {user?.role === 'SELLER' && (
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => navigate('/seller-dashboard')}
+                                className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline px-2 py-1"
+                            >
+                                Seller Command Hub
+                            </button>
+                            <span className="text-gray-300 dark:text-gray-700">•</span>
+                            <button
+                                type="button"
+                                onClick={() => navigate('/my-properties')}
+                                className="text-xs font-bold text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-2 py-1"
+                            >
+                                My Listings
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {error && (

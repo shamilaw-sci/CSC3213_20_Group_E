@@ -109,7 +109,7 @@ const adminRepository = {
     getUsers: async (roleFilter) => {
         let query = supabase
             .from('users')
-            .select('id, name, email, role, verified, created_at')
+            .select('id, name, email, role, created_at')
             .order('created_at', { ascending: false })
             .limit(100);
             
@@ -138,7 +138,7 @@ const adminRepository = {
     getUserById: async (id) => {
         const { data, error } = await supabase
             .from('users')
-            .select('id, name, email, role, verified, phone, avatar_url, theme_preference, email_notifications, created_at')
+            .select('id, name, email, role, phone, avatar_url, theme_preference, email_notifications, created_at')
             .eq('id', id)
             .single();
         if (error) throw error;
@@ -172,8 +172,7 @@ const adminRepository = {
         const { data, error } = await supabase
             .from('transactions')
             .select(`
-                id, amount, currency, status, created_at, transaction_id, payment_method, property_id,
-                properties(title, users(name))
+                id, amount, currency, status, created_at, transaction_id, payment_method, property_id
             `)
             .order('created_at', { ascending: false });
         if (error) throw error;

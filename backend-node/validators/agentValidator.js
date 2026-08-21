@@ -27,7 +27,7 @@ const updateProfileSchema = z.object({
     agency_name: z.string().max(150).optional(),
     license_number: z.string().max(100).optional(),
     bio: z.string().max(3000).optional(),
-    languages: z.array(z.string()).optional(),
+    languages: z.array(z.string()).or(z.string()).optional(),
     youtube_video_url: z.string().url("Invalid YouTube URL").optional().or(z.literal('')),
     service_areas: z.string().max(500).optional(),
     specialization: z.string().max(200).optional()

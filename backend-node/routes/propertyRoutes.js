@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { propertyImageUpload } = require('../middleware/uploadMiddleware');
 
-const { addProperty, getProperties, getMyProperties, updateMyProperty, getPropertyById, incrementViews } = require('../controllers/propertyController');
+const { addProperty, getProperties, getMyProperties, updateMyProperty, deleteMyProperty, getPropertyById, incrementViews } = require('../controllers/propertyController');
 const { protect } = require('../middleware/authMiddleware');
 const validate = require('../middleware/validate');
 const { addPropertySchema, updatePropertySchema, getPropertiesSchema } = require('../validators/propertyValidator');
@@ -18,6 +18,7 @@ router.post('/', protect, propertyImageUpload.array('images', 10), validate(addP
 router.get('/my-listings', protect, validate(getPropertiesSchema), getMyProperties);
 
 router.patch('/my-listings/:id', protect, validate(updatePropertySchema), updateMyProperty);
+router.delete('/my-listings/:id', protect, deleteMyProperty);
 
 // 4. Increment property views
 router.post('/:id/view', incrementViews);
