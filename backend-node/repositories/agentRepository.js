@@ -6,8 +6,9 @@ const agentRepository = {
         let query = supabase
             .from('users')
             .select(`
-                id, name, avatar_url, role,
-                agent_profiles(agency_name, specialization, bio)
+                id, name, avatar_url, role, phone, email,
+                agent_profiles (agency_name, specialization, bio, service_areas, license_number, total_sales, total_rentals, youtube_video_url, cover_image_url),
+                agent_reviews:agent_reviews!agent_reviews_agent_id_fkey (rating)
             `)
             .eq('role', 'AGENT');
 
@@ -21,16 +22,16 @@ const agentRepository = {
     },
 
     // 2. Get a single agent profile
-    getAgentProfile: async (id) => {
+    getAgentProfile: async (agentId) => {
         const { data, error } = await supabase
             .from('users')
             .select(`
-                id, name, email, phone, avatar_url, role, created_at,
-                agent_profiles (*),
-                properties:properties (id, title, price, bedrooms, bathrooms, images, city, status),
-                agent_reviews:agent_reviews!agent_reviews_agent_id_fkey (id, reviewer_id, rating, comment, created_at, reviewer:users!reviewer_id(name, avatar_url))
+                id, name, avatar_url, role, phone, email,
+                agent_profiles (agency_name, specialization, bio, service_areas, license_number, total_sales, total_rentals, youtube_video_url, cover_image_url),
+                properties (id, title, price, bedrooms, bathrooms, district, city, images, status, type, listing_type),
+                agent_reviews:agent_reviews!agent_reviews_agent_id_fkey (id, rating, comment, created_at, reviewer:users!agent_reviews_reviewer_id_fkey(name, avatar_url))
             `)
-            .eq('id', id)
+            .eq('id', agentId)
             .single();
         if (error) throw error;
         return data;
@@ -46,22 +47,142 @@ const agentRepository = {
         return data[0];
     },
 
-    // 4. Get Agent Leads (Conversations)
-    getAgentLeads: async (agentId) => {
+    // 3.1 Create Viewing / Consultation Lead
+    createViewingLead: async (agentId, bookingData) => {
+        const { client_name, client_email, client_phone, property_id, viewing_type, preferred_date, preferred_time, notes } = bookingData;
+        
+        let leadSource = viewing_type ? `Booking (${viewing_type}): ${preferred_date || 'Flexible'} ${preferred_time || ''}` : 'Direct Profile Booking';
+        if (notes && notes.trim()) {
+            leadSource += ` • Note: "${notes.trim()}"`;
+        }
+
         const { data, error } = await supabase
+            .from('leads')
+            .insert([{
+                assigned_agent_id: agentId,
+                property_id: property_id || null,
+                client_name,
+                client_email,
+                client_phone,
+                lead_source: leadSource,
+                timeframe_to_move: 'ASAP',
+                lifecycle_status: 'New'
+            }])
+            .select();
+        
+        if (error) throw error;
+        return data ? data[0] : null;
+    },
+
+    // 4. Get Agent Leads (Combined Conversations & Direct Leads)
+    getAgentLeads: async (agentId) => {
+        // Fetch conversations
+        const { data: convData, error: convError } = await supabase
             .from('conversations')
             .select(`
                 id, type, property_id, buyer_id, seller_id, created_at, updated_at,
                 lead_status, timeframe, pre_approved,
-                properties (title, images, price),
-                buyer:users!buyer_id (name, avatar_url, email, phone)
+                properties (id, title, images, price),
+                buyer:users!buyer_id (id, name, avatar_url, email, phone)
             `)
             .eq('seller_id', agentId)
             .in('type', ['property', 'agent'])
             .order('updated_at', { ascending: false });
 
+        if (convError) throw convError;
+
+        // Fetch first messages for conversations
+        const convWithMessages = await Promise.all((convData || []).map(async (conv) => {
+            const { data: msgData } = await supabase
+                .from('messages')
+                .select('body')
+                .eq('conversation_id', conv.id)
+                .order('created_at', { ascending: true })
+                .limit(1);
+            return {
+                ...conv,
+                notes: msgData?.[0]?.body || null,
+                last_message: msgData?.[0]?.body || 'Inquiry conversation opened'
+            };
+        }));
+
+        // Fetch direct leads from leads table
+        const { data: directData, error: directError } = await supabase
+            .from('leads')
+            .select(`
+                lead_id, assigned_agent_id, property_id, client_name, client_email, client_phone,
+                lead_source, pre_approval_status, timeframe_to_move, lifecycle_status, created_at, updated_at,
+                properties (id, title, images, price)
+            `)
+            .eq('assigned_agent_id', agentId)
+            .order('created_at', { ascending: false });
+
+        if (directError) console.error("Direct leads fetch error:", directError);
+
+        const normalizedDirectLeads = (directData || []).map(l => {
+            // Map lead_lifecycle to CRM stages: 'New', 'Contacted', 'Showing', 'Offer', 'Closed'
+            let status = 'New';
+            if (l.lifecycle_status === 'Attempted Contact') status = 'Contacted';
+            else if (l.lifecycle_status === 'Active') status = 'Showing';
+            else if (l.lifecycle_status === 'Closed') status = 'Closed';
+
+            const noteMatch = l.lead_source?.match(/Note:\s*["']?([^"']+)["']?/i);
+            const extractedNotes = noteMatch ? noteMatch[1].trim() : null;
+
+            return {
+                id: l.lead_id,
+                is_direct_booking: true,
+                type: 'booking',
+                property_id: l.property_id,
+                created_at: l.created_at,
+                updated_at: l.updated_at,
+                lead_status: status,
+                timeframe: l.timeframe_to_move || 'ASAP',
+                pre_approved: l.pre_approval_status || false,
+                lead_source: l.lead_source,
+                notes: extractedNotes,
+                properties: l.properties,
+                buyer: {
+                    name: l.client_name,
+                    email: l.client_email,
+                    phone: l.client_phone,
+                    avatar_url: null
+                }
+            };
+        });
+
+        // Combine both
+        const combined = [...convWithMessages, ...normalizedDirectLeads];
+        combined.sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at));
+        return combined;
+    },
+
+    // 4.1 Get Appointments for a Buyer
+    getBuyerAppointments: async (userEmail, userId) => {
+        let query = supabase
+            .from('leads')
+            .select(`
+                lead_id, assigned_agent_id, property_id, client_name, client_email, client_phone,
+                lead_source, pre_approval_status, timeframe_to_move, lifecycle_status, created_at, updated_at,
+                properties (id, title, images, price, city, district),
+                assigned_agent:users!leads_assigned_agent_id_fkey (id, name, avatar_url, phone, email, agent_profiles(agency_name, license_number))
+            `)
+            .order('created_at', { ascending: false });
+
+        if (userEmail) {
+            query = query.eq('client_email', userEmail);
+        }
+
+        const { data, error } = await query;
         if (error) throw error;
-        return data;
+        
+        return (data || []).map(l => {
+            const noteMatch = l.lead_source?.match(/Note:\s*["']?([^"']+)["']?/i);
+            return {
+                ...l,
+                notes: noteMatch ? noteMatch[1].trim() : null
+            };
+        });
     },
 
     // Helper: Get Last Message for a Lead
@@ -77,25 +198,101 @@ const agentRepository = {
 
     // 5. Update Lead Metadata
     updateLeadMetadata: async (id, seller_id, lead_status, timeframe, pre_approved) => {
-        const { data, error } = await supabase
+        // First try updating conversations table
+        const { data: conv, error: convError } = await supabase
             .from('conversations')
             .update({ lead_status, timeframe, pre_approved })
             .eq('id', id)
             .eq('seller_id', seller_id)
-            .select()
-            .single();
+            .select();
+
+        if (conv && conv.length > 0) return conv[0];
+
+        // If not in conversations, try updating leads table
+        let lifecycle_status = 'New';
+        if (lead_status === 'Contacted') lifecycle_status = 'Attempted Contact';
+        else if (lead_status === 'Showing' || lead_status === 'Offer') lifecycle_status = 'Active';
+        else if (lead_status === 'Closed') lifecycle_status = 'Closed';
+
+        const { data: lead, error: leadError } = await supabase
+            .from('leads')
+            .update({ 
+                lifecycle_status,
+                updated_at: new Date().toISOString()
+            })
+            .eq('lead_id', id)
+            .eq('assigned_agent_id', seller_id)
+            .select();
+
+        if (leadError) throw leadError;
+        return lead ? lead[0] : null;
+    },
+
+    // 5.1 Delete Lead from CRM (Agent)
+    deleteAgentLead: async (id, agentId) => {
+        // Try deleting from leads table
+        const { data: delLead, error: leadErr } = await supabase
+            .from('leads')
+            .delete()
+            .eq('lead_id', id)
+            .eq('assigned_agent_id', agentId)
+            .select();
+
+        if (delLead && delLead.length > 0) return true;
+
+        // Try deleting from conversations table
+        const { data: delConv, error: convErr } = await supabase
+            .from('conversations')
+            .delete()
+            .eq('id', id)
+            .eq('seller_id', agentId)
+            .select();
+
+        return (delConv && delConv.length > 0);
+    },
+
+    // 5.2 Cancel / Delete Appointment (Buyer)
+    deleteBuyerAppointment: async (leadId, userEmail) => {
+        const { data, error } = await supabase
+            .from('leads')
+            .delete()
+            .eq('lead_id', leadId)
+            .eq('client_email', userEmail)
+            .select();
+
         if (error) throw error;
-        return data;
+        return data && data.length > 0;
     },
 
     // 6. Update Agent Profile
     updateAgentProfile: async (agentId, updates) => {
-        const { data, error } = await supabase
+        // Check if agent profile row already exists
+        const { data: existing } = await supabase
             .from('agent_profiles')
-            .upsert({ agent_id: agentId, ...updates }, { onConflict: 'agent_id' })
-            .select();
-        if (error) throw error;
-        return data[0];
+            .select('agent_id, agency_name')
+            .eq('agent_id', agentId)
+            .maybeSingle();
+
+        if (existing) {
+            const { data, error } = await supabase
+                .from('agent_profiles')
+                .update(updates)
+                .eq('agent_id', agentId)
+                .select();
+            if (error) throw error;
+            return data ? data[0] : null;
+        } else {
+            const { data, error } = await supabase
+                .from('agent_profiles')
+                .insert([{
+                    agent_id: agentId,
+                    agency_name: updates.agency_name || 'Independent Real Estate Agent',
+                    ...updates
+                }])
+                .select();
+            if (error) throw error;
+            return data ? data[0] : null;
+        }
     },
 
     // 7. Resubmit Application

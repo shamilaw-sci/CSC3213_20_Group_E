@@ -94,6 +94,8 @@ const Login = () => {
                 navigate(location.state.from.pathname, { replace: true });
             } else if (loggedUser?.role === 'SELLER') {
                 navigate('/seller-dashboard', { replace: true });
+            } else if (loggedUser?.role === 'AGENT') {
+                navigate('/agent-dashboard', { replace: true });
             } else {
                 navigate(from, { replace: true });
             }
@@ -116,6 +118,8 @@ const Login = () => {
                 navigate(location.state.from.pathname, { replace: true });
             } else if (loggedUser?.role === 'SELLER') {
                 navigate('/seller-dashboard', { replace: true });
+            } else if (loggedUser?.role === 'AGENT') {
+                navigate('/agent-dashboard', { replace: true });
             } else {
                 navigate(from, { replace: true });
             }

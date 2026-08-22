@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from '../../context/UserAuthContext';
-import { Bell, MessageSquare, User, PlusCircle, Compass } from "lucide-react";
+import { Bell, MessageSquare, User, PlusCircle, Compass, Calendar } from "lucide-react";
 import usePoll from '../../hooks/usePoll';
 import "./Navbar.css";
 
@@ -226,6 +226,20 @@ const Navbar = ({ transparent = false }) => {
                 >
                   Find an Agent
                 </button>
+
+                {(user?.role === 'BUYER' || user?.role === 'USER') && (
+                  <button
+                    type="button"
+                    onClick={() => navigate("/buyer-dashboard")}
+                    className={`px-3.5 py-2 rounded-xl text-sm font-bold transition duration-150 cursor-pointer ${
+                      transparent
+                        ? 'text-white/90 hover:text-white hover:bg-white/10 drop-shadow-xs'
+                        : 'text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30'
+                    }`}
+                  >
+                    Buyer Hub
+                  </button>
+                )}
               </>
             )}
           </div>
@@ -415,13 +429,38 @@ const Navbar = ({ transparent = false }) => {
                     >
                       Profile & Settings
                     </button>
+                    {(user.role === "BUYER" || user.role === "USER") && (
+                      <button
+                        type="button"
+                        onClick={() => navigate("/buyer-dashboard")}
+                        className="block w-full text-left px-4 py-2 text-xs text-blue-600 dark:text-blue-400 font-bold hover:bg-blue-50 dark:hover:bg-blue-900/50"
+                      >
+                        Buyer Command Hub
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => navigate("/buyer-dashboard?tab=appointments")}
+                      className="block w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 font-medium"
+                    >
+                      My Appointments
+                    </button>
+                    {user.role === "AGENT" && (
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/agent/${user.id}`)}
+                        className="block w-full text-left px-4 py-2 text-xs text-blue-600 dark:text-blue-400 font-bold hover:bg-blue-50 dark:hover:bg-blue-900/50"
+                      >
+                        My Public Agent Profile
+                      </button>
+                    )}
                     {(user.role === "SELLER" || user.role === "AGENT" || user.role === "PENDING_AGENT" || user.role === "REJECTED_AGENT") && (
                       <button
                         type="button"
                         onClick={() => navigate(user.role === "SELLER" ? "/seller-dashboard" : "/agent-dashboard")}
                         className="block w-full text-left px-4 py-2 text-xs text-blue-600 dark:text-blue-400 font-bold hover:bg-blue-50 dark:hover:bg-blue-900/50"
                       >
-                        {user.role === "SELLER" ? "Seller Dashboard" : "Agent Hub"}
+                        {user.role === "SELLER" ? "Seller Dashboard" : "Agent Hub & CRM"}
                       </button>
                     )}
                     <button

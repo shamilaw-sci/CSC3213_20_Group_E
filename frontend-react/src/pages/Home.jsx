@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import DarkHero from '../components/home/DarkHero';
+import BuyerCommandHub from '../components/home/BuyerCommandHub';
 import PrestigeMetricsRibbon from '../components/home/PrestigeMetricsRibbon';
 import CinematicShowcase from '../components/home/CinematicShowcase';
 import FeaturedResidences from '../components/home/FeaturedResidences';
@@ -23,6 +24,9 @@ const Home = () => {
 
             {/* 2. Prestige Social Proof & Trust Metrics */}
             <PrestigeMetricsRibbon />
+
+            {/* 2.5. Dynamic Executive Buyer Command Hub (Active only when logged in as Buyer) */}
+            <BuyerCommandHub />
 
             {/* 3. Sticky Scroll Experience (Buy, Rent, Sell) */}
             <CinematicShowcase />

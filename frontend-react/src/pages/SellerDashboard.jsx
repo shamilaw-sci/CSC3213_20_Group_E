@@ -6,7 +6,7 @@ import { m } from "framer-motion";
 import { 
     Home, PlusCircle, Building, CheckCircle2, Clock, XCircle, 
     MessageSquare, TrendingUp, ArrowRight, Eye, Heart, 
-    Sparkles, ShieldCheck, DollarSign, ChevronRight, AlertCircle, ArrowUpRight
+    Zap, ShieldCheck, DollarSign, ChevronRight, AlertCircle, ArrowUpRight
 } from 'lucide-react';
 import api from '../context/api';
 
@@ -514,7 +514,7 @@ const SellerDashboard = () => {
                         {/* Smart AI Sales Advisor */}
                         <div className="bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent dark:from-amber-950/30 dark:via-orange-950/20 p-5 rounded-2xl border border-amber-300/40 dark:border-amber-800/40 shadow-xs">
                             <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 mb-2">
-                                <Sparkles className="w-4 h-4" />
+                                <Zap className="w-4 h-4" />
                                 <h3 className="text-xs font-extrabold uppercase tracking-wider">AI Sales Advisor</h3>
                             </div>
                             <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-1.5">

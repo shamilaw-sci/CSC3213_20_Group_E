@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { m } from 'framer-motion';
-import { ArrowDown, Compass, Sparkles, MapPin } from 'lucide-react';
+import { ArrowDown, Compass, Building2, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const hotspots = [
@@ -134,7 +134,7 @@ export default function DarkHero() {
                             >
                                 <div className="bg-black/85 backdrop-blur-xl border border-white/20 text-white p-3.5 rounded-2xl whitespace-nowrap shadow-2xl min-w-[220px]">
                                     <div className="flex items-center gap-1.5 text-blue-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">
-                                        <Sparkles className="w-3 h-3" /> Architectural Highlight
+                                        <Building2 className="w-3.5 h-3.5" /> Architectural Highlight
                                     </div>
                                     <h4 className="text-xs font-bold text-white">{spot.label}</h4>
                                     <p className="text-[11px] text-gray-300 font-light mt-0.5">{spot.detail}</p>

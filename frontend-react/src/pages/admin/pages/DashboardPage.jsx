@@ -14,7 +14,6 @@ import {
   TrendingUp, 
   MapPin, 
   PieChart, 
-  Sparkles,
   ArrowRight,
   AlertCircle
 } from "lucide-react";
