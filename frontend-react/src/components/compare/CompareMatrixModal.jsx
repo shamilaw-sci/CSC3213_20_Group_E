@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useCompare } from '../context/CompareContext';
+import { useCompare } from '../../context/CompareContext';
 
 
 export default function CompareMatrixModal() {

@@ -4,12 +4,19 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/joho/godotenv"
 )
 
 func main() {
-	dbUrl := "postgresql://postgres.gezlojwtupnxmmfxeluy:CSC3213_2026@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres"
+	_ = godotenv.Load()
+
+	dbUrl := os.Getenv("DATABASE_URL")
+	if dbUrl == "" {
+		log.Fatal("DATABASE_URL environment variable is not set")
+	}
 
 	pool, err := pgxpool.New(context.Background(), dbUrl)
 	if err != nil {

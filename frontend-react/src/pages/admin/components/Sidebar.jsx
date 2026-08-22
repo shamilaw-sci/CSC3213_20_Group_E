@@ -1,94 +1,144 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAdminAuth } from "../context/AdminAuthContext";
+import { fetchDashboardStats } from "../api/adminApi";
 import { 
   LayoutDashboard, 
   List, 
   Users, 
+  UserCheck, 
   BarChart3, 
   MessageSquare, 
   FileText, 
   ShieldAlert, 
   Settings,
-  LogOut
+  LogOut,
+  Globe
 } from "lucide-react";
-
-const NAV_ITEMS = [
-  { path: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { path: "/admin/listings", icon: List, label: "Listings" },
-  { path: "/admin/users", icon: Users, label: "Users" },
-  { path: "/admin/agent-approvals", icon: Users, label: "Agent Approvals" },
-  { path: "/admin/analytics", icon: BarChart3, label: "Analytics" },
-  { path: "/admin/messages", icon: MessageSquare, label: "Messages" },
-  { path: "/admin/reports", icon: FileText, label: "Reports" },
-  { path: "/admin/audit-logs", icon: ShieldAlert, label: "Audit Logs" },
-  { path: "/admin/settings", icon: Settings, label: "Settings" },
-];
 
 const Sidebar = () => {
   const { admin, logout } = useAdminAuth();
   const navigate = useNavigate();
+  const [pendingListings, setPendingListings] = useState(0);
+
+  useEffect(() => {
+    fetchDashboardStats()
+      .then((data) => setPendingListings(data.pendingApproval || 0))
+      .catch(() => setPendingListings(0));
+  }, []);
 
   const handleLogout = () => {
     logout();
     navigate("/admin/login");
   };
 
+  const navItems = [
+    { path: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+    { 
+      path: "/admin/listings", 
+      icon: List, 
+      label: "Listings",
+      badge: pendingListings > 0 ? pendingListings : null,
+      badgeColor: "bg-amber-500 text-slate-950 font-black"
+    },
+    { path: "/admin/users", icon: Users, label: "Users" },
+    { path: "/admin/agent-approvals", icon: UserCheck, label: "Agent Approvals" },
+    { path: "/admin/analytics", icon: BarChart3, label: "Analytics" },
+    { path: "/admin/messages", icon: MessageSquare, label: "Messages" },
+    { path: "/admin/reports", icon: FileText, label: "Reports" },
+    { path: "/admin/audit-logs", icon: ShieldAlert, label: "Audit Logs" },
+    { path: "/admin/settings", icon: Settings, label: "Settings" },
+  ];
+
   return (
-    <aside className="w-64 bg-white border-r border-gray-100 flex flex-col h-screen fixed top-0 left-0 z-50">
+    <aside className="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800/90 flex flex-col h-screen fixed top-0 left-0 z-50 shadow-md dark:shadow-2xl transition-colors duration-200">
       
-      {/* Brand */}
-      <div className="h-20 px-6 flex items-center border-b border-gray-100">
-        <img
-          src="/logo.jpeg"
-          alt="Thirasara Property logo"
-          className="w-10 h-10 object-cover rounded-xl shadow-md mr-3"
-        />
-        <div className="flex flex-col">
-          <span className="font-black text-gray-900 tracking-tight leading-tight">Thirasara</span>
-          <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Admin Panel</span>
+      {/* Brand & Logo */}
+      <div className="h-20 px-6 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg shadow-blue-500/25 border border-blue-400/30">
+            T
+          </div>
+          <div className="flex flex-col">
+            <span className="font-black text-slate-900 dark:text-white tracking-tight leading-tight text-base">Thirasara</span>
+            <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">Admin Console</span>
+          </div>
         </div>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1">
-        <span className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-4 px-2">Main Menu</span>
-        {NAV_ITEMS.map(({ path, icon: Icon, label }) => (
+      {/* Navigation Links */}
+      <nav className="flex-1 overflow-y-auto py-5 px-3 space-y-1.5 custom-scrollbar">
+        <div className="px-3 pb-2 text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+          Executive Menu
+        </div>
+        
+        {navItems.map(({ path, icon: Icon, label, badge, badgeColor }) => (
           <NavLink
             key={path}
             to={path}
             className={({ isActive }) => `
-              flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-bold text-sm
+              flex items-center justify-between px-3.5 py-2.5 rounded-2xl transition-all duration-200 font-bold text-sm
               ${isActive 
-                ? "bg-blue-50 text-blue-700" 
-                : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30 font-extrabold" 
+                : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-white"
               }
             `}
           >
             {({ isActive }) => (
               <>
-                <Icon className={`w-5 h-5 ${isActive ? "text-blue-600" : "text-gray-400"}`} />
-                <span>{label}</span>
+                <div className="flex items-center gap-3">
+                  <Icon className={`w-4 h-4 ${isActive ? "text-white" : "text-slate-400 dark:text-slate-400"}`} />
+                  <span>{label}</span>
+                </div>
+                {badge && (
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] ${isActive ? "bg-white text-blue-900 font-black" : badgeColor}`}>
+                    {badge}
+                  </span>
+                )}
               </>
             )}
           </NavLink>
         ))}
+
+        <div className="pt-4 px-3 pb-2 text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+          Public Portal
+        </div>
+        <a
+          href="/"
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition font-bold text-sm"
+        >
+          <div className="flex items-center gap-3">
+            <Globe className="w-4 h-4 text-slate-400" />
+            <span>Public Website</span>
+          </div>
+          <span className="text-[10px] text-slate-400">↗</span>
+        </a>
       </nav>
 
-      {/* Footer Profile */}
-      <div className="p-4 border-t border-gray-100 bg-gray-50/50">
-        <div className="flex items-center gap-3 bg-white p-3 rounded-2xl border border-gray-100 shadow-sm">
-          <div className="w-10 h-10 bg-gradient-to-br from-gray-800 to-gray-700 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-inner">
-            {admin?.name?.[0]?.toUpperCase() || "A"}
+      {/* Admin Profile & Logout */}
+      <div className="p-4 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/40">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-600 to-blue-600 text-white font-bold flex items-center justify-center text-sm shadow-md shrink-0">
+              {admin?.name?.[0]?.toUpperCase() || "A"}
+            </div>
+            <div className="min-w-0">
+              <span className="block text-xs font-black text-slate-900 dark:text-white truncate">
+                {admin?.name || "Super Admin"}
+              </span>
+              <span className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate">
+                {admin?.email || "admin@thirasara.lk"}
+              </span>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <span className="block font-bold text-gray-900 text-sm truncate">{admin?.name || "Administrator"}</span>
-            <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Super Admin</span>
-          </div>
-          <button aria-label="Accessible interactive control" type="button" 
-            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors" 
-            onClick={handleLogout} 
-            title="Logout"
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="p-2 rounded-xl text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition cursor-pointer"
+            title="Sign Out"
           >
             <LogOut className="w-4 h-4" />
           </button>

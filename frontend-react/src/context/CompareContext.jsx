@@ -4,19 +4,31 @@ const CompareContext = createContext();
 
 export function CompareProvider({ children }) {
     const [compareList, setCompareList] = useState(() => {
-        const saved = localStorage.getItem('compareList');
-        return saved ? JSON.parse(saved) : [];
+        try {
+            const saved = localStorage.getItem('compareList');
+            return saved ? JSON.parse(saved) : [];
+        } catch {
+            return [];
+        }
     });
     const [isCompareOpen, setIsCompareOpen] = useState(false);
 
     useEffect(() => {
-        localStorage.setItem('compareList', JSON.stringify(compareList));
+        try {
+            localStorage.setItem('compareList', JSON.stringify(compareList));
+        } catch (e) {
+            console.error("Failed to save compare list:", e);
+        }
     }, [compareList]);
 
     useEffect(() => {
         const handleStorage = (e) => {
             if (e.key === 'compareList') {
-                setCompareList(e.newValue ? JSON.parse(e.newValue) : []);
+                try {
+                    setCompareList(e.newValue ? JSON.parse(e.newValue) : []);
+                } catch {
+                    setCompareList([]);
+                }
             }
         };
         window.addEventListener('storage', handleStorage);

@@ -1,9 +1,12 @@
 import React, { useEffect } from 'react';
-import DarkHero from '../components/DarkHero';
-import CinematicShowcase from '../components/CinematicShowcase';
-import AgentShowcase from '../components/AgentShowcase';
-import CinematicFooter from '../components/CinematicFooter';
-import Navbar from '../components/Navbar';
+import DarkHero from '../components/home/DarkHero';
+import BuyerCommandHub from '../components/home/BuyerCommandHub';
+import PrestigeMetricsRibbon from '../components/home/PrestigeMetricsRibbon';
+import CinematicShowcase from '../components/home/CinematicShowcase';
+import FeaturedResidences from '../components/home/FeaturedResidences';
+import AgentShowcase from '../components/agent/AgentShowcase';
+import CinematicFooter from '../components/layout/CinematicFooter';
+import Navbar from '../components/layout/Navbar';
 
 const Home = () => {
 
@@ -16,16 +19,25 @@ const Home = () => {
         <div className="bg-black min-h-screen font-sans selection:bg-white/30 selection:text-white">
             <Navbar transparent={true} />
 
-            {/* 1. Preloader & Dark Hero */}
+            {/* 1. Preloader, Cinematic Dark Hero & Glass Quick-Search */}
             <DarkHero />
 
-            {/* 2. Sticky Scroll Show (Buy, Rent, Sell) */}
+            {/* 2. Prestige Social Proof & Trust Metrics */}
+            <PrestigeMetricsRibbon />
+
+            {/* 2.5. Dynamic Executive Buyer Command Hub (Active only when logged in as Buyer) */}
+            <BuyerCommandHub />
+
+            {/* 3. Sticky Scroll Experience (Buy, Rent, Sell) */}
             <CinematicShowcase />
 
-            {/* 3. The Agents Showcase */}
+            {/* 4. Curated Prime Residences Collection */}
+            <FeaturedResidences />
+
+            {/* 5. The Expert Agents Showcase */}
             <AgentShowcase />
 
-            {/* 4. Cinematic Footer */}
+            {/* 6. Cinematic Inquiries & Global Footer */}
             <CinematicFooter />
 
         </div>

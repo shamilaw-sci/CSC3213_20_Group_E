@@ -1,28 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/UserAuthContext';
-import Navbar from '../components/Navbar';
+import Navbar from '../components/layout/Navbar';
 import { m } from "framer-motion";
-import { Home, Key, Building, CheckCircle, Clock, XCircle, MessageSquare, TrendingUp, ArrowRight, Eye, Heart, BarChart3, Lightbulb } from 'lucide-react';
+import { 
+    Home, PlusCircle, Building, CheckCircle2, Clock, XCircle, 
+    MessageSquare, TrendingUp, ArrowRight, Eye, Heart, 
+    Zap, ShieldCheck, DollarSign, ChevronRight, AlertCircle, ArrowUpRight
+} from 'lucide-react';
 import api from '../context/api';
-import { Player } from '@lottiefiles/react-lottie-player';
 
-const StatCard = ({ icon: Icon, label, value, colorClass, delay }) => (
-    <m.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay, duration: 0.3 }}
-        className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between hover:border-blue-300 hover:shadow-md transition"
-    >
-        <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${colorClass}`}>
-                <Icon className="w-5 h-5" />
-            </div>
-            <span className="font-semibold text-sm text-gray-600">{label}</span>
-        </div>
-        <span className="text-xl font-bold text-gray-900">{value}</span>
-    </m.div>
-);
+const formatLKR = (num) => {
+    if (!num || isNaN(num)) return 'Rs. 0';
+    if (num >= 1000000000) return `Rs. ${(num / 1000000000).toFixed(1)}B`;
+    if (num >= 1000000) return `Rs. ${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `Rs. ${(num / 1000).toFixed(0)}K`;
+    return `Rs. ${num.toLocaleString()}`;
+};
 
 const SellerDashboard = () => {
     const { user } = useAuth();
@@ -33,8 +27,14 @@ const SellerDashboard = () => {
         approved: 0,
         pending: 0,
         rejected: 0,
+        draft: 0,
         messages: 0,
+        views: 0,
+        saves: 0,
+        totalPortfolioValue: 0
     });
+    const [recentListings, setRecentListings] = useState([]);
+    const [recentConversations, setRecentConversations] = useState([]);
     const [loading, setLoading] = useState(true);
 
     // Ensure only Sellers can access this page
@@ -45,7 +45,7 @@ const SellerDashboard = () => {
     }, [user, navigate]);
 
     useEffect(() => {
-        const fetchStats = async () => {
+        const fetchDashboardData = async () => {
             try {
                 const [propertiesRes, conversationsRes] = await Promise.all([
                     api.get('/properties/my-listings'),
@@ -55,15 +55,19 @@ const SellerDashboard = () => {
                 const properties = propertiesRes.data.properties || [];
                 const conversations = conversationsRes.data.conversations || [];
                 
-                let approved = 0, pending = 0, rejected = 0;
-                let totalViews = 0, totalSaves = 0;
+                let approved = 0, pending = 0, rejected = 0, draft = 0;
+                let totalViews = 0, totalSaves = 0, portfolioValue = 0;
+                
                 properties.forEach(p => {
-                    if (p.status === 'approved') approved++;
+                    const isPaid = p.payment_status === 'Paid' || p.payment_status === 'paid';
+                    if (!isPaid) draft++;
+                    else if (p.status === 'approved') approved++;
                     else if (p.status === 'pending') pending++;
                     else if (p.status === 'rejected') rejected++;
                     
                     totalViews += (p.views_count || 0);
                     totalSaves += (p.favorites?.[0]?.count || 0);
+                    portfolioValue += Number(p.price || 0);
                 });
                 
                 setStats({
@@ -71,10 +75,15 @@ const SellerDashboard = () => {
                     approved,
                     pending,
                     rejected,
+                    draft,
                     messages: conversations.length,
                     views: totalViews,
-                    saves: totalSaves
+                    saves: totalSaves,
+                    totalPortfolioValue: portfolioValue
                 });
+
+                setRecentListings(properties.slice(0, 4));
+                setRecentConversations(conversations.slice(0, 3));
             } catch (error) {
                 console.error("Error fetching seller stats:", error);
             } finally {
@@ -83,265 +92,459 @@ const SellerDashboard = () => {
         };
 
         if (user && user.role === 'SELLER') {
-            fetchStats();
+            fetchDashboardData();
         }
     }, [user]);
 
     if (!user) return null;
 
+    const firstName = user.name?.split(' ')[0] || 'Seller';
+
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+        <div className="min-h-screen bg-slate-50 dark:bg-gray-950 flex flex-col font-sans selection:bg-blue-500 selection:text-white pb-12">
             <Navbar />
             
-            {/* Main Dual-Pane Layout */}
-            <div className="flex-1 flex flex-col lg:flex-row w-full max-w-[1600px] mx-auto overflow-hidden">
-                
-                {/* Left Side: Cinematic Hero & Quick Actions */}
-                <div className="flex-1 relative text-white p-6 lg:p-10 flex flex-col overflow-y-auto">
-                    {/* Cinematic Background Image (from Landing Page) */}
-                    <div 
-                        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat" 
-                        style={{ backgroundImage: 'url(/images/hero2.jpg)' }}
-                    ></div>
-                    {/* Dark gradient overlay for readability */}
-                    <div className="absolute inset-0 z-[1] bg-gradient-to-tr from-black via-black/80 to-black/40"></div>
-                    
-                    {/* Background decorations */}
-                    <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none z-[2]"></div>
-                    <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none z-[2]"></div>
-
-                    <div className="relative z-10 flex-1 flex flex-col justify-start max-w-3xl">
-                        
-                        {/* Welcome Section with Inline Agent */}
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
-                            <m.h1 
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="text-3xl md:text-5xl font-black tracking-tight leading-tight"
-                            >
-                                Welcome back,<br/>
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">
-                                    {user.name.split(' ')[0]}! 👋
+            {/* Header & Quick Action Command Bar */}
+            <header className="bg-white dark:bg-gray-900 border-b border-gray-200/80 dark:border-gray-800 sticky top-16 z-20 shadow-xs">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800">
+                                    Seller Command Hub
                                 </span>
-                            </m.h1>
-
-                            {/* Walking Agent Lottie Animation */}
-                            <m.div 
-                                initial={{ opacity: 0, x: 200 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ 
-                                    opacity: { duration: 0.5 },
-                                    x: { type: "spring", stiffness: 40, damping: 15, delay: 0.2 }
-                                }}
-                                className="w-48 h-48 md:w-72 md:h-72 lg:w-80 lg:h-80 relative z-20 shrink-0 flex items-center justify-center -mt-6"
-                            >
-                                <Player
-                                    autoplay
-                                    loop
-                                    src="/images/walking.json"
-                                    style={{ height: '100%', width: '100%' }}
-                                />
-                            </m.div>
-                        </div>
-
-                        <m.p 
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 }}
-                            className="text-base text-blue-100/80 mb-8 max-w-2xl"
-                        >
-                            Manage your premium properties, track buyer engagement, and grow your real estate portfolio all in one place.
-                        </m.p>
-
-                        {/* Quick Actions Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* Sell Property */}
-                            <m.button aria-label="Accessible interactive control" type="button" 
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() => navigate('/add-property')}
-                                className="bg-white/10 backdrop-blur-md border border-white/20 p-5 rounded-2xl text-left hover:bg-white/20 transition group flex flex-col"
-                            >
-                                <div className="w-10 h-10 bg-blue-500/20 text-blue-300 rounded-xl flex items-center justify-center mb-3 group-hover:bg-blue-500 group-hover:text-white transition">
-                                    <Key className="w-5 h-5" />
-                                </div>
-                                <h3 className="text-lg font-bold text-white mb-1">Sell a Property</h3>
-                                <p className="text-blue-100/70 text-xs mb-3 flex-1">List your land or house for sale and reach verified buyers.</p>
-                                <div className="flex items-center text-blue-300 font-semibold text-sm group-hover:text-white">
-                                    Start Listing <ArrowRight className="w-4 h-4 ml-2" />
-                                </div>
-                            </m.button>
-
-                            {/* Rent Property */}
-                            <m.button aria-label="Accessible interactive control" type="button" 
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() => navigate('/add-property')}
-                                className="bg-white/10 backdrop-blur-md border border-white/20 p-5 rounded-2xl text-left hover:bg-white/20 transition group flex flex-col"
-                            >
-                                <div className="w-10 h-10 bg-green-500/20 text-green-300 rounded-xl flex items-center justify-center mb-3 group-hover:bg-green-500 group-hover:text-white transition">
-                                    <Building className="w-5 h-5" />
-                                </div>
-                                <h3 className="text-lg font-bold text-white mb-1">Rent a Property</h3>
-                                <p className="text-blue-100/70 text-xs mb-3 flex-1">Add a new rental listing and find the perfect tenant quickly.</p>
-                                <div className="flex items-center text-emerald-300 font-semibold text-sm group-hover:text-white">
-                                    Start Listing <ArrowRight className="w-4 h-4 ml-2" />
-                                </div>
-                            </m.button>
-                        </div>
-
-                        {/* Recent Activity & Insights - Moved to Left Side */}
-                        <div className="mt-12">
-                            <h3 className="text-sm font-bold text-blue-200 uppercase tracking-wider mb-4">Recent Activity & Insights</h3>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {/* Performance Chart */}
-                                <div className="bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/20 shadow-sm flex flex-col">
-                                    <div className="flex items-center gap-2 mb-4 text-white">
-                                        <BarChart3 className="w-4 h-4 text-blue-300" />
-                                        <span className="font-bold text-sm">Weekly Views</span>
-                                    </div>
-                                    <div className="flex items-end justify-between h-20 gap-2 px-1">
-                                        {[30, 45, 25, 60, 40, 75, 50].map((val, i) => (
-                                            <div key={i} className="w-full bg-white/10 rounded-t-sm relative group flex flex-col justify-end">
-                                                <m.div 
-                                                    initial={{ scaleY: 0 }}
-                                                    animate={{ scaleY: val / 100 }}
-                                                    style={{ transformOrigin: "bottom" }}
-                                                    transition={{ delay: 0.5 + (i * 0.1), duration: 0.5 }}
-                                                    className="w-full h-full bg-blue-400 rounded-t-sm"
-                                                ></m.div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="flex justify-between text-[10px] text-blue-200/60 mt-2 px-1 font-medium">
-                                        <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-col gap-4">
-                                    {/* Messages */}
-                                    <m.button aria-label="Accessible interactive control" type="button" 
-                                        onClick={() => navigate('/messages')}
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.6, duration: 0.3 }}
-                                        className="w-full bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/20 shadow-sm flex items-center justify-between hover:bg-white/20 transition group flex-1"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 rounded-lg bg-purple-500/20 text-purple-300 group-hover:bg-purple-500 group-hover:text-white transition">
-                                                <MessageSquare className="w-5 h-5" />
-                                            </div>
-                                            <div className="text-left">
-                                                <span className="block font-semibold text-sm text-white">Unread Messages</span>
-                                                <span className="block text-xs text-blue-100/70">{stats?.messages || 0} active chats</span>
-                                            </div>
-                                        </div>
-                                        <div className="bg-purple-500/20 text-purple-300 border border-purple-500/30 px-3 py-1 rounded-full text-xs font-bold">
-                                            {stats?.messages || 0} New
-                                        </div>
-                                    </m.button>
-
-                                    {/* AI Tip */}
-                                    <div className="bg-amber-500/10 backdrop-blur-md border border-amber-500/30 p-4 rounded-xl flex gap-3 flex-1">
-                                        <Lightbulb className="w-5 h-5 text-amber-300 shrink-0 mt-0.5" />
-                                        <div>
-                                            <h4 className="text-sm font-bold text-amber-300 mb-1">Pro Tip for Sellers</h4>
-                                            <p className="text-xs text-amber-100/80 leading-relaxed">
-                                                Listings with 5+ photos get <b>40% more views</b>.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
+                                <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Verified Seller Account
+                                </span>
                             </div>
+                            <h1 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white mt-1 tracking-tight">
+                                Welcome back, {firstName}!
+                            </h1>
+                            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                                Real-time performance, buyer demand, and active property management.
+                            </p>
+                        </div>
+
+                        {/* Top Action Buttons */}
+                        <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap">
+                            <button
+                                onClick={() => navigate('/messages')}
+                                className="relative inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-200 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 transition"
+                            >
+                                <MessageSquare className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                                <span>Inquiries</span>
+                                {stats.messages > 0 && (
+                                    <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-600 text-white">
+                                        {stats.messages}
+                                    </span>
+                                )}
+                            </button>
+
+                            <button
+                                onClick={() => navigate('/my-properties')}
+                                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-200 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 transition"
+                            >
+                                <Home className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                <span>My Listings ({stats.total})</span>
+                            </button>
+
+                            <button
+                                onClick={() => navigate('/add-property')}
+                                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition shadow-sm hover:shadow-md"
+                            >
+                                <PlusCircle className="w-4 h-4" />
+                                <span>+ Post New Property</span>
+                            </button>
                         </div>
                     </div>
                 </div>
+            </header>
 
-                {/* Right Side: Analytics & Overview Sidebar */}
-                <div className="w-full lg:w-[450px] bg-white p-6 lg:p-8 flex flex-col border-l border-gray-100 overflow-y-auto">
-                    <div className="mb-6">
-                        <h2 className="text-xl font-black text-gray-900 mb-1">Overview</h2>
-                        <p className="text-gray-500 text-xs">Your real estate performance at a glance.</p>
-                    </div>
-
-                    {loading ? (
-                        <div className="flex-1 flex items-center justify-center">
-                            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            {/* Main Content Area */}
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 w-full flex-1">
+                
+                {/* Unpaid Drafts Banner */}
+                {stats.draft > 0 && (
+                    <div className="mb-6 p-4 rounded-2xl bg-amber-500/15 border border-amber-500/40 text-amber-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                            <AlertCircle className="w-5 h-5 text-amber-400 shrink-0" />
+                            <span className="text-xs sm:text-sm font-semibold">
+                                You have <strong>{stats.draft} unpaid draft listing{stats.draft > 1 ? 's' : ''}</strong> saved. Complete payment to submit for Admin review.
+                            </span>
                         </div>
-                    ) : (
-                        <div className="space-y-6">
-                            {/* Hero Stat */}
-                            <m.div 
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl p-5 text-white shadow-lg relative overflow-hidden"
-                            >
-                                <TrendingUp className="absolute right-[-10px] bottom-[-10px] w-24 h-24 text-white/10" />
-                                <h3 className="text-blue-100 text-xs font-semibold mb-1">Total Properties Listed</h3>
-                                <div className="text-4xl font-black">{stats.total}</div>
-                            </m.div>
-
-                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Property Status</h3>
-                            
-                            <div className="space-y-3">
-                                <StatCard 
-                                    icon={CheckCircle} 
-                                    label="Approved & Live" 
-                                    value={stats.approved} 
-                                    colorClass="bg-emerald-100 text-emerald-600" 
-                                    delay={0.1}
-                                />
-                                
-                                <StatCard 
-                                    icon={Clock} 
-                                    label="Pending Review" 
-                                    value={stats.pending} 
-                                    colorClass="bg-yellow-100 text-yellow-600" 
-                                    delay={0.2}
-                                />
-
-                                <StatCard 
-                                    icon={XCircle} 
-                                    label="Rejected" 
-                                    value={stats.rejected} 
-                                    colorClass="bg-red-100 text-red-600" 
-                                    delay={0.3}
-                                />
-                            </div>
-                            
-                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 mt-6">Engagement & Performance</h3>
-                            
-                            <div className="grid grid-cols-2 gap-3">
-                                <StatCard 
-                                    icon={Eye} 
-                                    label="Total Views" 
-                                    value={stats.views} 
-                                    colorClass="bg-blue-50 text-blue-600" 
-                                    delay={0.4}
-                                />
-                                <StatCard 
-                                    icon={Heart} 
-                                    label="Total Saves" 
-                                    value={stats.saves} 
-                                    colorClass="bg-rose-50 text-rose-600" 
-                                    delay={0.5}
-                                />
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="mt-8 pt-8 border-t border-gray-100">
-                        <button aria-label="Accessible interactive control" type="button" 
+                        <button
                             onClick={() => navigate('/my-properties')}
-                            className="w-full py-4 bg-gray-900 hover:bg-black text-white font-bold rounded-xl transition shadow-lg flex items-center justify-center gap-2"
+                            className="px-4 py-1.5 rounded-xl bg-amber-500 text-slate-950 text-xs font-black hover:bg-amber-400 transition cursor-pointer self-start sm:self-auto shrink-0"
                         >
-                            <Home className="w-5 h-5" /> Manage My Listings
+                            View Drafts →
                         </button>
                     </div>
-                </div>
-            </div>
+                )}
 
+                {/* 1. Top Executive KPI Cards (5 Columns) */}
+                <section aria-label="Key Performance Indicators" className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 sm:gap-4 mb-8">
+                    
+                    {/* Portfolio Value */}
+                    <div className="bg-white dark:bg-gray-900 p-4 sm:p-5 rounded-2xl border border-gray-200/70 dark:border-gray-800 shadow-xs flex flex-col justify-between">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Portfolio Value</span>
+                            <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                                <DollarSign className="w-4 h-4" />
+                            </div>
+                        </div>
+                        <div className="mt-3">
+                            <div className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight">
+                                {loading ? '...' : formatLKR(stats.totalPortfolioValue)}
+                            </div>
+                            <span className="text-[11px] text-gray-400 dark:text-gray-500 font-medium">Across {stats.total} listings</span>
+                        </div>
+                    </div>
+
+                    {/* Active Listings */}
+                    <div className="bg-white dark:bg-gray-900 p-4 sm:p-5 rounded-2xl border border-gray-200/70 dark:border-gray-800 shadow-xs flex flex-col justify-between">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Live Listings</span>
+                            <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                                <CheckCircle2 className="w-4 h-4" />
+                            </div>
+                        </div>
+                        <div className="mt-3">
+                            <div className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
+                                {loading ? '...' : stats.approved}
+                                <span className="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+                            </div>
+                            <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">Active on search</span>
+                        </div>
+                    </div>
+
+                    {/* In Review */}
+                    <div className="bg-white dark:bg-gray-900 p-4 sm:p-5 rounded-2xl border border-gray-200/70 dark:border-gray-800 shadow-xs flex flex-col justify-between">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Under Review</span>
+                            <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                                <Clock className="w-4 h-4" />
+                            </div>
+                        </div>
+                        <div className="mt-3">
+                            <div className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight">
+                                {loading ? '...' : stats.pending}
+                            </div>
+                            <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">Admin review &lt; 24h</span>
+                        </div>
+                    </div>
+
+                    {/* Buyer Impressions */}
+                    <div className="bg-white dark:bg-gray-900 p-4 sm:p-5 rounded-2xl border border-gray-200/70 dark:border-gray-800 shadow-xs flex flex-col justify-between">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Views</span>
+                            <div className="w-8 h-8 rounded-lg bg-cyan-50 dark:bg-cyan-950/40 text-cyan-600 dark:text-cyan-400 flex items-center justify-center">
+                                <Eye className="w-4 h-4" />
+                            </div>
+                        </div>
+                        <div className="mt-3">
+                            <div className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight">
+                                {loading ? '...' : stats.views.toLocaleString()}
+                            </div>
+                            <span className="text-[11px] text-cyan-600 dark:text-cyan-400 font-medium">Buyer impressions</span>
+                        </div>
+                    </div>
+
+                    {/* Buyer Wishlist Saves */}
+                    <div className="bg-white dark:bg-gray-900 p-4 sm:p-5 rounded-2xl border border-gray-200/70 dark:border-gray-800 shadow-xs flex flex-col justify-between col-span-2 sm:col-span-2 lg:col-span-1">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Shortlisted</span>
+                            <div className="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center">
+                                <Heart className="w-4 h-4" />
+                            </div>
+                        </div>
+                        <div className="mt-3">
+                            <div className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight">
+                                {loading ? '...' : stats.saves.toLocaleString()}
+                            </div>
+                            <span className="text-[11px] text-rose-600 dark:text-rose-400 font-medium">High intent buyers</span>
+                        </div>
+                    </div>
+                </section>
+
+                {/* 2. Main Analytics & Operational Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    
+                    {/* Left 8-Cols: Performance Curve & Recent Listings Snapshot */}
+                    <div className="lg:col-span-8 space-y-6">
+                        
+                        {/* Interactive Engagement & Market Demand Card */}
+                        <div className="bg-white dark:bg-gray-900 p-5 sm:p-6 rounded-2xl border border-gray-200/70 dark:border-gray-800 shadow-xs">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
+                                <div>
+                                    <h2 className="text-base font-bold text-gray-900 dark:text-white">Weekly Buyer Engagement</h2>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">Total views and inquiry velocity across all properties.</p>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2.5 py-1 rounded-lg">
+                                        <TrendingUp className="w-3.5 h-3.5" /> +18.4% vs last week
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Activity Bar Chart */}
+                            <div className="h-32 sm:h-36 flex items-end justify-between gap-3 sm:gap-4 px-2 pt-4 border-b border-gray-100 dark:border-gray-800">
+                                {[
+                                    { day: 'Mon', views: 35, inquiries: 2 },
+                                    { day: 'Tue', views: 55, inquiries: 5 },
+                                    { day: 'Wed', views: 40, inquiries: 3 },
+                                    { day: 'Thu', views: 70, inquiries: 8 },
+                                    { day: 'Fri', views: 65, inquiries: 6 },
+                                    { day: 'Sat', views: 90, inquiries: 12 },
+                                    { day: 'Sun', views: 80, inquiries: 10 }
+                                ].map((item, i) => (
+                                    <div key={item.day} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group">
+                                        <div className="text-[10px] font-bold text-gray-400 dark:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            {item.views}
+                                        </div>
+                                        <m.div 
+                                            initial={{ height: 0 }}
+                                            animate={{ height: `${(item.views / 95) * 100}%` }}
+                                            transition={{ delay: 0.1 + (i * 0.05), duration: 0.4 }}
+                                            className={`w-full max-w-[28px] rounded-t-lg transition-all ${
+                                                i === 5 
+                                                    ? 'bg-gradient-to-t from-blue-600 to-cyan-400 shadow-xs' 
+                                                    : 'bg-blue-500/80 hover:bg-blue-600 dark:bg-blue-600/70 dark:hover:bg-blue-500'
+                                            }`}
+                                        ></m.div>
+                                        <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mt-1">{item.day}</span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-2 mt-4 pt-2 text-center text-xs">
+                                <div className="p-2 rounded-xl bg-gray-50 dark:bg-gray-800/50">
+                                    <span className="block text-gray-400 text-[10px] font-bold uppercase">Avg. Views / Property</span>
+                                    <span className="text-sm font-black text-gray-900 dark:text-white mt-0.5">
+                                        {stats.total > 0 ? Math.round(stats.views / stats.total) : 0}
+                                    </span>
+                                </div>
+                                <div className="p-2 rounded-xl bg-gray-50 dark:bg-gray-800/50">
+                                    <span className="block text-gray-400 text-[10px] font-bold uppercase">Save Rate</span>
+                                    <span className="text-sm font-black text-gray-900 dark:text-white mt-0.5">
+                                        {stats.views > 0 ? ((stats.saves / stats.views) * 100).toFixed(1) : 0}%
+                                    </span>
+                                </div>
+                                <div className="p-2 rounded-xl bg-gray-50 dark:bg-gray-800/50">
+                                    <span className="block text-gray-400 text-[10px] font-bold uppercase">Lead Velocity</span>
+                                    <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 mt-0.5">High Demand</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Recent Listings Snapshot */}
+                        <div className="bg-white dark:bg-gray-900 p-5 sm:p-6 rounded-2xl border border-gray-200/70 dark:border-gray-800 shadow-xs">
+                            <div className="flex items-center justify-between mb-4">
+                                <div>
+                                    <h2 className="text-base font-bold text-gray-900 dark:text-white">Recent Listings</h2>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">Quick snapshot of your latest property submissions.</p>
+                                </div>
+                                <button 
+                                    onClick={() => navigate('/my-properties')}
+                                    className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                                >
+                                    View all ({stats.total}) <ArrowRight className="w-3.5 h-3.5" />
+                                </button>
+                            </div>
+
+                            {loading ? (
+                                <div className="py-12 flex justify-center">
+                                    <div className="w-6 h-6 border-3 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                                </div>
+                            ) : recentListings.length === 0 ? (
+                                <div className="text-center py-10 px-4 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-2xl">
+                                    <Building className="w-10 h-10 text-gray-400 mx-auto mb-2" />
+                                    <h3 className="text-sm font-bold text-gray-900 dark:text-white">No properties listed yet</h3>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-sm mx-auto">
+                                        Start reaching thousands of active buyers and renters in Sri Lanka today.
+                                    </p>
+                                    <button
+                                        onClick={() => navigate('/add-property')}
+                                        className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition shadow-xs"
+                                    >
+                                        + List Your First Property
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                                    {recentListings.map(prop => (
+                                        <div key={prop.id} className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 group">
+                                            <div className="flex items-center gap-3.5">
+                                                <div className="w-14 h-14 rounded-xl bg-gray-100 dark:bg-gray-800 overflow-hidden flex-shrink-0 relative">
+                                                    {prop.images && prop.images[0] ? (
+                                                        <img src={prop.images[0]} alt={prop.title} className="w-full h-full object-cover group-hover:scale-105 transition" />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                                            <Building className="w-6 h-6" />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <div className="flex items-center gap-2">
+                                                        <h3 className="text-sm font-bold text-gray-900 dark:text-white line-clamp-1 group-hover:text-blue-600 transition">
+                                                            {prop.title}
+                                                        </h3>
+                                                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 uppercase">
+                                                            {prop.listing_type || 'Sale'}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                                        {prop.city ? `${prop.city}, ${prop.district || ''}` : 'Sri Lanka'} • <span className="font-bold text-gray-900 dark:text-white">{formatLKR(prop.price)}</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center justify-between sm:justify-end gap-3">
+                                                {/* Status Badge */}
+                                                <div>
+                                                    {prop.status === 'approved' && (
+                                                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 dark:text-emerald-300 px-2.5 py-1 rounded-full border border-emerald-200/60 dark:border-emerald-900/50">
+                                                            <CheckCircle2 className="w-3 h-3" /> Live
+                                                        </span>
+                                                    )}
+                                                    {prop.status === 'pending' && (
+                                                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 bg-amber-50 dark:bg-amber-950/50 dark:text-amber-300 px-2.5 py-1 rounded-full border border-amber-200/60 dark:border-amber-900/50">
+                                                            <Clock className="w-3 h-3" /> Reviewing
+                                                        </span>
+                                                    )}
+                                                    {prop.status === 'rejected' && (
+                                                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-red-700 bg-red-50 dark:bg-red-950/50 dark:text-red-300 px-2.5 py-1 rounded-full border border-red-200/60 dark:border-red-900/50">
+                                                            <XCircle className="w-3 h-3" /> Needs Fix
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                {/* Views */}
+                                                <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                                                    <Eye className="w-3.5 h-3.5 text-gray-400" />
+                                                    <span className="font-semibold">{prop.views_count || 0}</span>
+                                                </div>
+
+                                                <button
+                                                    onClick={() => navigate(`/property/${prop.id}`)}
+                                                    className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                                                    title="View Property"
+                                                >
+                                                    <ArrowUpRight className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Right 4-Cols: Active Inquiries & Smart AI Advisor */}
+                    <div className="lg:col-span-4 space-y-6">
+                        
+                        {/* Quick Launch Cards */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <button
+                                onClick={() => navigate('/add-property')}
+                                className="p-4 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 text-white text-left shadow-sm hover:shadow-md transition group"
+                            >
+                                <Building className="w-5 h-5 text-blue-200 mb-2 group-hover:scale-110 transition-transform" />
+                                <span className="block font-bold text-sm">Sell Land/House</span>
+                                <span className="block text-[11px] text-blue-100/70 mt-0.5">Reach verified buyers</span>
+                            </button>
+
+                            <button
+                                onClick={() => navigate('/add-property')}
+                                className="p-4 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white text-left shadow-sm hover:shadow-md transition group"
+                            >
+                                <Home className="w-5 h-5 text-emerald-200 mb-2 group-hover:scale-110 transition-transform" />
+                                <span className="block font-bold text-sm">Rent a Property</span>
+                                <span className="block text-[11px] text-emerald-100/70 mt-0.5">Find reliable tenants</span>
+                            </button>
+                        </div>
+
+                        {/* Buyer Inquiries Snapshot */}
+                        <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-gray-200/70 dark:border-gray-800 shadow-xs">
+                            <div className="flex items-center justify-between mb-3.5">
+                                <div className="flex items-center gap-2">
+                                    <MessageSquare className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                                    <h2 className="text-sm font-bold text-gray-900 dark:text-white">Active Buyer Chats</h2>
+                                </div>
+                                <Link to="/messages" className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">
+                                    Open Inbox
+                                </Link>
+                            </div>
+
+                            {loading ? (
+                                <div className="py-6 flex justify-center">
+                                    <div className="w-5 h-5 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+                                </div>
+                            ) : recentConversations.length === 0 ? (
+                                <div className="py-6 text-center text-xs text-gray-400 dark:text-gray-500">
+                                    No active inquiries yet. Inquiries will appear here as soon as buyers message you.
+                                </div>
+                            ) : (
+                                <div className="space-y-2.5">
+                                    {recentConversations.map(conv => (
+                                        <div 
+                                            key={conv.id}
+                                            onClick={() => navigate('/messages')}
+                                            className="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/60 hover:bg-purple-50 dark:hover:bg-purple-950/30 transition cursor-pointer border border-transparent hover:border-purple-200 dark:hover:border-purple-800 flex items-center justify-between"
+                                        >
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 font-bold text-xs flex items-center justify-center">
+                                                    {(conv.buyer?.name || 'Buyer').charAt(0).toUpperCase()}
+                                                </div>
+                                                <div>
+                                                    <span className="block text-xs font-bold text-gray-900 dark:text-white">
+                                                        {conv.buyer?.name || 'Prospective Buyer'}
+                                                    </span>
+                                                    <span className="block text-[11px] text-gray-500 dark:text-gray-400 line-clamp-1">
+                                                        {conv.property?.title || 'Property Inquiry'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <ChevronRight className="w-4 h-4 text-gray-400" />
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Smart AI Sales Advisor */}
+                        <div className="bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent dark:from-amber-950/30 dark:via-orange-950/20 p-5 rounded-2xl border border-amber-300/40 dark:border-amber-800/40 shadow-xs">
+                            <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 mb-2">
+                                <Zap className="w-4 h-4" />
+                                <h3 className="text-xs font-extrabold uppercase tracking-wider">AI Sales Advisor</h3>
+                            </div>
+                            <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-1.5">
+                                Want 40% more buyer inquiries?
+                            </h4>
+                            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                                Listings with at least <b>5 high-resolution photos</b> and a transparent <b>price breakdown</b> close 2.3x faster in Colombo and Kandy.
+                            </p>
+                            <div className="mt-3 pt-3 border-t border-amber-200/60 dark:border-amber-800/60 flex items-center justify-between text-[11px]">
+                                <span className="font-semibold text-amber-800 dark:text-amber-300">Market Demand Index</span>
+                                <span className="font-bold text-emerald-600 dark:text-emerald-400">🔥 Very High (8.9/10)</span>
+                            </div>
+                        </div>
+
+                        {/* Trust & Safety Guard */}
+                        <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-200/70 dark:border-gray-800 shadow-xs flex items-center gap-3">
+                            <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 shrink-0">
+                                <ShieldCheck className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h4 className="text-xs font-bold text-gray-900 dark:text-white">Fast Moderation Guarantee</h4>
+                                <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
+                                    All new property submissions are reviewed and verified within 24 hours.
+                                </p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </main>
         </div>
     );
 };

@@ -3,13 +3,23 @@ import api from '../context/api';
 import axios from 'axios';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/UserAuthContext';
-import Navbar from '../components/Navbar';
+import Navbar from '../components/layout/Navbar';
 import { m } from "framer-motion";
-import { Send, Paperclip, X, Image as ImageIcon, FileText, User, MessageSquare, ShieldAlert } from 'lucide-react';
+import { Send, Paperclip, X, Image as ImageIcon, FileText, User, MessageSquare, ShieldAlert, ArrowLeft } from 'lucide-react';
 
 // axios is globally configured with withCredentials = true
 // Authorization header no longer strictly required for browser if relying on HttpOnly cookies,
 // but kept here as fallback for any edge case or manual token storage.
+
+const isSafeAttachmentUrl = (url) => {
+    if (!url || typeof url !== 'string') return false;
+    try {
+        const parsed = new URL(url, window.location.origin);
+        return ['http:', 'https:'].includes(parsed.protocol);
+    } catch {
+        return false;
+    }
+};
 
 const getConversationTitle = (conversation, user) => {
     if (conversation.type === 'support') return 'Admin Support';
@@ -51,7 +61,6 @@ const getInitials = (name) => {
 };
 
 const Messages = () => {
-    const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const { user } = useAuth();
     const messagesEndRef = useRef(null);
@@ -64,11 +73,7 @@ const Messages = () => {
     const [messagesLoading, setMessagesLoading] = useState(false);
     const [error, setError] = useState('');
 
-    useEffect(() => {
-        if (!user) {
-            navigate('/login');
-        }
-    }, [navigate, user]);
+
 
     const selectedConversation = useMemo(
         () => conversations.find((conversation) => conversation.id === selectedId),
@@ -201,15 +206,47 @@ const Messages = () => {
     };
 
     return (
-        <div className="flex flex-col h-[100dvh] bg-[#f8f9fa] font-sans overflow-hidden">
+        <div className="flex flex-col h-[100dvh] bg-[#f8f9fa] dark:bg-gray-950 font-sans overflow-hidden">
             <Navbar />
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 w-full flex-1 flex flex-col min-h-0">
-                <div className="mb-4 flex justify-between items-end">
-                    <div>
-                        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Messages</h1>
-                        <p className="text-gray-500 mt-1">Talk with sellers, buyers, and admin support.</p>
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 w-full flex-1 flex flex-col min-h-0">
+                <div className="mb-3 flex items-center justify-between flex-wrap gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-3">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                if (user?.role === 'SELLER') navigate('/seller-dashboard');
+                                else if (user?.role === 'AGENT') navigate('/agent-dashboard');
+                                else navigate(-1);
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition shadow-xs cursor-pointer"
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                            <span>{user?.role === 'SELLER' ? '← Dashboard' : user?.role === 'AGENT' ? '← Agent Hub' : '← Back'}</span>
+                        </button>
+                        <div>
+                            <h1 className="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">Messages & Inquiries</h1>
+                        </div>
                     </div>
+                    {user?.role === 'SELLER' && (
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => navigate('/seller-dashboard')}
+                                className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline px-2 py-1"
+                            >
+                                Seller Command Hub
+                            </button>
+                            <span className="text-gray-300 dark:text-gray-700">•</span>
+                            <button
+                                type="button"
+                                onClick={() => navigate('/my-properties')}
+                                className="text-xs font-bold text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-2 py-1"
+                            >
+                                My Listings
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {error && (
@@ -385,11 +422,11 @@ const Messages = () => {
                                                     }`}>
                                                         {message.body && <p className="text-[15px] whitespace-pre-wrap leading-snug">{message.body}</p>}
                                                         
-                                                        {message.attachment_url && (
+                                                        {message.attachment_url && isSafeAttachmentUrl(message.attachment_url) && (
                                                             <a aria-label="Accessible interactive control"
                                                                 href={message.attachment_url}
                                                                 target="_blank"
-                                                                rel="noreferrer"
+                                                                rel="noopener noreferrer"
                                                                 className={`block mt-2 rounded-xl overflow-hidden border ${mine ? 'border-blue-400/30 bg-blue-500/20' : 'border-gray-200 bg-gray-50'} hover:opacity-90 transition-opacity`}
                                                             >
                                                                 {message.attachment_type?.startsWith('image/') ? (

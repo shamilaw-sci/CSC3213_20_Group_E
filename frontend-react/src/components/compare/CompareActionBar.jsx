@@ -1,5 +1,5 @@
 import React from 'react';
-import { useCompare } from '../context/CompareContext';
+import { useCompare } from '../../context/CompareContext';
 
 export default function CompareActionBar() {
     const { compareList, setIsCompareOpen, removeFromCompare, clearCompare } = useCompare();

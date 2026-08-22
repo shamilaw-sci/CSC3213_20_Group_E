@@ -1,39 +1,70 @@
 import React, { useState, useEffect } from "react";
 import { fetchDashboardStats, fetchRevenueData, fetchUserGrowth, fetchListings } from "../api/adminApi";
+import { useNavigate } from "react-router-dom";
 import { m } from "framer-motion";
-import { Home, Clock, Users, DollarSign, ArrowUpRight, ArrowDownRight, ChevronRight } from "lucide-react";
+import { 
+  Building2, 
+  Clock, 
+  Users, 
+  DollarSign, 
+  ChevronRight, 
+  ShieldCheck, 
+  CheckCircle2, 
+  FileCheck2, 
+  TrendingUp, 
+  MapPin, 
+  PieChart, 
+  ArrowRight,
+  AlertCircle
+} from "lucide-react";
 
-// Simple bar chart using Tailwind utilities
-const BarChart = ({ data = [], colorClass = "bg-blue-500" }) => {
-  if (!data.length) return null;
-  const max = Math.max(...data.map((d) => d.value || 0), 1);
+// Modern Interactive Bar Chart with tooltips and glowing columns
+const BarChart = ({ data = [], colorClass = "from-blue-600 to-indigo-500", suffix = "" }) => {
+  if (!data || !data.length) {
+    return (
+      <div className="h-48 flex items-center justify-center text-xs text-slate-500 font-bold">
+        No transaction records in this interval.
+      </div>
+    );
+  }
+  const max = Math.max(...data.map((d) => Number(d.value ?? d.users ?? d.count ?? 0)), 1);
+
   return (
-    <div className="flex items-end justify-between h-48 mt-4 gap-2">
-      {data.map((d, i) => (
-        <div key={i} className="flex flex-col items-center flex-1 group">
-          <div className="w-full relative flex items-end justify-center h-full rounded-t-lg bg-gray-50 overflow-hidden">
-            <m.div
-              initial={{ scaleY: 0 }}
-              animate={{ scaleY: d.value / max }}
-              style={{ transformOrigin: "bottom" }}
-              transition={{ duration: 1, ease: "easeOut", delay: i * 0.1 }}
-              className={`w-full h-full ${colorClass} rounded-t-md opacity-80 group-hover:opacity-100 transition-opacity min-h-[4px]`}
-            />
-            {/* Tooltip on hover */}
-            <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-[10px] py-1 px-2 rounded font-bold whitespace-nowrap z-10 pointer-events-none">
-                {d.value.toLocaleString()}
+    <div className="flex items-end justify-between h-48 mt-4 gap-2.5 sm:gap-4 px-2">
+      {data.map((d, i) => {
+        const val = Number(d.value ?? d.users ?? d.count ?? 0);
+        const heightPct = Math.max((val / max) * 100, 10);
+
+        return (
+          <div key={i} className="flex flex-col items-center flex-1 group relative">
+            {/* Hover Tooltip */}
+            <div className="absolute -top-9 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-slate-800 text-white text-[11px] font-black py-1 px-2.5 rounded-lg shadow-xl whitespace-nowrap z-20 pointer-events-none -translate-y-1 group-hover:translate-y-0 border border-slate-700">
+              {suffix === "LKR" ? `LKR ${val.toLocaleString()}` : `${val.toLocaleString()} ${suffix}`}
             </div>
+
+            {/* Bar Track Container */}
+            <div className="w-full relative flex items-end justify-center h-36 rounded-2xl bg-slate-800/60 p-1 overflow-hidden border border-slate-700/50">
+              <m.div
+                initial={{ height: 0 }}
+                animate={{ height: `${heightPct}%` }}
+                transition={{ duration: 0.8, ease: "easeOut", delay: i * 0.08 }}
+                className={`w-full bg-gradient-to-t ${colorClass} rounded-xl shadow-md opacity-90 group-hover:opacity-100 transition-opacity min-h-[8px]`}
+              />
+            </div>
+
+            {/* Month / Period Label */}
+            <span className="text-[10px] sm:text-xs font-bold text-slate-400 mt-2.5 uppercase tracking-wider">
+              {d.label}
+            </span>
           </div>
-          <span className="text-[10px] font-bold text-gray-400 mt-3 uppercase tracking-wider">{d.label}</span>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };
 
-// Removed mock data
-
 const DashboardPage = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalListings: 0,
     pendingApproval: 0,
@@ -43,10 +74,12 @@ const DashboardPage = () => {
     sellerCount: 0,
     revenue: 0,
     rejectedListings: 0,
+    listingTypes: []
   });
   const [revenue, setRevenue] = useState([]);
   const [userGrowth, setUserGrowth] = useState([]);
   const [pendingListings, setPendingListings] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
@@ -65,7 +98,8 @@ const DashboardPage = () => {
             pending.listings.slice(0, 5).map((listing) => ({
               id: listing.id,
               title: listing.title,
-              seller: listing.seller_id || "Seller",
+              seller: listing.seller_id || "Verified Seller",
+              city: listing.city || listing.district || "Colombo",
               date: listing.created_at?.slice(0, 10) || "-",
               price: `LKR ${Number(listing.price || 0).toLocaleString("en-LK")}`,
             }))
@@ -73,159 +107,318 @@ const DashboardPage = () => {
         }
       } catch (err) {
         console.error("Failed to load dashboard data:", err);
+      } finally {
+        setLoading(false);
       }
     };
     load();
   }, []);
 
-  const fmt = (n) => new Intl.NumberFormat("en-LK").format(n);
-  const fmtCur = (n) => `LKR ${new Intl.NumberFormat("en-LK").format(n)}`;
+  const fmt = (n) => new Intl.NumberFormat("en-LK").format(n || 0);
+  const fmtCur = (n) => `LKR ${new Intl.NumberFormat("en-LK").format(n || 0)}`;
 
   const statCards = [
-    { title: "Total Listings", value: fmt(stats.totalListings || 0), icon: Home, trend: "up", desc: "Active & Pending", color: "blue" },
-    { title: "Pending Approval", value: fmt(stats.pendingApproval || 0), icon: Clock, trend: "neutral", desc: "Requires action", color: "orange" },
-    { title: "Total Users", value: fmt(stats.totalUsers || 0), icon: Users, trend: "up", desc: "Buyers & Sellers", color: "indigo" },
-    { title: "Total Revenue", value: fmtCur(stats.revenue || 0), icon: DollarSign, trend: "up", desc: "Overall Income", color: "emerald" }
+    { 
+      title: "Total Portfolio Listings", 
+      value: fmt(stats.totalListings || 0), 
+      icon: Building2, 
+      desc: `${stats.activeListings || 0} Live · ${stats.pendingApproval || 0} In Review`, 
+      color: "from-blue-600 to-cyan-500",
+      textColor: "text-blue-400",
+      bgLight: "bg-blue-950/60 border border-blue-800/60",
+      route: "/admin/listings"
+    },
+    { 
+      title: "Pending Title Verifications", 
+      value: fmt(stats.pendingApproval || 0), 
+      icon: Clock, 
+      desc: "Requires Super Admin Action", 
+      color: "from-amber-500 to-orange-500",
+      textColor: "text-amber-400",
+      bgLight: "bg-amber-950/60 border border-amber-800/60",
+      route: "/admin/listings?status=pending"
+    },
+    { 
+      title: "Verified Platform Users", 
+      value: fmt(stats.totalUsers || 0), 
+      icon: Users, 
+      desc: `${stats.buyerCount || 0} Buyers · ${stats.sellerCount || 0} Sellers`, 
+      color: "from-indigo-600 to-purple-600",
+      textColor: "text-indigo-400",
+      bgLight: "bg-indigo-950/60 border border-indigo-800/60",
+      route: "/admin/users"
+    },
+    { 
+      title: "Total Platform Revenue", 
+      value: fmtCur(stats.revenue || 0), 
+      icon: DollarSign, 
+      desc: "Listing Fees & Promotion Subscriptions", 
+      color: "from-emerald-600 to-teal-500",
+      textColor: "text-emerald-400",
+      bgLight: "bg-emerald-950/60 border border-emerald-800/60",
+      route: "/admin/reports"
+    }
   ];
 
-  const getColorClasses = (color) => {
-      const map = {
-          blue: "bg-blue-50 text-blue-600 border-blue-100",
-          orange: "bg-orange-50 text-orange-600 border-orange-100",
-          indigo: "bg-indigo-50 text-indigo-600 border-indigo-100",
-          emerald: "bg-emerald-50 text-emerald-600 border-emerald-100"
-      };
-      return map[color] || map.blue;
-  };
-
   return (
-    <div className="space-y-8 pb-12">
-      {/* Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statCards.map((stat, idx) => (
-          <m.div 
-            key={idx}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.1 }}
-            className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group"
-          >
-            <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-${stat.color}-500/5 to-${stat.color}-500/10 rounded-full -mr-10 -mt-10 transition-transform group-hover:scale-110`} />
-            
-            <div className="flex justify-between items-start mb-4 relative z-10">
-                <div className="flex flex-col">
-                    <span className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">{stat.title}</span>
-                    <span className={`text-3xl font-black text-gray-900 mt-2 ${stat.title === 'Monthly Revenue' ? 'text-2xl' : ''}`}>{stat.value}</span>
-                </div>
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm border ${getColorClasses(stat.color)}`}>
-                    <stat.icon className="w-6 h-6" />
-                </div>
+    <div className="space-y-8 pb-12 font-sans text-slate-100">
+      
+      {/* 1. High-Contrast Official Amber Moderation Banner */}
+      {stats.pendingApproval > 0 && (
+        <m.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-amber-950/50 border-2 border-amber-500/70 rounded-3xl p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 shadow-2xl backdrop-blur-md"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center shadow-lg shadow-amber-500/30 shrink-0 font-black">
+              <Clock className="w-6 h-6 animate-pulse" />
             </div>
-
-            <div className="flex items-center gap-1.5 mt-4 relative z-10">
-                {stat.trend === 'up' ? <ArrowUpRight className="w-4 h-4 text-emerald-500" /> : 
-                 stat.trend === 'down' ? <ArrowDownRight className="w-4 h-4 text-red-500" /> : null}
-                <span className={`text-xs font-bold ${stat.trend === 'up' ? 'text-emerald-600' : stat.trend === 'down' ? 'text-red-600' : 'text-gray-400'}`}>
-                    {stat.desc}
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-md bg-amber-500/20 text-amber-300 font-mono text-[11px] font-black uppercase tracking-wider border border-amber-500/40">
+                  ACTION REQUIRED
                 </span>
+                <h3 className="text-base sm:text-lg font-black text-amber-200">
+                  {stats.pendingApproval} Properties Awaiting Super Admin Deed Verification
+                </h3>
+              </div>
+              <p className="text-xs sm:text-sm text-amber-100/90 font-medium mt-1">
+                New deed submissions and PostGIS spatial boundaries require legal review before publishing to the live map.
+              </p>
             </div>
-          </m.div>
-        ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate("/admin/listings?status=pending")}
+            className="px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs sm:text-sm transition flex items-center gap-2 shadow-xl shadow-amber-500/25 shrink-0 cursor-pointer"
+          >
+            <span>Review & Approve</span>
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </m.div>
+      )}
+
+      {/* 2. Top Executive KPI Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        {statCards.map((stat, idx) => {
+          const Icon = stat.icon;
+          return (
+            <m.div 
+              key={stat.title}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.08 }}
+              onClick={() => navigate(stat.route)}
+              className="bg-slate-900 rounded-3xl p-6 border border-slate-800 shadow-lg hover:border-slate-700 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group cursor-pointer"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest block">
+                    {stat.title}
+                  </span>
+                  <span className="text-2xl sm:text-3xl font-black text-white mt-1.5 block tracking-tight">
+                    {stat.value}
+                  </span>
+                </div>
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${stat.bgLight} ${stat.textColor} group-hover:scale-110 transition duration-300 shadow-md`}>
+                  <Icon className="w-6 h-6" />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-3 border-t border-slate-800/80">
+                <span className="text-xs font-bold text-slate-400">
+                  {stat.desc}
+                </span>
+                <ChevronRight className="w-4 h-4 text-slate-500 group-hover:translate-x-1 group-hover:text-blue-400 transition-all" />
+              </div>
+            </m.div>
+          );
+        })}
       </div>
 
-      {/* Charts Row */}
+      {/* 3. Deep Analytics Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <m.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }} className="admin-card">
-          <div className="admin-card-header">
+        
+        {/* Revenue Overview Card */}
+        <m.div 
+          initial={{ opacity: 0, x: -20 }} 
+          animate={{ opacity: 1, x: 0 }} 
+          transition={{ delay: 0.2 }} 
+          className="bg-slate-900 rounded-3xl p-6 sm:p-7 border border-slate-800 shadow-lg"
+        >
+          <div className="flex items-center justify-between mb-4">
             <div>
-                <h3 className="admin-card-title">Revenue Overview</h3>
-                <p className="text-xs text-gray-400 font-bold mt-1 uppercase tracking-wider">Listing fees (LKR)</p>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-black text-white">Monthly Revenue Inflow</h3>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                  LKR
+                </span>
+              </div>
+              <p className="text-xs font-semibold text-slate-400 mt-0.5">
+                Paid listing subscriptions, premium highlights & agent commissions
+              </p>
             </div>
+            <button 
+              onClick={() => navigate('/admin/reports')}
+              className="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1 cursor-pointer"
+            >
+              <span>Audit Reports</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
           </div>
-          <BarChart data={revenue} colorClass="bg-gradient-to-t from-blue-600 to-blue-400" />
+          <BarChart data={revenue} colorClass="from-blue-600 to-cyan-500" suffix="LKR" />
         </m.div>
 
-        <m.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }} className="admin-card">
-          <div className="admin-card-header">
+        {/* User Growth Card */}
+        <m.div 
+          initial={{ opacity: 0, x: 20 }} 
+          animate={{ opacity: 1, x: 0 }} 
+          transition={{ delay: 0.3 }} 
+          className="bg-slate-900 rounded-3xl p-6 sm:p-7 border border-slate-800 shadow-lg"
+        >
+          <div className="flex items-center justify-between mb-4">
             <div>
-                <h3 className="admin-card-title">User Growth</h3>
-                <p className="text-xs text-gray-400 font-bold mt-1 uppercase tracking-wider">Registered Accounts</p>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-black text-white">Platform User Growth</h3>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                  Cumulative
+                </span>
+              </div>
+              <p className="text-xs font-semibold text-slate-400 mt-0.5">
+                Total verified buyers, sellers, and licensed property brokers
+              </p>
             </div>
+            <button 
+              onClick={() => navigate('/admin/analytics')}
+              className="text-xs font-bold text-purple-400 hover:text-purple-300 flex items-center gap-1 cursor-pointer"
+            >
+              <span>Deep Analytics</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
           </div>
-          <BarChart data={userGrowth} colorClass="bg-gradient-to-t from-indigo-600 to-indigo-400" />
+          <BarChart data={userGrowth} colorClass="from-purple-600 to-indigo-500" suffix="accounts" />
         </m.div>
+
       </div>
 
-      {/* Tables Row */}
+      {/* 4. Platform Insights & Moderation Queue Row */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Overview List */}
-        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="admin-card xl:col-span-1">
-          <div className="admin-card-header border-b border-gray-100 pb-4">
-            <h3 className="admin-card-title">Platform Summary</h3>
+        
+        {/* Platform Insights & Health */}
+        <m.div 
+          initial={{ opacity: 0, y: 20 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          transition={{ delay: 0.4 }} 
+          className="bg-slate-900 rounded-3xl p-6 sm:p-7 border border-slate-800 shadow-lg xl:col-span-1"
+        >
+          <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+            <h3 className="text-base font-black text-white">Platform Health & Inventory</h3>
+            <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest flex items-center gap-1.5 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              Live Sync
+            </span>
           </div>
-          <div className="space-y-4 mt-6">
+
+          <div className="space-y-3 mt-5">
             {[
-              { label: "Active Listings", value: fmt(stats.activeListings), color: "text-emerald-600", bg: "bg-emerald-50" },
-              { label: "Pending Approval", value: fmt(stats.pendingApproval), color: "text-orange-600", bg: "bg-orange-50" },
-              { label: "Rejected / Removed", value: fmt(stats.rejectedListings), color: "text-red-600", bg: "bg-red-50" },
-              { label: "Buyers Registered", value: fmt(stats.buyerCount), color: "text-blue-600", bg: "bg-blue-50" },
-              { label: "Sellers Registered", value: fmt(stats.sellerCount), color: "text-indigo-600", bg: "bg-indigo-50" },
+              { label: "Active & Live Properties", value: fmt(stats.activeListings), color: "text-emerald-300", bg: "bg-emerald-500/15 border border-emerald-500/30" },
+              { label: "Pending Legal Review", value: fmt(stats.pendingApproval), color: "text-amber-300", bg: "bg-amber-500/15 border border-amber-500/30" },
+              { label: "Rejected / Defective Deeds", value: fmt(stats.rejectedListings), color: "text-red-300", bg: "bg-red-500/15 border border-red-500/30" },
+              { label: "Registered Buyers", value: fmt(stats.buyerCount), color: "text-blue-300", bg: "bg-blue-500/15 border border-blue-500/30" },
+              { label: "Registered Sellers", value: fmt(stats.sellerCount), color: "text-purple-300", bg: "bg-purple-500/15 border border-purple-500/30" },
             ].map(({ label, value, color, bg }) => (
-              <div key={label} className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors">
-                <span className="text-sm font-bold text-gray-600">{label}</span>
-                <span className={`text-sm font-black px-3 py-1 rounded-lg ${bg} ${color}`}>{value}</span>
+              <div key={label} className="flex items-center justify-between p-3 rounded-2xl bg-slate-800/40 border border-slate-800/80 hover:bg-slate-800/80 transition-colors">
+                <span className="text-xs font-bold text-slate-300">{label}</span>
+                <span className={`text-xs font-black px-3 py-1 rounded-xl ${bg} ${color}`}>{value}</span>
               </div>
             ))}
           </div>
-        </m.div>
 
-        {/* Pending Listings Table */}
-        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="admin-card xl:col-span-2 flex flex-col">
-          <div className="admin-card-header border-b border-gray-100 pb-4">
-            <h3 className="admin-card-title">Pending Approvals</h3>
-            <a aria-label="Accessible interactive control" href="/admin/listings" className="text-sm font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 bg-blue-50 px-4 py-2 rounded-lg transition-colors">
-                View All <ChevronRight className="w-4 h-4" />
-            </a>
-          </div>
-          
-          <div className="flex-1 mt-4">
-            <div className="admin-data-table-wrap border-none">
-              <table className="admin-data-table">
-                <thead>
-                  <tr>
-                    <th className="bg-transparent text-[10px]">Reference</th>
-                    <th className="bg-transparent text-[10px]">Property</th>
-                    <th className="bg-transparent text-[10px]">Price</th>
-                    <th className="bg-transparent text-[10px]">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pendingListings.length === 0 && (
-                    <tr>
-                      <td colSpan={4} className="text-center py-8">
-                        <div className="flex flex-col items-center">
-                            <Clock className="w-8 h-8 text-gray-300 mb-2" />
-                            <span className="text-gray-500 font-medium">No properties waiting for approval.</span>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                  {pendingListings.map((p) => (
-                    <tr key={p.id}>
-                      <td><span className="text-xs font-bold font-mono text-gray-400 bg-gray-50 px-2 py-1 rounded">{p.id}</span></td>
-                      <td>
-                        <div className="text-sm font-bold text-gray-900">{p.title}</div>
-                        <div className="text-xs text-gray-500 mt-0.5">{p.seller}</div>
-                      </td>
-                      <td><span className="text-sm font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">{p.price}</span></td>
-                      <td className="text-xs font-bold text-gray-400">{p.date}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          {/* Quick Legal Safety Note */}
+          <div className="mt-5 p-4 rounded-2xl bg-blue-950/40 border border-blue-800/50 flex items-start gap-3">
+            <ShieldCheck className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+            <div className="text-[11px] text-slate-300 leading-relaxed font-light">
+              <span className="font-bold text-white block mb-0.5">PostGIS Spatial Verification:</span>
+              Coordinates and boundaries are automatically cross-checked against Sri Lanka Surveyor General survey maps.
             </div>
           </div>
         </m.div>
+
+        {/* Pending Moderation Queue Table */}
+        <m.div 
+          initial={{ opacity: 0, y: 20 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          transition={{ delay: 0.5 }} 
+          className="bg-slate-900 rounded-3xl p-6 sm:p-7 border border-slate-800 shadow-lg xl:col-span-2 flex flex-col"
+        >
+          <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+            <div>
+              <h3 className="text-base font-black text-white">Pending Moderation Queue</h3>
+              <p className="text-xs text-slate-400 font-semibold mt-0.5">
+                Properties awaiting Super Admin deed & polygon approval
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate("/admin/listings?status=pending")}
+              className="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1 bg-blue-500/10 border border-blue-500/20 px-3.5 py-2 rounded-xl transition cursor-pointer"
+            >
+              <span>Full Queue</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+          
+          <div className="flex-1 mt-4 overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-slate-800 text-[11px] font-black uppercase tracking-wider text-slate-400">
+                  <th className="pb-3">Property Title</th>
+                  <th className="pb-3">Location</th>
+                  <th className="pb-3">Price (LKR)</th>
+                  <th className="pb-3">Submitted</th>
+                  <th className="pb-3 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/80">
+                {pendingListings.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="text-center py-10">
+                      <div className="flex flex-col items-center">
+                        <CheckCircle2 className="w-9 h-9 text-emerald-400 mb-2" />
+                        <span className="text-white font-bold text-sm">All Clear!</span>
+                        <span className="text-slate-400 text-xs mt-0.5">No pending listings waiting for verification.</span>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+                {pendingListings.map((p) => (
+                  <tr key={p.id} className="hover:bg-slate-800/50 transition">
+                    <td className="py-3.5 pr-3">
+                      <div className="text-xs font-bold text-white line-clamp-1 max-w-[220px]">{p.title}</div>
+                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">REF: {p.id.slice(0, 8)}</div>
+                    </td>
+                    <td className="py-3.5 pr-3 text-xs font-semibold text-slate-300">{p.city}</td>
+                    <td className="py-3.5 pr-3">
+                      <span className="text-xs font-black text-emerald-400">{p.price}</span>
+                    </td>
+                    <td className="py-3.5 pr-3 text-xs font-semibold text-slate-400">{p.date}</td>
+                    <td className="py-3.5 text-right">
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/admin/listings`)}
+                        className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white transition font-bold text-xs shadow-md cursor-pointer"
+                      >
+                        Inspect
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </m.div>
+
       </div>
 
     </div>

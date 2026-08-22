@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/UserAuthContext";
+import { useAuth } from '../../context/UserAuthContext';
 import { m, useScroll, useTransform } from "framer-motion";
 
 const showcaseData = [

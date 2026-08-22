@@ -1,14 +1,12 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const { createClient } = require('@supabase/supabase-js');
+const supabase = require('../config/supabase');
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
-
-const chatWithAI = async (req, res) => {
+const chatWithAI = async (req, res, next) => {
     try {
         const { message, history } = req.body;
         
         if (!process.env.GEMINI_API_KEY) {
-            return res.status(500).json({ error: "GEMINI_API_KEY is not configured in the backend." });
+            return next(new Error("GEMINI_API_KEY is not configured in the backend."));
         }
 
         const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -30,7 +28,7 @@ const chatWithAI = async (req, res) => {
         if (agentsError) console.error("Could not fetch agents for AI context", agentsError);
 
         // Create a compact context for properties
-        const propertyContext = properties.map(p => 
+        const propertyContext = (properties || []).map(p => 
             `[ID: ${p.id}] ${p.title} - ${p.type} in ${p.city || p.district || 'Unknown location'}. Price: LKR ${p.price}. ${p.bedrooms || 0} Beds, ${p.bathrooms || 0} Baths, ${p.land_size || 0} perches. Image: ${p.images?.[0]}`
         ).join('\n');
         
@@ -87,7 +85,7 @@ If the user asks to find an agent in a specific location (e.g. Kandy, Colombo), 
         res.status(200).json({ response: response.response.text() });
     } catch (error) {
         console.error("AI Error:", error);
-        res.status(500).json({ error: error.message || "Failed to communicate with AI Assistant." });
+        next(error);
     }
 };
 

@@ -2,16 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { m } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import api from '../context/api';
-import PropertyCard from '../components/PropertyCard';
-import AdvancedSearchBar from '../components/AdvancedSearchBar';
+import PropertyCard from '../components/property/PropertyCard';
+import AdvancedSearchBar from '../components/property/AdvancedSearchBar';
 import { Button } from '@/components/ui/button';
 import { Search, Map as MapIcon, ArrowRight, Home, Key, FileCheck } from 'lucide-react';
-import Navbar from '../components/Navbar';
+import Navbar from '../components/layout/Navbar';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
-import MarkerPopup from '../components/MarkerPopup';
+import MarkerPopup from '../components/map/MarkerPopup';
 import 'leaflet/dist/leaflet.css';
+import toast from 'react-hot-toast';
 
 
 const formatPrice = (price) => {
@@ -89,7 +90,7 @@ const BuyPage = () => {
                 : (res.data?.properties || res.data?.data || []);
             setProperties(fetchedProps);
         } catch (error) {
-            console.error('Error fetching properties:', error);
+            (toast.error('Error fetching properties:'), console.error('Error fetching properties:', error));
         } finally {
             setLoading(false);
         }

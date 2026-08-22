@@ -1,183 +1,151 @@
-// Base API configuration for Thirasara Property Admin Panel
-// Backend: Node.js + Express on port 5000; Go microservice on port 8080
+/**
+ * Admin API Client — Thirasara Property Admin Panel
+ *
+ * Uses a dedicated Axios instance with:
+ *  - Shared baseURL from VITE_API_URL environment variable
+ *  - Automatic Bearer token injection from localStorage via request interceptor
+ *
+ * All exported function NAMES and SIGNATURES are unchanged — admin pages
+ * (DashboardPage, ListingsPage, UsersPage, etc.) import these directly
+ * and require no modification.
+ *
+ * To add a new admin API call, add a new exported function at the bottom
+ * of the relevant section. Do NOT call fetch() directly in this file.
+ */
+import axios from 'axios';
 
-const envUrl = import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || "http://localhost:5000"}`;
-const BASE_URL = envUrl.endsWith('/api') ? envUrl : `${envUrl}/api`;
-
-const getHeaders = () => ({
-  "Content-Type": "application/json",
-  Authorization: `Bearer ${localStorage.getItem("admin_token") || ""}`,
+// ─── Axios Instance ───────────────────────────────────────────────────────────
+const adminApi = axios.create({
+  baseURL: (import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api',
 });
 
-const handleResponse = async (res) => {
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Request failed");
-  return data;
-};
+// Automatically attach admin Bearer token to every request.
+// Token is stored in localStorage as 'admin_token' upon admin login.
+adminApi.interceptors.request.use((config) => {
+  const token = localStorage.getItem('admin_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
-// ─── Auth ───────────────────────────────────────────────────────────────────
+// Normalize response: unwrap .data so callers get the payload directly.
+const unwrap = (promise) => promise.then((res) => res.data);
+
+// ─── Auth ─────────────────────────────────────────────────────────────────────
 export const adminLogin = (email, password) =>
-  fetch(`${BASE_URL}/admin/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-  }).then(handleResponse);
+  unwrap(adminApi.post('/admin/login', { email, password }));
 
-// ─── Dashboard Stats ─────────────────────────────────────────────────────────
+export const verifyAdminSession = () =>
+  unwrap(adminApi.get('/admin/verify'));
+
+// ─── Dashboard Stats ──────────────────────────────────────────────────────────
 export const fetchDashboardStats = () =>
-  fetch(`${BASE_URL}/admin/dashboard/stats`, { headers: getHeaders() }).then(handleResponse);
+  unwrap(adminApi.get('/admin/dashboard/stats'));
 
-export const fetchRevenueData = (period = "monthly") =>
-  fetch(`${BASE_URL}/admin/dashboard/revenue?period=${period}`, { headers: getHeaders() }).then(handleResponse);
+export const fetchRevenueData = (period = 'monthly') =>
+  unwrap(adminApi.get('/admin/dashboard/revenue', { params: { period } }));
 
 export const fetchUserGrowth = () =>
-  fetch(`${BASE_URL}/admin/dashboard/user-growth`, { headers: getHeaders() }).then(handleResponse);
+  unwrap(adminApi.get('/admin/dashboard/user-growth'));
 
-// ─── Listings Management (FR-REQ-5.6, ADM-001, ADM-002) ─────────────────────
-export const fetchListings = (params = {}) => {
-  const query = new URLSearchParams(
-    Object.entries(params).filter(([, value]) => value !== undefined && value !== null && value !== "")
-  ).toString();
-  return fetch(`${BASE_URL}/admin/listings?${query}`, { headers: getHeaders() }).then(handleResponse);
-};
+// ─── Listings Management ──────────────────────────────────────────────────────
+export const fetchListings = (params = {}) =>
+  unwrap(adminApi.get('/admin/listings', { params }));
 
 export const approveListing = (listingId) =>
-  fetch(`${BASE_URL}/admin/listings/${listingId}/approve`, {
-    method: "PATCH",
-    headers: getHeaders(),
-  }).then(handleResponse);
+  unwrap(adminApi.patch(`/admin/listings/${listingId}/approve`));
 
 export const rejectListing = (listingId, reason) =>
-  fetch(`${BASE_URL}/admin/listings/${listingId}/reject`, {
-    method: "PATCH",
-    headers: getHeaders(),
-    body: JSON.stringify({ reason }),
-  }).then(handleResponse);
+  unwrap(adminApi.patch(`/admin/listings/${listingId}/reject`, { reason }));
 
 export const deleteListing = (listingId) =>
-  fetch(`${BASE_URL}/admin/listings/${listingId}`, {
-    method: "DELETE",
-    headers: getHeaders(),
-  }).then(handleResponse);
+  unwrap(adminApi.delete(`/admin/listings/${listingId}`));
 
 export const fetchListingById = (listingId) =>
-  fetch(`${BASE_URL}/admin/listings/${listingId}`, { headers: getHeaders() }).then(handleResponse);
+  unwrap(adminApi.get(`/admin/listings/${listingId}`));
 
 export const fetchConversations = () =>
-  fetch(`${BASE_URL}/conversations`, { headers: getHeaders() }).then(handleResponse);
+  unwrap(adminApi.get('/conversations'));
 
 export const fetchConversationMessages = (conversationId) =>
-  fetch(`${BASE_URL}/conversations/${conversationId}/messages`, { headers: getHeaders() }).then(handleResponse);
+  unwrap(adminApi.get(`/conversations/${conversationId}/messages`));
 
 export const sendConversationMessage = (conversationId, body, attachment) => {
   const formData = new FormData();
-  formData.append("body", body);
-  if (attachment) formData.append("attachment", attachment);
-
-  return fetch(`${BASE_URL}/conversations/${conversationId}/messages`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${localStorage.getItem("admin_token") || ""}` },
-    body: formData,
-  }).then(handleResponse);
+  formData.append('body', body);
+  if (attachment) formData.append('attachment', attachment);
+  return unwrap(
+    adminApi.post(`/conversations/${conversationId}/messages`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  );
 };
 
-// ─── User Management (ADM-003, ADM-004) ─────────────────────────────────────
-export const fetchUsers = (params = {}) => {
-  const query = new URLSearchParams(params).toString();
-  return fetch(`${BASE_URL}/admin/users?${query}`, { headers: getHeaders() }).then(handleResponse);
-};
+// ─── User Management ──────────────────────────────────────────────────────────
+export const fetchUsers = (params = {}) =>
+  unwrap(adminApi.get('/admin/users', { params }));
 
 export const fetchUserById = (userId) =>
-  fetch(`${BASE_URL}/admin/users/${userId}`, { headers: getHeaders() }).then(handleResponse);
+  unwrap(adminApi.get(`/admin/users/${userId}`));
 
 export const fetchPendingAgents = () =>
-  fetch(`${BASE_URL}/admin/pending-agents`, { headers: getHeaders() }).then(handleResponse);
+  unwrap(adminApi.get('/admin/pending-agents'));
 
 export const banUser = (userId, reason) =>
-  fetch(`${BASE_URL}/admin/users/${userId}/ban`, {
-    method: "PATCH",
-    headers: getHeaders(),
-    body: JSON.stringify({ reason }),
-  }).then(handleResponse);
+  unwrap(adminApi.patch(`/admin/users/${userId}/ban`, { reason }));
 
 export const unbanUser = (userId) =>
-  fetch(`${BASE_URL}/admin/users/${userId}/unban`, {
-    method: "PATCH",
-    headers: getHeaders(),
-  }).then(handleResponse);
+  unwrap(adminApi.patch(`/admin/users/${userId}/unban`));
 
 export const updateUserRole = (userId, role, reason = null) =>
-  fetch(`${BASE_URL}/admin/users/${userId}/role`, {
-    method: "PATCH",
-    headers: getHeaders(),
-    body: JSON.stringify({ role, reason }),
-  }).then(handleResponse);
+  unwrap(adminApi.patch(`/admin/users/${userId}/role`, { role, reason }));
 
-// ─── Analytics (FR-REQ-5.7, ADM-006) ────────────────────────────────────────
-export const fetchAnalytics = (params = {}) => {
-  const query = new URLSearchParams(params).toString();
-  return fetch(`${BASE_URL}/admin/analytics?${query}`, { headers: getHeaders() }).then(handleResponse);
-};
+// ─── Analytics ────────────────────────────────────────────────────────────────
+export const fetchAnalytics = (params = {}) =>
+  unwrap(adminApi.get('/admin/analytics', { params }));
 
 export const fetchSearchHeatmap = () =>
-  fetch(`${BASE_URL}/admin/analytics/heatmap`, { headers: getHeaders() }).then(handleResponse);
+  unwrap(adminApi.get('/admin/analytics/heatmap'));
 
-// ─── Reports (ADM-005, ADM-012) ──────────────────────────────────────────────
-export const fetchTransactionHistory = (params = {}) => {
-  const query = new URLSearchParams(params).toString();
-  return fetch(`${BASE_URL}/admin/reports/transactions?${query}`, { headers: getHeaders() }).then(handleResponse);
-};
+// ─── Reports ──────────────────────────────────────────────────────────────────
+export const fetchTransactionHistory = (params = {}) =>
+  unwrap(adminApi.get('/admin/reports/transactions', { params }));
 
 export const exportReport = async (type, filters = {}) => {
-  const query = new URLSearchParams(filters).toString();
-  const res = await fetch(`${BASE_URL}/admin/reports/export/${type}?${query}`, {
-    headers: { ...getHeaders(), Accept: "application/octet-stream" },
+  const res = await adminApi.get(`/admin/reports/export/${type}`, {
+    params: filters,
+    responseType: 'blob',
   });
-  if (!res.ok) throw new Error("Export failed");
-  const blob = await res.blob();
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement("a");
+  const url = window.URL.createObjectURL(new Blob([res.data]));
+  const a = document.createElement('a');
   a.href = url;
   a.download = `thirasara-${type}-report.csv`;
   a.click();
   window.URL.revokeObjectURL(url);
 };
 
-// ─── Audit Logs (ADM-008, SEC-010) ───────────────────────────────────────────
-export const fetchAuditLogs = (params = {}) => {
-  const query = new URLSearchParams(params).toString();
-  return fetch(`${BASE_URL}/admin/audit-logs?${query}`, { headers: getHeaders() }).then(handleResponse);
-};
+// ─── Audit Logs ───────────────────────────────────────────────────────────────
+export const fetchAuditLogs = (params = {}) =>
+  unwrap(adminApi.get('/admin/audit-logs', { params }));
 
-// ─── Settings / Configuration (ADM-007) ──────────────────────────────────────
+// ─── Settings / Configuration ─────────────────────────────────────────────────
 export const fetchSettings = () =>
-  fetch(`${BASE_URL}/admin/settings`, { headers: getHeaders() }).then(handleResponse);
+  unwrap(adminApi.get('/admin/settings'));
 
 export const updateSettings = (settings) =>
-  fetch(`${BASE_URL}/admin/settings`, {
-    method: "PUT",
-    headers: getHeaders(),
-    body: JSON.stringify(settings),
-  }).then(handleResponse);
+  unwrap(adminApi.put('/admin/settings', settings));
 
-// ─── Listing Boosts / Promotions (ADM-010) ───────────────────────────────────
+// ─── Listing Boosts / Promotions ──────────────────────────────────────────────
 export const fetchBoosts = () =>
-  fetch(`${BASE_URL}/admin/boosts`, { headers: getHeaders() }).then(handleResponse);
+  unwrap(adminApi.get('/admin/boosts'));
 
 export const toggleBoost = (listingId, enabled) =>
-  fetch(`${BASE_URL}/admin/boosts/${listingId}`, {
-    method: "PATCH",
-    headers: getHeaders(),
-    body: JSON.stringify({ enabled }),
-  }).then(handleResponse);
+  unwrap(adminApi.patch(`/admin/boosts/${listingId}`, { enabled }));
 
-// ─── Reported Content (ADM-011) ───────────────────────────────────────────────
+// ─── Reported Content ─────────────────────────────────────────────────────────
 export const fetchReportedContent = () =>
-  fetch(`${BASE_URL}/admin/reported`, { headers: getHeaders() }).then(handleResponse);
+  unwrap(adminApi.get('/admin/reported'));
 
 export const resolveReport = (reportId, action) =>
-  fetch(`${BASE_URL}/admin/reported/${reportId}/resolve`, {
-    method: "PATCH",
-    headers: getHeaders(),
-    body: JSON.stringify({ action }),
-  }).then(handleResponse);
+  unwrap(adminApi.patch(`/admin/reported/${reportId}/resolve`, { action }));

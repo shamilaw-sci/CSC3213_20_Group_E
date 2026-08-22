@@ -1,9 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { AnimatePresence, m } from "framer-motion";
-import { Bot, X, Send, Loader, Sparkles } from 'lucide-react';
+import { Bot, X, Send, Loader } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import api from '../context/api';
-import { useAuth } from '../context/UserAuthContext';
+import api from '../../context/api';
+import { useAuth } from '../../context/UserAuthContext';
 
 const FloatingAIChat = () => {
     const { user } = useAuth();
@@ -104,7 +104,7 @@ const FloatingAIChat = () => {
                         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 flex justify-between items-center text-white">
                             <div className="flex items-center gap-2">
                                 <div className="p-2 bg-white/20 rounded-lg">
-                                    <Sparkles className="w-5 h-5 text-yellow-300" />
+                                    <Bot className="w-5 h-5 text-yellow-300" />
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-sm">Thirasara AI</h3>

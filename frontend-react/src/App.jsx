@@ -6,14 +6,25 @@ import { ThemeProvider } from './context/ThemeProvider';
 import { CompareProvider } from './context/CompareContext';
 import { AdminAuthProvider } from './pages/admin/context/AdminAuthContext';
 import { MotionConfig, LazyMotion, domAnimation } from 'framer-motion';
+import { Toaster } from 'react-hot-toast';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false, // Prevents excessive refetching when switching tabs
+      retry: 1, // Only retry failed requests once
+    },
+  },
+});
 
 // Components that should load immediately
-import FloatingAIChat from './components/FloatingAIChat';
-import ProtectedRoute from './components/ProtectedRoute';
+import FloatingAIChat from './components/ai/FloatingAIChat';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 import AdminProtectedRoute from './pages/admin/components/AdminProtectedRoute';
 import AdminLayout from './pages/admin/components/AdminLayout';
-import CompareActionBar from './components/CompareActionBar';
-import CompareMatrixModal from './components/CompareMatrixModal';
+import CompareActionBar from './components/compare/CompareActionBar';
+import CompareMatrixModal from './components/compare/CompareMatrixModal';
 
 // Set global axios configuration
 axios.defaults.withCredentials = true;
@@ -32,6 +43,7 @@ const AgentSearch = lazy(() => import('./pages/AgentSearch'));
 const AgentProfile = lazy(() => import('./pages/AgentProfile'));
 const AgentDashboard = lazy(() => import('./pages/agent/Dashboard'));
 const SellerDashboard = lazy(() => import('./pages/SellerDashboard'));
+const BuyerDashboard = lazy(() => import('./pages/BuyerDashboard'));
 const MyFavorites = lazy(() => import('./pages/MyFavorites'));
 const PropertyDetails = lazy(() => import('./pages/PropertyDetails'));
 const SearchResults = lazy(() => import('./pages/SearchResults'));
@@ -59,10 +71,12 @@ function App() {
   return (
     <MotionConfig reducedMotion="user">
       <LazyMotion features={domAnimation}>
+      <QueryClientProvider client={queryClient}>
       <UserAuthProvider>
         <ThemeProvider>
           <CompareProvider>
           <Router>
+          <Toaster position="bottom-right" toastOptions={{ className: 'dark:bg-slate-800 dark:text-slate-200' }} />
           <FloatingAIChat />
           <CompareActionBar />
           <CompareMatrixModal />
@@ -84,15 +98,40 @@ function App() {
                 <SellerDashboard />
               </ProtectedRoute>
             } />
+            <Route path="/buyer-dashboard" element={
+              <ProtectedRoute allowedRoles={['BUYER', 'USER', 'ADMIN', 'AGENT', 'SELLER']}>
+                <BuyerDashboard />
+              </ProtectedRoute>
+            } />
             <Route path="/login" element={<Login />} />
             <Route path="/buy" element={<BuyPage />} />
             <Route path="/map" element={<MapSearch />} />
             <Route path="/rent" element={<MapSearch />} />
-            <Route path="/add-property" element={<AddProperty />} />
-            <Route path="/my-properties" element={<MyProperties />} />
-            <Route path="/messages" element={<Messages />} />
-            <Route path="/profile" element={<ProfileSettings />} />
-            <Route path="/favorites" element={<MyFavorites />} />
+            <Route path="/add-property" element={
+              <ProtectedRoute allowedRoles={['SELLER', 'AGENT']}>
+                <AddProperty />
+              </ProtectedRoute>
+            } />
+            <Route path="/my-properties" element={
+              <ProtectedRoute allowedRoles={['SELLER']}>
+                <MyProperties />
+              </ProtectedRoute>
+            } />
+            <Route path="/messages" element={
+              <ProtectedRoute>
+                <Messages />
+              </ProtectedRoute>
+            } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <ProfileSettings />
+              </ProtectedRoute>
+            } />
+            <Route path="/favorites" element={
+              <ProtectedRoute>
+                <MyFavorites />
+              </ProtectedRoute>
+            } />
             <Route path="/register" element={<Register />} />
 
             
@@ -123,6 +162,7 @@ function App() {
           </CompareProvider>
         </ThemeProvider>
       </UserAuthProvider>
+      </QueryClientProvider>
       </LazyMotion>
     </MotionConfig>
   );

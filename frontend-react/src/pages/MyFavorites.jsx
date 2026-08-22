@@ -1,38 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import api from '../context/api';
+import React from 'react';
 import { Heart, MapPin } from 'lucide-react';
 import { m } from "framer-motion";
 import { useNavigate } from 'react-router-dom';
+import api from '../context/api';
+import useFetch from '../hooks/useFetch';
+import toast from 'react-hot-toast';
 
 const MyFavorites = () => {
-    const [favorites, setFavorites] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const navigate = useNavigate();
 
-    useEffect(() => {
-        fetchFavorites();
-    }, []);
-
-    const fetchFavorites = async () => {
-        try {
-            const res = await api.get('/favorites');
-            setFavorites(res.data.favorites);
-        } catch (err) {
-            setError("Failed to load favorites. " + (err.response?.data?.message || ''));
-        } finally {
-            setLoading(false);
-        }
-    };
+    // Fetches the current user's saved favorite properties.
+    // To change the endpoint, update the string below.
+    const { data, loading, error, setData: setFavoritesData } = useFetch('/favorites');
+    const favorites = data?.favorites || [];
 
     const handleRemove = async (propertyId) => {
         try {
-            await api.post(`/api/favorites/${propertyId}`);
-            setFavorites(favorites.filter(p => p.id !== propertyId));
+            await api.post(`/favorites/${propertyId}`);
+            setFavoritesData(prev => ({
+                ...prev,
+                favorites: prev.favorites.filter(p => p.id !== propertyId)
+            }));
         } catch (err) {
-            console.error("Failed to remove favorite", err);
+            (toast.error("Failed to remove favorite"), console.error("Failed to remove favorite", err));
         }
     };
+
+
 
     if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 

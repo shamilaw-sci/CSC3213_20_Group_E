@@ -1,125 +1,103 @@
-/**
- * @file Register.jsx
- * @description User registration component facilitating account creation for Buyers and Sellers.
- */
-
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import api from '../context/api';
 import { useAuth } from '../context/UserAuthContext';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import toast from 'react-hot-toast';
+import { Player } from '@lottiefiles/react-lottie-player';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
+import api from '../context/api';
+
+// Validation Schema using Zod
+const registerSchema = z.object({
+  role: z.enum(['BUYER', 'SELLER', 'AGENT']),
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  agencyName: z.string().optional(),
+  licenseNumber: z.string().optional(),
+});
 
 const Register = () => {
     const navigate = useNavigate();
     const { login } = useAuth();
-    
-    // UI State Management
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [role, setRole] = useState('BUYER'); // Default role
-    const [agencyName, setAgencyName] = useState('');
-    const [licenseNumber, setLicenseNumber] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
-    const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
-    /**
-     * Handles the form submission to register a new user.
-     * Authenticates via backend API and persists the session data.
-     */
-    const handleRegister = async (e) => {
-        e.preventDefault();
-        setError('');
+    // Initialize React Hook Form
+    const {
+        register,
+        handleSubmit,
+        watch,
+        setValue,
+        formState: { errors, isValid }
+    } = useForm({
+        resolver: zodResolver(registerSchema),
+        defaultValues: {
+            role: 'BUYER',
+            name: '',
+            email: '',
+            password: '',
+            agencyName: '',
+            licenseNumber: ''
+        },
+        mode: 'onChange' // Validates on every keystroke
+    });
+
+    const selectedRole = watch('role');
+
+    const onSubmit = async (data) => {
         setLoading(true);
-
         try {
-            // Dispatch registration payload to the backend API
-            const response = await api.post('/auth/register', { 
-                name: name,
-                email: email, 
-                password: password,
-                role: role,
-                agency_name: agencyName,
-                license_number: licenseNumber
-            });
-
-            // Persist authentication token and user data to local storage on successful registration
-            login(response.data.user);
+            const response = await api.post('/auth/register', data);
+            toast.success(response.data.message || 'Registration successful!');
             
-            // Role-based redirect
-            if (response.data.user.role === 'SELLER') {
-                navigate('/seller-dashboard');
-            } else if (response.data.user.role === 'AGENT' || response.data.user.role === 'PENDING_AGENT') {
-                navigate('/agent-dashboard');
-            } else {
+            // Auto login after registration
+            try {
+                await login(data.email, data.password);
                 navigate('/');
+            } catch (loginError) {
+                toast.error('Registered successfully, but auto-login failed. Please sign in manually.');
+                navigate('/login');
             }
-            
         } catch (err) {
-            setError(err.response?.data?.message || "Registration failed. Please try again.");
+            toast.error(err.response?.data?.message || err.message || 'Failed to register');
+            console.error("Registration error:", err.response?.data?.message || err.message);
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="flex min-h-screen bg-white font-sans">
-            
-            {/* --- Left Side: Register Form --- */}
-            <div className="w-full md:w-[450px] lg:w-[500px] flex flex-col justify-center px-8 sm:px-12 py-10 relative overflow-y-auto">
-                
-                {/* Back to Home Button */}
-                <button type="button" aria-label="Accessible interactive control" 
-                    onClick={() => navigate('/')} 
-                    className="absolute top-6 left-6 text-gray-500 hover:text-gray-800 transition p-2 rounded-full hover:bg-gray-100"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                    </svg>
-                </button>
+        <div className="flex h-screen max-h-screen w-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
+            {/* --- Form Container (Height-Fitted & Scroll-Safe) --- */}
+            <div className="w-full md:w-[480px] lg:w-[500px] xl:w-[520px] flex-shrink-0 flex flex-col justify-center px-6 sm:px-10 lg:px-12 py-6 bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 relative z-10 shadow-lg md:shadow-none h-full overflow-y-auto">
+                <div className="mx-auto w-full max-w-sm sm:max-w-md my-auto py-2">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-1 tracking-tight">Create an account</h2>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm mb-4">Join us to buy or sell properties easily.</p>
 
-                <div className="max-w-md w-full mx-auto mt-8">
-                    {/* Logo */}
-                    <div className="flex items-center mb-6 cursor-pointer" onClick={() => navigate('/')}>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600 mr-1 -rotate-12" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-                        </svg>
-                        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Thirasara</h1>
-                    </div>
-
-                    <h2 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">Create an account</h2>
-                    <p className="text-gray-500 text-sm mb-6">Join us to buy or sell properties easily.</p>
-
-                    {error && (
-                        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm font-medium">
-                            {error}
-                        </div>
-                    )}
-
-                    <form onSubmit={handleRegister} className="animate-fade-in">
+                    <form onSubmit={handleSubmit(onSubmit)} className="animate-fade-in">
                         
                         {/* Role Selection */}
                         <div className="mb-5">
-                            <label htmlFor="z9fqly" className="block text-gray-700 text-sm font-medium mb-2">I want to...</label>
+                            <label className="block text-gray-700 text-sm font-medium mb-2">I want to...</label>
                             <div className="flex space-x-3">
-                                <button aria-label="Accessible interactive control"
-                                    type="button"
-                                    onClick={() => setRole('BUYER')}
-                                    className={`flex-1 py-3 px-4 border rounded-lg font-bold text-sm transition ${role === 'BUYER' ? 'bg-blue-50 border-blue-500 text-blue-700' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'}`}
+                                <button type="button"
+                                    onClick={() => setValue('role', 'BUYER', { shouldValidate: true })}
+                                    className={`flex-1 py-3 px-4 border rounded-lg font-bold text-sm transition ${selectedRole === 'BUYER' ? 'bg-blue-50 border-blue-500 text-blue-700' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'}`}
                                 >
                                     Buy Property
                                 </button>
-                                <button aria-label="Accessible interactive control"
-                                    type="button"
-                                    onClick={() => setRole('SELLER')}
-                                    className={`flex-1 py-3 px-2 border rounded-lg font-bold text-xs sm:text-sm transition ${role === 'SELLER' ? 'bg-green-50 border-green-500 text-green-700' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'}`}
+                                <button type="button"
+                                    onClick={() => setValue('role', 'SELLER', { shouldValidate: true })}
+                                    className={`flex-1 py-3 px-2 border rounded-lg font-bold text-xs sm:text-sm transition ${selectedRole === 'SELLER' ? 'bg-green-50 border-green-500 text-green-700' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'}`}
                                 >
                                     Sell Property
                                 </button>
-                                <button aria-label="Accessible interactive control"
-                                    type="button"
-                                    onClick={() => setRole('AGENT')}
-                                    className={`flex-1 py-3 px-2 border rounded-lg font-bold text-xs sm:text-sm transition ${role === 'AGENT' ? 'bg-purple-50 border-purple-500 text-purple-700' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'}`}
+                                <button type="button"
+                                    onClick={() => setValue('role', 'AGENT', { shouldValidate: true })}
+                                    className={`flex-1 py-3 px-2 border rounded-lg font-bold text-xs sm:text-sm transition ${selectedRole === 'AGENT' ? 'bg-purple-50 border-purple-500 text-purple-700' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'}`}
                                 >
                                     I'm an Agent
                                 </button>
@@ -129,55 +107,41 @@ const Register = () => {
                         {/* Name Input */}
                         <div className="mb-4">
                             <label htmlFor="name" className="block text-gray-700 text-sm font-medium mb-2">Full Name <span className="text-red-500">*</span></label>
-                            <input aria-label="Accessible interactive control"
-                                id="name"
-                                type="text"
-                                autoComplete="name"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                required
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+                            <input id="name" type="text"
+                                {...register('name')}
+                                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-1 transition ${errors.name ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
                                 placeholder="e.g. John Doe"
                             />
+                            {errors.name && <p className="text-red-500 text-xs mt-1 font-medium">{errors.name.message}</p>}
                         </div>
 
                         {/* Email Input */}
                         <div className="mb-4">
                             <label htmlFor="email" className="block text-gray-700 text-sm font-medium mb-2">Email Address <span className="text-red-500">*</span></label>
-                            <input aria-label="Accessible interactive control"
-                                id="email"
-                                type="email"
-                                autoComplete="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value.toLowerCase())}
-                                required
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+                            <input id="email" type="email"
+                                {...register('email')}
+                                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-1 transition ${errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
                                 placeholder="name@example.com"
                             />
+                            {errors.email && <p className="text-red-500 text-xs mt-1 font-medium">{errors.email.message}</p>}
                         </div>
 
                         {/* Extra fields for Agent */}
-                        {role === 'AGENT' && (
-                            <div className="bg-purple-50 p-4 rounded-lg mb-4 border border-purple-100">
+                        {selectedRole === 'AGENT' && (
+                            <div className="bg-purple-50 p-4 rounded-lg mb-4 border border-purple-100 animate-fade-in">
                                 <h3 className="text-purple-800 font-semibold mb-3 text-sm">Agent Details</h3>
                                 <div className="mb-3">
                                     <label htmlFor="agencyName" className="block text-gray-700 text-xs font-medium mb-1">Agency Name (Optional)</label>
-                                    <input aria-label="Accessible interactive control"
-                                        id="agencyName"
-                                        type="text"
-                                        value={agencyName}
-                                        onChange={(e) => setAgencyName(e.target.value)}
+                                    <input id="agencyName" type="text"
+                                        {...register('agencyName')}
                                         className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition"
                                         placeholder="e.g. Premier Realty, Independent"
                                     />
                                 </div>
                                 <div>
                                     <label htmlFor="licenseNumber" className="block text-gray-700 text-xs font-medium mb-1">License Number (Optional)</label>
-                                    <input aria-label="Accessible interactive control"
-                                        id="licenseNumber"
-                                        type="text"
-                                        value={licenseNumber}
-                                        onChange={(e) => setLicenseNumber(e.target.value)}
+                                    <input id="licenseNumber" type="text"
+                                        {...register('licenseNumber')}
                                         className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition"
                                         placeholder="e.g. RE-123456"
                                     />
@@ -185,23 +149,17 @@ const Register = () => {
                             </div>
                         )}
 
-                        {/* Password aria-label="Accessible interactive control" Input */}
+                        {/* Password Input */}
                         <div className="mb-6">
                             <label htmlFor="password" className="block text-gray-700 text-sm font-medium mb-2">Password <span className="text-red-500">*</span></label>
                             <div className="relative">
-                                <input aria-label="Accessible interactive control"
-                                    id="password"
+                                <input id="password"
                                     type={showPassword ? "text" : "password"}
-                                    autoComplete="new-password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    required
-                                    minLength="6"
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition pr-12"
+                                    {...register('password')}
+                                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-1 pr-12 transition ${errors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
                                     placeholder="At least 6 characters"
                                 />
-                                <button aria-label="Accessible interactive control"
-                                    type="button"
+                                <button type="button"
                                     onClick={() => setShowPassword(!showPassword)}
                                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
                                 >
@@ -217,12 +175,12 @@ const Register = () => {
                                     )}
                                 </button>
                             </div>
+                            {errors.password && <p className="text-red-500 text-xs mt-1 font-medium">{errors.password.message}</p>}
                         </div>
 
-                        <button aria-label="Accessible interactive control" 
-                            type="submit" 
-                            disabled={loading || !email || !password || !name}
-                            className={`w-full text-white font-bold py-3 px-4 rounded-lg transition duration-200 ${loading || !email || !password || !name ? 'bg-blue-400 cursor-not-allowed' : 'bg-[#006aff] hover:bg-blue-700'}`}
+                        <button type="submit" 
+                            disabled={loading || !isValid}
+                            className={`w-full text-white font-bold py-3 px-4 rounded-lg transition duration-200 ${loading || !isValid ? 'bg-blue-400 cursor-not-allowed' : 'bg-[#006aff] hover:bg-blue-700'}`}
                         >
                             {loading ? 'Creating account...' : 'Create Account'}
                         </button>
@@ -234,14 +192,18 @@ const Register = () => {
                 </div>
             </div>
 
-            {/* --- Right Side: Background Image --- */}
+            {/* --- Left Side: Background Image --- */}
             <div
-                className="hidden md:block flex-1 bg-cover bg-center"
+                className="hidden md:block flex-1 bg-cover bg-center relative"
                 style={{ backgroundImage: "url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')" }}
             >
-                <div className="w-full h-full bg-black/10"></div>
+                {/* Logo wrapper pinned to top-left corner */}
+                <div className="absolute top-6 left-8 flex items-center cursor-pointer z-10" onClick={() => navigate('/')}>
+                    <img src="/logo.jpeg" alt="Thirasara Logo" className="logo mr-2 w-10 h-10 rounded" />
+                    <h1 className="text-xl font-extrabold text-white tracking-tight drop-shadow-md">Thirasara Property</h1>
+                </div>
+                <div className="absolute inset-0 bg-black/30"></div>
             </div>
-
         </div>
     );
 };
