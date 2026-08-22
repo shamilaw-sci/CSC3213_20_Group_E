@@ -82,6 +82,14 @@ const findOrCreateSocialUser = async ({ email, name, provider, provider_id, avat
  * Signs a JWT, sets the auth cookie, and sends the standard login response.
  */
 const sendAuthResponse = (res, user) => {
+    if (user.role === 'ADMIN') {
+        return res.status(403).json({
+            message: "Administrator account detected. For security, please sign in via the official Admin Command Center.",
+            is_admin: true,
+            admin_login_url: "/admin/login"
+        });
+    }
+
     const token = jwt.sign(
         { id: user.id, role: user.role },
         process.env.JWT_SECRET,

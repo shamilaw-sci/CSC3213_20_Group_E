@@ -2,8 +2,12 @@ package repository
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"strings"
+	"sync"
+	"time"
 
 	"go-map-service/models"
 
@@ -11,20 +15,71 @@ import (
 	"go.uber.org/zap"
 )
 
+type cacheEntry struct {
+	data      []models.PropertyResponse
+	expiresAt time.Time
+}
+
 type MapRepository struct {
-	Pool *pgxpool.Pool
+	Pool  *pgxpool.Pool
+	cache map[string]cacheEntry
+	mu    sync.RWMutex
 }
 
 func NewMapRepository(pool *pgxpool.Pool) *MapRepository {
-	return &MapRepository{Pool: pool}
+	repo := &MapRepository{
+		Pool:  pool,
+		cache: make(map[string]cacheEntry),
+	}
+	// Background cache cleanup every 1 minute
+	go func() {
+		ticker := time.NewTicker(1 * time.Minute)
+		for range ticker.C {
+			repo.mu.Lock()
+			now := time.Now()
+			for k, v := range repo.cache {
+				if now.After(v.expiresAt) {
+					delete(repo.cache, k)
+				}
+			}
+			repo.mu.Unlock()
+		}
+	}()
+	return repo
+}
+
+func (r *MapRepository) getCacheKey(req models.SearchRequest) string {
+	raw := fmt.Sprintf("%s|%v|%v|%v|%v",
+		req.Polygon,
+		req.Beds,
+		req.Baths,
+		req.Type,
+		req.ListingType,
+	)
+	hash := sha256.Sum256([]byte(raw))
+	return hex.EncodeToString(hash[:])
 }
 
 func (r *MapRepository) SearchProperties(ctx context.Context, req models.SearchRequest) ([]models.PropertyResponse, error) {
-	// Query only essential public property columns without leaking seller PII (M3 fix)
+	cacheKey := r.getCacheKey(req)
+
+	// 1. Fast Cache Read (< 1ms from RAM)
+	r.mu.RLock()
+	if entry, found := r.cache[cacheKey]; found && time.Now().Before(entry.expiresAt) {
+		r.mu.RUnlock()
+		return entry.data, nil
+	}
+	r.mu.RUnlock()
+
+	// 2. High-Speed PostGIS Spatial Query (Points + Polygons with Index operators)
 	query := `SELECT p.id, p.title, p.description, p.price, p.latitude, p.longitude, p.images, p.bedrooms, p.bathrooms, p.land_size, p.type, p.city, p.listing_type
 			  FROM properties p
 			  WHERE p.status = 'approved'
-			  AND ST_Intersects(p.boundary::geometry, ST_GeomFromText($1, 4326))`
+			  AND (
+			      (p.boundary IS NOT NULL AND (p.boundary::geometry && ST_GeomFromText($1, 4326) OR ST_Intersects(p.boundary::geometry, ST_GeomFromText($1, 4326))))
+			      OR
+			      (p.boundary IS NULL AND p.longitude IS NOT NULL AND p.latitude IS NOT NULL AND ST_Intersects(ST_SetSRID(ST_MakePoint(p.longitude, p.latitude), 4326), ST_GeomFromText($1, 4326)))
+			  )`
 	
 	args := []interface{}{req.Polygon}
 	paramCount := 1
@@ -115,6 +170,14 @@ func (r *MapRepository) SearchProperties(ctx context.Context, req models.SearchR
 	if properties == nil {
 		properties = []models.PropertyResponse{}
 	}
+
+	// 3. Store in Hot Spatial Cache (30s TTL)
+	r.mu.Lock()
+	r.cache[cacheKey] = cacheEntry{
+		data:      properties,
+		expiresAt: time.Now().Add(30 * time.Second),
+	}
+	r.mu.Unlock()
 
 	return properties, nil
 }

@@ -102,6 +102,15 @@ const loginUser = async (req, res, next) => {
             return res.status(400).json({ message: "Invalid email or password." });
         }
 
+        // Strict Separation: Prevent Administrative logins on public consumer portal
+        if (user.role === 'ADMIN') {
+            return res.status(403).json({
+                message: "Administrator account detected. For security, please sign in via the official Admin Command Center.",
+                is_admin: true,
+                admin_login_url: "/admin/login"
+            });
+        }
+
         // Generate JWT token
         const token = jwt.sign(
             { id: user.id, role: user.role },

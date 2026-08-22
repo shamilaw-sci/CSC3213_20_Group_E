@@ -100,7 +100,30 @@ const Login = () => {
                 navigate(from, { replace: true });
             }
         } catch (err) {
-            toast.error(err.response?.data?.message || err.message || 'Google sign-in failed');
+            if (err.response?.data?.is_admin) {
+                toast((t) => (
+                    <div className="flex flex-col gap-2">
+                        <span className="font-bold text-xs text-slate-900 dark:text-white">
+                            🛡️ Administrator Account Detected
+                        </span>
+                        <span className="text-[11px] text-slate-600 dark:text-slate-300">
+                            Please use the official Admin Command Center to sign in.
+                        </span>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                toast.dismiss(t.id);
+                                navigate('/admin/login');
+                            }}
+                            className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition cursor-pointer self-start"
+                        >
+                            Go to Admin Login →
+                        </button>
+                    </div>
+                ), { duration: 6000 });
+            } else {
+                toast.error(err.response?.data?.message || err.message || 'Google sign-in failed');
+            }
             console.error("Google sign-in failed:", err.response?.data?.message || err.message);
         }
     };
@@ -124,7 +147,30 @@ const Login = () => {
                 navigate(from, { replace: true });
             }
         } catch (err) {
-            toast.error(err.response?.data?.message || err.message || 'Failed to sign in');
+            if (err.response?.data?.is_admin) {
+                toast((t) => (
+                    <div className="flex flex-col gap-2">
+                        <span className="font-bold text-xs text-slate-900 dark:text-white">
+                            🛡️ Administrator Account Detected
+                        </span>
+                        <span className="text-[11px] text-slate-600 dark:text-slate-300">
+                            Please use the official Admin Command Center to sign in.
+                        </span>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                toast.dismiss(t.id);
+                                navigate('/admin/login');
+                            }}
+                            className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition cursor-pointer self-start"
+                        >
+                            Go to Admin Login →
+                        </button>
+                    </div>
+                ), { duration: 6000 });
+            } else {
+                toast.error(err.response?.data?.message || err.message || 'Failed to sign in');
+            }
             console.error("Sign-in failed:", err.response?.data?.message || err.message);
         } finally {
             setLoading(false);
