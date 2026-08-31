@@ -3,7 +3,7 @@
  * @description Map-based property search component allowing users to filter properties by drawing freehand polygons or selecting districts.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import { useNavigate } from 'react-router-dom';
@@ -48,6 +48,8 @@ const getSafeImageUrl = (prop) => {
  */
 const MapSearch = () => {
     const navigate = useNavigate();
+    const [mapStyle, setMapStyle] = useState('streets'); // 'streets' | 'satellite' | 'dark'
+
     const {
         loading,
         activeMarkerId,
@@ -77,6 +79,14 @@ const MapSearch = () => {
         handleSearch,
         filteredProperties
     } = useMapSearch();
+
+    const getMapboxStyleUrl = () => {
+        const token = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || 'pk.eyJ1IjoiZGdwaXVtYWwiLCJhIjoiY210Z3Rkcnp0MTgzYjJ4cTA0N2l1cm1tNiJ9.iMojiZBaPeTEVOfp0ljGEQ';
+        let stylePath = 'mapbox/streets-v12';
+        if (mapStyle === 'satellite') stylePath = 'mapbox/satellite-streets-v12';
+        else if (mapStyle === 'dark') stylePath = 'mapbox/dark-v11';
+        return `https://api.mapbox.com/styles/v1/${stylePath}/tiles/256/{z}/{x}/{y}@2x?access_token=${token}`;
+    };
 
     return (
         <div className="flex flex-col h-screen bg-white">
@@ -115,13 +125,57 @@ const MapSearch = () => {
                             <span className="bg-blue-600 text-white px-4 py-2 rounded-full font-bold shadow-lg animate-pulse">Searching...</span>
                         </div>
                     )}
+
+                    {/* Floating Luxury Multi-Layer Map Canvas Switcher */}
+                    <div className="absolute bottom-6 left-6 z-[1000] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-1.5 rounded-2xl shadow-2xl border border-gray-200/80 dark:border-slate-700/80 flex items-center gap-1">
+                        <button
+                            type="button"
+                            onClick={() => setMapStyle('streets')}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                                mapStyle === 'streets' 
+                                    ? 'bg-blue-600 text-white shadow-md' 
+                                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800'
+                            }`}
+                        >
+                            <span>🏙️</span>
+                            <span>Streets</span>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setMapStyle('satellite')}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                                mapStyle === 'satellite' 
+                                    ? 'bg-blue-600 text-white shadow-md' 
+                                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800'
+                            }`}
+                        >
+                            <span>🛰️</span>
+                            <span>Satellite</span>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setMapStyle('dark')}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                                mapStyle === 'dark' 
+                                    ? 'bg-blue-600 text-white shadow-md' 
+                                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800'
+                            }`}
+                        >
+                            <span>🌙</span>
+                            <span>Dark</span>
+                        </button>
+                    </div>
                     
                     <MapContainer center={[7.8731, 80.7718]} zoom={8} style={{ height: '100%', width: '100%' }}>
                         <MapEvents onBoundsChange={handleBoundsChange} onMapClick={handleMapClick} searchMode={searchMode} />
                         
                         <TileLayer 
-                            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" 
-                            attribution='&copy; CartoDB'
+                            key={mapStyle}
+                            attribution='&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                            url={getMapboxStyleUrl()}
+                            tileSize={512}
+                            zoomOffset={-1}
+                            maxZoom={19}
                         />
 
                         <MapLayers 
@@ -172,17 +226,23 @@ const MapSearch = () => {
                         >
                             {filteredProperties.map((prop) => {
                                 const imageUrl = getSafeImageUrl(prop);
-                                const isActive = activeMarkerId === prop.id || hoveredPropId === prop.id;
+                                const isActive = activeMarkerId === prop.id;
+                                const isHovered = hoveredPropId === prop.id;
                                 
                                 return (
                                     <Marker 
                                         key={prop.id} 
                                         position={[prop.latitude, prop.longitude]} 
-                                        icon={createCustomIcon(prop.price, isActive, prop.listing_type, prop.type)}
+                                        icon={createCustomIcon(prop.price, isActive, isHovered, prop.listing_type, prop.type, true)}
                                         eventHandlers={{
                                             click: (e) => {
                                                 L.DomEvent.stopPropagation(e);
                                                 setActiveMarkerId(prop.id);
+                                                // Scroll matching card in sidebar
+                                                const cardEl = document.getElementById(`sidebar-property-${prop.id}`);
+                                                if (cardEl) {
+                                                    cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                                                }
                                             },
                                             mouseover: () => setHoveredPropId(prop.id),
                                             mouseout: () => setHoveredPropId(null),

@@ -13,21 +13,25 @@ export const formatPrice = (price) => {
 };
 
 export const getMarkerColor = (listingType, propType) => {
-    if (listingType?.toLowerCase() === 'rent' || propType?.includes('Rent')) return '!bg-purple-600';
-    if (listingType?.toLowerCase() === 'sold') return '!bg-yellow-500';
-    return '!bg-red-600'; // Sale
+    if (listingType?.toLowerCase() === 'rent' || propType?.includes('Rent')) return 'marker-rent';
+    if (listingType?.toLowerCase() === 'sold') return 'marker-sold';
+    return 'marker-sale'; // Red for Sale
 };
 
 /**
- * Generates a dynamic custom interactive map marker icon
+ * Generates a dynamic custom interactive map marker icon with luxury glassmorphic depth & hover-sync glow
  */
-export const createCustomIcon = (price, isActive, listingType, propType) => {
+export const createCustomIcon = (price, isActive, isHovered, listingType, propType, isVerified = true) => {
     const isRent = listingType?.toLowerCase() === 'rent' || propType?.includes('Rent');
     const priceText = formatPrice(price) + (isRent ? '/mo' : '');
+    const activeClass = isActive ? 'active' : isHovered ? 'hovered' : '';
+    const verifiedBadge = isVerified ? `<span class="inline-block ml-1 text-[10px] text-blue-200" title="Verified Listing">✓</span>` : '';
+
     return L.divIcon({
-        className: `custom-leaflet-marker ${isActive ? 'active-marker' : ''}`,
-        html: `<div class="map-marker-container ${getMarkerColor(listingType, propType)} ${isActive ? 'active' : ''}">
+        className: `custom-leaflet-marker ${activeClass}`,
+        html: `<div class="map-marker-container ${getMarkerColor(listingType, propType)} ${activeClass}">
                  <span class="map-marker-price">${priceText}</span>
+                 ${verifiedBadge}
                </div>`,
         iconSize: [0, 0],
         iconAnchor: [0, 0],
