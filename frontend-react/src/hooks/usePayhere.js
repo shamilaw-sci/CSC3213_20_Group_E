@@ -27,7 +27,7 @@ export const usePayhere = (setMessage) => {
       .catch((err) => console.error("Failed to fetch payment config:", err));
   }, []);
 
-  // Trigger PayHere after property is successfully saved
+  // Trigger PayHere after property is successfully saved as Draft
   const triggerPayment = async (propertyId) => {
     const amount = paymentConfig.listingFee;
 
@@ -42,8 +42,8 @@ export const usePayhere = (setMessage) => {
       const payment = {
         sandbox: true,
         merchant_id: paymentConfig.merchantId,
-        return_url: `${window.location.origin}/my-properties`,
-        cancel_url: `${window.location.origin}/my-properties`,
+        return_url: `${window.location.origin}/seller-dashboard`,
+        cancel_url: `${window.location.origin}/seller-dashboard`,
         notify_url: `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/payment/notify`,
         order_id: propertyId,
         items: "Thirasara Property Listing Fee",
@@ -59,24 +59,33 @@ export const usePayhere = (setMessage) => {
         country: "Sri Lanka",
       };
 
-      window.payhere.onCompleted = function onCompleted(orderId) {
+      window.payhere.onCompleted = async function onCompleted(orderId) {
+        try {
+          await api.post('/payment/confirm-client-success', {
+            property_id: orderId || propertyId,
+            payment_id: orderId || `PAY-${Date.now()}`
+          });
+        } catch (confirmErr) {
+          console.warn("Client confirmation note:", confirmErr);
+        }
+
         setMessage({
           type: "success",
-          text: `Payment successful for Property: ${orderId}. Property is sent to admin approval. Please stay alert, it will be listed soon.`,
+          text: `Payment confirmed! Property is now submitted for Super Admin deed verification.`,
         });
-        setTimeout(() => navigate(user?.role === "SELLER" ? "/seller-dashboard" : "/agent-dashboard"), 3000);
+        setTimeout(() => navigate(user?.role === "SELLER" ? "/seller-dashboard" : "/agent-dashboard"), 2500);
       };
 
       window.payhere.onDismissed = function onDismissed() {
         setMessage({
-          type: "error",
-          text: "Payment cancelled. You can pay later from your dashboard.",
+          type: "success",
+          text: "Listing saved as a private Draft in your dashboard. You can complete payment anytime to submit for Admin review.",
         });
         setTimeout(() => navigate(user?.role === "SELLER" ? "/seller-dashboard" : "/agent-dashboard"), 3000);
       };
 
       window.payhere.onError = function onError(error) {
-        setMessage({ type: "error", text: `Payment Error: ${error}` });
+        setMessage({ type: "error", text: `Payment Error: ${error}. Listing is safely saved in your Drafts.` });
         setTimeout(() => navigate(user?.role === "SELLER" ? "/seller-dashboard" : "/agent-dashboard"), 3000);
       };
 
@@ -86,7 +95,7 @@ export const usePayhere = (setMessage) => {
       console.error("Payment Initialization Error:", error);
       setMessage({
         type: "error",
-        text: "Property saved, but failed to start payment. Please try paying from the dashboard.",
+        text: "Listing saved to Drafts! Please try completing payment from your dashboard.",
       });
       setTimeout(() => navigate(user?.role === "SELLER" ? "/seller-dashboard" : "/agent-dashboard"), 3000);
     }

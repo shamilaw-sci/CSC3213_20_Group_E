@@ -21,7 +21,7 @@ const getPaymentConfig = async (req, res, next) => {
         });
     } catch (err) {
         logger.error('Failed to fetch payment config', err);
-        next(err || error); // manually check this line
+        next(err);
     }
 };
 
@@ -61,24 +61,23 @@ const processWebhook = async (req, res, next) => {
     });
 
     const {
-        merchant_id, 
-        order_id, 
-        payhere_amount, 
-        payhere_currency, 
-        status_code, 
+        merchant_id,
+        order_id,
+        payhere_amount,
+        payhere_currency,
+        status_code,
         md5sig,
-        custom_1 // Optional: Can be used to pass seller_id from frontend if needed
+        payment_id,
     } = req.body;
 
     const merchant_secret = process.env.PAYHERE_MERCHANT_SECRET;
     
-    // Recreate the MD5 hash to verify the payload's authenticity
+    // Generate MD5 signature to verify authenticity
     const hashed_secret = crypto.createHash('md5').update(merchant_secret).digest('hex').toUpperCase();
     const hashString = merchant_id + order_id + payhere_amount + payhere_currency + status_code + hashed_secret;
     const local_md5sig = crypto.createHash('md5').update(hashString).digest('hex').toUpperCase();
 
     // Verify signature and check if payment is successful (status_code === '2')
-    // Dynamic Security Fix: Fetch the required payment amount from DB to prevent malicious manipulation.
     let REQUIRED_FEE = 500.00;
     try {
         const rawFee = await settingsRepository.getSettingValue('listing_fee', '500.00');
@@ -87,7 +86,12 @@ const processWebhook = async (req, res, next) => {
         logger.error('Failed to fetch required fee for webhook validation', e);
     }
     
-    if (local_md5sig === md5sig && status_code === '2') {
+    // Constant-time comparison to prevent timing attacks (M11 fix)
+    const isSignatureValid = md5sig &&
+        Buffer.byteLength(local_md5sig) === Buffer.byteLength(md5sig) &&
+        crypto.timingSafeEqual(Buffer.from(local_md5sig), Buffer.from(md5sig));
+
+    if (isSignatureValid && status_code === '2') {
         if (parseFloat(payhere_amount) !== REQUIRED_FEE) {
             logger.warn('PayHere payment amount mismatch', {
                 order_id,
@@ -143,8 +147,61 @@ const processWebhook = async (req, res, next) => {
     }
 };
 
+/**
+ * Endpoint for client-side confirmed payments (e.g. sandbox callback or direct user session completion).
+ */
+const confirmPayment = async (req, res, next) => {
+    try {
+        const { property_id, payment_id } = req.body;
+        if (!property_id) {
+            return res.status(400).json({ error: "property_id is required" });
+        }
+
+        const property = await propertyRepository.getPropertyById(property_id);
+        if (!property) {
+            return res.status(404).json({ error: "Property not found" });
+        }
+
+        // Verify that the user owns the property or is an admin
+        if (property.seller_id !== req.user.id && req.user.role !== 'ADMIN') {
+            return res.status(403).json({ error: "Access denied" });
+        }
+
+        const rawFee = await settingsRepository.getSettingValue('listing_fee', '500.00');
+        const amount = parseFloat(rawFee);
+
+        // Record transaction
+        try {
+            await transactionRepository.insertTransaction({
+                property_id: property_id,
+                amount: amount,
+                currency: 'LKR',
+                payment_method: 'PayHere',
+                status: 'SUCCESS',
+                transaction_id: payment_id || `PAY-${Date.now()}`
+            });
+        } catch (txErr) {
+            logger.warn('Transaction record creation note:', txErr.message);
+        }
+
+        // Transition property from 'draft' to 'pending'
+        await propertyRepository.updatePaymentStatus(property_id, 'Paid', 'pending');
+        logger.info('Property promoted from draft to pending after payment confirmation', { property_id });
+
+        res.status(200).json({
+            message: "Payment confirmed successfully. Property is now pending admin inspection.",
+            status: "pending",
+            payment_status: "Paid"
+        });
+    } catch (err) {
+        logger.error('Error in confirmPayment:', err);
+        next(err);
+    }
+};
+
 module.exports = {
     getPaymentConfig,
     generateHash,
-    processWebhook
+    processWebhook,
+    confirmPayment
 };

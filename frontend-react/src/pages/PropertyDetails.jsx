@@ -7,7 +7,7 @@ import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import MortgageCalculator from '../components/property/MortgageCalculator';
 import PropertyCard from '../components/property/PropertyCard';
-import { Bed, Bath, Maximize, MapPin, Heart, MessageCircle, ChevronLeft, ChevronRight, Loader2, Scale } from 'lucide-react';
+import { Bed, Bath, Maximize, MapPin, Heart, MessageCircle, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Polygon, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -16,6 +16,7 @@ import { AnimatePresence, m } from "framer-motion";
 import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png';
 import iconUrl from 'leaflet/dist/images/marker-icon.png';
 import shadowUrl from 'leaflet/dist/images/marker-shadow.png';
+import toast from 'react-hot-toast';
 
 // Fix for default Leaflet markers
 delete L.Icon.Default.prototype._getIconUrl;
@@ -48,25 +49,25 @@ const PropertyDetails = () => {
                 // Fetch property details
                 const res = await api.get(`/properties/${id}`);
                 setProperty(res.data.property);
-                
-                // Track view
-                api.post(`/properties/${id}/view`).catch(err => console.error("Error tracking view", err));
 
-                // Fetch similar properties (independent of the main fetch failing)
+                // Track view silently in background
+                api.post(`/properties/${id}/view`).catch(() => {});
+
+                // Fetch similar properties silently in background
                 api.get(`/properties/${id}/similar`)
                     .then(simRes => setSimilarProperties(simRes.data.properties || []))
-                    .catch(err => console.error("Error loading similar properties", err))
+                    .catch(() => {})
                     .finally(() => setSimilarLoading(false));
 
-                // Fetch the statistical price insight (great deal / fair / above market)
+                // Fetch statistical price insight silently in background
                 api.get(`/properties/${id}/price-insight`)
                     .then(priceRes => setPriceInsight(priceRes.data.insight || null))
-                    .catch(err => console.error("Error loading price insight", err));
-                
+                    .catch(() => {});
+
                 // If user is logged in, check if it's a favorite
                 if (user) {
                     const favRes = await api.get('/favorites');
-                    const favList = favRes.data.favorites;
+                    const favList = favRes.data.favorites || [];
                     if (favList.some(f => f.property_id === id)) {
                         setIsFavorite(true);
                     }
@@ -88,17 +89,15 @@ const PropertyDetails = () => {
         setIsFavLoading(true);
         try {
             const res = await api.post(`/favorites/${id}`);
-            
-            // The backend returns { isFavorite: boolean }
             setIsFavorite(res.data.isFavorite);
 
-            // Trigger animation only if it was added
             if (res.data.isFavorite) {
                 setShowAnimation(true);
                 setTimeout(() => setShowAnimation(false), 1000);
             }
         } catch (err) {
-            console.error('Error toggling favorite:', err);
+            console.error('Error toggling favorite:', err?.message);
+            toast.error('Error updating favorites');
         } finally {
             setIsFavLoading(false);
         }
@@ -114,15 +113,11 @@ const PropertyDetails = () => {
             return;
         }
         try {
-            const response = await api.post(
-                `/conversations/property/${id}`,
-                {},
-                {}
-            );
+            const response = await api.post(`/conversations/property/${id}`, {});
             navigate(`/messages?conversation=${response.data.conversation.id}`);
         } catch (error) {
-            console.error("Error creating/fetching conversation:", error);
-            alert("Failed to start conversation");
+            console.error("Error creating/fetching conversation:", error?.message);
+            toast.error("Failed to start conversation");
         }
     };
 
@@ -140,10 +135,10 @@ const PropertyDetails = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
                 <div className="flex flex-col items-center">
                     <Loader2 className="w-12 h-12 text-blue-600 animate-spin mb-4" />
-                    <p className="text-gray-500 font-medium">Loading property details...</p>
+                    <p className="text-gray-500 dark:text-gray-400 font-medium">Loading property details...</p>
                 </div>
             </div>
         );
@@ -151,14 +146,14 @@ const PropertyDetails = () => {
 
     if (error || !property) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="bg-white p-8 rounded-2xl shadow-sm text-center max-w-md">
-                    <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+                <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm text-center max-w-md">
+                    <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
                         <span className="text-2xl">!</span>
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Property Not Found</h2>
-                    <p className="text-gray-500 mb-6">{error || "The property you're looking for doesn't exist or has been removed."}</p>
-                    <button aria-label="Accessible interactive control" type="button" onClick={() => navigate('/properties')} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Property Not Found</h2>
+                    <p className="text-gray-500 dark:text-gray-400 mb-6">{error || "The property you're looking for doesn't exist or has been removed."}</p>
+                    <button aria-label="Browse Properties" type="button" onClick={() => navigate('/buy')} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all">
                         Browse Properties
                     </button>
                 </div>
@@ -169,15 +164,15 @@ const PropertyDetails = () => {
     const images = property.images?.length > 0 ? property.images : ['/placeholder.jpg'];
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col font-sans selection:bg-blue-200">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col font-sans selection:bg-blue-200">
             <Navbar />
             
             <main className="flex-grow pt-24 pb-20 px-4 md:px-8 max-w-7xl mx-auto w-full">
                 
                 {/* Back Button */}
-                <button aria-label="Accessible interactive control" type="button" 
+                <button aria-label="Back to results" type="button" 
                     onClick={() => navigate(-1)} 
-                    className="flex items-center text-gray-500 hover:text-blue-600 font-medium mb-6 transition-colors"
+                    className="flex items-center text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 font-medium mb-6 transition-colors"
                 >
                     <ChevronLeft className="w-5 h-5 mr-1" />
                     Back to results
@@ -194,8 +189,7 @@ const PropertyDetails = () => {
                                 animate={{ scale: [0, 1.5, 1.2], opacity: 1 }}
                                 exit={{ scale: 0, opacity: 0 }}
                                 transition={{ duration: 0.5, ease: "easeOut" }}
-                                className="absolute z-50 flex items-center justify-center drop-shadow-2xl"
-                                style={{ pointerEvents: 'none' }}
+                                className="absolute z-50 flex items-center justify-center drop-shadow-2xl pointer-events-none"
                             >
                                 <Heart className="w-40 h-40 text-red-500 fill-red-500 drop-shadow-lg" />
                             </m.div>
@@ -212,10 +206,10 @@ const PropertyDetails = () => {
 
                     {images.length > 1 && (
                         <>
-                            <button aria-label="Accessible interactive control" type="button" onClick={prevImage} className="absolute left-6 top-1/2 -translate-y-1/2 p-3 bg-white/20 hover:bg-white text-white hover:text-gray-900 backdrop-blur-md rounded-full transition-all shadow-lg">
+                            <button aria-label="Previous Image" type="button" onClick={prevImage} className="absolute left-6 top-1/2 -translate-y-1/2 p-3 bg-white/20 hover:bg-white text-white hover:text-gray-900 backdrop-blur-md rounded-full transition-all shadow-lg">
                                 <ChevronLeft className="w-6 h-6" />
                             </button>
-                            <button aria-label="Accessible interactive control" type="button" onClick={nextImage} className="absolute right-6 top-1/2 -translate-y-1/2 p-3 bg-white/20 hover:bg-white text-white hover:text-gray-900 backdrop-blur-md rounded-full transition-all shadow-lg">
+                            <button aria-label="Next Image" type="button" onClick={nextImage} className="absolute right-6 top-1/2 -translate-y-1/2 p-3 bg-white/20 hover:bg-white text-white hover:text-gray-900 backdrop-blur-md rounded-full transition-all shadow-lg">
                                 <ChevronRight className="w-6 h-6" />
                             </button>
                             
@@ -228,7 +222,7 @@ const PropertyDetails = () => {
                     )}
 
                     <div className="absolute top-6 right-6 flex gap-3 z-10">
-                        <button aria-label="Accessible interactive control" type="button" 
+                        <button aria-label="Save Favorite" type="button" 
                             onClick={handleToggleFavorite}
                             disabled={isFavLoading}
                             className={`p-4 rounded-full backdrop-blur-md transition-all shadow-xl ${isFavorite ? 'bg-white text-red-500' : 'bg-black/30 text-white hover:bg-white hover:text-red-500'}`}
@@ -245,60 +239,60 @@ const PropertyDetails = () => {
                     <div className="col-span-1 lg:col-span-2 space-y-10">
                         <div>
                             <div className="flex flex-wrap items-center gap-3 mb-4">
-                                <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider ${property.listing_type?.toLowerCase() === 'rent' || property.type?.includes('Rent') ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
+                                <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider ${property.listing_type?.toLowerCase() === 'rent' || property.type?.includes('Rent') ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300'}`}>
                                     {property.type === 'Land' ? 'Land' : property.type?.includes('Rent') ? 'House' : property.type} for {property.listing_type?.toLowerCase() === 'rent' || property.type?.includes('Rent') ? 'Rent' : 'Sale'}
                                 </span>
                                 {property.users?.role === 'AGENT' && property.users?.name && (
-                                    <span className="bg-yellow-100 text-yellow-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider flex items-center">
+                                    <span className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider flex items-center">
                                         <span className="mr-1">★</span> By {property.users.name}
                                     </span>
                                 )}
                                 {property.status === 'approved' && (
-                                    <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                                    <span className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                                         Verified Listing
                                     </span>
                                 )}
                             </div>
-                            <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight mb-4">
+                            <h1 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white tracking-tight mb-4">
                                 {property.title}
                             </h1>
-                            <div className="flex items-center text-gray-500 gap-2 text-lg font-medium">
+                            <div className="flex items-center text-gray-500 dark:text-gray-400 gap-2 text-lg font-medium">
                                 <MapPin className="w-5 h-5 text-gray-400" />
                                 {property.address}
                             </div>
                         </div>
 
-                        <div className="flex flex-wrap gap-6 py-6 border-y border-gray-100">
+                        <div className="flex flex-wrap gap-6 py-6 border-y border-gray-100 dark:border-gray-800">
                             {property.bedrooms && (
                                 <div className="flex flex-col">
-                                    <span className="text-gray-500 text-sm font-bold uppercase tracking-wider mb-1 flex items-center gap-2"><Bed className="w-4 h-4"/> Bedrooms</span>
-                                    <span className="text-2xl font-black text-gray-900">{property.bedrooms}</span>
+                                    <span className="text-gray-500 dark:text-gray-400 text-sm font-bold uppercase tracking-wider mb-1 flex items-center gap-2"><Bed className="w-4 h-4"/> Bedrooms</span>
+                                    <span className="text-2xl font-black text-gray-900 dark:text-white">{property.bedrooms}</span>
                                 </div>
                             )}
                             {property.bathrooms && (
-                                <div className="flex flex-col border-l border-gray-100 pl-6">
-                                    <span className="text-gray-500 text-sm font-bold uppercase tracking-wider mb-1 flex items-center gap-2"><Bath className="w-4 h-4"/> Bathrooms</span>
-                                    <span className="text-2xl font-black text-gray-900">{property.bathrooms}</span>
+                                <div className="flex flex-col border-l border-gray-100 dark:border-gray-800 pl-6">
+                                    <span className="text-gray-500 dark:text-gray-400 text-sm font-bold uppercase tracking-wider mb-1 flex items-center gap-2"><Bath className="w-4 h-4"/> Bathrooms</span>
+                                    <span className="text-2xl font-black text-gray-900 dark:text-white">{property.bathrooms}</span>
                                 </div>
                             )}
                             {property.land_size && (
-                                <div className="flex flex-col border-l border-gray-100 pl-6">
-                                    <span className="text-gray-500 text-sm font-bold uppercase tracking-wider mb-1 flex items-center gap-2"><Maximize className="w-4 h-4"/> Area</span>
-                                    <span className="text-2xl font-black text-gray-900">{property.land_size} Perches</span>
+                                <div className="flex flex-col border-l border-gray-100 dark:border-gray-800 pl-6">
+                                    <span className="text-gray-500 dark:text-gray-400 text-sm font-bold uppercase tracking-wider mb-1 flex items-center gap-2"><Maximize className="w-4 h-4"/> Area</span>
+                                    <span className="text-2xl font-black text-gray-900 dark:text-white">{property.land_size} Perches</span>
                                 </div>
                             )}
                         </div>
 
                         <div>
-                            <h3 className="text-2xl font-bold text-gray-900 mb-4">About this property</h3>
-                            <p className="text-gray-600 text-lg leading-relaxed whitespace-pre-wrap">
+                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">About this property</h3>
+                            <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed whitespace-pre-wrap">
                                 {property.description || "No description provided."}
                             </p>
                         </div>
 
                         <div>
-                            <h3 className="text-2xl font-bold text-gray-900 mb-4">Map Location</h3>
-                            <div className="h-[400px] w-full rounded-3xl overflow-hidden border border-gray-200 shadow-inner z-0">
+                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Map Location</h3>
+                            <div className="h-[400px] w-full rounded-3xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-inner z-0">
                                 {property.latitude && property.longitude ? (
                                     <MapContainer
                                         center={[property.latitude, property.longitude]}
@@ -321,7 +315,7 @@ const PropertyDetails = () => {
                                         )}
                                     </MapContainer>
                                 ) : (
-                                    <div className="flex items-center justify-center h-full bg-gray-100 text-gray-500 font-medium">
+                                    <div className="flex items-center justify-center h-full bg-gray-100 dark:bg-gray-800 text-gray-500 font-medium">
                                         Location data not available
                                     </div>
                                 )}
@@ -336,20 +330,20 @@ const PropertyDetails = () => {
 
                     {/* Sidebar Card */}
                     <div className="col-span-1">
-                        <div className="sticky top-28 bg-white rounded-3xl shadow-xl border border-gray-100 p-8">
+                        <div className="sticky top-28 bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-700 p-8">
                             <div className="mb-6">
-                                <span className="text-gray-500 font-bold uppercase tracking-wider text-sm">Asking Price</span>
-                                <h2 className="text-4xl font-black text-gray-900 mt-1 tracking-tight">
+                                <span className="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider text-sm">Asking Price</span>
+                                <h2 className="text-4xl font-black text-gray-900 dark:text-white mt-1 tracking-tight">
                                     Rs. {property.price?.toLocaleString()}
                                     {(property.listing_type?.toLowerCase() === 'rent' || property.type?.includes('Rent')) && <span className="text-xl text-gray-500 font-medium">/mo</span>}
                                 </h2>
                                 {priceInsight && (
                                     <div className={`inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 rounded-full text-xs font-bold ${
                                         priceInsight.level === 'great_deal'
-                                            ? 'bg-emerald-50 text-emerald-700'
+                                             ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
                                             : priceInsight.level === 'above_market'
-                                                ? 'bg-red-50 text-red-600'
-                                                : 'bg-amber-50 text-amber-700'
+                                                ? 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-300'
+                                                : 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
                                     }`}>
                                         {priceInsight.level === 'great_deal' ? '🟢' : priceInsight.level === 'above_market' ? '🔴' : '🟡'}
                                         {priceInsight.label}
@@ -360,7 +354,7 @@ const PropertyDetails = () => {
                                 )}
                             </div>
                             
-                            <button aria-label="Accessible interactive control" type="button" 
+                            <button aria-label="Contact Seller" type="button" 
                                 onClick={handleContactSeller}
                                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg hover:shadow-blue-600/30 flex items-center justify-center gap-2 mb-4"
                             >
@@ -368,24 +362,24 @@ const PropertyDetails = () => {
                                 Contact Seller
                             </button>
 
-                            <button aria-label="Accessible interactive control" type="button" 
+                            <button aria-label="Save Property" type="button" 
                                 onClick={handleToggleFavorite}
                                 disabled={isFavLoading}
-                                className="w-full bg-gray-50 hover:bg-gray-100 text-gray-900 font-bold py-4 rounded-xl transition-all border border-gray-200 flex items-center justify-center gap-2"
+                                className="w-full bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-bold py-4 rounded-xl transition-all border border-gray-200 dark:border-gray-600 flex items-center justify-center gap-2"
                             >
                                 <Heart className={`w-5 h-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
                                 {isFavorite ? 'Saved to Favorites' : 'Save Property'}
                             </button>
 
-                            <button aria-label="Accessible interactive control" type="button" 
+                            <button aria-label="Compare Property" type="button" 
                                 onClick={() => {
                                     const isCompared = compareList.some(p => p.id === property.id);
                                     isCompared ? removeFromCompare(property.id) : addToCompare(property);
                                 }}
                                 className={`w-full font-bold py-4 rounded-xl transition-all border flex items-center justify-center gap-2 mt-4 ${
                                     compareList.some(p => p.id === property.id)
-                                        ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200'
-                                        : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                                        ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700 hover:bg-red-50 hover:text-red-600 hover:border-red-200'
+                                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                                 }`}
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -395,13 +389,13 @@ const PropertyDetails = () => {
                             </button>
 
                             {/* Trust badges */}
-                            <div className="mt-8 pt-6 border-t border-gray-100 space-y-4 text-sm text-gray-500">
+                            <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-700 space-y-4 text-sm text-gray-500 dark:text-gray-400">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600">🛡️</div>
+                                    <div className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600">🛡️</div>
                                     <span className="font-medium">Secure messaging</span>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">👤</div>
+                                    <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600">👤</div>
                                     <span className="font-medium">Verified listing</span>
                                 </div>
                             </div>
@@ -413,7 +407,7 @@ const PropertyDetails = () => {
                 {/* Similar Properties */}
                 {!similarLoading && similarProperties.length > 0 && (
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
-                        <h2 className="text-2xl font-bold text-gray-900 mb-6">Similar Properties You May Like</h2>
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Similar Properties You May Like</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                             {similarProperties.map((simProp) => (
                                 <PropertyCard key={simProp.id} prop={simProp} />

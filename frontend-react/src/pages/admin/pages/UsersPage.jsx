@@ -1,39 +1,58 @@
 import React, { useState, useEffect } from "react";
 import { fetchUsers, banUser, unbanUser, updateUserRole } from "../api/adminApi";
 import "../styles/admin-global.css";
-
+import { 
+  Users, 
+  Search, 
+  ShieldCheck, 
+  ShieldAlert, 
+  UserX, 
+  UserCheck, 
+  Mail, 
+  Calendar, 
+  Shield, 
+  X,
+  AlertTriangle 
+} from "lucide-react";
 
 const BanModal = ({ user, onConfirm, onCancel }) => {
   const [reason, setReason] = useState("");
   return (
     <div className="admin-modal-overlay">
-      <div className="admin-modal">
+      <div className="admin-modal max-w-md">
         <div className="admin-modal-header">
-          <h3 className="admin-card-title">Ban User</h3>
-          <button aria-label="Accessible interactive control" type="button" className="admin-modal-close" onClick={onCancel}>✕</button>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-red-500/20 text-red-400 flex items-center justify-center">
+              <AlertTriangle className="w-4 h-4" />
+            </div>
+            <h3 className="admin-card-title">Restrict User Access</h3>
+          </div>
+          <button type="button" className="admin-modal-close" onClick={onCancel}>
+            <X className="w-4 h-4" />
+          </button>
         </div>
-        <p style={{ fontSize: "0.875rem", color: "var(--admin-text-secondary)", marginBottom: 16 }}>
-          Ban <strong style={{ color: "var(--admin-text-primary)" }}>{user?.name}</strong> ({user?.email})?
-          This will restrict their access immediately.
+        <p className="text-xs text-slate-300 mb-4">
+          Ban <strong className="text-white">{user?.name}</strong> ({user?.email})? This will immediately revoke their JWT credentials and terminate active sessions.
         </p>
         <div className="admin-form-group">
-          <label htmlFor="4md3g3" className="admin-form-label">Reason for Ban</label>
-          <textarea aria-label="Accessible interactive control"
+          <label className="admin-form-label">Ban Reason</label>
+          <textarea
             className="admin-form-control"
             rows={3}
-            placeholder="State the reason for banning this user…"
+            placeholder="e.g. Fraudulent listing attempts, policy violation..."
             value={reason}
             onChange={(e) => setReason(e.target.value)}
           />
         </div>
-        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-          <button aria-label="Accessible interactive control" type="button" className="admin-btn admin-btn-secondary" onClick={onCancel}>Cancel</button>
-          <button aria-label="Accessible interactive control" type="button"
+        <div className="flex gap-3 justify-end mt-6">
+          <button type="button" className="admin-btn admin-btn-secondary" onClick={onCancel}>Cancel</button>
+          <button
+            type="button"
             className="admin-btn admin-btn-danger"
             onClick={() => reason.trim() && onConfirm(reason)}
             disabled={!reason.trim()}
           >
-            Ban User
+            Confirm Ban
           </button>
         </div>
       </div>
@@ -44,216 +63,212 @@ const BanModal = ({ user, onConfirm, onCancel }) => {
 const UsersPage = () => {
   const [users, setUsers] = useState([]);
   const [roleFilter, setRoleFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [banTarget, setBanTarget] = useState(null);
-  const [toast, setToast] = useState(null);
+  const [toastMsg, setToastMsg] = useState(null);
 
   const showToast = (msg, type = "success") => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3000);
+    setToastMsg({ msg, type });
+    setTimeout(() => setToastMsg(null), 3000);
+  };
+
+  const loadUsers = () => {
+    fetchUsers({ role: roleFilter !== "all" ? roleFilter : undefined })
+      .then((d) => { if (d?.users) setUsers(d.users); })
+      .catch(() => {});
   };
 
   useEffect(() => {
-    fetchUsers({ role: roleFilter !== "all" ? roleFilter : undefined })
-      .then((d) => { if (d?.users?.length) setUsers(d.users); })
-      .catch(() => {});
+    loadUsers();
   }, [roleFilter]);
 
   const handleBan = async (reason) => {
-    const id = banTarget.id || banTarget._id;
+    if (!banTarget) return;
     try {
-      await banUser(id, reason);
-      setUsers((p) => p.map((u) => ((u.id || u._id) === id ? { ...u, status: "Banned" } : u)));
-      showToast(`${banTarget.name} has been banned.`);
+      await banUser(banTarget.id, reason);
+      setUsers((prev) =>
+        prev.map((u) => (u.id === banTarget.id ? { ...u, is_banned: true, status: "Banned" } : u))
+      );
+      setBanTarget(null);
+      showToast("User banned successfully.");
     } catch {
       showToast("Failed to ban user.", "error");
-    } finally {
-      setBanTarget(null);
     }
   };
 
-  const handleUnban = async (user) => {
+  const handleUnban = async (id) => {
     try {
-      const id = user.id || user._id;
       await unbanUser(id);
-      setUsers((p) => p.map((u) => ((u.id || u._id) === id ? { ...u, status: "Active" } : u)));
-      showToast(`${user.name} has been unbanned.`);
+      setUsers((prev) =>
+        prev.map((u) => (u.id === id ? { ...u, is_banned: false, status: "Active" } : u))
+      );
+      showToast("User access restored.");
     } catch {
-      showToast("Failed to unban user.", "error");
+      showToast("Failed to restore user access.", "error");
     }
   };
 
-  const handleRoleChange = async (userId, newRole) => {
-    try {
-      await updateUserRole(userId, newRole);
-      setUsers((p) => p.map((u) => ((u.id || u._id) === userId ? { ...u, role: newRole } : u)));
-      showToast("Role updated.");
-    } catch {
-      showToast("Failed to update role.", "error");
-    }
-  };
-
-  const filtered = users.filter((u) => {
-    const matchRole = roleFilter === "all" || (u.role && u.role.toLowerCase() === roleFilter);
-    const matchStatus = statusFilter === "all" || u.status.toLowerCase() === statusFilter;
-    const matchSearch = !search ||
-      u.name.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase()) ||
-      u.location?.toLowerCase().includes(search.toLowerCase());
-    return matchRole && matchStatus && matchSearch;
+  const filteredUsers = users.filter((u) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (
+      u.name?.toLowerCase().includes(q) ||
+      u.email?.toLowerCase().includes(q) ||
+      u.role?.toLowerCase().includes(q)
+    );
   });
 
   return (
-    <div>
+    <div className="space-y-6">
+      
+      {/* Toast Notification */}
+      {toastMsg && (
+        <div className="admin-toast-container">
+          <div className={`admin-toast ${toastMsg.type}`}>
+            <span>{toastMsg.msg}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Header */}
       <div className="admin-page-header">
         <div>
-          <h1>User Management</h1>
-          <p>View, manage roles, and control user access</p>
+          <h1>User & Role Management</h1>
+          <p>Oversee registered accounts, verify credentials, and manage role-based permissions</p>
         </div>
-        <div style={{ fontSize: "0.85rem", color: "var(--admin-text-secondary)" }}>{filtered.length} users</div>
+
+        {/* Role Filters */}
+        <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 p-1.5 rounded-2xl">
+          {[
+            { id: "all", label: "All Users" },
+            { id: "BUYER", label: "Buyers" },
+            { id: "SELLER", label: "Sellers" },
+            { id: "AGENT", label: "Agents" },
+            { id: "ADMIN", label: "Admins" },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setRoleFilter(tab.id)}
+              className={`px-3.5 py-1.5 rounded-xl font-bold text-xs transition cursor-pointer ${
+                roleFilter === tab.id
+                  ? "bg-blue-600 text-white shadow-md"
+                  : "text-slate-400 hover:text-white hover:bg-slate-800"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="admin-filters-row">
-        <div className="admin-search-bar" style={{ flex: 1, maxWidth: 320 }}>
-          <span style={{ color: "var(--admin-text-muted)" }}>🔍</span>
-          <input aria-label="Accessible interactive control"
-            placeholder="Search by name, email, location…"
+      {/* Search Bar */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="admin-search-bar w-full sm:w-80">
+          <Search className="w-4 h-4 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search by name, email or role..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <select aria-label="Accessible interactive control" className="admin-filter-select" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
-          <option value="all">All Roles</option>
-          <option value="buyer">Buyer</option>
-          <option value="seller">Seller</option>
-          <option value="agent">Agent</option>
-          <option value="pending_agent">Pending Agent</option>
-          <option value="admin">Admin</option>
-        </select>
-        <select aria-label="Accessible interactive control" className="admin-filter-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-          <option value="all">All Status</option>
-          <option value="active">Active</option>
-          <option value="banned">Banned</option>
-        </select>
+
+        <span className="text-xs text-slate-400 font-semibold">
+          Total Users: {filteredUsers.length}
+        </span>
       </div>
 
-      <div className="admin-grid admin-grid-3" style={{ marginBottom: 24 }}>
-        <div className="admin-stat-card">
-          <div className="admin-stat-label">Total Users</div>
-          <div className="admin-stat-value">{users.length}</div>
-        </div>
-        <div className="admin-stat-card">
-          <div className="admin-stat-label">Sellers</div>
-          <div className="admin-stat-value" style={{ color: "var(--admin-gold)" }}>
-            {users.filter((u) => u.role?.toUpperCase() === "SELLER").length}
-          </div>
-        </div>
-        <div className="admin-stat-card">
-          <div className="admin-stat-label">Banned</div>
-          <div className="admin-stat-value" style={{ color: "var(--admin-danger)" }}>
-            {users.filter((u) => u.status === "Banned").length}
-          </div>
-        </div>
-      </div>
-
-      <div className="admin-card" style={{ padding: 0 }}>
-        <div className="admin-data-table-wrap">
-          <table className="admin-data-table">
-            <thead>
+      {/* Data Table */}
+      <div className="admin-data-table-wrap">
+        <table className="admin-data-table">
+          <thead>
+            <tr>
+              <th>User Account</th>
+              <th>System Role</th>
+              <th>Status</th>
+              <th>Joined Date</th>
+              <th className="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredUsers.length === 0 && (
               <tr>
-                <th>User</th>
-                <th>Role</th>
-                <th>Location</th>
-                <th>Listings</th>
-                <th>Joined</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <td colSpan={5} className="text-center py-12 text-slate-400">
+                  No users found.
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 && (
-                <tr>
-                  <td colSpan={7}>
-                    <div className="admin-empty-state">
-                      <div className="admin-empty-state-icon">👥</div>
-                      <h3>No users found</h3>
-                      <p>Try a different search or filter.</p>
+            )}
+            {filteredUsers.map((u) => (
+              <tr key={u.id}>
+                <td>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-white font-bold text-sm">
+                      {u.name?.[0]?.toUpperCase() || "U"}
                     </div>
-                  </td>
-                </tr>
-              )}
-              {filtered.map((u) => (
-                <tr key={u.id || u._id}>
-                  <td>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <div style={{
-                        width: 32, height: 32, borderRadius: "50%",
-                        background: u.status === "Banned" ? "var(--admin-danger-dim)" : "var(--admin-gold-dim)",
-                        color: u.status === "Banned" ? "var(--admin-danger)" : "var(--admin-gold)",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontWeight: 700, fontSize: "0.85rem"
-                      }}>
-                        {u.name[0]}
-                      </div>
-                      <div>
-                        <div style={{ fontSize: "0.875rem", fontWeight: 600 }}>{u.name}</div>
-                        <div style={{ fontSize: "0.75rem", color: "var(--admin-text-secondary)" }}>{u.email}</div>
+                    <div>
+                      <div className="font-bold text-white text-sm">{u.name}</div>
+                      <div className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
+                        <Mail className="w-3 h-3" />
+                        <span>{u.email}</span>
                       </div>
                     </div>
-                  </td>
-                  <td>
-                    <select aria-label="Accessible interactive control"
-                      className="admin-filter-select"
-                      value={u.role?.toUpperCase()}
-                      onChange={(e) => handleRoleChange(u.id || u._id, e.target.value)}
-                      style={{ padding: "4px 8px", fontSize: "0.8rem" }}
-                    >
-                      <option value="BUYER">Buyer</option>
-                      <option value="SELLER">Seller</option>
-                      <option value="AGENT">Agent</option>
-                      <option value="PENDING_AGENT">Pending Agent</option>
-                      <option value="ADMIN">Admin</option>
-                    </select>
-                  </td>
-                  <td style={{ fontSize: "0.875rem" }}>{u.location}</td>
-                  <td style={{ fontSize: "0.875rem", textAlign: "center" }}>{u.listings}</td>
-                  <td style={{ fontSize: "0.8rem", color: "var(--admin-text-secondary)" }}>{u.joinDate}</td>
-                  <td>
-                    <span className={`admin-badge admin-badge-${u.status === "Active" ? "approved" : "banned"}`}>
-                      {u.status}
-                    </span>
-                  </td>
-                  <td>
-                    {u.status === "Active" ? (
-                      <button aria-label="Accessible interactive control" type="button" className="admin-btn admin-btn-danger admin-btn-sm" onClick={() => setBanTarget(u)}>
-                        🚫 Ban
+                  </div>
+                </td>
+                <td>
+                  <span className={`px-2.5 py-1 rounded-xl text-xs font-bold ${
+                    u.role === 'ADMIN' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' :
+                    u.role === 'AGENT' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' :
+                    u.role === 'SELLER' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' :
+                    'bg-slate-800 text-slate-300'
+                  }`}>
+                    {u.role}
+                  </span>
+                </td>
+                <td>
+                  <span className={`admin-badge ${u.is_banned ? 'admin-badge-banned' : 'admin-badge-active'}`}>
+                    {u.is_banned ? 'Banned' : 'Active'}
+                  </span>
+                </td>
+                <td className="text-xs text-slate-400">
+                  {u.created_at ? new Date(u.created_at).toLocaleDateString("en-LK") : "-"}
+                </td>
+                <td className="text-right">
+                  {u.role !== 'ADMIN' && (
+                    u.is_banned ? (
+                      <button
+                        type="button"
+                        onClick={() => handleUnban(u.id)}
+                        className="px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 hover:bg-emerald-600 hover:text-white transition font-bold text-xs cursor-pointer"
+                      >
+                        Unban
                       </button>
                     ) : (
-                      <button aria-label="Accessible interactive control" type="button" className="admin-btn admin-btn-success admin-btn-sm" onClick={() => handleUnban(u)}>
-                        ✓ Unban
+                      <button
+                        type="button"
+                        onClick={() => setBanTarget(u)}
+                        className="px-3 py-1.5 rounded-xl bg-red-500/20 text-red-300 hover:bg-red-600 hover:text-white transition font-bold text-xs cursor-pointer"
+                      >
+                        Ban
                       </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    )
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
+      {/* Ban Modal */}
       {banTarget && (
-        <BanModal user={banTarget} onConfirm={handleBan} onCancel={() => setBanTarget(null)} />
+        <BanModal
+          user={banTarget}
+          onConfirm={handleBan}
+          onCancel={() => setBanTarget(null)}
+        />
       )}
 
-      {toast && (
-        <div className="admin-toast-container">
-          <div className={`admin-toast ${toast.type}`}>
-            <span>{toast.type === "success" ? "✓" : "✕"}</span>
-            <span>{toast.msg}</span>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

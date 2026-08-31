@@ -59,6 +59,20 @@ export const MapEvents = ({ onBoundsChange, onMapClick, searchMode }) => {
         searchModeRef.current = searchMode;
     }, [searchMode]);
 
+    // Initial Mount Viewport Resolution (Fixes blank map on initial load)
+    useEffect(() => {
+        if (searchMode === 'bounds') {
+            try {
+                const initialBounds = map.getBounds();
+                if (initialBounds && initialBounds.isValid && initialBounds.isValid()) {
+                    onBoundsChange(initialBounds);
+                }
+            } catch (e) {
+                console.warn("Initial map bounds resolution error:", e);
+            }
+        }
+    }, [map, searchMode, onBoundsChange]);
+
     useEffect(() => {
         let timeoutId;
         const handleMoveEnd = () => {
@@ -66,7 +80,7 @@ export const MapEvents = ({ onBoundsChange, onMapClick, searchMode }) => {
                 clearTimeout(timeoutId);
                 timeoutId = setTimeout(() => {
                     onBoundsChange(map.getBounds());
-                }, 600);
+                }, 150); // Optimized to 150ms for instant spatial loading
             }
         };
 

@@ -6,6 +6,17 @@ import { ThemeProvider } from './context/ThemeProvider';
 import { CompareProvider } from './context/CompareContext';
 import { AdminAuthProvider } from './pages/admin/context/AdminAuthContext';
 import { MotionConfig, LazyMotion, domAnimation } from 'framer-motion';
+import { Toaster } from 'react-hot-toast';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false, // Prevents excessive refetching when switching tabs
+      retry: 1, // Only retry failed requests once
+    },
+  },
+});
 
 // Components that should load immediately
 import FloatingAIChat from './components/ai/FloatingAIChat';
@@ -32,6 +43,7 @@ const AgentSearch = lazy(() => import('./pages/AgentSearch'));
 const AgentProfile = lazy(() => import('./pages/AgentProfile'));
 const AgentDashboard = lazy(() => import('./pages/agent/Dashboard'));
 const SellerDashboard = lazy(() => import('./pages/SellerDashboard'));
+const BuyerDashboard = lazy(() => import('./pages/BuyerDashboard'));
 const MyFavorites = lazy(() => import('./pages/MyFavorites'));
 const PropertyDetails = lazy(() => import('./pages/PropertyDetails'));
 const SearchResults = lazy(() => import('./pages/SearchResults'));
@@ -59,10 +71,12 @@ function App() {
   return (
     <MotionConfig reducedMotion="user">
       <LazyMotion features={domAnimation}>
+      <QueryClientProvider client={queryClient}>
       <UserAuthProvider>
         <ThemeProvider>
           <CompareProvider>
           <Router>
+          <Toaster position="bottom-right" toastOptions={{ className: 'dark:bg-slate-800 dark:text-slate-200' }} />
           <FloatingAIChat />
           <CompareActionBar />
           <CompareMatrixModal />
@@ -82,6 +96,11 @@ function App() {
             <Route path="/seller-dashboard" element={
               <ProtectedRoute allowedRoles={['SELLER']}>
                 <SellerDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/buyer-dashboard" element={
+              <ProtectedRoute allowedRoles={['BUYER', 'USER', 'ADMIN', 'AGENT', 'SELLER']}>
+                <BuyerDashboard />
               </ProtectedRoute>
             } />
             <Route path="/login" element={<Login />} />
@@ -143,6 +162,7 @@ function App() {
           </CompareProvider>
         </ThemeProvider>
       </UserAuthProvider>
+      </QueryClientProvider>
       </LazyMotion>
     </MotionConfig>
   );

@@ -3,6 +3,7 @@ import { Menu, Calculator } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import AdvancedSearchBar from '../../components/property/AdvancedSearchBar';
 import api from '../../context/api';
+import toast from 'react-hot-toast';
 
 const MapTopBar = ({
     filters,
@@ -30,7 +31,7 @@ const MapTopBar = ({
             });
             alert("Search saved successfully!");
         } catch (error) {
-            console.error("Error saving search", error);
+            (toast.error("Error saving search"), console.error("Error saving search", error));
             if (error.response?.status === 401) {
                 alert("Please log in to save searches.");
             } else {

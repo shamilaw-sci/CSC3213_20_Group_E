@@ -1,31 +1,33 @@
 import React, { useEffect, useState } from 'react';
-import { Check, X, ShieldAlert, FileText, Building } from 'lucide-react';
+import { Check, X, ShieldAlert, FileText, Building, UserCheck, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import * as adminApi from '../api/adminApi';
+import "../styles/admin-global.css";
 
 const AgentApprovalsPage = () => {
   const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  
-  // Modal state
   const [rejectingAgentId, setRejectingAgentId] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
+  const [toastMsg, setToastMsg] = useState(null);
+
+  const showToast = (msg, type = "success") => {
+    setToastMsg({ msg, type });
+    setTimeout(() => setToastMsg(null), 3000);
+  };
+
+  const fetchPending = async () => {
+    try {
+      setLoading(true);
+      const data = await adminApi.fetchPendingAgents();
+      setAgents(data.agents || []);
+    } catch (err) {
+      console.error('Error fetching pending agents:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchPending = async () => {
-      try {
-        setLoading(true);
-        const data = await adminApi.fetchPendingAgents();
-        setAgents(data.agents || []);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching pending agents:', err);
-        setError('Failed to load pending agents.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchPending();
   }, []);
 
@@ -34,127 +36,160 @@ const AgentApprovalsPage = () => {
       await adminApi.updateUserRole(id, newRole, reason);
       setAgents((prev) => prev.filter((a) => a.id !== id));
       if (newRole === 'REJECTED_AGENT') {
-          setRejectingAgentId(null);
-          setRejectReason('');
+        setRejectingAgentId(null);
+        setRejectReason('');
+        showToast('Agent application rejected.');
+      } else {
+        showToast('Agent credentials approved successfully!');
       }
     } catch (err) {
-      console.error(`Failed to update role to ${newRole}:`, err);
-      alert(`Error: ${err.message || 'Update failed'}`);
+      showToast(`Update failed: ${err.message || 'Error'}`, 'error');
     }
   };
 
   const handleRejectSubmit = () => {
-      if (!rejectReason.trim()) {
-          alert("Please provide a reason for rejection.");
-          return;
-      }
-      handleAction(rejectingAgentId, 'REJECTED_AGENT', rejectReason);
+    if (!rejectReason.trim()) return;
+    handleAction(rejectingAgentId, 'REJECTED_AGENT', rejectReason);
   };
 
-  if (loading) return <div className="flex justify-center p-8"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>;
-
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="space-y-6">
+      
+      {/* Toast Notification */}
+      {toastMsg && (
+        <div className="admin-toast-container">
+          <div className={`admin-toast ${toastMsg.type}`}>
+            <span>{toastMsg.msg}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Header */}
+      <div className="admin-page-header">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Agent Approvals</h1>
-          <p className="text-gray-500 mt-1">Review and verify new real estate agents.</p>
+          <h1>Agent Credentials & Licensing</h1>
+          <p>Review and verify real estate broker applications, CEA licenses & agency affiliations</p>
         </div>
-        <div className="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg font-bold flex items-center gap-2">
-          <ShieldAlert className="w-5 h-5" />
-          {agents.length} Pending
-        </div>
+        <span className="px-3.5 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 font-bold text-xs">
+          {agents.length} Applications Pending
+        </span>
       </div>
 
-      {error && (
-        <div className="bg-red-50 text-red-600 p-4 rounded-lg mb-6 border border-red-200">{error}</div>
-      )}
-
-      {agents.length === 0 ? (
-        <div className="bg-white p-12 text-center rounded-xl border border-gray-200 shadow-sm">
-          <Check className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-gray-900 mb-2">All Caught Up!</h3>
-          <p className="text-gray-500">There are no pending agent registrations to review.</p>
+      {/* Agent Applications Grid */}
+      {loading ? (
+        <div className="flex justify-center p-16">
+          <div className="admin-spinner"></div>
+        </div>
+      ) : agents.length === 0 ? (
+        <div className="admin-card text-center py-16">
+          <div className="flex flex-col items-center">
+            <CheckCircle2 className="w-12 h-12 text-emerald-400 mb-3" />
+            <h3 className="text-lg font-bold text-white">No Pending Agent Applications</h3>
+            <p className="text-xs text-slate-400 mt-1 max-w-sm">
+              All broker and agency license verification requests have been processed.
+            </p>
+          </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {agents.map((agent) => {
-            const profile = Array.isArray(agent.agent_profiles) ? (agent.agent_profiles[0] || {}) : (agent.agent_profiles || {});
-            return (
-              <div key={agent.id || agent._id} className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition overflow-hidden flex flex-col">
-                <div className="p-5 border-b border-gray-100 flex-1">
-                  <div className="flex justify-between items-start mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {agents.map((agent) => (
+            <div key={agent.id} className="admin-card relative overflow-hidden flex flex-col justify-between">
+              <div>
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center font-bold text-lg">
+                      {agent.name?.[0]?.toUpperCase() || "A"}
+                    </div>
                     <div>
-                      <h3 className="font-bold text-lg text-gray-900">{agent.name}</h3>
-                      <p className="text-sm text-gray-500">{agent.email}</p>
-                    </div>
-                    <span className="bg-yellow-100 text-yellow-700 text-xs font-bold px-2 py-1 rounded">PENDING</span>
-                  </div>
-
-                  <div className="space-y-3 mt-4 text-sm">
-                    <div className="flex items-center text-gray-700 gap-2">
-                      <Building className="w-4 h-4 text-gray-400" />
-                      <span className="font-medium">Agency:</span>
-                      <span>{profile.agency_name || 'N/A'}</span>
-                    </div>
-                    <div className="flex items-center text-gray-700 gap-2">
-                      <FileText className="w-4 h-4 text-gray-400" />
-                      <span className="font-medium">License:</span>
-                      <span>{profile.license_number || 'N/A'}</span>
+                      <h3 className="font-bold text-white text-base">{agent.name}</h3>
+                      <p className="text-xs text-slate-400">{agent.email}</p>
                     </div>
                   </div>
-
-                  {profile.bio && (
-                    <div className="mt-4 text-sm bg-gray-50 p-3 rounded-lg border border-gray-100">
-                      <p className="text-gray-600 line-clamp-3">"{profile.bio}"</p>
-                    </div>
-                  )}
+                  <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    License Pending
+                  </span>
                 </div>
 
-                <div className="bg-gray-50 p-4 flex flex-col gap-2 border-t border-gray-200">
-                  <div className="flex gap-2">
-                    <button type="button" onClick={() => setRejectingAgentId(agent.id)} className="flex-1 flex items-center justify-center gap-1 py-2 px-3 border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-lg font-medium transition text-sm">
-                      <X className="w-4 h-4" /> Reject
-                    </button>
-                    <button type="button" onClick={() => handleAction(agent.id, 'AGENT')} className="flex-1 flex items-center justify-center gap-1 py-2 px-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition shadow-sm text-sm">
-                      <Check className="w-4 h-4" /> Approve
-                    </button>
+                <div className="space-y-2.5 bg-slate-800/60 p-4 rounded-2xl border border-slate-800 text-xs mb-5">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Agency Name:</span>
+                    <span className="font-bold text-white">{agent.agency_name || "Independent Broker"}</span>
                   </div>
-                  <button type="button" onClick={() => { if(window.confirm('Are you sure you want to permanently ban this agent?')) handleAction(agent.id, 'BANNED') }} className="w-full py-2 px-3 text-red-700 hover:underline text-xs font-medium transition text-center">
-                    Ban Permanently
-                  </button>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">CEA License No:</span>
+                    <span className="font-mono font-bold text-blue-400">{agent.license_number || "PENDING-DOCS"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Applied On:</span>
+                    <span className="text-slate-300">{agent.created_at ? new Date(agent.created_at).toLocaleDateString("en-LK") : "-"}</span>
+                  </div>
                 </div>
               </div>
-            );
-          })}
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-3 pt-4 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setRejectingAgentId(agent.id)}
+                  className="flex-1 admin-btn admin-btn-danger"
+                >
+                  <X className="w-4 h-4" />
+                  <span>Reject</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleAction(agent.id, 'AGENT')}
+                  className="flex-1 admin-btn admin-btn-success"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Approve License</span>
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Reject Modal */}
+      {/* Reject Reason Modal */}
       {rejectingAgentId && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-              <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Reject Agent Application</h3>
-                  <p className="text-gray-600 mb-4 text-sm">Please provide a reason for rejection. This will be shown to the agent so they can correct their details and resubmit.</p>
-                  
-                  <textarea 
-                      className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 min-h-[100px] mb-4 outline-none"
-                      placeholder="e.g. Please provide a valid real estate license number."
-                      value={rejectReason}
-                      onChange={(e) => setRejectReason(e.target.value)}
-                  ></textarea>
-
-                  <div className="flex gap-3 justify-end">
-                      <button onClick={() => { setRejectingAgentId(null); setRejectReason(''); }} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition">
-                          Cancel
-                      </button>
-                      <button onClick={handleRejectSubmit} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition">
-                          Confirm Rejection
-                      </button>
-                  </div>
+        <div className="admin-modal-overlay">
+          <div className="admin-modal max-w-md">
+            <div className="admin-modal-header">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-red-400" />
+                <h3 className="admin-card-title">Reject Agent Application</h3>
               </div>
+              <button type="button" className="admin-modal-close" onClick={() => setRejectingAgentId(null)}>
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="admin-form-group">
+              <label className="admin-form-label">Reason for Rejection</label>
+              <textarea
+                className="admin-form-control"
+                rows={3}
+                placeholder="e.g. Invalid real estate registration license number..."
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-3 justify-end mt-6">
+              <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setRejectingAgentId(null)}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="admin-btn admin-btn-danger"
+                onClick={handleRejectSubmit}
+                disabled={!rejectReason.trim()}
+              >
+                Confirm Rejection
+              </button>
+            </div>
           </div>
+        </div>
       )}
+
     </div>
   );
 };

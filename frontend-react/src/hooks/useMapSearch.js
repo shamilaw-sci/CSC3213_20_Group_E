@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getWKTFromBounds } from '../components/map/MapControls';
 
+const DEFAULT_SRI_LANKA_BOUNDS_WKT = 'POLYGON((79.2 10.1, 82.3 10.1, 82.3 5.5, 79.2 5.5, 79.2 10.1))';
+
 export const useMapSearch = () => {
     const location = useLocation();
     const savedSearch = location.state?.savedSearch;
@@ -15,7 +17,8 @@ export const useMapSearch = () => {
     const [maxPriceFilter, setMaxPriceFilter] = useState(null);
     const [selectedDistrict, setSelectedDistrict] = useState(null);
     
-    const [currentPolygon, setCurrentPolygon] = useState(savedSearch?.polygon || null);
+    // Pre-populate with default boundary to trigger instant load on initial render
+    const [currentPolygon, setCurrentPolygon] = useState(savedSearch?.polygon || DEFAULT_SRI_LANKA_BOUNDS_WKT);
     
     // Disaster Risk Map State
     const [showFloodZones, setShowFloodZones] = useState(false);
@@ -61,8 +64,10 @@ export const useMapSearch = () => {
 
     // Fetch properties whenever polygon or filters change
     useEffect(() => {
+        if (!currentPolygon) return;
+
+        const controller = new AbortController();
         const fetchProps = async () => {
-            if (!currentPolygon) return;
             setLoading(true);
             try {
                 const apiUrl = import.meta.env.VITE_MAP_API_URL || 'http://localhost:8080/api/map/search';
@@ -80,12 +85,15 @@ export const useMapSearch = () => {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload),
+                    signal: controller.signal
                 });
                 if (!res.ok) throw new Error('Map service failed');
                 const data = await res.json();
                 setProperties(data.properties || []);
             } catch (error) {
-                console.error("🔥 Search error:", error.response?.data || error.message);
+                if (error.name !== 'AbortError') {
+                    console.error("🔥 Search error:", error.message);
+                }
             } finally {
                 setLoading(false);
             }
@@ -93,8 +101,12 @@ export const useMapSearch = () => {
         
         const timeoutId = setTimeout(() => {
             fetchProps();
-        }, 300);
-        return () => clearTimeout(timeoutId);
+        }, 80); // Ultra-responsive 80ms execution
+
+        return () => {
+            clearTimeout(timeoutId);
+            controller.abort();
+        };
     }, [currentPolygon, filters]);
 
     const handleBoundsChange = useCallback((bounds) => {

@@ -1,32 +1,34 @@
 import React, { useState, useEffect } from "react";
 import { fetchAuditLogs } from "../api/adminApi";
 import "../styles/admin-global.css";
+import { 
+  ShieldAlert, 
+  Search, 
+  Filter, 
+  ShieldCheck, 
+  AlertTriangle, 
+  Info, 
+  CheckCircle2, 
+  Lock, 
+  Terminal,
+  Activity
+} from "lucide-react";
 
 const MOCK_LOGS = [
-  { id: "LOG-001", actor: "Admin", action: "LISTING_APPROVED", target: "LST-1041 (3.5 Perches, Kandy)", timestamp: "2026-04-28 10:32:14", ip: "192.168.1.10", severity: "info" },
-  { id: "LOG-002", actor: "Admin", action: "USER_BANNED", target: "Yasith Fernando (yasith@mail.com)", timestamp: "2026-04-28 09:18:05", ip: "192.168.1.10", severity: "warning" },
-  { id: "LOG-003", actor: "Admin", action: "LISTING_REJECTED", target: "LST-1038 (Commercial Plot)", timestamp: "2026-04-27 16:44:22", ip: "192.168.1.10", severity: "warning" },
-  { id: "LOG-004", actor: "System", action: "PAYMENT_RECEIVED", target: "TXN-9006 (LKR 5,000)", timestamp: "2026-04-27 14:02:51", ip: "PayHere-Webhook", severity: "info" },
-  { id: "LOG-005", actor: "Admin", action: "SETTINGS_UPDATED", target: "Loan interest rate → 14%", timestamp: "2026-04-26 11:30:00", ip: "192.168.1.10", severity: "info" },
-  { id: "LOG-006", actor: "System", action: "BACKUP_COMPLETED", target: "MongoDB Atlas snapshot", timestamp: "2026-04-26 02:00:00", ip: "Cron Job", severity: "success" },
-  { id: "LOG-007", actor: "chaminda@mail.com", action: "LISTING_CREATED", target: "LST-1041", timestamp: "2026-04-25 18:15:33", ip: "203.94.12.55", severity: "info" },
-  { id: "LOG-008", actor: "System", action: "RATE_LIMIT_HIT", target: "IP: 45.33.12.201 — /api/search", timestamp: "2026-04-25 17:55:10", ip: "45.33.12.201", severity: "danger" },
-  { id: "LOG-009", actor: "Admin", action: "USER_UNBANNED", target: "saman@mail.com", timestamp: "2026-04-24 13:22:00", ip: "192.168.1.10", severity: "success" },
-  { id: "LOG-010", actor: "System", action: "EMAIL_SENT", target: "ListingApproved → chaminda@mail.com", timestamp: "2026-04-24 12:05:44", ip: "SMTP-Service", severity: "info" },
+  { id: "LOG-001", actor: "Super Admin", action: "LISTING_APPROVED", target: "REF: 41769d4f (Luxury Villa Colombo 03)", timestamp: "2026-08-21 16:40:14", ip: "192.168.1.10", severity: "info" },
+  { id: "LOG-002", actor: "Super Admin", action: "USER_BANNED", target: "Fraudulent Seller (user_9402)", timestamp: "2026-08-21 15:18:05", ip: "192.168.1.10", severity: "warning" },
+  { id: "LOG-003", actor: "Super Admin", action: "LISTING_REJECTED", target: "REF: 2e05f6a7 (Invalid Survey Boundary)", timestamp: "2026-08-21 14:44:22", ip: "192.168.1.10", severity: "warning" },
+  { id: "LOG-004", actor: "System Gateway", action: "PAYMENT_SETTLED", target: "TXN-15000 (LKR 15,000 Listing Fee)", timestamp: "2026-08-21 12:02:51", ip: "Webhook-TLS1.3", severity: "success" },
+  { id: "LOG-005", actor: "Super Admin", action: "SETTINGS_UPDATED", target: "Base Listing Fee → LKR 1,500", timestamp: "2026-08-21 10:30:00", ip: "192.168.1.10", severity: "info" },
+  { id: "LOG-006", actor: "System Cron", action: "DATABASE_INTEGRITY_CHECK", target: "PostGIS Spatial R-Tree Index Verified", timestamp: "2026-08-21 02:00:00", ip: "Internal-Cron", severity: "success" },
+  { id: "LOG-007", actor: "RateLimiter Guard", action: "RATE_LIMIT_BLOCKED", target: "IP: 45.33.12.201 — Threshold Exceeded", timestamp: "2026-08-20 17:55:10", ip: "45.33.12.201", severity: "danger" },
+  { id: "LOG-008", actor: "Auth Daemon", action: "ADMIN_LOGIN_SUCCESS", target: "admin@gmail.com (Session Initialized)", timestamp: "2026-08-20 13:22:00", ip: "127.0.0.1", severity: "success" },
 ];
-
-const SEV_CLASSES = {
-  info: "admin-badge-active",
-  warning: "admin-badge-pending",
-  danger: "admin-badge-rejected",
-  success: "admin-badge-approved",
-};
 
 const AuditLogsPage = () => {
   const [logs, setLogs] = useState(MOCK_LOGS);
   const [search, setSearch] = useState("");
   const [sevFilter, setSevFilter] = useState("all");
-  const [actorFilter, setActorFilter] = useState("all");
 
   useEffect(() => {
     fetchAuditLogs()
@@ -36,107 +38,115 @@ const AuditLogsPage = () => {
 
   const filtered = logs.filter((l) => {
     const matchSev = sevFilter === "all" || l.severity === sevFilter;
-    const matchActor = actorFilter === "all" ||
-      (actorFilter === "admin" && l.actor === "Admin") ||
-      (actorFilter === "system" && l.actor === "System") ||
-      (actorFilter === "user" && l.actor !== "Admin" && l.actor !== "System");
     const matchSearch = !search ||
       l.action.toLowerCase().includes(search.toLowerCase()) ||
       l.target.toLowerCase().includes(search.toLowerCase()) ||
       l.actor.toLowerCase().includes(search.toLowerCase());
-    return matchSev && matchActor && matchSearch;
+    return matchSev && matchSearch;
   });
 
   return (
-    <div>
+    <div className="space-y-6">
+      
+      {/* Header */}
       <div className="admin-page-header">
         <div>
-          <h1>Audit Logs</h1>
-          <p>Tamper-proof record of all system and admin actions</p>
+          <h1>Security & Immutable Audit Trail</h1>
+          <p>Cryptographically timestamped telemetry of all administrative and security actions</p>
         </div>
-        <div style={{ fontSize: "0.8rem", color: "var(--admin-text-secondary)", display: "flex", alignItems: "center", gap: 8 }}>
-          <span className="admin-badge admin-badge-approved">Read-Only</span>
-          {filtered.length} entries
+        <div className="flex items-center gap-2">
+          <span className="px-3 py-1 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center gap-1.5">
+            <Lock className="w-3.5 h-3.5" /> Immutable Append-Only
+          </span>
         </div>
       </div>
 
-      <div className="admin-filters-row">
-        <div className="admin-search-bar" style={{ flex: 1, maxWidth: 360 }}>
-          <span style={{ color: "var(--admin-text-muted)" }}>🔍</span>
-          <input aria-label="Accessible interactive control"
-            placeholder="Search actions, targets, actors…"
+      {/* Search & Filters */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="admin-search-bar w-full sm:w-80">
+          <Search className="w-4 h-4 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search action, actor or target..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <select aria-label="Accessible interactive control" className="admin-filter-select" value={sevFilter} onChange={(e) => setSevFilter(e.target.value)}>
-          <option value="all">All Severity</option>
-          <option value="info">Info</option>
-          <option value="success">Success</option>
-          <option value="warning">Warning</option>
-          <option value="danger">Danger</option>
-        </select>
-        <select aria-label="Accessible interactive control" className="admin-filter-select" value={actorFilter} onChange={(e) => setActorFilter(e.target.value)}>
-          <option value="all">All Actors</option>
-          <option value="admin">Admin</option>
-          <option value="system">System</option>
-          <option value="user">Users</option>
-        </select>
-      </div>
 
-      <div className="admin-card" style={{ padding: 0 }}>
-        <div className="admin-data-table-wrap">
-          <table className="admin-data-table">
-            <thead>
-              <tr>
-                <th>Log ID</th>
-                <th>Timestamp</th>
-                <th>Actor</th>
-                <th>Action</th>
-                <th>Target / Detail</th>
-                <th>IP</th>
-                <th>Severity</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 && (
-                <tr>
-                  <td colSpan={7}>
-                    <div className="admin-empty-state">
-                      <div className="admin-empty-state-icon">📋</div>
-                      <h3>No log entries match your filters</h3>
-                    </div>
-                  </td>
-                </tr>
-              )}
-              {filtered.map((l) => (
-                <tr key={l.id}>
-                  <td><code style={{ fontSize: "0.72rem", color: "var(--admin-text-muted)" }}>{l.id}</code></td>
-                  <td style={{ fontSize: "0.78rem", color: "var(--admin-text-secondary)", whiteSpace: "nowrap" }}>{l.timestamp}</td>
-                  <td>
-                    <span style={{
-                      fontSize: "0.8rem", fontWeight: 600,
-                      color: l.actor === "System" ? "var(--admin-info)" : l.actor === "Admin" ? "var(--admin-gold)" : "var(--admin-text-primary)"
-                    }}>
-                      {l.actor}
-                    </span>
-                  </td>
-                  <td>
-                    <code style={{ fontSize: "0.78rem", color: "var(--admin-text-primary)", background: "var(--admin-bg-secondary)", padding: "2px 6px", borderRadius: 4 }}>
-                      {l.action}
-                    </code>
-                  </td>
-                  <td style={{ fontSize: "0.825rem", maxWidth: 280 }}>{l.target}</td>
-                  <td><code style={{ fontSize: "0.72rem", color: "var(--admin-text-muted)" }}>{l.ip}</code></td>
-                  <td>
-                    <span className={`admin-badge ${SEV_CLASSES[l.severity]}`}>{l.severity}</span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="flex items-center gap-2">
+          {["all", "info", "success", "warning", "danger"].map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setSevFilter(s)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase transition cursor-pointer ${
+                sevFilter === s
+                  ? "bg-blue-600 text-white"
+                  : "bg-slate-900 border border-slate-800 text-slate-400 hover:text-white"
+              }`}
+            >
+              {s}
+            </button>
+          ))}
         </div>
       </div>
+
+      {/* Logs Table */}
+      <div className="admin-data-table-wrap">
+        <table className="admin-data-table">
+          <thead>
+            <tr>
+              <th>Event ID</th>
+              <th>Action Triggered</th>
+              <th>Actor (Initiator)</th>
+              <th>Target / Resource</th>
+              <th>IP Origin</th>
+              <th>Timestamp</th>
+              <th>Severity</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0 && (
+              <tr>
+                <td colSpan={7} className="text-center py-12 text-slate-400">
+                  No log entries matched your filter.
+                </td>
+              </tr>
+            )}
+            {filtered.map((l) => (
+              <tr key={l.id}>
+                <td>
+                  <span className="font-mono text-xs font-bold text-slate-400">{l.id}</span>
+                </td>
+                <td>
+                  <span className="font-mono text-xs font-bold text-white bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700">
+                    {l.action}
+                  </span>
+                </td>
+                <td className="text-xs font-semibold text-blue-400">{l.actor}</td>
+                <td>
+                  <span className="text-xs text-slate-300 line-clamp-1 max-w-[240px]">{l.target}</span>
+                </td>
+                <td>
+                  <span className="font-mono text-[11px] text-slate-400">{l.ip}</span>
+                </td>
+                <td className="text-xs text-slate-400 font-mono">{l.timestamp}</td>
+                <td>
+                  <span className={`admin-badge ${
+                    l.severity === 'success' ? 'admin-badge-approved' :
+                    l.severity === 'danger' ? 'admin-badge-rejected' :
+                    l.severity === 'warning' ? 'admin-badge-pending' :
+                    'admin-badge-active'
+                  }`}>
+                    {l.severity}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useCompare } from '../../context/CompareContext';
 import api from '../../context/api';
+import toast from 'react-hot-toast';
 
 /**
  * Safely retrieves the primary image URL from the property object.
@@ -26,7 +27,7 @@ const MapSidebarCard = React.memo(({ prop, isActive, onMouseEnter, onMouseLeave,
             await api.post(`/favorites/${prop.id}`);
             setIsFavorite(!isFavorite);
         } catch (error) {
-            console.error('Failed to toggle favorite', error);
+            (toast.error('Failed to toggle favorite'), console.error('Failed to toggle favorite', error));
         }
     };
 

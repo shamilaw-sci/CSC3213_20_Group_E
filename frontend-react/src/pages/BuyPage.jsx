@@ -12,6 +12,7 @@ import L from 'leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import MarkerPopup from '../components/map/MarkerPopup';
 import 'leaflet/dist/leaflet.css';
+import toast from 'react-hot-toast';
 
 
 const formatPrice = (price) => {
@@ -89,7 +90,7 @@ const BuyPage = () => {
                 : (res.data?.properties || res.data?.data || []);
             setProperties(fetchedProps);
         } catch (error) {
-            console.error('Error fetching properties:', error);
+            (toast.error('Error fetching properties:'), console.error('Error fetching properties:', error));
         } finally {
             setLoading(false);
         }
