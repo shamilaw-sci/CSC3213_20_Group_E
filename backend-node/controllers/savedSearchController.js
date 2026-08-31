@@ -8,30 +8,19 @@ const savedSearchRepository = require('../repositories/savedSearchRepository');
 // @desc Save a new search (map polygon + filters) for the logged-in user
 // @route POST /api/saved-searches
 // @access Private
-const saveSearch = async (req, res, next) => {
+const saveSearch = async(req, res, next) => {
     try {
         const userId = req.user.id;
         const { title, polygon, beds, baths, property_type } = req.body;
 
-        const { data, error } = await supabase
-            .from('saved_searches')
-            .insert([{
-                user_id: userId,
-                title: title || 'My Saved Search',
-                polygon,
-                beds,
-                baths,
-                property_type,
-                email_alerts_enabled: true,
-            }])
-            .select();
-        const { data, error } = await savedSearchRepository.insertSavedSearch({ 
-            user_id: userId, 
+
+        const { data, error } = await savedSearchRepository.insertSavedSearch({
+            user_id: userId,
             title: title || 'My Saved Search',
-            polygon, 
-            beds, 
-            baths, 
-            property_type 
+            polygon,
+            beds,
+            baths,
+            property_type
         });
 
         if (error) {
@@ -50,7 +39,7 @@ const saveSearch = async (req, res, next) => {
 // @desc Get all saved searches for the logged-in user
 // @route GET /api/saved-searches
 // @access Private
-const getSavedSearches = async (req, res, next) => {
+const getSavedSearches = async(req, res, next) => {
     try {
         const userId = req.user.id;
 
@@ -72,7 +61,7 @@ const getSavedSearches = async (req, res, next) => {
 // @desc Delete a saved search belonging to the logged-in user
 // @route DELETE /api/saved-searches/:id
 // @access Private
-const deleteSavedSearch = async (req, res, next) => {
+const deleteSavedSearch = async(req, res, next) => {
     try {
         const { id } = req.params;
         const userId = req.user.id;
@@ -88,7 +77,7 @@ const deleteSavedSearch = async (req, res, next) => {
 // @desc Turn email match-alerts on/off for one saved search
 // @route PATCH /api/saved-searches/:id/alerts
 // @access Private
-const toggleAlerts = async (req, res, next) => {
+const toggleAlerts = async(req, res, next) => {
     try {
         const { id } = req.params;
         const userId = req.user.id;
@@ -121,7 +110,7 @@ const toggleAlerts = async (req, res, next) => {
  * Intentionally never throws: a failure here must never break the
  * property-approval flow that calls it.
  */
-const checkSavedSearchMatches = async (property) => {
+const checkSavedSearchMatches = async(property) => {
     try {
         if (!property) return;
 
@@ -139,7 +128,7 @@ const checkSavedSearchMatches = async (property) => {
 
         await Promise.all(
             matches.map((search) => {
-                const email = search.users?.email;
+                const email = search.users ?.email;
                 if (!email) return Promise.resolve();
                 return sendSavedSearchAlertEmail(email, search.title, property).catch((err) =>
                     logger.error('Failed to send saved-search alert email', err)
