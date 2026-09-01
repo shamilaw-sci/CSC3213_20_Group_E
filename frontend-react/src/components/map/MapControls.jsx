@@ -21,13 +21,21 @@ export const getMarkerColor = (listingType, propType) => {
 /**
  * Generates a dynamic custom interactive map marker icon with luxury glassmorphic depth & hover-sync glow
  */
+const iconCache = new Map();
+
 export const createCustomIcon = (price, isActive, isHovered, listingType, propType, isVerified = true) => {
     const isRent = listingType?.toLowerCase() === 'rent' || propType?.includes('Rent');
     const priceText = formatPrice(price) + (isRent ? '/mo' : '');
     const activeClass = isActive ? 'active' : isHovered ? 'hovered' : '';
     const verifiedBadge = isVerified ? `<span class="inline-block ml-1 text-[10px] text-blue-200" title="Verified Listing">✓</span>` : '';
 
-    return L.divIcon({
+    const cacheKey = `${priceText}_${activeClass}_${listingType}_${propType}_${isVerified}`;
+
+    if (iconCache.has(cacheKey)) {
+        return iconCache.get(cacheKey);
+    }
+
+    const icon = L.divIcon({
         className: `custom-leaflet-marker ${activeClass}`,
         html: `<div class="map-marker-container ${getMarkerColor(listingType, propType)} ${activeClass}">
                  <span class="map-marker-price">${priceText}</span>
@@ -37,6 +45,9 @@ export const createCustomIcon = (price, isActive, isHovered, listingType, propTy
         iconAnchor: [0, 0],
         popupAnchor: [0, -12],
     });
+
+    iconCache.set(cacheKey, icon);
+    return icon;
 };
 
 /**

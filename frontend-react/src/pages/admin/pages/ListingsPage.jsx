@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { fetchListings, fetchListingById, approveListing, rejectListing, deleteListing } from "../api/adminApi";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 import { MapContainer, TileLayer, Marker, Polygon, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -505,84 +507,71 @@ const normalizeListing = (listing) => {
 };
 
 const ListingsPage = () => {
-  const [listings, setListings] = useState([]);
+  const queryClient = useQueryClient();
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [rejectTarget, setRejectTarget] = useState(null);
   const [detailsTarget, setDetailsTarget] = useState(null);
-  const [loadingAction, setLoadingAction] = useState(false);
-  const [toastMsg, setToastMsg] = useState(null);
 
-  const showToast = (msg, type = "success") => {
-    setToastMsg({ msg, type });
-    setTimeout(() => setToastMsg(null), 3000);
-  };
+  const { data: listings = [], isLoading } = useQuery({
+    queryKey: ['adminListings', filter],
+    queryFn: async () => {
+      const data = await fetchListings({ status: filter === "all" ? undefined : filter });
+      return (data?.listings || []).map(normalizeListing);
+    }
+  });
 
-  const loadListings = () => {
-    fetchListings({ status: filter === "all" ? undefined : filter })
-      .then((data) => setListings((data?.listings || []).map(normalizeListing)))
-      .catch(() => {});
-  };
+  const approveMutation = useMutation({
+    mutationFn: approveListing,
+    onSuccess: (data, id) => {
+      queryClient.invalidateQueries({ queryKey: ['adminListings'] });
+      toast.success("Property approved and published live!");
+      if (detailsTarget?._id === id) {
+        setDetailsTarget((prev) => ({ ...prev, status: "Approved", statusKey: "approved" }));
+      }
+    },
+    onError: () => toast.error("Failed to approve property.")
+  });
 
-  useEffect(() => {
-    loadListings();
-  }, [filter]);
+  const rejectMutation = useMutation({
+    mutationFn: ({ id, reason }) => rejectListing(id, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminListings'] });
+      setRejectTarget(null);
+      setDetailsTarget(null);
+      toast.success("Property rejected and feedback dispatched to seller.");
+    },
+    onError: () => toast.error("Failed to reject property.")
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteListing,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminListings'] });
+      toast.success("Listing deleted permanently.");
+    },
+    onError: () => toast.error("Failed to delete listing.")
+  });
 
   const handleViewDetails = async (id) => {
     try {
       const data = await fetchListingById(id);
       setDetailsTarget(normalizeListing(data.listing));
-    } catch {
+    } catch (error) {
+      toast.error("Failed to fetch property details");
       const listing = listings.find((l) => l._id === id);
       if (listing) setDetailsTarget(listing);
     }
   };
 
-  const handleApprove = async (id) => {
-    setLoadingAction(true);
-    try {
-      await approveListing(id);
-      setListings((prev) =>
-        prev.map((l) => (l._id === id ? { ...l, status: "Approved", statusKey: "approved" } : l))
-      );
-      if (detailsTarget?._id === id) {
-        setDetailsTarget((prev) => ({ ...prev, status: "Approved", statusKey: "approved" }));
-      }
-      showToast("Property approved and published live!");
-    } catch {
-      showToast("Failed to approve property.", "error");
-    } finally {
-      setLoadingAction(false);
-    }
-  };
-
-  const handleRejectConfirm = async (reason) => {
+  const handleApprove = (id) => approveMutation.mutate(id);
+  const handleRejectConfirm = (reason) => {
     if (!rejectTarget) return;
-    setLoadingAction(true);
-    try {
-      await rejectListing(rejectTarget._id, reason);
-      setListings((prev) =>
-        prev.map((l) => (l._id === rejectTarget._id ? { ...l, status: "Rejected", statusKey: "rejected" } : l))
-      );
-      setRejectTarget(null);
-      setDetailsTarget(null);
-      showToast("Property rejected and feedback dispatched to seller.");
-    } catch {
-      showToast("Failed to reject property.", "error");
-    } finally {
-      setLoadingAction(false);
-    }
+    rejectMutation.mutate({ id: rejectTarget._id, reason });
   };
-
-  const handleDelete = async (id) => {
+  const handleDelete = (id) => {
     if (!window.confirm("Are you sure you want to permanently delete this listing?")) return;
-    try {
-      await deleteListing(id);
-      setListings((prev) => prev.filter((l) => l._id !== id));
-      showToast("Listing deleted permanently.");
-    } catch {
-      showToast("Failed to delete listing.", "error");
-    }
+    deleteMutation.mutate(id);
   };
 
   const filteredListings = listings.filter((l) => {
@@ -596,18 +585,11 @@ const ListingsPage = () => {
     );
   });
 
+  const loadingAction = approveMutation.isPending || rejectMutation.isPending || deleteMutation.isPending;
+
   return (
     <div className="space-y-6">
       
-      {/* Toast Notification */}
-      {toastMsg && (
-        <div className="admin-toast-container">
-          <div className={`admin-toast ${toastMsg.type}`}>
-            <span>{toastMsg.msg}</span>
-          </div>
-        </div>
-      )}
-
       {/* Rejection Reason Modal */}
       {rejectTarget && (
         <RejectModal

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { m } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import api from '../context/api';
@@ -116,47 +116,49 @@ const BuyPage = () => {
     };
 
     // Filter by search term locally (since it's usually faster if we don't have a full text search endpoint)
-    const filteredProperties = properties.filter(prop => {
-        // Search Term
-        const matchesSearch = !filters.searchTerm || 
-            (prop.title?.toLowerCase().includes(filters.searchTerm.toLowerCase()) || 
-             prop.address?.toLowerCase().includes(filters.searchTerm.toLowerCase()));
-        
-        // Price
-        const propPrice = prop.price || 0;
-        const matchesMinPrice = !filters.minPrice || propPrice >= parseInt(filters.minPrice);
-        const matchesMaxPrice = !filters.maxPrice || propPrice <= parseInt(filters.maxPrice);
+    const filteredProperties = useMemo(() => {
+        return properties.filter(prop => {
+            // Search Term
+            const matchesSearch = !filters.searchTerm || 
+                (prop.title?.toLowerCase().includes(filters.searchTerm.toLowerCase()) || 
+                 prop.address?.toLowerCase().includes(filters.searchTerm.toLowerCase()));
+            
+            // Price
+            const propPrice = prop.price || 0;
+            const matchesMinPrice = !filters.minPrice || propPrice >= parseInt(filters.minPrice);
+            const matchesMaxPrice = !filters.maxPrice || propPrice <= parseInt(filters.maxPrice);
 
-        // Property Type
-        const activeTypes = Object.keys(filters.propTypes).filter(k => filters.propTypes[k]);
-        const matchesType = activeTypes.length === 0 || activeTypes.some(t => (prop.type || 'House').includes(t));
+            // Property Type
+            const activeTypes = Object.keys(filters.propTypes).filter(k => filters.propTypes[k]);
+            const matchesType = activeTypes.length === 0 || activeTypes.some(t => (prop.type || 'House').includes(t));
 
-        // Listing Type Check (Rent, Sale, Sold)
-        // Some properties might have type="Rent House", so we also fallback to checking that just in case.
-        const isPropRent = prop.listing_type === 'Rent' || prop.type === 'Rent House' || prop.type === 'Rent Villa';
-        let matchesListingType = true;
-        if (filters.listingType === 'Rent') matchesListingType = isPropRent;
-        else if (filters.listingType === 'Sale') matchesListingType = !isPropRent && prop.listing_type !== 'Sold';
-        else if (filters.listingType === 'Sold') matchesListingType = prop.listing_type === 'Sold';
+            // Listing Type Check (Rent, Sale, Sold)
+            // Some properties might have type="Rent House", so we also fallback to checking that just in case.
+            const isPropRent = prop.listing_type === 'Rent' || prop.type === 'Rent House' || prop.type === 'Rent Villa';
+            let matchesListingType = true;
+            if (filters.listingType === 'Rent') matchesListingType = isPropRent;
+            else if (filters.listingType === 'Sale') matchesListingType = !isPropRent && prop.listing_type !== 'Sold';
+            else if (filters.listingType === 'Sold') matchesListingType = prop.listing_type === 'Sold';
 
-        // Beds
-        let matchesBeds = true;
-        if (filters.beds !== 'Any') {
-            const targetBeds = parseInt(filters.beds.replace('+', ''));
-            const propBeds = prop.bedrooms || 0;
-            matchesBeds = filters.exactMatch ? propBeds === targetBeds : propBeds >= targetBeds;
-        }
+            // Beds
+            let matchesBeds = true;
+            if (filters.beds !== 'Any') {
+                const targetBeds = parseInt(filters.beds.replace('+', ''));
+                const propBeds = prop.bedrooms || 0;
+                matchesBeds = filters.exactMatch ? propBeds === targetBeds : propBeds >= targetBeds;
+            }
 
-        // Baths
-        let matchesBaths = true;
-        if (filters.baths !== 'Any') {
-            const targetBaths = parseInt(filters.baths.replace('+', ''));
-            const propBaths = prop.bathrooms || 0;
-            matchesBaths = filters.exactMatch ? propBaths === targetBaths : propBaths >= targetBaths;
-        }
+            // Baths
+            let matchesBaths = true;
+            if (filters.baths !== 'Any') {
+                const targetBaths = parseInt(filters.baths.replace('+', ''));
+                const propBaths = prop.bathrooms || 0;
+                matchesBaths = filters.exactMatch ? propBaths === targetBaths : propBaths >= targetBaths;
+            }
 
-        return matchesSearch && matchesMinPrice && matchesMaxPrice && matchesType && matchesBeds && matchesBaths && matchesListingType;
-    });
+            return matchesSearch && matchesMinPrice && matchesMaxPrice && matchesType && matchesBeds && matchesBaths && matchesListingType;
+        });
+    }, [properties, filters]);
 
     const getSafeImageUrl = (prop) => {
         if (!prop.images || prop.images.length === 0) return '/placeholder-house.jpg';

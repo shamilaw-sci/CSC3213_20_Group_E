@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/UserAuthContext";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Bell, MessageSquare, User } from "lucide-react";
 import api from "../context/api";
 import "./Navbar.css";
@@ -22,26 +23,26 @@ const Navbar = ({ transparent = false }) => {
     navigate("/login");
   };
 
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [recentMessages, setRecentMessages] = useState([]);
+  const { data, isError, error } = useQuery({
+    queryKey: ['unreadMessages'],
+    queryFn: async () => {
+      const res = await api.get("/conversations/unread");
+      return res.data;
+    },
+    enabled: !!user,
+    refetchInterval: 15000,
+  });
 
   useEffect(() => {
-    if (!user) return;
+    if (isError) {
+      toast.error("Failed to fetch unread messages");
+      console.error("Failed to fetch unread messages", error);
+    }
+  }, [isError, error]);
 
-    const fetchUnread = async () => {
-      try {
-        const res = await api.get("/conversations/unread");
-        setUnreadCount(res.data.unreadCount || 0);
-        setRecentMessages(res.data.recentMessages || []);
-      } catch (err) {
-        (toast.error("Failed to fetch unread messages"), console.error("Failed to fetch unread messages", err));
-      }
-    };
+  const unreadCount = data?.unreadCount || 0;
+  const recentMessages = data?.recentMessages || [];
 
-    fetchUnread();
-    const interval = setInterval(fetchUnread, 15000); // Check every 15s
-    return () => clearInterval(interval);
-  }, [user]);
 
   return (
     <nav className={`sticky top-0 z-50 transition-all duration-300 ${transparent ? 'bg-transparent text-white' : 'bg-white/80 backdrop-blur-xl border-b border-gray-100/50 shadow-sm'}`}>

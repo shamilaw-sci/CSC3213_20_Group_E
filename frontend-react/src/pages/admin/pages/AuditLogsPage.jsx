@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import { fetchAuditLogs } from "../api/adminApi";
 import "../styles/admin-global.css";
 import { 
@@ -33,7 +34,7 @@ const AuditLogsPage = () => {
   useEffect(() => {
     fetchAuditLogs()
       .then((d) => { if (d?.logs?.length) setLogs(d.logs); })
-      .catch(() => {});
+      .catch((err) => { toast.error("Failed to fetch audit logs"); console.error(err); });
   }, []);
 
   const filtered = logs.filter((l) => {

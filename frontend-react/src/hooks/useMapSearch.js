@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getWKTFromBounds } from '../components/map/MapControls';
 
@@ -134,41 +134,43 @@ export const useMapSearch = () => {
         setFilters(newFilters);
     };
 
-    const filteredProperties = properties.filter(prop => {
-        const matchesSearch = !filters.searchTerm || 
-            (prop.title?.toLowerCase().includes(filters.searchTerm.toLowerCase()) || 
-             prop.address?.toLowerCase().includes(filters.searchTerm.toLowerCase()));
-        
-        const propPrice = prop.price || 0;
-        const matchesMinPrice = !filters.minPrice || propPrice >= parseInt(filters.minPrice);
-        const matchesMaxPrice = !filters.maxPrice || propPrice <= parseInt(filters.maxPrice);
-        const matchesFeasibilityPrice = maxPriceFilter === null || propPrice <= maxPriceFilter;
+    const filteredProperties = useMemo(() => {
+        return properties.filter(prop => {
+            const matchesSearch = !filters.searchTerm || 
+                (prop.title?.toLowerCase().includes(filters.searchTerm.toLowerCase()) || 
+                 prop.address?.toLowerCase().includes(filters.searchTerm.toLowerCase()));
+            
+            const propPrice = prop.price || 0;
+            const matchesMinPrice = !filters.minPrice || propPrice >= parseInt(filters.minPrice);
+            const matchesMaxPrice = !filters.maxPrice || propPrice <= parseInt(filters.maxPrice);
+            const matchesFeasibilityPrice = maxPriceFilter === null || propPrice <= maxPriceFilter;
 
-        const activeTypes = Object.keys(filters.propTypes).filter(k => filters.propTypes[k]);
-        const matchesType = activeTypes.length === 0 || activeTypes.some(t => (prop.type || 'House').includes(t));
+            const activeTypes = Object.keys(filters.propTypes).filter(k => filters.propTypes[k]);
+            const matchesType = activeTypes.length === 0 || activeTypes.some(t => (prop.type || 'House').includes(t));
 
-        const isPropRent = prop.listing_type === 'Rent' || prop.type === 'Rent House' || prop.type === 'Rent Villa';
-        let matchesListingType = true;
-        if (filters.listingType === 'Rent') matchesListingType = isPropRent;
-        else if (filters.listingType === 'Sale') matchesListingType = !isPropRent && prop.listing_type !== 'Sold';
-        else if (filters.listingType === 'Sold') matchesListingType = prop.listing_type === 'Sold';
+            const isPropRent = prop.listing_type === 'Rent' || prop.type === 'Rent House' || prop.type === 'Rent Villa';
+            let matchesListingType = true;
+            if (filters.listingType === 'Rent') matchesListingType = isPropRent;
+            else if (filters.listingType === 'Sale') matchesListingType = !isPropRent && prop.listing_type !== 'Sold';
+            else if (filters.listingType === 'Sold') matchesListingType = prop.listing_type === 'Sold';
 
-        let matchesBeds = true;
-        if (filters.beds !== 'Any') {
-            const targetBeds = parseInt(filters.beds.replace('+', ''));
-            const propBeds = prop.bedrooms || 0;
-            matchesBeds = filters.exactMatch ? propBeds === targetBeds : propBeds >= targetBeds;
-        }
+            let matchesBeds = true;
+            if (filters.beds !== 'Any') {
+                const targetBeds = parseInt(filters.beds.replace('+', ''));
+                const propBeds = prop.bedrooms || 0;
+                matchesBeds = filters.exactMatch ? propBeds === targetBeds : propBeds >= targetBeds;
+            }
 
-        let matchesBaths = true;
-        if (filters.baths !== 'Any') {
-            const targetBaths = parseInt(filters.baths.replace('+', ''));
-            const propBaths = prop.bathrooms || 0;
-            matchesBaths = filters.exactMatch ? propBaths === targetBaths : propBaths >= targetBaths;
-        }
+            let matchesBaths = true;
+            if (filters.baths !== 'Any') {
+                const targetBaths = parseInt(filters.baths.replace('+', ''));
+                const propBaths = prop.bathrooms || 0;
+                matchesBaths = filters.exactMatch ? propBaths === targetBaths : propBaths >= targetBaths;
+            }
 
-        return matchesSearch && matchesMinPrice && matchesMaxPrice && matchesFeasibilityPrice && matchesType && matchesBeds && matchesBaths && matchesListingType;
-    });
+            return matchesSearch && matchesMinPrice && matchesMaxPrice && matchesFeasibilityPrice && matchesType && matchesBeds && matchesBaths && matchesListingType;
+        });
+    }, [properties, filters, maxPriceFilter]);
 
     return {
         properties,

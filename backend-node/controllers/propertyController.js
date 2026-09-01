@@ -32,16 +32,23 @@ const addProperty = async (req, res, next) => {
     let imageUrls = [];
 
     if (files && files.length > 0) {
-      const uploadPromises = files.map(async (file) => {
-        const fileName = generateSafeFileName(file.originalname);
-        const filePath = `public/${fileName}`;
+      const uploadResults = await Promise.allSettled(
+        files.map(async (file) => {
+          const fileName = generateSafeFileName(file.originalname);
+          const filePath = `public/${fileName}`;
 
-        const publicUrl = await propertyRepository.uploadImage(filePath, file.buffer, file.mimetype);
-        uploadedFiles.push(filePath);
-        return publicUrl;
-      });
+          const publicUrl = await propertyRepository.uploadImage(filePath, file.buffer, file.mimetype);
+          uploadedFiles.push(filePath); // Add to tracking immediately after success
+          return publicUrl;
+        })
+      );
 
-      imageUrls = await Promise.all(uploadPromises);
+      const failedUploads = uploadResults.filter(r => r.status === 'rejected');
+      if (failedUploads.length > 0) {
+        throw new Error(`Failed to upload ${failedUploads.length} images`);
+      }
+
+      imageUrls = uploadResults.map(r => r.value);
     }
 
     const property = await propertyRepository.addProperty({
@@ -75,7 +82,22 @@ const addProperty = async (req, res, next) => {
     });
   } catch (error) {
     if (uploadedFiles.length > 0) {
-      propertyRepository.removeImages(uploadedFiles).catch((e) => console.error("Rollback failed:", e));
+      // Robust rollback with retry mechanism to prevent orphaned storage blobs
+      const rollback = async () => {
+        let retries = 3;
+        while (retries > 0) {
+          try {
+            await propertyRepository.removeImages(uploadedFiles);
+            console.log("Successfully rolled back orphaned files.");
+            break;
+          } catch (e) {
+            retries--;
+            console.error(`Rollback failed, retries left: ${retries}`, e);
+            if (retries > 0) await new Promise(res => setTimeout(res, 1000));
+          }
+        }
+      };
+      rollback(); // Run async in background without blocking error response
     }
     next(error);
   }
