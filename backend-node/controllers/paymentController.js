@@ -32,6 +32,10 @@ const generateHash = (req, res) => {
     const { order_id, amount } = req.body; 
     const currency = 'LKR'; 
 
+    if (!order_id || !amount || isNaN(amount)) {
+        return res.status(400).json({ error: 'Missing or invalid order_id or amount' });
+    }
+
     const merchant_id = process.env.PAYHERE_MERCHANT_ID;
     const merchant_secret = process.env.PAYHERE_MERCHANT_SECRET;
 
@@ -115,30 +119,27 @@ const processWebhook = async (req, res, next) => {
                     transaction_id: req.body.payment_id
                 });
             } catch (txError) {
-                logger.error('Failed to insert transaction record', txError);
+                logger.error('Failed to insert transaction record (non-fatal)', txError);
             }
 
             // 2. Update the property's payment status and send for admin review
-            try {
-                const property = await propertyRepository.updatePaymentStatus(order_id, 'Paid', 'pending');
-                logger.info('Property payment status updated', { property_id: order_id });
+            const property = await propertyRepository.updatePaymentStatus(order_id, 'Paid', 'pending');
+            logger.info('Property payment status updated', { property_id: order_id });
 
-                const user = await userRepository.findById(property.seller_id);
-                if (user && user.email) {
-                    sendPaymentReceipt(user.email, property.title || 'Your Property', parseFloat(payhere_amount))
-                        .catch((error) => logger.error('Failed to send payment receipt', error));
-                }
-                return res.status(200).send("OK");
-            } catch (propError) {
-                logger.error('Failed to update property status', propError);
+            const user = await userRepository.findById(property.seller_id);
+            if (user && user.email) {
+                sendPaymentReceipt(user.email, property.title || 'Your Property', parseFloat(payhere_amount))
+                    .catch((error) => logger.error('Failed to send payment receipt', error));
             }
+            
+            // Successfully updated the DB, so acknowledge receipt to PayHere
+            return res.status(200).send("OK");
 
         } catch (dbError) {
-            logger.error('Unexpected database error during webhook processing', dbError);
+            logger.error('Failed to update property status, rejecting webhook so PayHere retries', dbError);
+            // DO NOT return 200 OK here, otherwise PayHere will never retry.
+            return res.status(500).send("Internal Server Error");
         }
-
-        // Acknowledge receipt of the webhook to PayHere
-        res.status(200).send("OK");
 
     } else {
         logger.warn('PayHere payment failed or security hash mismatch', { order_id, status_code });

@@ -26,6 +26,7 @@ export default function usePropertyForm() {
   const [boundaryCoordinates, setBoundaryCoordinates] = useState([]);
   const [images, setImages] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
+  const [draftPropertyId, setDraftPropertyId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
 
@@ -51,6 +52,12 @@ export default function usePropertyForm() {
       return;
     }
 
+    if (draftPropertyId) {
+      setMessage({ type: "success", text: "Resuming payment for existing draft..." });
+      await triggerPayment(draftPropertyId);
+      return;
+    }
+
     setLoading(true);
     setMessage({
       type: "success",
@@ -66,13 +73,25 @@ export default function usePropertyForm() {
       let centerLng = formData.longitude;
 
       if (locationMode === "boundary" && boundaryCoordinates.length >= 3) {
-        const coords = [...boundaryCoordinates];
-        const first = coords[0];
-        const last = coords[coords.length - 1];
+        let coords = [...boundaryCoordinates];
+        let first = coords[0];
+        let last = coords[coords.length - 1];
 
-        if (first[0] !== last[0] || first[1] !== last[1]) {
-          coords.push(first);
+        // If the user manually closed it, remove the duplicate last point temporarily
+        // so we can count the true number of distinct vertices.
+        if (first[0] === last[0] && first[1] === last[1]) {
+            coords.pop();
         }
+
+        if (coords.length < 3) {
+            setMessage({ type: "error", text: "A valid boundary must have at least 3 distinct points (a triangle)." });
+            setLoading(false);
+            return;
+        }
+
+        // Always push the exact first point at the very end to guarantee a perfectly closed PostGIS polygon
+        first = coords[0];
+        coords.push(first);
 
         const wktPoints = coords.map((c) => `${c[1]} ${c[0]}`).join(", ");
         finalBoundaryWKT = `POLYGON((${wktPoints}))`;
@@ -115,6 +134,7 @@ export default function usePropertyForm() {
       });
 
       const newPropertyId = response.data.property.id;
+      setDraftPropertyId(newPropertyId);
 
       setMessage({
         type: "success",

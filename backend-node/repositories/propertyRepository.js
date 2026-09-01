@@ -118,23 +118,17 @@ const propertyRepository = {
         return true;
     },
 
-    // 6. Increment Views
+    // 6. Increment Views (Atomic RPC)
     incrementViews: async (id) => {
-        const { data: prop, error: fetchError } = await supabase
-            .from('properties')
-            .select('views_count')
-            .eq('id', id)
-            .single();
-        if (fetchError) return null;
-
-        const newCount = (prop.views_count || 0) + 1;
-        const { error: updateError } = await supabase
-            .from('properties')
-            .update({ views_count: newCount })
-            .eq('id', id);
-        if (updateError) throw updateError;
+        // Try atomic RPC to prevent race conditions
+        const { data, error } = await supabase.rpc('increment_property_views', { property_id: id });
         
-        return newCount;
+        if (error) {
+            console.error(`Atomic RPC failed for property ${id}:`, error);
+            throw error; // Fail loudly rather than using a race-condition prone fallback
+        }
+        
+        return data;
     }
 };
 

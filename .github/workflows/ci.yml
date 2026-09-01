@@ -68,6 +68,10 @@ jobs:
           node -c server.js
           find routes controllers middleware repositories validators -name "*.js" -exec node -c {} +
 
+      - name: Security Scan (npm audit)
+        working-directory: backend-node
+        run: npm audit --audit-level=high
+
   # ==========================================
   # 3. React Frontend Build & Type Check CI Job
   # ==========================================
@@ -97,6 +101,10 @@ jobs:
           VITE_API_URL: "http://localhost:5000"
           VITE_MAP_API_URL: "http://localhost:8080/api/map/search"
 
+      - name: Security Scan (npm audit)
+        working-directory: frontend-react
+        run: npm audit --audit-level=high
+
   # ==========================================
   # 4. Docker Compose Multi-Container Build Job
   # ==========================================
@@ -114,3 +122,13 @@ jobs:
 
       - name: Validate Docker Compose Configurations & Build Images
         run: docker compose build
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'

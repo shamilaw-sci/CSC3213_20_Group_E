@@ -35,4 +35,32 @@ const protect = async (req, res, next) => {
     }
 };
 
-module.exports = { protect };
+const optionalAuth = async (req, res, next) => {
+    let token = req.cookies?.token;
+
+    if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+        token = req.headers.authorization.split(' ')[1];
+    }
+
+    if (!token) {
+        return next();
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const { data: user, error } = await supabase
+            .from('users')
+            .select('id, role, name, email')
+            .eq('id', decoded.id)
+            .single();
+
+        if (!error && user) {
+            req.user = user;
+        }
+    } catch (error) {
+        // Ignore token errors for optional auth
+    }
+    next();
+};
+
+module.exports = { protect, optionalAuth };

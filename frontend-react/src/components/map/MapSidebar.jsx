@@ -12,10 +12,10 @@ const MapSidebar = ({
     const navigate = useNavigate();
 
     return (
-        <div className="w-[450px] bg-white border-l overflow-y-auto flex flex-col z-10 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.1)]">
-            <div className="p-4 border-b sticky top-0 bg-white z-20 shadow-sm">
-                <h3 className="font-bold text-lg text-gray-900">Real Estate & Homes</h3>
-                <p className="text-sm text-gray-500">{filteredProperties.length} results found</p>
+        <div className="w-[450px] bg-white dark:bg-slate-900 border-l border-gray-200 dark:border-slate-800 overflow-y-auto flex flex-col z-10 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.1)]">
+            <div className="p-4 border-b border-gray-200 dark:border-slate-800 sticky top-0 bg-white dark:bg-slate-900 z-20 shadow-sm">
+                <h3 className="font-bold text-lg text-gray-900 dark:text-white">Real Estate & Homes</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{filteredProperties.length} results found</p>
             </div>
             {filteredProperties.length > 0 ? (
                 <div className="p-4 grid grid-cols-2 gap-3 auto-rows-max">

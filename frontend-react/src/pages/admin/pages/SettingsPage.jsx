@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import { fetchSettings, updateSettings } from "../api/adminApi";
 import { useTheme } from "../../../context/ThemeProvider";
 import "../styles/admin-global.css";
@@ -48,7 +49,7 @@ const SettingsPage = () => {
           setSettings({ ...DEFAULT_SETTINGS, ...d, listingFee: d.listing_fee || 1500 });
         }
       })
-      .catch(() => {});
+      .catch((err) => { toast.error("Failed to load settings"); console.error(err); });
   }, []);
 
   const showToast = (msg, type = "success") => {

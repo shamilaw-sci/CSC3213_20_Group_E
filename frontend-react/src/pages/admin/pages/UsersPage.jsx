@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import { fetchUsers, banUser, unbanUser, updateUserRole } from "../api/adminApi";
 import "../styles/admin-global.css";
 import { 
@@ -75,7 +76,7 @@ const UsersPage = () => {
   const loadUsers = () => {
     fetchUsers({ role: roleFilter !== "all" ? roleFilter : undefined })
       .then((d) => { if (d?.users) setUsers(d.users); })
-      .catch(() => {});
+      .catch((err) => { toast.error("Failed to load users"); console.error(err); });
   };
 
   useEffect(() => {

@@ -42,11 +42,33 @@ func SetupRouter(mapHandler *handlers.MapHandler, pool ...*pgxpool.Pool) *gin.En
 		}
 	}
 
+	isAllowedOrigin := func(origin string) bool {
+		if origin == "" {
+			return true
+		}
+		if allowedOrigins[origin] {
+			return true
+		}
+		// Allow any localhost or 127.0.0.1 development port
+		if strings.HasPrefix(origin, "http://localhost:") || strings.HasPrefix(origin, "http://127.0.0.1:") {
+			return true
+		}
+		// Allow Vercel preview & production deployments
+		if strings.HasSuffix(origin, ".vercel.app") || origin == "https://thirasara-property.vercel.app" {
+			return true
+		}
+		return false
+	}
+
 	r.Use(func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
 
-		if allowedOrigins[origin] {
-			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+		if isAllowedOrigin(origin) {
+			if origin != "" {
+				c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+			} else {
+				c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+			}
 			c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 			c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
 			c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET")
@@ -54,7 +76,7 @@ func SetupRouter(mapHandler *handlers.MapHandler, pool ...*pgxpool.Pool) *gin.En
 		}
 
 		if c.Request.Method == "OPTIONS" {
-			if origin != "" && !allowedOrigins[origin] {
+			if !isAllowedOrigin(origin) {
 				c.AbortWithStatus(403)
 				return
 			}
