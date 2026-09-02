@@ -1,5 +1,6 @@
 const request = require('supertest');
 // Mock Supabase
+const { createClient } = require('@supabase/supabase-js');
 jest.mock('@supabase/supabase-js', () => {
     const mockSupabase = {
         from: jest.fn().mockReturnThis(),

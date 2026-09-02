@@ -168,17 +168,7 @@ const getAgentLeads = async (req, res, next) => {
         }
 
         const data = await agentRepository.getAgentLeads(req.user.id);
-
-        // Fetch the last message for each conversation
-        const enrichedLeads = await Promise.all(data.map(async (lead) => {
-            const lastMessage = await agentRepository.getLastMessage(lead.id);
-            return {
-                ...lead,
-                last_message: lastMessage
-            };
-        }));
-
-        res.status(200).json({ leads: enrichedLeads });
+        res.status(200).json({ leads: data || [] });
     } catch (error) {
         next(error);
     }

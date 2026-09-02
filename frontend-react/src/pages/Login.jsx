@@ -8,6 +8,8 @@ import api from '../context/api';
 import toast from 'react-hot-toast';
 import { Player } from '@lottiefiles/react-lottie-player';
 import { m } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -221,9 +223,9 @@ const Login = () => {
                                 <label htmlFor="email" className="block text-gray-700 dark:text-gray-300 text-xs font-semibold mb-1">
                                     Email Address <span className="text-red-500">*</span>
                                 </label>
-                                <input id="email" type="email"
+                                <Input id="email" type="email"
                                     {...registerLogin('email')}
-                                    className={`w-full px-3.5 py-2 sm:py-2.5 text-sm border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition ${loginErrors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'}`}
+                                    className={loginErrors.email ? 'border-red-500' : ''}
                                 />
                                 {loginErrors.email && <p className="text-red-500 text-xs mt-0.5 font-medium">{loginErrors.email.message}</p>}
                             </div>
@@ -233,14 +235,16 @@ const Login = () => {
                                     <label htmlFor="password" className="block text-gray-700 dark:text-gray-300 text-xs font-semibold">
                                         Password <span className="text-red-500">*</span>
                                     </label>
-                                    <button type="button" onClick={() => setStep('reset')} className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline">
-                                        Forgot password?
+                                    <button type="button" onClick={() => setStep(2)} className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition">
+                                        Forgot Password?
                                     </button>
                                 </div>
                                 <div className="relative">
-                                    <input id="password" type={showPassword ? "text" : "password"}
+                                    <Input
+                                        id="password"
+                                        type={showPassword ? 'text' : 'password'}
                                         {...registerLogin('password')}
-                                        className={`w-full px-3.5 py-2 sm:py-2.5 text-sm border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10 transition ${loginErrors.password ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'}`}
+                                        className={`pr-10 ${loginErrors.password ? 'border-red-500' : ''}`}
                                     />
                                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none">
                                         {showPassword ? (
@@ -253,9 +257,9 @@ const Login = () => {
                                 {loginErrors.password && <p className="text-red-500 text-xs mt-0.5 font-medium">{loginErrors.password.message}</p>}
                             </div>
 
-                            <button type="submit" disabled={loading || !isLoginValid} className={`w-full text-white font-bold py-2.5 sm:py-3 px-4 rounded-xl text-sm transition duration-200 shadow-md ${loading || !isLoginValid ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 hover:shadow-lg'}`}>
+                            <Button type="submit" disabled={loading || !isLoginValid} className="w-full mt-4">
                                 {loading ? 'Signing in...' : 'Sign In'}
-                            </button>
+                            </Button>
                         </form>
                     ) : (
                         <form onSubmit={handleSubmitReset(onResetSubmit)} className="animate-fade-in">
@@ -269,21 +273,21 @@ const Login = () => {
                                 <label htmlFor="reset_email" className="block text-gray-700 dark:text-gray-300 text-xs font-semibold mb-1">
                                     Email Address <span className="text-red-500">*</span>
                                 </label>
-                                <input id="reset_email" type="email"
+                                <Input id="reset_email" type="email"
                                     {...registerReset('email')}
-                                    className={`w-full px-3.5 py-2.5 text-sm border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition ${resetErrors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'}`}
+                                    className={resetErrors.email ? 'border-red-500' : ''}
                                 />
                                 {resetErrors.email && <p className="text-red-500 text-xs mt-0.5 font-medium">{resetErrors.email.message}</p>}
                             </div>
                             
                             {!resetMessage ? (
-                                <button type="submit" disabled={loading || !isResetValid} className={`w-full text-white font-bold py-3 px-4 rounded-xl text-sm transition duration-200 shadow-md ${loading || !isResetValid ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 hover:shadow-lg'}`}>
+                                <Button type="submit" disabled={loading || !isResetValid} className="w-full mt-2">
                                     {loading ? 'Sending...' : 'Send Reset Link'}
-                                </button>
+                                </Button>
                             ) : (
-                                <button type="button" onClick={() => { setStep(1); setResetMessage(''); }} className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 font-bold py-3 px-4 rounded-xl text-sm transition duration-200">
+                                <Button variant="outline" type="button" onClick={() => { setStep(1); setResetMessage(''); }} className="w-full mt-2">
                                     Back to Sign in
-                                </button>
+                                </Button>
                             )}
                         </form>
                     )}
@@ -304,14 +308,14 @@ const Login = () => {
                                 {/* Google Sign In Button Container */}
                                 <div ref={googleBtnRef} className="w-full flex justify-center"></div>
 
-                                <button type="button" onClick={() => handleSocialLogin('Facebook')} className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition font-medium text-xs sm:text-sm text-gray-700 dark:text-gray-200 h-9 sm:h-10 max-w-[350px]">
+                                <Button variant="outline" type="button" onClick={() => handleSocialLogin('Facebook')} className="w-full max-w-[350px]">
                                     <svg className="w-4 h-4 mr-2.5 text-blue-600" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" /></svg>
                                     Continue with Facebook
-                                </button>
-                                <button type="button" onClick={() => handleSocialLogin('Apple')} className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition font-medium text-xs sm:text-sm text-gray-700 dark:text-gray-200 h-9 sm:h-10 max-w-[350px]">
+                                </Button>
+                                <Button variant="outline" type="button" onClick={() => handleSocialLogin('Apple')} className="w-full max-w-[350px]">
                                     <img src="https://www.svgrepo.com/show/511330/apple-173.svg" alt="Apple" className="h-4 w-4 mr-2 dark:invert" />
                                     Continue with Apple
-                                </button>
+                                </Button>
                             </div>
                         </>
                     )}

@@ -45,23 +45,26 @@ const MapLayers = ({
                 <GeoJSON 
                     data={floodData} 
                     style={{
-                        color: "#3b82f6", // blue-500
-                        weight: 2,
-                        fillColor: "#3b82f6",
-                        fillOpacity: 0.3,
+                        color: "#0284c7", // sky-600
+                        weight: 2.5,
+                        fillColor: "#06b6d4", // cyan-500
+                        fillOpacity: 0.32,
                     }}
                     onEachFeature={(feature, layer) => {
                         if (feature.properties && feature.properties.name) {
                             const p = feature.properties;
                             layer.bindPopup(`
-                                <div style="font-family: sans-serif;">
-                                    <strong style="color: #3b82f6; font-size: 14px;">${p.name}</strong><br/>
-                                    <span style="font-size: 12px; color: #555;">Risk Level: <b style="color: red;">${p.risk_level}</b></span><br/>
-                                    <hr style="margin: 4px 0;" />
-                                    <div style="font-size: 12px; line-height: 1.4;">
-                                        <b>Affected Families:</b> ${p.affectedFamilies?.toLocaleString() || 0}<br/>
-                                        <b>Deaths:</b> ${p.deaths || 0}<br/>
-                                        <b>Missing:</b> ${p.missing || 0}
+                                <div class="p-2 font-sans min-w-[200px]">
+                                    <div class="flex items-center gap-1.5 mb-1">
+                                        <span class="text-sm">🌊</span>
+                                        <strong class="text-sky-700 font-extrabold text-sm">${p.name}</strong>
+                                    </div>
+                                    <div class="inline-block px-2 py-0.5 rounded-full text-[11px] font-bold bg-sky-100 text-sky-800 mb-2">
+                                        Flood Hazard: ${p.risk_level}
+                                    </div>
+                                    <div class="text-xs text-gray-600 space-y-0.5 border-t pt-1.5">
+                                        <div><b>Affected:</b> ${(p.affectedFamilies || 0).toLocaleString()} families</div>
+                                        <div><b>Incidents Reported:</b> ${p.deaths || 0}</div>
                                     </div>
                                 </div>
                             `);
@@ -74,24 +77,26 @@ const MapLayers = ({
                 <GeoJSON 
                     data={landslideData} 
                     style={{
-                        color: "#ef4444", // red-500
-                        weight: 2,
+                        color: "#dc2626", // red-600
+                        weight: 2.5,
                         fillColor: "#ef4444",
-                        fillOpacity: 0.3,
-                        dashArray: '5, 5'
+                        fillOpacity: 0.32,
+                        dashArray: '6, 6'
                     }}
                     onEachFeature={(feature, layer) => {
                         if (feature.properties && feature.properties.name) {
                             const p = feature.properties;
                             layer.bindPopup(`
-                                <div style="font-family: sans-serif;">
-                                    <strong style="color: #ef4444; font-size: 14px;">${p.name}</strong><br/>
-                                    <span style="font-size: 12px; color: #555;">Risk Level: <b style="color: red;">${p.risk_level}</b></span><br/>
-                                    <hr style="margin: 4px 0;" />
-                                    <div style="font-size: 12px; line-height: 1.4;">
-                                        <b>Affected Families:</b> ${p.affectedFamilies?.toLocaleString() || 0}<br/>
-                                        <b>Deaths:</b> ${p.deaths || 0}<br/>
-                                        <b>Missing:</b> ${p.missing || 0}
+                                <div class="p-2 font-sans min-w-[200px]">
+                                    <div class="flex items-center gap-1.5 mb-1">
+                                        <span class="text-sm">⚠️</span>
+                                        <strong class="text-red-700 font-extrabold text-sm">${p.name}</strong>
+                                    </div>
+                                    <div class="inline-block px-2 py-0.5 rounded-full text-[11px] font-bold bg-red-100 text-red-800 mb-2">
+                                        Landslide Vulnerability: ${p.risk_level}
+                                    </div>
+                                    <div class="text-xs text-gray-600 space-y-0.5 border-t pt-1.5">
+                                        <div><b>High-Risk Zones:</b> ${(p.affectedFamilies || 0).toLocaleString()} units</div>
                                     </div>
                                 </div>
                             `);

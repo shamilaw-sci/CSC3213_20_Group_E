@@ -403,32 +403,83 @@ body {
     border-bottom-color: transparent !important;
 }
 
-.marker-rent { background-color: #8b40c6; }
-.marker-rent::after { border-top-color: #8b40c6; }
+.marker-rent { background-color: #9333ea; }
+.marker-rent::after { border-top-color: #9333ea; }
 
-.marker-sale { background-color: #d93c23; }
-.marker-sale::after { border-top-color: #d93c23; }
+.marker-sale { background-color: #dc2626; }
+.marker-sale::after { border-top-color: #dc2626; }
 
-.marker-sold { background-color: #f5b041; }
-.marker-sold::after { border-top-color: #f5b041; }
+.marker-sold { background-color: #f59e0b; }
+.marker-sold::after { border-top-color: #f59e0b; }
 
 .map-marker-container:hover,
+.map-marker-container.hovered,
 .map-marker-container.active {
     z-index: 1000 !important;
-    transform: translateX(-50%) scale(1.15);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    transform: translateX(-50%) scale(1.2);
 }
 
-.map-marker-container.active {
-    background-color: #2563eb; /* active bright blue */
+/* Red Glow for Sale */
+.map-marker-container.marker-sale:hover,
+.map-marker-container.marker-sale.hovered,
+.map-marker-container.marker-sale.active {
+    background-color: #ef4444 !important;
+    animation: markerPulseRed 1.5s infinite;
 }
-.map-marker-container.active::after {
-    border-top-color: #2563eb;
+.map-marker-container.marker-sale.hovered::after,
+.map-marker-container.marker-sale.active::after,
+.map-marker-container.marker-sale:hover::after {
+    border-top-color: #ef4444 !important;
+}
+
+/* Purple Glow for Rent */
+.map-marker-container.marker-rent:hover,
+.map-marker-container.marker-rent.hovered,
+.map-marker-container.marker-rent.active {
+    background-color: #a855f7 !important;
+    animation: markerPulsePurple 1.5s infinite;
+}
+.map-marker-container.marker-rent.hovered::after,
+.map-marker-container.marker-rent.active::after,
+.map-marker-container.marker-rent:hover::after {
+    border-top-color: #a855f7 !important;
+}
+
+/* Amber Glow for Sold */
+.map-marker-container.marker-sold:hover,
+.map-marker-container.marker-sold.hovered,
+.map-marker-container.marker-sold.active {
+    background-color: #f59e0b !important;
+    animation: markerPulseAmber 1.5s infinite;
+}
+.map-marker-container.marker-sold.hovered::after,
+.map-marker-container.marker-sold.active::after,
+.map-marker-container.marker-sold:hover::after {
+    border-top-color: #f59e0b !important;
+}
+
+@keyframes markerPulseRed {
+    0% { transform: translateX(-50%) scale(1.2); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+    70% { transform: translateX(-50%) scale(1.25); box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
+    100% { transform: translateX(-50%) scale(1.2); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+@keyframes markerPulsePurple {
+    0% { transform: translateX(-50%) scale(1.2); box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.7); }
+    70% { transform: translateX(-50%) scale(1.25); box-shadow: 0 0 0 12px rgba(168, 85, 247, 0); }
+    100% { transform: translateX(-50%) scale(1.2); box-shadow: 0 0 0 0 rgba(168, 85, 247, 0); }
+}
+
+@keyframes markerPulseAmber {
+    0% { transform: translateX(-50%) scale(1.2); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+    70% { transform: translateX(-50%) scale(1.25); box-shadow: 0 0 0 12px rgba(245, 158, 11, 0); }
+    100% { transform: translateX(-50%) scale(1.2); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
 }
 
 .map-marker-price {
     white-space: nowrap;
     line-height: 1.2;
+    letter-spacing: -0.02em;
 }
 
 /* Draw Control Button Position */
@@ -534,7 +585,7 @@ body {
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
-  --chart-1: o.klch(0.87 0 0);
+  --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);

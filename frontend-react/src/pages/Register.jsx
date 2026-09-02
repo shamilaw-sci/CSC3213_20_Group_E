@@ -8,6 +8,8 @@ import toast from 'react-hot-toast';
 import { Player } from '@lottiefiles/react-lottie-player';
 import { m, LazyMotion, domAnimation } from 'framer-motion';
 import api from '../context/api';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 // Validation Schema using Zod
 const registerSchema = z.object({
@@ -83,33 +85,36 @@ const Register = () => {
                         <div className="mb-5">
                             <label className="block text-gray-700 text-sm font-medium mb-2">I want to...</label>
                             <div className="flex space-x-3">
-                                <button type="button"
+                                <Button type="button"
+                                    variant={selectedRole === 'BUYER' ? 'default' : 'outline'}
                                     onClick={() => setValue('role', 'BUYER', { shouldValidate: true })}
-                                    className={`flex-1 py-3 px-4 border rounded-lg font-bold text-sm transition ${selectedRole === 'BUYER' ? 'bg-blue-50 border-blue-500 text-blue-700' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'}`}
+                                    className="flex-1"
                                 >
                                     Buy Property
-                                </button>
-                                <button type="button"
+                                </Button>
+                                <Button type="button"
+                                    variant={selectedRole === 'SELLER' ? 'default' : 'outline'}
                                     onClick={() => setValue('role', 'SELLER', { shouldValidate: true })}
-                                    className={`flex-1 py-3 px-2 border rounded-lg font-bold text-xs sm:text-sm transition ${selectedRole === 'SELLER' ? 'bg-green-50 border-green-500 text-green-700' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'}`}
+                                    className="flex-1"
                                 >
                                     Sell Property
-                                </button>
-                                <button type="button"
+                                </Button>
+                                <Button type="button"
+                                    variant={selectedRole === 'AGENT' ? 'default' : 'outline'}
                                     onClick={() => setValue('role', 'AGENT', { shouldValidate: true })}
-                                    className={`flex-1 py-3 px-2 border rounded-lg font-bold text-xs sm:text-sm transition ${selectedRole === 'AGENT' ? 'bg-purple-50 border-purple-500 text-purple-700' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'}`}
+                                    className="flex-1"
                                 >
                                     I'm an Agent
-                                </button>
+                                </Button>
                             </div>
                         </div>
 
                         {/* Name Input */}
                         <div className="mb-4">
                             <label htmlFor="name" className="block text-gray-700 text-sm font-medium mb-2">Full Name <span className="text-red-500">*</span></label>
-                            <input id="name" type="text"
+                            <Input id="name" type="text"
                                 {...register('name')}
-                                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-1 transition ${errors.name ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
+                                className={errors.name ? 'border-red-500' : ''}
                                 placeholder="e.g. John Doe"
                             />
                             {errors.name && <p className="text-red-500 text-xs mt-1 font-medium">{errors.name.message}</p>}
@@ -118,9 +123,9 @@ const Register = () => {
                         {/* Email Input */}
                         <div className="mb-4">
                             <label htmlFor="email" className="block text-gray-700 text-sm font-medium mb-2">Email Address <span className="text-red-500">*</span></label>
-                            <input id="email" type="email"
+                            <Input id="email" type="email"
                                 {...register('email')}
-                                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-1 transition ${errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
+                                className={errors.email ? 'border-red-500' : ''}
                                 placeholder="name@example.com"
                             />
                             {errors.email && <p className="text-red-500 text-xs mt-1 font-medium">{errors.email.message}</p>}
@@ -132,17 +137,15 @@ const Register = () => {
                                 <h3 className="text-purple-800 font-semibold mb-3 text-sm">Agent Details</h3>
                                 <div className="mb-3">
                                     <label htmlFor="agencyName" className="block text-gray-700 text-xs font-medium mb-1">Agency Name (Optional)</label>
-                                    <input id="agencyName" type="text"
+                                    <Input id="agencyName" type="text"
                                         {...register('agencyName')}
-                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition"
                                         placeholder="e.g. Premier Realty, Independent"
                                     />
                                 </div>
                                 <div>
                                     <label htmlFor="licenseNumber" className="block text-gray-700 text-xs font-medium mb-1">License Number (Optional)</label>
-                                    <input id="licenseNumber" type="text"
+                                    <Input id="licenseNumber" type="text"
                                         {...register('licenseNumber')}
-                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition"
                                         placeholder="e.g. RE-123456"
                                     />
                                 </div>
@@ -153,10 +156,10 @@ const Register = () => {
                         <div className="mb-6">
                             <label htmlFor="password" className="block text-gray-700 text-sm font-medium mb-2">Password <span className="text-red-500">*</span></label>
                             <div className="relative">
-                                <input id="password"
+                                <Input id="password"
                                     type={showPassword ? "text" : "password"}
                                     {...register('password')}
-                                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-1 pr-12 transition ${errors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
+                                    className={`pr-12 ${errors.password ? 'border-red-500' : ''}`}
                                     placeholder="At least 6 characters"
                                 />
                                 <button type="button"
@@ -178,12 +181,12 @@ const Register = () => {
                             {errors.password && <p className="text-red-500 text-xs mt-1 font-medium">{errors.password.message}</p>}
                         </div>
 
-                        <button type="submit" 
+                        <Button type="submit" 
                             disabled={loading || !isValid}
-                            className={`w-full text-white font-bold py-3 px-4 rounded-lg transition duration-200 ${loading || !isValid ? 'bg-blue-400 cursor-not-allowed' : 'bg-[#006aff] hover:bg-blue-700'}`}
+                            className="w-full mt-2"
                         >
                             {loading ? 'Creating account...' : 'Create Account'}
-                        </button>
+                        </Button>
                     </form>
 
                     <div className="mt-6 text-sm text-center text-gray-600">

@@ -43,7 +43,12 @@ const MapSidebarCard = React.memo(({ prop, isActive, onMouseEnter, onMouseLeave,
 
     return (
         <div 
-            className={`relative flex flex-col bg-white border rounded-xl overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-md ${isActive ? 'border-blue-500 shadow-lg ring-2 ring-blue-200 scale-[1.02] z-10' : 'border-gray-200'}`}
+            id={`sidebar-property-${prop.id}`}
+            className={`relative flex flex-col bg-white dark:bg-slate-900 border rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl ${
+                isActive 
+                    ? 'border-blue-600 dark:border-blue-500 shadow-2xl ring-4 ring-blue-500/25 scale-[1.03] z-10' 
+                    : 'border-gray-200 dark:border-slate-800 hover:border-gray-300 dark:hover:border-slate-700'
+            }`}
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
             onClick={onClick}
@@ -89,15 +94,42 @@ const MapSidebarCard = React.memo(({ prop, isActive, onMouseEnter, onMouseLeave,
                 </button>
                 {isActive && <div className="absolute inset-0 bg-blue-500/10"></div>}
             </div>
-            <div className="p-2">
-                <h4 className="font-extrabold text-lg text-gray-900">Rs. {prop.price?.toLocaleString()}{prop.listing_type === 'Rent' || prop.type === 'Rent House' || prop.type === 'Rent Villa' ? '/mo' : ''}</h4>
-                <div className="flex items-center text-gray-700 text-[11px] mt-0.5 mb-1 truncate">
-                    {prop.bedrooms && <span className="font-bold">{prop.bedrooms} <span className="font-normal text-gray-500">bds</span> <span className="text-gray-300 mx-1">|</span></span>}
-                    {prop.bathrooms && <span className="font-bold">{prop.bathrooms} <span className="font-normal text-gray-500">ba</span> <span className="text-gray-300 mx-1">|</span></span>}
-                    {prop.land_size && <span className="font-bold">{prop.land_size} <span className="font-normal text-gray-500">perches</span></span>}
-                    {!prop.bedrooms && !prop.bathrooms && <span className="font-semibold text-gray-600">{prop.type || 'Property'}</span>}
+            <div className="p-3 bg-white dark:bg-slate-900 flex flex-col justify-between">
+                <div>
+                    <div className="flex items-center justify-between gap-1 mb-1">
+                        <h4 className="font-extrabold text-base text-gray-900 dark:text-white tracking-tight">
+                            Rs. {prop.price?.toLocaleString()}
+                            <span className="text-xs font-normal text-gray-500 dark:text-gray-400">
+                                {prop.listing_type === 'Rent' || prop.type?.includes('Rent') ? '/mo' : ''}
+                            </span>
+                        </h4>
+                        {/* Dynamic Property Listing Type Tag */}
+                        {prop.listing_type === 'Rent' || prop.type?.includes('Rent') ? (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold tracking-wide uppercase bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800 shrink-0">
+                                Rent
+                            </span>
+                        ) : prop.listing_type === 'Sold' ? (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold tracking-wide uppercase bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shrink-0">
+                                Sold
+                            </span>
+                        ) : (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold tracking-wide uppercase bg-red-50 text-red-700 dark:bg-red-950/60 dark:text-red-300 border border-red-200 dark:border-red-800 shrink-0">
+                                Sale
+                            </span>
+                        )}
+                    </div>
+                    
+                    <div className="flex items-center text-gray-700 dark:text-gray-200 text-[11px] mt-0.5 mb-1 font-medium truncate">
+                        {prop.bedrooms && <span><b className="text-gray-900 dark:text-white font-bold">{prop.bedrooms}</b> <span className="text-gray-500 dark:text-gray-400">bds</span> <span className="text-gray-300 dark:text-gray-600 mx-1">|</span></span>}
+                        {prop.bathrooms && <span><b className="text-gray-900 dark:text-white font-bold">{prop.bathrooms}</b> <span className="text-gray-500 dark:text-gray-400">ba</span> <span className="text-gray-300 dark:text-gray-600 mx-1">|</span></span>}
+                        {prop.land_size && <span><b className="text-gray-900 dark:text-white font-bold">{prop.land_size}</b> <span className="text-gray-500 dark:text-gray-400">perches</span></span>}
+                        {!prop.bedrooms && !prop.bathrooms && <span className="font-semibold text-gray-800 dark:text-gray-200">{prop.type || 'Property'}</span>}
+                    </div>
                 </div>
-                <p className="text-xs font-medium text-gray-600 truncate">{prop.address || prop.title}</p>
+                
+                <p className="text-xs font-normal text-gray-500 dark:text-gray-400 truncate mt-0.5">
+                    {prop.address || prop.title}
+                </p>
             </div>
         </div>
     );

@@ -218,9 +218,22 @@ const AddProperty = () => {
   };
 
   const removeImage = (idx) => {
+    URL.revokeObjectURL(previewUrls[idx]);
     setImages((prev) => prev.filter((_, i) => i !== idx));
     setPreviewUrls((prev) => prev.filter((_, i) => i !== idx));
   };
+
+  const previewUrlsRef = React.useRef(previewUrls);
+  React.useEffect(() => {
+    previewUrlsRef.current = previewUrls;
+  }, [previewUrls]);
+
+  React.useEffect(() => {
+    return () => {
+      // Cleanup object URLs on unmount only
+      previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, []);
 
   const validateStep = (step) => {
     if (step === 1) {
@@ -241,9 +254,19 @@ const AddProperty = () => {
         setMessage({ type: "error", text: "Please specify the town or street address." });
         return false;
       }
-      if (locationMode === "boundary" && boundaryCoordinates.length < 3) {
-        setMessage({ type: "error", text: "Please click at least 3 points on the map to define the boundary." });
-        return false;
+      if (locationMode === "boundary") {
+        let distinctPoints = boundaryCoordinates.length;
+        if (distinctPoints > 0) {
+          const first = boundaryCoordinates[0];
+          const last = boundaryCoordinates[boundaryCoordinates.length - 1];
+          if (first[0] === last[0] && first[1] === last[1]) {
+            distinctPoints -= 1;
+          }
+        }
+        if (distinctPoints < 3) {
+          setMessage({ type: "error", text: "Please click at least 3 distinct points on the map to define the boundary." });
+          return false;
+        }
       }
     } else if (step === 3) {
       if (images.length === 0) {

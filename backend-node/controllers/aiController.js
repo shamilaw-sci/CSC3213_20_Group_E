@@ -1,88 +1,152 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const supabase = require('../config/supabase');
 
+const searchPropertiesFromDB = async (args) => {
+    let query = supabase.from('properties').select('id, title, price, type, city, district, bedrooms, bathrooms, land_size').eq('status', 'approved').limit(5);
+    
+    if (args.location) {
+        query = query.or(`city.ilike.%${args.location}%,district.ilike.%${args.location}%`);
+    }
+    if (args.maxPrice) query = query.lte('price', args.maxPrice);
+    if (args.type) query = query.ilike('type', `%${args.type}%`);
+    
+    const { data, error } = await query;
+    if (error) {
+        console.error("Supabase property search error:", error);
+        return [];
+    }
+    return data;
+};
+
+const searchAgentsFromDB = async (args) => {
+    let query = supabase.from('users').select('id, name, role, agent_profiles!inner(service_areas, agency_name)').in('role', ['AGENT', 'SELLER']).limit(5);
+    
+    if (args.location) {
+        query = query.ilike('agent_profiles.service_areas', `%${args.location}%`);
+    }
+    
+    const { data, error } = await query;
+    if (error) {
+        console.error("Supabase agent search error:", error);
+        return [];
+    }
+    return data.map(a => ({
+        name: a.name,
+        role: a.role,
+        agency_name: a.agent_profiles[0]?.agency_name,
+        service_areas: a.agent_profiles[0]?.service_areas
+    }));
+};
+
+const tools = [{
+    functionDeclarations: [
+        {
+            name: "search_properties",
+            description: "Search the database for properties matching user criteria. Returns up to 5 properties.",
+            parameters: {
+                type: "OBJECT",
+                properties: {
+                    location: { type: "STRING", description: "City or district (e.g. Kandy, Colombo)" },
+                    maxPrice: { type: "NUMBER", description: "Maximum price in LKR" },
+                    type: { type: "STRING", description: "Property type (e.g. house, land, apartment, commercial)" }
+                }
+            }
+        },
+        {
+            name: "search_agents",
+            description: "Search the database for real estate agents operating in a specific location.",
+            parameters: {
+                type: "OBJECT",
+                properties: {
+                    location: { type: "STRING", description: "City or district where the user wants to find an agent" }
+                },
+                required: ["location"]
+            }
+        }
+    ]
+}];
+
 const chatWithAI = async (req, res, next) => {
     try {
         const { message, history } = req.body;
         
         if (!process.env.GEMINI_API_KEY) {
-            return next(new Error("GEMINI_API_KEY is not configured in the backend."));
+            return next(new Error("GEMINI_API_KEY is not configured."));
         }
 
         const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-        // 1. Fetch properties to provide context to Gemini
-        const { data: properties, error } = await supabase
-            .from('properties')
-            .select('id, title, description, price, type, bedrooms, bathrooms, land_size, district, city, images')
-            .eq('status', 'approved');
+        // Role-based intelligence
+        const userRole = req.user ? req.user.role : 'GUEST';
+        const userName = req.user ? req.user.name : 'Guest';
 
-        if (error) throw error;
+        const systemInstruction = `You are a helpful and friendly real estate assistant for Thirasara Properties in Sri Lanka.
+You are talking to a ${userRole} named ${userName}.
 
-        // 2. Fetch agents to provide context to Gemini
-        const { data: agents, error: agentsError } = await supabase
-            .from('users')
-            .select('id, name, role, agent_profiles(service_areas, agency_name)')
-            .in('role', ['AGENT', 'SELLER']);
-            
-        if (agentsError) console.error("Could not fetch agents for AI context", agentsError);
+- If the user is an ADMIN: You should provide administrative insight and help them oversee properties/agents.
+- If the user is a BUYER: Focus on helping them find their dream home, suggesting properties via your tools.
+- If the user is a SELLER/AGENT: Focus on helping them list properties or manage leads, giving them market encouragement.
+- If the user is a GUEST: Be very welcoming and encourage them to register an account to save properties and contact agents.
 
-        // Create a compact context for properties
-        const propertyContext = (properties || []).map(p => 
-            `[ID: ${p.id}] ${p.title} - ${p.type} in ${p.city || p.district || 'Unknown location'}. Price: LKR ${p.price}. ${p.bedrooms || 0} Beds, ${p.bathrooms || 0} Baths, ${p.land_size || 0} perches. Image: ${p.images?.[0]}`
-        ).join('\n');
-        
-        // Create a compact context for agents
-        const agentContext = (agents || []).map(a => {
-            const profile = a.agent_profiles && a.agent_profiles[0] ? a.agent_profiles[0] : {};
-            return `${a.name} (${a.role}) - Agency: ${profile.agency_name || 'Independent'}. Service Areas (Locations): ${profile.service_areas || 'Island-wide'}.`;
-        }).join('\n');
+You have access to tools to search for live properties and agents in the database. Use them when the user asks for properties, homes, lands, or agents!
+IMPORTANT: When suggesting a property from your search tool, ALWAYS format the property ID at the end of the line exactly like this: \`[ID: <uuid>]\`. This renders a clickable UI card for the user!`;
 
-        const systemInstruction = `You are a helpful and friendly real estate assistant for Thirasara Properties in Sri Lanka. 
-Your job is to help users find properties and real estate agents based on their requests.
-Always be polite, concise, and enthusiastic. Use emojis where appropriate.
-Use the following list of available properties to answer the user's questions:
-
---- AVAILABLE PROPERTIES ---
-${propertyContext}
-----------------------------
-
-If the user asks for a property that matches their criteria, suggest the best matches from the list above. Include the property title, price, location, and a brief reason why it matches.
-IMPORTANT: When suggesting a property, format the property ID at the end of the line like this: \`[ID: <uuid>]\`. This helps the frontend render a clickable card!
-DO NOT invent properties that are not in the list.
-If no properties match, apologize and tell them we don't currently have exactly that, but suggest a close alternative if possible.
-
---- AVAILABLE AGENTS ---
-${agentContext}
-----------------------------
-
-If the user asks to find an agent in a specific location (e.g. Kandy, Colombo), look at the Available Agents list and suggest agents whose Service Areas match their location. Provide the agent's name, their agency, and tell the user they can search for this agent in the "Find an agent" page at the top navigation bar. If no agents match the location, apologize and tell them to check the "Find an agent" page.`;
-
-        // Format history for Gemini API (if provided)
         let contents = [];
         if (history && Array.isArray(history)) {
-             history.forEach(msg => {
+             // Truncate to last 10 messages to prevent context window blowout
+             const truncatedHistory = history.slice(-10);
+             truncatedHistory.forEach(msg => {
                  contents.push({
                      role: msg.role === 'user' ? 'user' : 'model',
                      parts: [{ text: msg.text }]
                  });
              });
         }
-        
-        // Add current message
-        contents.push({
-            role: 'user',
-            parts: [{ text: message }]
-        });
+        contents.push({ role: 'user', parts: [{ text: message }] });
 
         const model = ai.getGenerativeModel({ 
             model: "gemini-2.5-flash",
-            systemInstruction: systemInstruction 
+            systemInstruction: systemInstruction,
+            tools: tools
         });
 
-        const response = await model.generateContent({ contents });
+        // Use generateContent instead of startChat to easily handle history + function calling
+        const result = await model.generateContent({ contents });
+        const responseText = result.response.text();
+        const functionCalls = result.response.functionCalls();
 
-        res.status(200).json({ response: response.response.text() });
+        // If the AI decides it needs to call a tool to answer
+        if (functionCalls && functionCalls.length > 0) {
+            const call = functionCalls[0];
+            let apiResponse = null;
+
+            if (call.name === 'search_properties') {
+                apiResponse = await searchPropertiesFromDB(call.args);
+            } else if (call.name === 'search_agents') {
+                apiResponse = await searchAgentsFromDB(call.args);
+            }
+
+            // Append the model's function call request to history
+            contents.push(result.response.candidates[0].content);
+            
+            // Append the tool's actual response
+            contents.push({
+                role: 'function',
+                parts: [{
+                    functionResponse: {
+                        name: call.name,
+                        response: { result: apiResponse || { error: "No results found" } }
+                    }
+                }]
+            });
+
+            // Make a second call to Gemini with the tool results so it can formulate the final answer
+            const finalResult = await model.generateContent({ contents });
+            return res.status(200).json({ response: finalResult.response.text() });
+        }
+
+        // If no tool was needed, just return the direct text response
+        return res.status(200).json({ response: responseText });
     } catch (error) {
         console.error("AI Error:", error);
         next(error);

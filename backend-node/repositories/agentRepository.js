@@ -91,19 +91,31 @@ const agentRepository = {
 
         if (convError) throw convError;
 
-        // Fetch first messages for conversations
-        const convWithMessages = await Promise.all((convData || []).map(async (conv) => {
-            const { data: msgData } = await supabase
+        const convIds = (convData || []).map(c => c.id);
+        let messagesMap = {};
+
+        if (convIds.length > 0) {
+            // Fetch all messages for these conversations in one round trip
+            const { data: allMessages, error: msgError } = await supabase
                 .from('messages')
-                .select('body')
-                .eq('conversation_id', conv.id)
-                .order('created_at', { ascending: true })
-                .limit(1);
-            return {
-                ...conv,
-                notes: msgData?.[0]?.body || null,
-                last_message: msgData?.[0]?.body || 'Inquiry conversation opened'
-            };
+                .select('conversation_id, body, created_at')
+                .in('conversation_id', convIds)
+                .order('created_at', { ascending: false });
+
+            if (!msgError && allMessages) {
+                // Group by conversation_id to get the last message
+                allMessages.forEach(msg => {
+                    if (!messagesMap[msg.conversation_id]) {
+                        messagesMap[msg.conversation_id] = msg.body;
+                    }
+                });
+            }
+        }
+
+        const convWithMessages = (convData || []).map(conv => ({
+            ...conv,
+            notes: messagesMap[conv.id] || null,
+            last_message: messagesMap[conv.id] || 'Inquiry conversation opened'
         }));
 
         // Fetch direct leads from leads table

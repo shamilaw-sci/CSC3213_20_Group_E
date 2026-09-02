@@ -7,7 +7,7 @@ import { useCompare } from '../../context/CompareContext';
 import { AnimatePresence, m } from "framer-motion";
 import toast from 'react-hot-toast';
 
-const PropertyCard = ({ prop, handleMessageSeller }) => {
+const PropertyCard = ({ prop, handleMessageSeller, isActive, onMouseEnter, onMouseLeave }) => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const { compareList, addToCompare, removeFromCompare } = useCompare();
@@ -46,12 +46,17 @@ const PropertyCard = ({ prop, handleMessageSeller }) => {
 
     return (
         <m.div 
-            whileHover={{ y: -15, scale: 1.02, rotateX: 2, rotateY: -2 }}
+            id={`property-card-${prop.id}`}
+            whileHover={{ y: -6, scale: 1.01 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            style={{ perspective: 1000, transformStyle: "preserve-3d" }}
             onClick={() => navigate(`/property/${prop.id}`)}
-            className="bg-[#242423] backdrop-blur-xl rounded-3xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.4)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.6)] transition-all duration-500 group cursor-pointer flex flex-col border border-white/10 relative"
-            className="bg-white/70 backdrop-blur-2xl rounded-3xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-[0_30px_60px_rgb(0,0,0,0.2)] transition-shadow duration-500 group cursor-pointer flex flex-col border border-white/60 relative"
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
+            className={`bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-3xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.15)] transition-all duration-300 group cursor-pointer flex flex-col border relative ${
+                isActive 
+                    ? 'border-blue-600 dark:border-blue-500 ring-4 ring-blue-500/25 shadow-2xl scale-[1.02] z-10' 
+                    : 'border-white/60 dark:border-slate-800'
+            }`}
         >
             <div className="h-64 w-full bg-gray-100 relative overflow-hidden flex items-center justify-center">
                 

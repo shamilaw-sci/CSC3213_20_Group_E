@@ -14,7 +14,9 @@ import api from '../context/api';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import toast from 'react-hot-toast';
-
+import PreferencesSettings from '../components/profile/PreferencesSettings';
+import AgentProfileSettings from '../components/profile/AgentProfileSettings';
+import SecuritySettings from '../components/profile/SecuritySettings';
 const ProfileSettings = () => {
     const { user, login } = useAuth();
     const { theme, changeTheme } = useTheme();
@@ -1028,177 +1030,33 @@ const ProfileSettings = () => {
 
                         {/* ── TAB 6: PROFILE & PASSWORD SECURITY ───────────────────── */}
                         {activeTab === 'profile' && (
-                            <m.div key="profile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                                <div className="max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-8 transition-colors">
-                                    
-                                    {/* Agent Brand Hub Banner */}
-                                    {(user?.role === 'AGENT' || user?.role === 'PENDING_AGENT') && (
-                                        <div className="mb-8 p-5 rounded-2xl bg-gradient-to-r from-blue-600/10 via-indigo-600/10 to-transparent border border-blue-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                                            <div>
-                                                <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                                                    <Building2 className="w-4 h-4 text-blue-500" />
-                                                    <span>Agent Command Studio & Public Showcase</span>
-                                                </h3>
-                                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                                                    Edit branding, cover banners, QR contact vCard, and direct lead settings
-                                                </p>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => navigate('/agent-dashboard')}
-                                                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-xs whitespace-nowrap self-start sm:self-auto cursor-pointer"
-                                            >
-                                                Open Agent Hub
-                                            </button>
-                                        </div>
-                                    )}
-
-                                    <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Personal & Account Security</h2>
-                                    
-                                    {message && <div className="mb-6 p-4 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 rounded-xl text-sm font-medium border border-emerald-500/20">{message}</div>}
-                                    {error && <div className="mb-6 p-4 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 rounded-xl text-sm font-medium border border-red-500/20">{error}</div>}
-
-                                    <form onSubmit={handleSubmit} className="space-y-6">
-                                        <div>
-                                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Full Name</label>
-                                            <div className="relative">
-                                                <User className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
-                                                <input type="text" name="name" value={formData.name} onChange={handleChange} className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white transition-all outline-none font-medium text-sm" />
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Email Address</label>
-                                            <div className="relative">
-                                                <Mail className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
-                                                <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white transition-all outline-none font-medium text-sm" />
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Phone Number</label>
-                                            <div className="relative">
-                                                <Phone className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
-                                                <input type="text" name="phone" value={formData.phone} onChange={handleChange} placeholder="+94 77 123 4567" className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white transition-all outline-none font-medium text-sm" />
-                                            </div>
-                                        </div>
-
-                                        <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
-                                            <h3 className="text-sm font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-4">Password Security</h3>
-                                            
-                                            <div className="space-y-4">
-                                                <div>
-                                                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Current Password (Required for changes)</label>
-                                                    <div className="relative">
-                                                        <Lock className="absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
-                                                        <input type="password" name="currentPassword" value={formData.currentPassword} onChange={handleChange} placeholder="••••••••" className="w-full pl-11 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white outline-none font-medium" />
-                                                    </div>
-                                                </div>
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                    <div>
-                                                        <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">New Password</label>
-                                                        <input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="••••••••" className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white outline-none font-medium" />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Confirm New Password</label>
-                                                        <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder="••••••••" className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white outline-none font-medium" />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="pt-4">
-                                            <button type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-md flex justify-center items-center gap-2 cursor-pointer disabled:opacity-50">
-                                                {loading ? <Loader className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                                                <span>Save Profile Details</span>
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </m.div>
+                            <SecuritySettings 
+                                user={user}
+                                formData={formData}
+                                handleChange={handleChange}
+                                handleSubmit={handleSubmit}
+                                loading={loading}
+                                message={message}
+                                error={error}
+                            />
                         )}
 
                         {/* ── TAB 7: PREFERENCES ───────────────────────────────────── */}
                         {activeTab === 'preferences' && (
-                            <m.div key="preferences" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                                <div className="max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-8">
-                                    <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Display & Interface Theme</h2>
-                                    
-                                    <div className="grid grid-cols-3 gap-4 mb-8">
-                                        {[
-                                            { key: 'light', label: 'Light', icon: Sun },
-                                            { key: 'dark', label: 'Dark', icon: Moon },
-                                            { key: 'system', label: 'System', icon: Monitor }
-                                        ].map(({ key, label, icon: Icon }) => (
-                                            <button
-                                                key={key}
-                                                type="button"
-                                                onClick={() => changeTheme(key)}
-                                                className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition cursor-pointer ${
-                                                    theme === key
-                                                        ? 'border-blue-600 bg-blue-50/50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400'
-                                                        : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-400'
-                                                }`}
-                                            >
-                                                <Icon className="w-6 h-6" />
-                                                <span className="text-xs font-bold">{label}</span>
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            </m.div>
+                            <PreferencesSettings theme={theme} changeTheme={changeTheme} />
                         )}
 
                         {/* ── TAB 8: AGENT BRAND SETTINGS (IF AGENT) ───────────────── */}
                         {activeTab === 'agentSettings' && (
-                            <m.div key="agentSettings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                                <div className="max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-8">
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
-                                        <div>
-                                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">Agent Credentials & Bio</h2>
-                                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Manage your agency credentials and specialization</p>
-                                        </div>
-                                        {user?.id && (
-                                            <button
-                                                type="button"
-                                                onClick={() => navigate(`/agent/${user.id}`)}
-                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 text-xs font-bold hover:bg-blue-100 transition cursor-pointer"
-                                            >
-                                                <span>Preview Public Profile</span>
-                                                <ExternalLink className="w-3.5 h-3.5" />
-                                            </button>
-                                        )}
-                                    </div>
-
-                                    {message && <div className="mb-6 p-4 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 rounded-xl text-sm font-medium">{message}</div>}
-                                    {error && <div className="mb-6 p-4 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 rounded-xl text-sm font-medium">{error}</div>}
-
-                                    <form onSubmit={handleAgentSubmit} className="space-y-6">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div>
-                                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Agency Name</label>
-                                                <input type="text" name="agency_name" value={agentFormData.agency_name} onChange={handleAgentChange} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-900 dark:text-white outline-none" />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">License Number</label>
-                                                <input type="text" name="license_number" value={agentFormData.license_number} onChange={handleAgentChange} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-900 dark:text-white outline-none" />
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Bio / Executive Summary</label>
-                                            <textarea name="bio" value={agentFormData.bio} onChange={handleAgentChange} rows="5" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-900 dark:text-white outline-none resize-none"></textarea>
-                                        </div>
-
-                                        <div className="pt-4">
-                                            <button type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-md flex justify-center items-center gap-2 cursor-pointer disabled:opacity-50">
-                                                {loading ? <Loader className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                                                <span>Save Agent Settings</span>
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </m.div>
+                            <AgentProfileSettings 
+                                user={user}
+                                agentFormData={agentFormData}
+                                handleAgentChange={handleAgentChange}
+                                handleAgentSubmit={handleAgentSubmit}
+                                loading={loading}
+                                message={message}
+                                error={error}
+                            />
                         )}
 
                     </AnimatePresence>
