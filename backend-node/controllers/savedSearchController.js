@@ -107,7 +107,7 @@ const checkSavedSearchMatches = async(property) => {
 
         await Promise.all(
             matches.map((search) => {
-                const email = search.users ? .email;
+                const email = search.users ?.email;
                 if (!email) return Promise.resolve();
                 return sendSavedSearchAlertEmail(email, search.title, property).catch((err) =>
                     logger.error('Failed to send saved-search alert email', err)

@@ -187,7 +187,7 @@ const updateMyProperty = async(req, res, next) => {
 
         let { data: property, error: updateError } = await propertyRepository.updateMyProperty(req.params.id, req.user.id, updates);
 
-        if (updateError && updateError.message ? .includes("rejection_reason")) {
+        if (updateError && updateError.message ?.includes("rejection_reason")) {
             const { rejection_reason, ...fallbackUpdates } = updates;
             const fallback = await propertyRepository.updateMyProperty(req.params.id, req.user.id, fallbackUpdates);
             property = fallback.data;
