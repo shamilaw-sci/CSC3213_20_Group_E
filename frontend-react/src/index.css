@@ -69,7 +69,283 @@ body {
   color-scheme: dark;
 }
 
+.dark body {
+  background-color: #111827;
+  color: #e5e7eb;
+}
 
+.dark .bg-white {
+  background-color: #1f2937;
+}
+
+.dark .bg-gray-50 {
+  background-color: #111827;
+}
+
+.dark .bg-gray-100 {
+  background-color: #1f2937;
+}
+
+.dark .bg-gray-200 {
+  background-color: #374151;
+}
+
+.dark .hover\:bg-gray-50:hover {
+  background-color: #1f2937;
+}
+
+.dark .hover\:bg-gray-100:hover {
+  background-color: #374151;
+}
+
+.dark .hover\:bg-gray-200:hover {
+  background-color: #4b5563;
+}
+
+.dark .text-gray-900 {
+  color: #f3f4f6;
+}
+
+.dark .text-gray-800 {
+  color: #e5e7eb;
+}
+
+.dark .text-gray-700 {
+  color: #d1d5db;
+}
+
+.dark .text-gray-600 {
+  color: #d1d5db;
+}
+
+.dark .text-gray-500 {
+  color: #9ca3af;
+}
+
+.dark .text-gray-400 {
+  color: #9ca3af;
+}
+
+.dark .text-gray-300 {
+  color: #9ca3af;
+}
+
+.dark .text-gray-200 {
+  color: #e5e7eb;
+}
+
+.dark .text-gray-100 {
+  color: #f3f4f6;
+}
+
+.dark .text-black {
+  color: #e5e7eb;
+}
+
+.dark .border-gray-50 {
+  border-color: #374151;
+}
+
+.dark .border-gray-100 {
+  border-color: #374151;
+}
+
+.dark .border-gray-200 {
+  border-color: #374151;
+}
+
+.dark .border-gray-300 {
+  border-color: #4b5563;
+}
+
+.dark .divide-gray-200 > * {
+  border-color: #374151;
+}
+
+.dark .bg-blue-50 {
+  background-color: rgba(30, 58, 138, 0.35);
+}
+
+.dark .bg-blue-100 {
+  background-color: rgba(30, 58, 138, 0.5);
+}
+
+.dark .bg-blue-200 {
+  background-color: rgba(30, 58, 138, 0.6);
+}
+
+.dark .bg-red-50 {
+  background-color: rgba(127, 29, 29, 0.35);
+}
+
+.dark .bg-red-100 {
+  background-color: rgba(127, 29, 29, 0.5);
+}
+
+.dark .bg-green-50 {
+  background-color: rgba(20, 83, 45, 0.35);
+}
+
+.dark .bg-green-100 {
+  background-color: rgba(20, 83, 45, 0.5);
+}
+
+.dark .bg-emerald-50 {
+  background-color: rgba(6, 78, 59, 0.4);
+}
+
+.dark .bg-emerald-100 {
+  background-color: rgba(6, 78, 59, 0.55);
+}
+
+.dark .bg-yellow-100 {
+  background-color: rgba(113, 63, 18, 0.45);
+}
+
+.dark .bg-purple-50 {
+  background-color: rgba(76, 29, 149, 0.4);
+}
+
+.dark .bg-purple-100 {
+  background-color: rgba(76, 29, 149, 0.55);
+}
+
+.dark .bg-indigo-50 {
+  background-color: rgba(49, 46, 129, 0.4);
+}
+
+.dark .bg-orange-50 {
+  background-color: rgba(124, 45, 18, 0.4);
+}
+
+.dark .bg-orange-100 {
+  background-color: rgba(124, 45, 18, 0.55);
+}
+
+.dark .border-red-100 {
+  border-color: rgba(127, 29, 29, 0.6);
+}
+
+.dark .border-red-200 {
+  border-color: rgba(127, 29, 29, 0.7);
+}
+
+.dark .border-green-200 {
+  border-color: rgba(20, 83, 45, 0.7);
+}
+
+.dark .border-blue-100 {
+  border-color: rgba(30, 58, 138, 0.7);
+}
+
+.dark .border-emerald-100 {
+  border-color: rgba(6, 78, 59, 0.7);
+}
+
+.dark .border-amber-100 {
+  border-color: rgba(113, 63, 18, 0.7);
+}
+
+.dark .border-orange-100 {
+  border-color: rgba(124, 45, 18, 0.7);
+}
+
+.dark .text-blue-500 {
+  color: #93c5fd;
+}
+
+.dark .text-blue-600 {
+  color: #60a5fa;
+}
+
+.dark .text-blue-700 {
+  color: #60a5fa;
+}
+
+.dark .text-blue-800 {
+  color: #93c5fd;
+}
+
+.dark .text-red-400 {
+  color: #fca5a5;
+}
+
+.dark .text-red-500 {
+  color: #f87171;
+}
+
+.dark .text-red-600 {
+  color: #f87171;
+}
+
+.dark .text-red-700 {
+  color: #f87171;
+}
+
+.dark .text-red-800 {
+  color: #fca5a5;
+}
+
+.dark .text-green-600 {
+  color: #4ade80;
+}
+
+.dark .text-green-700 {
+  color: #4ade80;
+}
+
+.dark .text-emerald-600 {
+  color: #34d399;
+}
+
+.dark .text-emerald-700 {
+  color: #34d399;
+}
+
+.dark .text-emerald-800 {
+  color: #6ee7b7;
+}
+
+.dark .text-yellow-600 {
+  color: #facc15;
+}
+
+.dark .text-yellow-700 {
+  color: #facc15;
+}
+
+.dark .text-yellow-800 {
+  color: #fde047;
+}
+
+.dark .text-amber-800 {
+  color: #fbbf24;
+}
+
+.dark .text-orange-600 {
+  color: #fb923c;
+}
+
+.dark .text-purple-600 {
+  color: #c084fc;
+}
+
+.dark .text-purple-700 {
+  color: #c084fc;
+}
+
+.dark .text-purple-800 {
+  color: #d8b4fe;
+}
+
+.dark .text-indigo-600 {
+  color: #818cf8;
+}
+
+.dark .glass-effect {
+  background: rgba(17, 24, 39, 0.75);
+  border-color: rgba(255, 255, 255, 0.1);
+}
 
 /* Custom Map Tooltip */
 .map-tooltip {

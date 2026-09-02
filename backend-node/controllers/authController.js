@@ -13,7 +13,7 @@ const setTokenCookie = (res, token) => {
 };
 
 // 1. User Registration - Create new user account
-const registerUser = async (req, res, next) => {
+const registerUser = async(req, res, next) => {
     try {
         const { name, email, password, role } = req.body;
 
@@ -51,10 +51,8 @@ const registerUser = async (req, res, next) => {
         }
 
         const registeredUser = newUser[0];
-        const token = jwt.sign(
-            { id: registeredUser.id, role: registeredUser.role },
-            process.env.JWT_SECRET,
-            { expiresIn: '1d' }
+        const token = jwt.sign({ id: registeredUser.id, role: registeredUser.role },
+            process.env.JWT_SECRET, { expiresIn: '1d' }
         );
 
         setTokenCookie(res, token);
@@ -81,7 +79,7 @@ const registerUser = async (req, res, next) => {
 };
 
 // 2. User Login - Authenticate existing user
-const loginUser = async (req, res, next) => {
+const loginUser = async(req, res, next) => {
     try {
         const { email, password } = req.body;
 
@@ -112,10 +110,8 @@ const loginUser = async (req, res, next) => {
         }
 
         // Generate JWT token
-        const token = jwt.sign(
-            { id: user.id, role: user.role },
-            process.env.JWT_SECRET,
-            { expiresIn: '1d' }
+        const token = jwt.sign({ id: user.id, role: user.role },
+            process.env.JWT_SECRET, { expiresIn: '1d' }
         );
 
         setTokenCookie(res, token);
@@ -140,7 +136,7 @@ const loginUser = async (req, res, next) => {
 };
 
 // 3. Check if email exists (Safe - does NOT leak names or PII)
-const checkEmail = async (req, res, next) => {
+const checkEmail = async(req, res, next) => {
     try {
         const { email } = req.body;
         if (!email) {
@@ -161,7 +157,7 @@ const checkEmail = async (req, res, next) => {
 };
 
 // 4. Handle forgot password requests
-const forgotPassword = async (req, res, next) => {
+const forgotPassword = async(req, res, next) => {
     try {
         const { email } = req.body;
         if (!email) {
@@ -172,10 +168,8 @@ const forgotPassword = async (req, res, next) => {
 
         // Security best practice: Always return same message regardless of whether email exists
         if (user && user.role !== 'BANNED') {
-            const resetToken = jwt.sign(
-                { id: user.id, type: 'password_reset' },
-                process.env.JWT_SECRET,
-                { expiresIn: '15m' }
+            const resetToken = jwt.sign({ id: user.id, type: 'password_reset' },
+                process.env.JWT_SECRET, { expiresIn: '15m' }
             );
             const resetLink = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}`;
 
@@ -192,7 +186,7 @@ const forgotPassword = async (req, res, next) => {
 };
 
 // 5. Complete Password Reset (C6 Fix)
-const resetPassword = async (req, res, next) => {
+const resetPassword = async(req, res, next) => {
     try {
         const { token, newPassword } = req.body;
         if (!token || !newPassword) {
@@ -239,7 +233,7 @@ const logoutUser = (req, res) => {
 };
 
 // 7. Get Current User Profile
-const getMe = async (req, res, next) => {
+const getMe = async(req, res, next) => {
     try {
         const token = req.cookies.token;
         if (!token) return res.status(401).json({ message: "Not authenticated" });
@@ -256,7 +250,7 @@ const getMe = async (req, res, next) => {
 };
 
 // 8. Update User Profile
-const updateProfile = async (req, res, next) => {
+const updateProfile = async(req, res, next) => {
     try {
         const { name, email, phone, password, avatar_url, theme_preference, email_notifications } = req.body;
 
@@ -268,7 +262,7 @@ const updateProfile = async (req, res, next) => {
         const updates = {};
         if (name) updates.name = name;
 
-        if (email && email.toLowerCase().trim() !== user.email?.toLowerCase().trim()) {
+        if (email && email.toLowerCase().trim() !== user.email ?.toLowerCase().trim()) {
             const cleanEmail = email.toLowerCase().trim();
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(cleanEmail)) {

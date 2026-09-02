@@ -91,7 +91,7 @@ const Navbar = ({ transparent = false }) => {
             className="absolute left-1/2 transform -translate-x-1/2 flex-shrink-0 cursor-pointer"
             onClick={() => navigate("/")}
           >
-            <h1 className="text-2xl font-extrabold text-black-600 tracking-tight flex items-center gap-2 text-blue-600">
+            <h1 className="text-2xl font-extrabold text-blue-600 tracking-tight flex items-center gap-2">
               <img
                 src="/logo.jpeg"
                 alt="Thirasara Logo"
@@ -141,7 +141,7 @@ const Navbar = ({ transparent = false }) => {
                           key={msg.id}
                           onClick={() =>
                             navigate(
-                              `/messages?conversation=${msg.conversation_id}`,
+                              `/messages?conversation=${msg.conversation_id}`
                             )
                           }
                           className="px-4 py-3 border-b border-gray-50 hover:bg-gray-50 cursor-pointer flex gap-3 items-start"

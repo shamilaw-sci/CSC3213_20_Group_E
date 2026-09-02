@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
-import { Calculator, X, DollarSign, Wallet, Percent, Calendar } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Calculator, X, DollarSign, Wallet, Percent, Calendar, Save, History, Trash2 } from 'lucide-react';
 import { AnimatePresence, m } from "framer-motion";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import api from '../context/api';
+import { useAuth } from '../context/UserAuthContext';
 
 const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
+    const { user } = useAuth();
     const [formData, setFormData] = useState({
         salary: '',
         savings: '',
@@ -14,6 +17,31 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
     const [result, setResult] = useState(null);
     const [error, setError] = useState(null);
 
+    // --- Calculation history (only relevant for logged-in users) ---
+    const [history, setHistory] = useState([]);
+    const [historyLoading, setHistoryLoading] = useState(false);
+    const [saveStatus, setSaveStatus] = useState(null); // 'saving' | 'saved' | 'error' | null
+    const [showHistory, setShowHistory] = useState(false);
+
+    const fetchHistory = useCallback(async () => {
+        if (!user) return;
+        setHistoryLoading(true);
+        try {
+            const res = await api.get('/feasibility/history');
+            setHistory(res.data.history || []);
+        } catch (err) {
+            console.error('Failed to load feasibility history', err);
+        } finally {
+            setHistoryLoading(false);
+        }
+    }, [user]);
+
+    useEffect(() => {
+        if (isOpen && user) {
+            fetchHistory();
+        }
+    }, [isOpen, user, fetchHistory]);
+
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
@@ -23,6 +51,7 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
         setLoading(true);
         setError(null);
         setResult(null);
+        setSaveStatus(null);
 
         try {
             const res = await api.post('/feasibility/calculate', {
@@ -43,6 +72,35 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
         if (result && result.maxBuyingPower) {
             onFilterApply(result.maxBuyingPower);
             onClose();
+        }
+    };
+
+    const handleSaveCalculation = async () => {
+        if (!result || !user) return;
+        setSaveStatus('saving');
+        try {
+            await api.post('/feasibility/save', {
+                salary: Number(formData.salary),
+                savings: Number(formData.savings),
+                loanDeductions: Number(formData.loanDeductions),
+                tenureYears: Number(formData.tenureYears),
+                maxBuyingPower: result.maxBuyingPower,
+                loanCapacity: result.loanCapacity || 0,
+                monthlyInstallment: result.monthlyInstallment || 0,
+            });
+            setSaveStatus('saved');
+            fetchHistory();
+        } catch (err) {
+            setSaveStatus('error');
+        }
+    };
+
+    const handleDeleteHistoryEntry = async (id) => {
+        try {
+            await api.delete(`/feasibility/history/${id}`);
+            setHistory((prev) => prev.filter((entry) => entry.id !== id));
+        } catch (err) {
+            console.error('Failed to delete history entry', err);
         }
     };
 
@@ -193,13 +251,84 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
 
                                     {result.message && <p className="mt-3 text-xs text-orange-600">{result.message}</p>}
 
+                                    {Array.isArray(result.amortizationSchedule) && result.amortizationSchedule.length > 0 && (
+                                        <div className="mt-5">
+                                            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Loan Balance Over Time</p>
+                                            <div className="h-40 bg-gray-50 border rounded-lg p-2">
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <LineChart data={result.amortizationSchedule}>
+                                                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                                        <XAxis dataKey="year" tick={{ fontSize: 11 }} label={{ value: 'Year', position: 'insideBottom', offset: -2, fontSize: 10 }} />
+                                                        <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} width={40} />
+                                                        <Tooltip formatter={(value) => [`Rs. ${Number(value).toLocaleString()}`, 'Remaining Balance']} labelFormatter={(y) => `Year ${y}`} />
+                                                        <Line type="monotone" dataKey="remainingBalance" stroke="#2563eb" strokeWidth={2} dot={false} />
+                                                    </LineChart>
+                                                </ResponsiveContainer>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     <button aria-label="Accessible interactive control" type="button"
                                         onClick={handleApplyFilter}
                                         className="w-full mt-6 bg-blue-600 text-white font-bold py-3 rounded-lg shadow-lg shadow-blue-200 hover:bg-blue-700 transition"
                                     >
                                         Filter Map to Affordability
                                     </button>
+
+                                    {user && (
+                                        <button aria-label="Save this calculation" type="button"
+                                            onClick={handleSaveCalculation}
+                                            disabled={saveStatus === 'saving'}
+                                            className="w-full mt-3 flex items-center justify-center gap-2 bg-white border border-blue-200 text-blue-700 font-semibold py-2.5 rounded-lg hover:bg-blue-50 transition disabled:opacity-50"
+                                        >
+                                            <Save className="h-4 w-4" />
+                                            {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? 'Saved!' : 'Save this calculation'}
+                                        </button>
+                                    )}
+                                    {saveStatus === 'error' && (
+                                        <p className="mt-2 text-xs text-red-500 text-center">Could not save. Please try again.</p>
+                                    )}
                                 </m.div>
+                            )}
+
+                            {user && (
+                                <div className="mt-8 border-t pt-4">
+                                    <button aria-label="Toggle saved calculations history" type="button"
+                                        onClick={() => setShowHistory((prev) => !prev)}
+                                        className="w-full flex items-center justify-between text-sm font-semibold text-gray-700"
+                                    >
+                                        <span className="flex items-center gap-2">
+                                            <History className="h-4 w-4" />
+                                            My Saved Calculations
+                                        </span>
+                                        <span className="text-xs text-gray-400">{showHistory ? 'Hide' : 'Show'}</span>
+                                    </button>
+
+                                    {showHistory && (
+                                        <div className="mt-3 space-y-2">
+                                            {historyLoading && <p className="text-xs text-gray-400">Loading history...</p>}
+                                            {!historyLoading && history.length === 0 && (
+                                                <p className="text-xs text-gray-400">No saved calculations yet.</p>
+                                            )}
+                                            {history.map((entry) => (
+                                                <div key={entry.id} className="flex items-center justify-between bg-gray-50 border rounded-lg p-3 text-sm">
+                                                    <div>
+                                                        <p className="font-bold text-gray-800">Rs. {Number(entry.max_buying_power).toLocaleString()}</p>
+                                                        <p className="text-xs text-gray-500">
+                                                            Salary Rs. {Number(entry.salary).toLocaleString()} &middot; {entry.tenure_years} yrs
+                                                        </p>
+                                                    </div>
+                                                    <button aria-label="Delete this saved calculation" type="button"
+                                                        onClick={() => handleDeleteHistoryEntry(entry.id)}
+                                                        className="p-2 text-gray-400 hover:text-red-500 transition"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                             )}
                         </div>
                     </m.div>

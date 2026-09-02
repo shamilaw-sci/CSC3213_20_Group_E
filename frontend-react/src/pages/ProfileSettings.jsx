@@ -280,6 +280,18 @@ const ProfileSettings = () => {
         }
     };
 
+    const handleToggleSearchAlerts = async (id, currentlyEnabled) => {
+        // Optimistic update so the switch feels instant
+        setSavedSearches(prev => prev.map(s => s.id === id ? { ...s, email_alerts_enabled: !currentlyEnabled } : s));
+        try {
+            await api.patch(`/saved-searches/${id}/alerts`, { emailAlertsEnabled: !currentlyEnabled });
+        } catch (err) {
+            // Roll back on failure
+            setSavedSearches(prev => prev.map(s => s.id === id ? { ...s, email_alerts_enabled: currentlyEnabled } : s));
+            console.error("Failed to update alert preference");
+        }
+    };
+
     const handleRemoveFavorite = async (id) => {
         try {
             await api.post(`/favorites/${id}`);
@@ -767,6 +779,20 @@ const ProfileSettings = () => {
                                                             {s.min_price && <span className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-semibold">Min: Rs. {Number(s.min_price).toLocaleString()}</span>}
                                                             {s.max_price && <span className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-semibold">Max: Rs. {Number(s.max_price).toLocaleString()}</span>}
                                                         </div>
+                                                        <button aria-label="Toggle email alerts for this saved search" type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleToggleSearchAlerts(search.id, search.email_alerts_enabled !== false);
+                                                            }}
+                                                            className={`mt-3 flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors ${
+                                                                search.email_alerts_enabled !== false
+                                                                    ? 'text-green-700 bg-green-50 dark:bg-green-900/30 dark:text-green-400'
+                                                                    : 'text-gray-400 bg-gray-100 dark:bg-gray-800'
+                                                            }`}
+                                                        >
+                                                            <Bell className="h-3.5 w-3.5" />
+                                                            {search.email_alerts_enabled !== false ? 'Email alerts on' : 'Email alerts off'}
+                                                        </button>
                                                     </div>
                                                     <button 
                                                         onClick={() => navigate(`/buy?${new URLSearchParams(s).toString()}`)}

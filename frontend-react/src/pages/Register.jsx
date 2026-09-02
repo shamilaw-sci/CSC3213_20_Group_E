@@ -195,7 +195,7 @@ const Register = () => {
                 </div>
             </div>
 
-            {/* --- Left Side: Background Image --- */}
+            {/* --- Right Side: Background Image --- */}
             <div
                 className="hidden md:block flex-1 bg-cover bg-center relative"
                 style={{ backgroundImage: "url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')" }}
