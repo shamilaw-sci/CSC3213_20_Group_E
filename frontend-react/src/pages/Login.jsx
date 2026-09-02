@@ -191,12 +191,7 @@ const Login = () => {
         } finally {
             setLoading(false);
         }
-    } catch (err) {
-        setError(err.response?.data?.message || err.message || `${provider} login failed. Please try again.`);
-    } finally {
-        setLoading(false);
-    }
-};
+    };
 
     return (
         <div className="flex h-screen max-h-screen w-screen overflow-hidden bg-white dark:bg-gray-900">
