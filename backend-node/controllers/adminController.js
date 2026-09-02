@@ -188,8 +188,8 @@ const approveListing = async(req, res, next) => {
             rejection_reason: null
         });
 
-        const sellerEmail = data ? .seller ? .email;
-        const sellerName = data ? .seller ? .name || 'Seller';
+        const sellerEmail = data ?.seller ?.email;
+        const sellerName = data ?.seller ?.name || 'Seller';
         if (sellerEmail) {
             await sendListingStatusEmail(sellerEmail, sellerName, data.title, 'approved');
         }
@@ -208,8 +208,8 @@ const rejectListing = async(req, res, next) => {
             rejection_reason: reason
         });
 
-        const sellerEmail = data ? .seller ? .email;
-        const sellerName = data ? .seller ? .name || 'Seller';
+        const sellerEmail = data ?.seller ?.email;
+        const sellerName = data ?.seller ?.name || 'Seller';
         if (sellerEmail) {
             await sendListingStatusEmail(sellerEmail, sellerName, data.title, 'rejected', reason);
         }

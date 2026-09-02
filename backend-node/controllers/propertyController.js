@@ -1,5 +1,9 @@
 const propertyRepository = require('../repositories/propertyRepository');
 const { generateSafeFileName } = require('../middleware/uploadMiddleware');
+const { findSimilarProperties } = require("../utils/similarityEngine");
+const { calculatePriceInsight } = require("../utils/priceInsightEngine");
+const { rankPropertiesByRelevance } = require("../utils/searchRelevance");
+const supabase = require('../config/supabase');
 
 const addProperty = async(req, res, next) => {
     let uploadedFiles = [];
@@ -183,7 +187,7 @@ const updateMyProperty = async(req, res, next) => {
 
         let { data: property, error: updateError } = await propertyRepository.updateMyProperty(req.params.id, req.user.id, updates);
 
-        if (updateError && updateError.message ? .includes("rejection_reason")) {
+        if (updateError && updateError.message ?.includes("rejection_reason")) {
             const { rejection_reason, ...fallbackUpdates } = updates;
             const fallback = await propertyRepository.updateMyProperty(req.params.id, req.user.id, fallbackUpdates);
             property = fallback.data;
@@ -270,9 +274,6 @@ const getSimilarProperties = async(req, res, next) => {
             return res.status(404).json({ message: "Property not found." });
         }
 
-        // Pull a reasonably-sized pool of approved candidates to rank locally.
-        // (For a much larger catalog this would move to a DB-side pre-filter,
-        // but ranking in JS keeps the scoring logic simple and fully testable.)
         const { data: candidates, error: candidatesError } = await supabase
             .from("properties")
             .select("*, users(name, role)")
@@ -321,8 +322,6 @@ const getPriceInsight = async(req, res, next) => {
 
         if (candidatesError) throw candidatesError;
 
-        // Reuse the same similarity ranking as "Similar Properties" so the price
-        // comparison is against genuinely comparable listings, not the whole catalog.
         const comparableProperties = findSimilarProperties(target, candidates || [], 15);
         const insight = calculatePriceInsight(target, comparableProperties);
 
@@ -352,9 +351,6 @@ const searchProperties = async(req, res, next) => {
         const { q, limit } = req.query;
         const resultLimit = Number(limit) || 20;
 
-        // Pull a pool of approved listings to rank locally. For a much larger
-        // catalog this would move to a DB-side full-text index, but ranking in
-        // JS keeps the scoring logic simple, transparent, and fully testable.
         const { data: candidates, error } = await supabase
             .from("properties")
             .select("id, title, description, type, price, city, district, bedrooms, bathrooms")
