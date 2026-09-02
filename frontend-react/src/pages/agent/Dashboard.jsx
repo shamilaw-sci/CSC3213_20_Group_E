@@ -23,8 +23,13 @@ const PIPELINE_STAGES = [
 ];
 
 const AgentDashboard = () => {
-    const { user } = useAuth();
+        const { user, logout } = useAuth();
     const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        await logout();
+        navigate('/login');
+    };
     
     // UI State
     const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'pipeline' | 'properties' | 'messages'

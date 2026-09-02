@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const adminRepository = require('../repositories/adminRepository');
 const { sendListingStatusEmail } = require('../utils/emailService');
 
-const login = async (req, res, next) => {
+const login = async(req, res, next) => {
     try {
         const { email, password } = req.body;
         const { data: adminUser, error } = await adminRepository.getAdminUserByEmail(email);
@@ -17,10 +17,8 @@ const login = async (req, res, next) => {
             return res.status(401).json({ message: "Invalid admin credentials" });
         }
 
-        const token = jwt.sign(
-            { id: adminUser.id, email: email, role: 'ADMIN' },
-            process.env.JWT_SECRET,
-            { expiresIn: '1d' }
+        const token = jwt.sign({ id: adminUser.id, email: email, role: 'ADMIN' },
+            process.env.JWT_SECRET, { expiresIn: '1d' }
         );
 
         return res.status(200).json({
@@ -54,7 +52,7 @@ const verifyAdmin = (req, res) => {
     });
 };
 
-const getDashboardStats = async (req, res, next) => {
+const getDashboardStats = async(req, res, next) => {
     try {
         const [
             { count: usersCount },
@@ -94,7 +92,7 @@ const getDashboardStats = async (req, res, next) => {
     }
 };
 
-const getRevenueData = async (req, res, next) => {
+const getRevenueData = async(req, res, next) => {
     try {
         const transactions = await adminRepository.getSuccessfulTransactions();
 
@@ -124,7 +122,7 @@ const getRevenueData = async (req, res, next) => {
     }
 };
 
-const getUserGrowth = async (req, res, next) => {
+const getUserGrowth = async(req, res, next) => {
     try {
         const users = await adminRepository.getAllUsersCreatedAt();
 
@@ -139,7 +137,7 @@ const getUserGrowth = async (req, res, next) => {
         const months = [];
         const d = new Date();
         d.setMonth(d.getMonth() - 5);
-        
+
         (users || []).forEach(u => {
             if (!u.created_at) return;
             if (new Date(u.created_at) < d) {
@@ -150,10 +148,10 @@ const getUserGrowth = async (req, res, next) => {
         for (let i = 0; i < 6; i++) {
             const monthLabel = d.toLocaleString('default', { month: 'short' });
             const key = d.toLocaleString('default', { month: 'short', year: 'numeric' });
-            
+
             cumulative += (countsPerMonth[key] || 0);
             months.push({ label: monthLabel, users: cumulative });
-            
+
             d.setMonth(d.getMonth() + 1);
         }
 
@@ -163,7 +161,7 @@ const getUserGrowth = async (req, res, next) => {
     }
 };
 
-const getListings = async (req, res, next) => {
+const getListings = async(req, res, next) => {
     try {
         const listings = await adminRepository.getListings(req.query.status);
         res.status(200).json({ listings });
@@ -172,7 +170,7 @@ const getListings = async (req, res, next) => {
     }
 };
 
-const getListingById = async (req, res, next) => {
+const getListingById = async(req, res, next) => {
     try {
         const listing = await adminRepository.getListingByIdWithTransactions(req.params.id);
         res.status(200).json({ listing });
@@ -182,15 +180,15 @@ const getListingById = async (req, res, next) => {
     }
 };
 
-const approveListing = async (req, res, next) => {
+const approveListing = async(req, res, next) => {
     try {
         const data = await adminRepository.updateListingStatus(req.params.id, {
             status: 'approved',
             rejection_reason: null
         });
 
-        const sellerEmail = data?.seller?.email;
-        const sellerName = data?.seller?.name || 'Seller';
+        const sellerEmail = data ?.seller ?.email;
+        const sellerName = data ?.seller ?.name || 'Seller';
         if (sellerEmail) {
             await sendListingStatusEmail(sellerEmail, sellerName, data.title, 'approved');
         }
@@ -201,7 +199,7 @@ const approveListing = async (req, res, next) => {
     }
 };
 
-const rejectListing = async (req, res, next) => {
+const rejectListing = async(req, res, next) => {
     try {
         const { reason } = req.body;
         const data = await adminRepository.updateListingStatus(req.params.id, {
@@ -209,8 +207,8 @@ const rejectListing = async (req, res, next) => {
             rejection_reason: reason
         });
 
-        const sellerEmail = data?.seller?.email;
-        const sellerName = data?.seller?.name || 'Seller';
+        const sellerEmail = data ?.seller ?.email;
+        const sellerName = data ?.seller ?.name || 'Seller';
         if (sellerEmail) {
             await sendListingStatusEmail(sellerEmail, sellerName, data.title, 'rejected', reason);
         }
@@ -221,7 +219,7 @@ const rejectListing = async (req, res, next) => {
     }
 };
 
-const deleteListing = async (req, res, next) => {
+const deleteListing = async(req, res, next) => {
     try {
         await adminRepository.deleteListing(req.params.id);
         res.status(200).json({ message: "Listing deleted successfully" });
@@ -230,7 +228,7 @@ const deleteListing = async (req, res, next) => {
     }
 };
 
-const getUsers = async (req, res, next) => {
+const getUsers = async(req, res, next) => {
     try {
         const users = await adminRepository.getUsers(req.query.role);
         res.status(200).json({ users });
@@ -239,7 +237,7 @@ const getUsers = async (req, res, next) => {
     }
 };
 
-const getPendingAgents = async (req, res, next) => {
+const getPendingAgents = async(req, res, next) => {
     try {
         const agents = await adminRepository.getPendingAgents();
         res.status(200).json({ agents });
@@ -248,7 +246,7 @@ const getPendingAgents = async (req, res, next) => {
     }
 };
 
-const getUserById = async (req, res, next) => {
+const getUserById = async(req, res, next) => {
     try {
         const user = await adminRepository.getUserById(req.params.id);
         res.status(200).json({ user });
@@ -257,7 +255,7 @@ const getUserById = async (req, res, next) => {
     }
 };
 
-const banUser = async (req, res, next) => {
+const banUser = async(req, res, next) => {
     try {
         await adminRepository.updateUserRole(req.params.id, 'BANNED', null);
         res.status(200).json({ message: "User banned successfully" });
@@ -266,7 +264,7 @@ const banUser = async (req, res, next) => {
     }
 };
 
-const unbanUser = async (req, res, next) => {
+const unbanUser = async(req, res, next) => {
     try {
         await adminRepository.updateUserRole(req.params.id, 'BUYER', null);
         res.status(200).json({ message: "User unbanned successfully" });
@@ -275,7 +273,7 @@ const unbanUser = async (req, res, next) => {
     }
 };
 
-const updateUserRole = async (req, res, next) => {
+const updateUserRole = async(req, res, next) => {
     try {
         const { role, reason } = req.body;
         if (!['BUYER', 'SELLER', 'ADMIN', 'BANNED', 'AGENT', 'PENDING_AGENT', 'REJECTED_AGENT'].includes(role)) {
@@ -290,21 +288,21 @@ const updateUserRole = async (req, res, next) => {
     }
 };
 
-const getAnalytics = async (req, res, next) => {
+const getAnalytics = async(req, res, next) => {
     try {
         const { userCount, propertyCount } = await adminRepository.getAnalyticsCounts();
-        res.status(200).json({ 
+        res.status(200).json({
             analytics: [
                 { metric: 'Total Users', value: userCount || 0 },
                 { metric: 'Total Properties', value: propertyCount || 0 }
-            ] 
+            ]
         });
     } catch (error) {
         next(error);
     }
 };
 
-const getSearchHeatmap = async (req, res, next) => {
+const getSearchHeatmap = async(req, res, next) => {
     try {
         res.status(200).json({ heatmap: [] });
     } catch (error) {
@@ -312,7 +310,7 @@ const getSearchHeatmap = async (req, res, next) => {
     }
 };
 
-const getTransactions = async (req, res, next) => {
+const getTransactions = async(req, res, next) => {
     try {
         const transactions = await adminRepository.getTransactionsDetailed();
         res.status(200).json({ transactions });
@@ -321,7 +319,7 @@ const getTransactions = async (req, res, next) => {
     }
 };
 
-const exportReport = async (req, res, next) => {
+const exportReport = async(req, res, next) => {
     try {
         const { type } = req.params;
         if (!['transactions', 'users', 'listings'].includes(type)) {
@@ -355,7 +353,7 @@ const exportReport = async (req, res, next) => {
     }
 };
 
-const getAuditLogs = async (req, res, next) => {
+const getAuditLogs = async(req, res, next) => {
     try {
         res.status(200).json({ logs: [] });
     } catch (error) {
@@ -363,10 +361,10 @@ const getAuditLogs = async (req, res, next) => {
     }
 };
 
-const getSettings = async (req, res, next) => {
+const getSettings = async(req, res, next) => {
     try {
         const data = await adminRepository.getPlatformSettings();
-        
+
         const settings = {};
         if (data) {
             data.forEach(item => {
@@ -381,7 +379,7 @@ const getSettings = async (req, res, next) => {
     }
 };
 
-const updateSettings = async (req, res, next) => {
+const updateSettings = async(req, res, next) => {
     try {
         const { listing_fee } = req.body;
         if (listing_fee) {
@@ -393,7 +391,7 @@ const updateSettings = async (req, res, next) => {
     }
 };
 
-const getBoosts = async (req, res, next) => {
+const getBoosts = async(req, res, next) => {
     try {
         res.status(200).json({ boosts: [] });
     } catch (error) {
@@ -401,7 +399,7 @@ const getBoosts = async (req, res, next) => {
     }
 };
 
-const toggleBoost = async (req, res, next) => {
+const toggleBoost = async(req, res, next) => {
     try {
         res.status(200).json({ message: "Boost toggled" });
     } catch (error) {
@@ -409,7 +407,7 @@ const toggleBoost = async (req, res, next) => {
     }
 };
 
-const getReportedContent = async (req, res, next) => {
+const getReportedContent = async(req, res, next) => {
     try {
         res.status(200).json({ reports: [] });
     } catch (error) {
@@ -417,7 +415,7 @@ const getReportedContent = async (req, res, next) => {
     }
 };
 
-const resolveReport = async (req, res, next) => {
+const resolveReport = async(req, res, next) => {
     try {
         res.status(200).json({ message: "Report resolved" });
     } catch (error) {
