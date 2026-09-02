@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { propertyImageUpload } = require('../middleware/uploadMiddleware');
 
-const { addProperty, getProperties, getMyProperties, updateMyProperty, deleteMyProperty, getPropertyById, incrementViews } = require('../controllers/propertyController');
+const { addProperty, getProperties, getMyProperties, updateMyProperty, deleteMyProperty, getPropertyById, incrementViews, getSimilarProperties, getPriceInsight, searchProperties } = require('../controllers/propertyController');
 const { protect } = require('../middleware/authMiddleware');
 const validate = require('../middleware/validate');
 const { addPropertySchema, updatePropertySchema, getPropertiesSchema } = require('../validators/propertyValidator');
