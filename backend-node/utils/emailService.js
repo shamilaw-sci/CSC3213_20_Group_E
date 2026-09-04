@@ -2,6 +2,7 @@ const nodemailer = require('nodemailer');
 const path = require('path');
 const logger = require('./logger');
 
+const fs = require('fs');
 const port = parseInt(process.env.EMAIL_PORT || '465', 10);
 
 const transporter = nodemailer.createTransport({
@@ -21,16 +22,30 @@ const sendEmail = async (to, subject, html) => {
             return;
         }
 
+        const attachments = [];
+        const localLogoPath = path.join(__dirname, '../assets/logo.jpeg');
+        const fallbackLogoPath = path.join(__dirname, '../../frontend-react/public/logo.jpeg');
+
+        if (fs.existsSync(localLogoPath)) {
+            attachments.push({
+                filename: 'logo.jpeg',
+                path: localLogoPath,
+                cid: 'thirasaralogo'
+            });
+        } else if (fs.existsSync(fallbackLogoPath)) {
+            attachments.push({
+                filename: 'logo.jpeg',
+                path: fallbackLogoPath,
+                cid: 'thirasaralogo'
+            });
+        }
+
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to,
             subject,
             html,
-            attachments: [{
-                filename: 'logo.jpeg',
-                path: path.join(__dirname, '../../frontend-react/public/logo.jpeg'),
-                cid: 'thirasaralogo' // same cid value as in the html img src
-            }]
+            attachments
         };
 
         const info = await transporter.sendMail(mailOptions);
