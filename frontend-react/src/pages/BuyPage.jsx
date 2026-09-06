@@ -53,7 +53,10 @@ const BuyPage = () => {
     const [hoveredPropId, setHoveredPropId] = useState(null);
 
     const getMapboxStyleUrl = () => {
-        const token = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || 'pk.eyJ1IjoiZGdwaXVtYWwiLCJhIjoiY210Z3Rkcnp0MTgzYjJ4cTA0N2l1cm1tNiJ9.iMojiZBaPeTEVOfp0ljGEQ';
+        const token = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
+        if (!token) {
+            return 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png';
+        }
         let stylePath = 'mapbox/streets-v12';
         if (mapStyle === 'satellite') stylePath = 'mapbox/satellite-streets-v12';
         else if (mapStyle === 'dark') stylePath = 'mapbox/dark-v11';

@@ -17,6 +17,7 @@ import axios from 'axios';
 // ─── Axios Instance ───────────────────────────────────────────────────────────
 const adminApi = axios.create({
   baseURL: (import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api',
+  withCredentials: true,
 });
 
 // Automatically attach admin Bearer token to every request.

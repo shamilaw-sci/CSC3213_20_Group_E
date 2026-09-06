@@ -110,39 +110,39 @@ const PropertyCard = ({ prop, handleMessageSeller, isActive, onMouseEnter, onMou
                     </div>
                 )}
 
-                <h3 className="text-3xl font-black text-white tracking-tight mb-2">
+                <h3 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight mb-2">
                     Rs. {prop.price?.toLocaleString()}
-                    {(prop.listing_type?.toLowerCase() === 'rent' || prop.type?.includes('Rent')) && <span className="text-lg text-gray-400 font-medium">/mo</span>}
+                    {(prop.listing_type?.toLowerCase() === 'rent' || prop.type?.includes('Rent')) && <span className="text-lg text-gray-500 dark:text-gray-400 font-medium">/mo</span>}
                 </h3>
                 
-                <div className="flex items-center gap-4 text-gray-300 text-sm mb-4 mt-2">
+                <div className="flex items-center gap-4 text-gray-600 dark:text-gray-300 text-sm mb-4 mt-2">
                     {prop.bedrooms && (
-                        <div className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1.5 rounded-lg border border-white/10">
-                            <Bed className="w-4 h-4 text-blue-400" />
-                            <span className="font-bold text-white">{prop.bedrooms}</span>
+                        <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-white/10 px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-white/10">
+                            <Bed className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                            <span className="font-bold text-gray-900 dark:text-white">{prop.bedrooms}</span>
                             <span className="text-xs font-medium">Beds</span>
                         </div>
                     )}
                     {prop.bathrooms && (
-                        <div className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1.5 rounded-lg border border-white/10">
-                            <Bath className="w-4 h-4 text-blue-400" />
-                            <span className="font-bold text-white">{prop.bathrooms}</span>
+                        <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-white/10 px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-white/10">
+                            <Bath className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                            <span className="font-bold text-gray-900 dark:text-white">{prop.bathrooms}</span>
                             <span className="text-xs font-medium">Baths</span>
                         </div>
                     )}
                     {prop.land_size && (
-                        <div className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1.5 rounded-lg border border-white/10">
-                            <Maximize className="w-4 h-4 text-blue-400" />
-                            <span className="font-bold text-white">{prop.land_size}</span>
+                        <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-white/10 px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-white/10">
+                            <Maximize className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                            <span className="font-bold text-gray-900 dark:text-white">{prop.land_size}</span>
                             <span className="text-xs font-medium">Perches</span>
                         </div>
                     )}
                     {!prop.bedrooms && !prop.bathrooms && !prop.land_size && (
-                        <span className="font-bold text-gray-300 bg-white/10 px-3 py-1 rounded-lg">{prop.type || 'Property'}</span>
+                        <span className="font-bold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-white/10 px-3 py-1 rounded-lg border border-gray-200 dark:border-white/10">{prop.type || 'Property'}</span>
                     )}
                 </div>
                 
-                <p className="text-gray-400 text-sm truncate mb-4 font-medium">{prop.address || prop.title}</p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm truncate mb-4 font-medium">{prop.address || prop.title}</p>
                 
                 <div className="mt-auto pt-4 flex items-center justify-between gap-3">
                     <button aria-label="Accessible interactive control" type="button"
@@ -168,8 +168,6 @@ const PropertyCard = ({ prop, handleMessageSeller, isActive, onMouseEnter, onMou
                             e.stopPropagation();
                             handleMessageSeller(prop.id);
                         }}
-                        className="flex-1 bg-white/10 backdrop-blur-md hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 border border-white/20 hover:border-blue-600 hover:shadow-[0_10px_20px_rgba(37,99,235,0.2)]"
-
                         className="flex-1 bg-white/50 backdrop-blur-md hover:bg-blue-600 text-gray-700 hover:text-white font-bold py-3 px-4 rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 border border-gray-200/50 hover:border-blue-600 hover:shadow-[0_10px_20px_rgba(37,99,235,0.2)]"
                     >
                         <MessageCircle className="w-5 h-5" />

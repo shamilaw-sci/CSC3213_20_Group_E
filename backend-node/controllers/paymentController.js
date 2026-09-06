@@ -163,6 +163,17 @@ const confirmPayment = async (req, res, next) => {
             return res.status(404).json({ error: "Property not found" });
         }
 
+        // In production, enforce that non-admin clients cannot self-confirm payments without gateway webhook validation
+        if (process.env.NODE_ENV === 'production' && req.user.role !== 'ADMIN') {
+            logger.warn('Blocked direct client payment confirmation attempt in production', {
+                user_id: req.user.id,
+                property_id: property_id
+            });
+            return res.status(403).json({
+                error: "Direct payment confirmation is disabled in production. Payments must be processed through the secure PayHere payment gateway."
+            });
+        }
+
         // Verify that the user owns the property or is an admin
         if (property.seller_id !== req.user.id && req.user.role !== 'ADMIN') {
             return res.status(403).json({ error: "Access denied" });
