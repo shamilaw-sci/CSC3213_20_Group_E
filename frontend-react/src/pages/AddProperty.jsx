@@ -24,8 +24,7 @@ import {
   Lock,
   Edit3,
   CreditCard,
-  Check
-} from "lucide-react";
+  Check, Maximize } from "lucide-react";
 
 import { MapContainer, TileLayer, Marker, Polygon, CircleMarker, useMapEvents } from "react-leaflet";
 import L from "leaflet";
@@ -120,6 +119,10 @@ const AddProperty = () => {
     setImages,
     previewUrls,
     setPreviewUrls,
+    virtualTourFiles,
+    setVirtualTourFiles,
+    virtualTourMetadata,
+    setVirtualTourMetadata,
     loading,
     message,
     setMessage,
@@ -191,6 +194,31 @@ const AddProperty = () => {
       },
     });
     return null;
+  };
+
+  
+  const handleVirtualTourUpload = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length + virtualTourFiles.length > 5) {
+      alert('You can only upload up to 5 virtual tours.');
+      return;
+    }
+    setVirtualTourFiles((prev) => [...prev, ...files]);
+    const newMetadata = files.map(() => ({ room: 'Room' }));
+    setVirtualTourMetadata((prev) => [...prev, ...newMetadata]);
+  };
+
+  const handleVirtualTourLabel = (index, value) => {
+    setVirtualTourMetadata((prev) => {
+      const newMeta = [...prev];
+      newMeta[index] = { ...newMeta[index], room: value };
+      return newMeta;
+    });
+  };
+
+  const removeVirtualTour = (index) => {
+    setVirtualTourFiles((prev) => prev.filter((_, i) => i !== index));
+    setVirtualTourMetadata((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleImageUpload = async (e) => {
@@ -555,7 +583,64 @@ const AddProperty = () => {
                 </div>
               </div>
 
-              {/* Navigation Controls */}
+              
+                {/* 360 Virtual Tours Section */}
+                <div className="pt-8 mt-8 border-t border-slate-800">
+                  <label className="block text-xs font-black uppercase tracking-wider text-emerald-400 mb-2">
+                    <span>360 Virtual Tours (Optional)</span>
+                    <span className="ml-2 bg-emerald-900/50 text-emerald-400 px-2 py-0.5 rounded-full text-[10px]">PREMIUM</span>
+                  </label>
+                  <p className="text-slate-500 text-sm mb-4">Upload equirectangular panoramic images (.jpg or .png) to create an immersive 3D viewing experience.</p>
+                  
+                  <div className="border-2 border-dashed border-slate-700 hover:border-emerald-500 rounded-3xl p-8 text-center bg-slate-950/40 transition mb-6">
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/jpeg, image/png"
+                      onChange={handleVirtualTourUpload}
+                      id="property-virtual-tours-input"
+                      className="hidden"
+                    />
+                    <label htmlFor="property-virtual-tours-input" className="flex flex-col items-center cursor-pointer">
+                      <div className="w-16 h-16 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center mb-4">
+                        <Maximize className="w-6 h-6 text-emerald-400" />
+                      </div>
+                      <span className="text-sm font-bold text-slate-300">Click to upload 360 photos</span>
+                      <span className="text-xs text-slate-500 mt-2">Max 5 panoramas (2:1 aspect ratio recommended)</span>
+                    </label>
+                  </div>
+
+                  {virtualTourFiles.length > 0 && (
+                    <div className="space-y-4">
+                      {virtualTourFiles.map((file, index) => (
+                        <div key={index} className="flex flex-col sm:flex-row gap-4 items-center bg-slate-900/50 p-4 rounded-2xl border border-slate-800">
+                          <div className="w-full sm:w-24 h-16 bg-slate-800 rounded-xl overflow-hidden shrink-0">
+                            <img src={URL.createObjectURL(file)} alt="360 preview" className="w-full h-full object-cover opacity-70" />
+                          </div>
+                          <div className="flex-grow w-full">
+                            <label className="block text-xs text-slate-400 mb-1">Room / Area Label</label>
+                            <input
+                              type="text"
+                              value={virtualTourMetadata[index]?.room || ''}
+                              onChange={(e) => handleVirtualTourLabel(index, e.target.value)}
+                              placeholder="e.g. Living Room, Master Bedroom"
+                              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:border-emerald-500 outline-none"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeVirtualTour(index)}
+                            className="p-3 text-red-400 hover:bg-red-400/10 rounded-xl transition"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Navigation Controls */}
               <div className="flex items-center justify-end border-t border-slate-800 pt-6 mt-8">
                 <button
                   type="button"
@@ -996,7 +1081,24 @@ const AddProperty = () => {
                       <div>
                         <span className="text-slate-400 block">Photographs:</span>
                         <span className="text-emerald-400 font-bold">{images.length} Photos Attached</span>
-                      </div>
+                        </div>
+                        {virtualTourFiles.length > 0 && (
+                          <div>
+                            <span className="text-slate-400 block">360° Tours:</span>
+                            <span className="text-emerald-400 font-bold">{virtualTourFiles.length} Panorama{virtualTourFiles.length > 1 ? 's' : ''} Attached</span>
+                          </div>
+                        )}
+                        {virtualTourFiles.length > 0 && (
+                          <div className="col-span-2 mt-2">
+                            <div className="flex flex-wrap gap-2">
+                              {virtualTourMetadata.map((meta, i) => (
+                                <span key={i} className="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-1 rounded-lg border border-emerald-500/30 flex items-center gap-1">
+                                  <Compass className="w-3 h-3" /> {meta.room}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                     </div>
                   </div>
                 </div>

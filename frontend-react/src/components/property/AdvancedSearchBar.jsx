@@ -15,6 +15,7 @@ export default function AdvancedSearchBar({ initialFilters, onSearch }) {
     const [beds, setBeds] = useState(initialFilters?.beds || 'Any');
     const [baths, setBaths] = useState(initialFilters?.baths || 'Any');
     const [exactMatch, setExactMatch] = useState(initialFilters?.exactMatch || false);
+    const [has360Tour, setHas360Tour] = useState(initialFilters?.has360Tour || false);
     
     // Checkbox states for property types
     const [propTypes, setPropTypes] = useState(
@@ -49,6 +50,7 @@ export default function AdvancedSearchBar({ initialFilters, onSearch }) {
                 beds,
                 baths,
                 exactMatch,
+                has360Tour,
                 propTypes
             });
         }
@@ -285,6 +287,13 @@ export default function AdvancedSearchBar({ initialFilters, onSearch }) {
                                             <span className="text-sm font-medium text-gray-700">{type}s</span>
                                         </div>
                                     ))}
+                                </div>
+                                
+                                <div className="flex items-center gap-3 mt-4 pt-4 mb-4 border-t border-gray-200 cursor-pointer" onClick={() => setHas360Tour(!has360Tour)}>
+                                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${has360Tour ? 'bg-emerald-600 border-emerald-600' : 'border-gray-300'}`}>
+                                        {has360Tour && <Check className="w-3.5 h-3.5 text-white" />}
+                                    </div>
+                                    <span className="text-sm font-bold text-emerald-700">360° Virtual Tour Only</span>
                                 </div>
                                 <Button onClick={handleApply} className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-2 font-bold text-sm">Apply</Button>
                             </m.div>

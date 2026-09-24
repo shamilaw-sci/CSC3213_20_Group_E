@@ -32,21 +32,49 @@ const addProperty = async(req, res, next) => {
             return res.status(403).json({ error: "Access denied. Only Sellers and Agents can add properties." });
         }
 
-        const files = req.files;
+        
+        const files = req.files || {};
+        const imageFiles = files.images || [];
+        const virtualTourFiles = files.virtualTours || [];
+        
         let imageUrls = [];
+        let virtualTourUrls = [];
 
-        if (files && files.length > 0) {
-            const uploadPromises = files.map(async(file) => {
-                const fileName = generateSafeFileName(file.originalname);
-                const filePath = `public/${fileName}`;
-
-                const publicUrl = await propertyRepository.uploadImage(filePath, file.buffer, file.mimetype);
+        if (imageFiles.length > 0) {
+            const uploadPromises = imageFiles.map(async (file) => {
+                const fileExt = file.originalname.split('.').pop();
+                const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+                const filePath = `${req.user.id}/${fileName}`;
                 uploadedFiles.push(filePath);
-                return publicUrl;
+                return await propertyRepository.uploadImage(filePath, file.buffer, file.mimetype);
             });
-
             imageUrls = await Promise.all(uploadPromises);
         }
+
+        if (virtualTourFiles.length > 0) {
+            const uploadPromises = virtualTourFiles.map(async (file) => {
+                const fileExt = file.originalname.split('.').pop();
+                const fileName = `360-${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+                const filePath = `${req.user.id}/${fileName}`;
+                uploadedFiles.push(filePath);
+                return await propertyRepository.uploadImage(filePath, file.buffer, file.mimetype);
+            });
+            virtualTourUrls = await Promise.all(uploadPromises);
+        }
+
+        let virtual_tours = [];
+        if (req.body.virtualTourMetadata && virtualTourUrls.length > 0) {
+            try {
+                const metadata = JSON.parse(req.body.virtualTourMetadata);
+                virtual_tours = metadata.map((meta, index) => ({
+                    room: meta.room,
+                    url: virtualTourUrls[index]
+                })).filter(vt => vt.url); // filter out any missing urls
+            } catch (e) {
+                console.error('Error parsing virtualTourMetadata:', e);
+            }
+        }
+
 
         const property = await propertyRepository.addProperty({
             type,
@@ -67,6 +95,7 @@ const addProperty = async(req, res, next) => {
             longitude,
             boundary,
             images: imageUrls,
+            virtual_tours: virtual_tours,
             seller_id: req.user.id,
             status: "pending",
             payment_status: "Unpaid",

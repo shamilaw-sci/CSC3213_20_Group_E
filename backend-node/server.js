@@ -112,6 +112,12 @@ app.use('/api/feasibility', feasibilityRoutes);
 // Routes: /api/feasibility/calculate
 // ----------------------------------------
 
+// --- Analytics Routes ---
+const analyticsRoutes = require('./routes/analyticsRoutes');
+app.use('/api/analytics', analyticsRoutes);
+// Routes: /api/analytics/history, /api/analytics/valuation
+// ----------------------------------------
+
 
 
 app.get('/', (req, res) => {
@@ -171,7 +177,11 @@ if (process.env.VERCEL) {
     module.exports = app;
 } else if (process.env.NODE_ENV !== 'test') {
     // Normal local deployment
-    app.listen(PORT, () => {
+    app.listen(PORT, (err) => {
+        if (err) {
+            console.error(`Failed to start server on port ${PORT}:`, err.message);
+            process.exit(1);
+        }
         console.log(`Server is running on port ${PORT}`);
     });
 }
