@@ -103,7 +103,7 @@ const Messages = () => {
 
     useEffect(() => {
         if (!selectedId) return;
-        setSearchParams({ conversation: selectedId });
+        setSearchParams({ conversation: selectedId }, { replace: true });
 
         const controller = new AbortController();
         const loadMessages = async () => {
@@ -214,15 +214,11 @@ const Messages = () => {
                     <div className="flex items-center gap-3">
                         <button
                             type="button"
-                            onClick={() => {
-                                if (user?.role === 'SELLER') navigate('/seller-dashboard');
-                                else if (user?.role === 'AGENT') navigate('/agent-dashboard');
-                                else navigate(-1);
-                            }}
+                            onClick={() => navigate(-1)}
                             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition shadow-xs cursor-pointer"
                         >
                             <ArrowLeft className="w-4 h-4" />
-                            <span>{user?.role === 'SELLER' ? '← Dashboard' : user?.role === 'AGENT' ? '← Agent Hub' : '← Back'}</span>
+                            <span>{user?.role === 'SELLER' ? 'Dashboard' : user?.role === 'AGENT' ? 'Agent Hub' : 'Back'}</span>
                         </button>
                         <div>
                             <h1 className="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">Messages & Inquiries</h1>

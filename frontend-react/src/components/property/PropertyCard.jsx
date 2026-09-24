@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bed, Bath, Maximize, Heart, MessageCircle } from 'lucide-react';
+import { Bed, Bath, Maximize, Heart, MessageCircle, Compass } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../context/api';
 import { useAuth } from '../../context/UserAuthContext';
@@ -88,20 +88,28 @@ const PropertyCard = ({ prop, handleMessageSeller, isActive, onMouseEnter, onMou
                 )}
                 
                 {/* Top Gradient & Labels */}
-                <div className="absolute top-0 left-0 w-full p-4 flex justify-between items-start z-10 bg-gradient-to-b from-black/60 to-transparent">
-                    <span className={`bg-white/90 backdrop-blur-sm ${prop.listing_type?.toLowerCase() === 'rent' || prop.type?.includes('Rent') ? 'text-purple-900' : 'text-blue-900'} text-[11px] font-black px-3 py-1.5 rounded-full shadow-sm uppercase tracking-widest`}>
-                        {prop.type === 'Land' ? 'Land' : prop.type?.includes('Rent') ? 'House' : 'House'} for {prop.listing_type?.toLowerCase() === 'rent' || prop.type?.includes('Rent') ? 'Rent' : 'Sale'}
-                    </span>
+                <div className="absolute top-0 left-0 w-full p-4 flex justify-between items-start z-10 bg-gradient-to-b from-black/60 to-transparent pointer-events-none">
+                    <div className="flex flex-col gap-1.5 items-start pointer-events-auto">
+                        <span className={`bg-white/95 backdrop-blur-sm ${prop.listing_type?.toLowerCase() === 'rent' || prop.type?.includes('Rent') ? 'text-purple-900' : 'text-blue-900'} text-[10px] sm:text-[11px] font-black px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full shadow-sm uppercase tracking-wider whitespace-nowrap`}>
+                            {prop.type === 'Land' ? 'Land' : prop.type?.includes('Rent') ? 'House' : 'House'} for {prop.listing_type?.toLowerCase() === 'rent' || prop.type?.includes('Rent') ? 'Rent' : 'Sale'}
+                        </span>
+                        {prop.virtual_tours && prop.virtual_tours.length > 0 && (
+                            <div className="bg-red-600/95 backdrop-blur-sm text-white text-[10px] font-black px-2 py-1 rounded-full shadow-sm flex items-center gap-1 border border-red-500/50 w-fit shrink-0 whitespace-nowrap">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a10 10 0 1 0 10 10H12V2z"></path><path d="M12 12 2.1 7.1"></path><path d="M12 12l9.9 4.9"></path></svg>
+                                360°
+                            </div>
+                        )}
+                    </div>
                     <button aria-label="Accessible interactive control" type="button" 
                         onClick={toggleFavorite}
-                        className={`transition-colors drop-shadow-md p-2 rounded-full backdrop-blur-sm ${isFavorite ? 'bg-white text-red-500' : 'bg-black/20 text-white hover:bg-white hover:text-red-500'}`}
+                        className={`transition-colors drop-shadow-md p-2 rounded-full backdrop-blur-sm pointer-events-auto ${isFavorite ? 'bg-white text-red-500' : 'bg-black/20 text-white hover:bg-white hover:text-red-500'}`}
                     >
                         <Heart className={`w-5 h-5 transition-colors ${isFavorite ? 'fill-current' : ''}`} />
                     </button>
                 </div>
             </div>
 
-            <div className="p-6 flex flex-col flex-grow bg-gradient-to-b from-white/10 to-white/5 relative">
+            <div className="p-4 sm:p-5 flex flex-col flex-grow bg-gradient-to-b from-white/10 to-white/5 relative">
                 
                 {/* Agent Tag */}
                 {prop.users?.role === 'AGENT' && prop.users?.name && (
@@ -110,57 +118,57 @@ const PropertyCard = ({ prop, handleMessageSeller, isActive, onMouseEnter, onMou
                     </div>
                 )}
 
-                <h3 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight mb-2">
+                <h3 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white tracking-tight mb-2 truncate">
                     Rs. {prop.price?.toLocaleString()}
-                    {(prop.listing_type?.toLowerCase() === 'rent' || prop.type?.includes('Rent')) && <span className="text-lg text-gray-500 dark:text-gray-400 font-medium">/mo</span>}
+                    {(prop.listing_type?.toLowerCase() === 'rent' || prop.type?.includes('Rent')) && <span className="text-sm sm:text-lg text-gray-500 dark:text-gray-400 font-medium">/mo</span>}
                 </h3>
                 
-                <div className="flex items-center gap-4 text-gray-600 dark:text-gray-300 text-sm mb-4 mt-2">
+                <div className="flex flex-wrap items-center gap-2 text-gray-600 dark:text-gray-300 text-sm mb-4 mt-1">
                     {prop.bedrooms && (
-                        <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-white/10 px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-white/10">
+                        <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-white/10 px-2 py-1.5 rounded-lg border border-gray-200 dark:border-white/10 shrink-0">
                             <Bed className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                             <span className="font-bold text-gray-900 dark:text-white">{prop.bedrooms}</span>
-                            <span className="text-xs font-medium">Beds</span>
+                            <span className="text-[11px] font-medium">Beds</span>
                         </div>
                     )}
                     {prop.bathrooms && (
-                        <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-white/10 px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-white/10">
+                        <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-white/10 px-2 py-1.5 rounded-lg border border-gray-200 dark:border-white/10 shrink-0">
                             <Bath className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                             <span className="font-bold text-gray-900 dark:text-white">{prop.bathrooms}</span>
-                            <span className="text-xs font-medium">Baths</span>
+                            <span className="text-[11px] font-medium">Baths</span>
                         </div>
                     )}
                     {prop.land_size && (
-                        <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-white/10 px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-white/10">
+                        <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-white/10 px-2 py-1.5 rounded-lg border border-gray-200 dark:border-white/10 shrink-0">
                             <Maximize className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                             <span className="font-bold text-gray-900 dark:text-white">{prop.land_size}</span>
-                            <span className="text-xs font-medium">Perches</span>
+                            <span className="text-[11px] font-medium">Perches</span>
                         </div>
                     )}
                     {!prop.bedrooms && !prop.bathrooms && !prop.land_size && (
-                        <span className="font-bold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-white/10 px-3 py-1 rounded-lg border border-gray-200 dark:border-white/10">{prop.type || 'Property'}</span>
+                        <span className="font-bold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-white/10 px-3 py-1 rounded-lg border border-gray-200 dark:border-white/10 shrink-0">{prop.type || 'Property'}</span>
                     )}
                 </div>
                 
                 <p className="text-gray-500 dark:text-gray-400 text-sm truncate mb-4 font-medium">{prop.address || prop.title}</p>
                 
-                <div className="mt-auto pt-4 flex items-center justify-between gap-3">
+                <div className="mt-auto pt-3 flex items-center justify-between gap-2">
                     <button aria-label="Accessible interactive control" type="button"
                         onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
                             isCompared ? removeFromCompare(prop.id) : addToCompare(prop);
                         }}
-                        className={`flex-1 font-bold py-3 px-4 rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 border shadow-sm ${
+                        className={`flex-1 font-bold py-2.5 px-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 border shadow-sm shrink-0 ${
                             isCompared 
                                 ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200' 
                                 : 'bg-white/50 backdrop-blur-md text-gray-700 hover:bg-gray-100 hover:text-gray-900 border-gray-200/50'
                         }`}
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                         </svg>
-                        <span className="text-sm">{isCompared ? 'Added' : 'Compare'}</span>
+                        <span className="text-[11px] sm:text-xs">Compare</span>
                     </button>
 
                     <button aria-label="Accessible interactive control" type="button"
@@ -168,10 +176,10 @@ const PropertyCard = ({ prop, handleMessageSeller, isActive, onMouseEnter, onMou
                             e.stopPropagation();
                             handleMessageSeller(prop.id);
                         }}
-                        className="flex-1 bg-white/50 backdrop-blur-md hover:bg-blue-600 text-gray-700 hover:text-white font-bold py-3 px-4 rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 border border-gray-200/50 hover:border-blue-600 hover:shadow-[0_10px_20px_rgba(37,99,235,0.2)]"
+                        className="flex-1 bg-white/50 backdrop-blur-md hover:bg-blue-600 text-gray-700 hover:text-white font-bold py-2.5 px-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 border border-gray-200/50 hover:border-blue-600 hover:shadow-lg shrink-0"
                     >
-                        <MessageCircle className="w-5 h-5" />
-                        <span className="text-sm">Contact</span>
+                        <MessageCircle className="w-4 h-4" />
+                        <span className="text-[11px] sm:text-xs">Contact</span>
                     </button>
                 </div>
             </div>

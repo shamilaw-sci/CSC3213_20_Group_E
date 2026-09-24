@@ -52,6 +52,7 @@ export const useMapSearch = () => {
         beds: savedSearch?.beds ? String(savedSearch.beds) : 'Any',
         baths: savedSearch?.baths ? String(savedSearch.baths) : 'Any',
         exactMatch: false,
+        has360Tour: false,
         propTypes: { 
             House: savedSearch?.property_type === 'House' || !savedSearch?.property_type, 
             Land: savedSearch?.property_type === 'Land' || !savedSearch?.property_type, 
@@ -168,7 +169,9 @@ export const useMapSearch = () => {
                 matchesBaths = filters.exactMatch ? propBaths === targetBaths : propBaths >= targetBaths;
             }
 
-            return matchesSearch && matchesMinPrice && matchesMaxPrice && matchesFeasibilityPrice && matchesType && matchesBeds && matchesBaths && matchesListingType;
+            const matches360 = filters.has360Tour ? (prop.virtual_tours && prop.virtual_tours.length > 0) : true;
+
+            return matchesSearch && matchesMinPrice && matchesMaxPrice && matchesFeasibilityPrice && matchesType && matchesBeds && matchesBaths && matchesListingType && matches360;
         });
     }, [properties, filters, maxPriceFilter]);
 

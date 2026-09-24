@@ -53,11 +53,19 @@ const MapSidebarCard = React.memo(({ prop, isActive, onMouseEnter, onMouseLeave,
             onMouseLeave={onMouseLeave}
             onClick={onClick}
         >
-            {prop.listing_type === 'Sold' && (
-                <div className="absolute top-2 left-2 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded z-10 shadow-sm">
-                    SOLD
-                </div>
-            )}
+            <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
+                {prop.listing_type === 'Sold' && (
+                    <div className="bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded shadow-sm w-fit">
+                        SOLD
+                    </div>
+                )}
+                {prop.virtual_tours && prop.virtual_tours.length > 0 && (
+                    <div className="bg-red-600/95 backdrop-blur-sm text-white text-[9px] font-black px-1.5 py-0.5 rounded shadow-sm flex items-center gap-1 border border-red-500/50 w-fit">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a10 10 0 1 0 10 10H12V2z"></path><path d="M12 12 2.1 7.1"></path><path d="M12 12l9.9 4.9"></path></svg>
+                        360°
+                    </div>
+                )}
+            </div>
             <div className="relative h-32 w-full bg-gray-100 shrink-0">
                 {imageUrl ? (
                     <img 
