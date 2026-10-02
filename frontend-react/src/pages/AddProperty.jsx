@@ -130,6 +130,15 @@ const AddProperty = () => {
     paymentConfig,
   } = usePropertyForm();
 
+  const MAX_HD_MB = 50; 
+  const currentHDSizeMB = images.reduce((acc, f) => acc + f.size, 0) / (1024 * 1024);
+  const hdProgress = Math.min((currentHDSizeMB / MAX_HD_MB) * 100, 100);
+
+  const MAX_360_MB = 25; 
+  const current360SizeMB = virtualTourFiles.reduce((acc, f) => acc + f.size, 0) / (1024 * 1024);
+  const v360Progress = Math.min((current360SizeMB / MAX_360_MB) * 100, 100);
+
+
   // Handle Type Change with exact conditional rules
   const handleTypeSelect = (type) => {
     setFormData((prev) => ({
@@ -199,6 +208,14 @@ const AddProperty = () => {
   
   const handleVirtualTourUpload = (e) => {
     const files = Array.from(e.target.files);
+
+      // Prevent individual files from exceeding the 5MB backend limit
+      const oversized = files.filter(f => f.size > 5 * 1024 * 1024);
+      if (oversized.length > 0) {
+        setMessage({ type: "error", text: "Upload failed: One or more 360 panorama files exceed the 5MB limit." });
+        return;
+      }
+
     if (files.length + virtualTourFiles.length > 5) {
       alert('You can only upload up to 5 virtual tours.');
       return;
@@ -223,6 +240,14 @@ const AddProperty = () => {
 
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
+
+      // Prevent individual files from exceeding the 5MB backend limit
+      const oversized = files.filter(f => f.size > 5 * 1024 * 1024);
+      if (oversized.length > 0) {
+        setMessage({ type: "error", text: "Upload failed: One or more files exceed the 5MB maximum size limit." });
+        return;
+      }
+
     if (images.length + files.length > 8) {
       setMessage({ type: "error", text: "You can upload up to 8 high-definition photos." });
       return;
@@ -584,62 +609,6 @@ const AddProperty = () => {
               </div>
 
               
-                {/* 360 Virtual Tours Section */}
-                <div className="pt-8 mt-8 border-t border-slate-800">
-                  <label className="block text-xs font-black uppercase tracking-wider text-emerald-400 mb-2">
-                    <span>360 Virtual Tours (Optional)</span>
-                    <span className="ml-2 bg-emerald-900/50 text-emerald-400 px-2 py-0.5 rounded-full text-[10px]">PREMIUM</span>
-                  </label>
-                  <p className="text-slate-500 text-sm mb-4">Upload equirectangular panoramic images (.jpg or .png) to create an immersive 3D viewing experience.</p>
-                  
-                  <div className="border-2 border-dashed border-slate-700 hover:border-emerald-500 rounded-3xl p-8 text-center bg-slate-950/40 transition mb-6">
-                    <input
-                      type="file"
-                      multiple
-                      accept="image/jpeg, image/png"
-                      onChange={handleVirtualTourUpload}
-                      id="property-virtual-tours-input"
-                      className="hidden"
-                    />
-                    <label htmlFor="property-virtual-tours-input" className="flex flex-col items-center cursor-pointer">
-                      <div className="w-16 h-16 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center mb-4">
-                        <Maximize className="w-6 h-6 text-emerald-400" />
-                      </div>
-                      <span className="text-sm font-bold text-slate-300">Click to upload 360 photos</span>
-                      <span className="text-xs text-slate-500 mt-2">Max 5 panoramas (2:1 aspect ratio recommended)</span>
-                    </label>
-                  </div>
-
-                  {virtualTourFiles.length > 0 && (
-                    <div className="space-y-4">
-                      {virtualTourFiles.map((file, index) => (
-                        <div key={index} className="flex flex-col sm:flex-row gap-4 items-center bg-slate-900/50 p-4 rounded-2xl border border-slate-800">
-                          <div className="w-full sm:w-24 h-16 bg-slate-800 rounded-xl overflow-hidden shrink-0">
-                            <img src={URL.createObjectURL(file)} alt="360 preview" className="w-full h-full object-cover opacity-70" />
-                          </div>
-                          <div className="flex-grow w-full">
-                            <label className="block text-xs text-slate-400 mb-1">Room / Area Label</label>
-                            <input
-                              type="text"
-                              value={virtualTourMetadata[index]?.room || ''}
-                              onChange={(e) => handleVirtualTourLabel(index, e.target.value)}
-                              placeholder="e.g. Living Room, Master Bedroom"
-                              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:border-emerald-500 outline-none"
-                            />
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeVirtualTour(index)}
-                            className="p-3 text-red-400 hover:bg-red-400/10 rounded-xl transition"
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
                 {/* Navigation Controls */}
               <div className="flex items-center justify-end border-t border-slate-800 pt-6 mt-8">
                 <button
@@ -940,6 +909,90 @@ const AddProperty = () => {
                   </div>
                 )}
               </div>
+                  {/* Memory Storage UI - HD Photos */}
+                  <div className="mt-6 bg-slate-900/50 rounded-xl p-4 border border-slate-800">
+                    <div className="flex justify-between items-end mb-2">
+                      <span className="text-[10px] font-black tracking-widest uppercase text-slate-500">HD Storage Used</span>
+                      <span className="text-sm font-bold text-blue-400">{currentHDSizeMB.toFixed(2)} MB <span className="text-slate-500 text-xs">/ {MAX_HD_MB} MB</span></span>
+                    </div>
+                    <div className="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800/50">
+                      <div 
+                        className={`h-full rounded-full transition-all duration-500 ${currentHDSizeMB >= MAX_HD_MB ? 'bg-red-500' : 'bg-blue-500'}`} 
+                        style={{ width: `${hdProgress}%` }}
+                      />
+                    </div>
+                  </div>
+
+
+                {/* 360 Virtual Tours Section */}
+                <div className="pt-8 mt-8 border-t border-slate-800">
+                  <label className="block text-xs font-black uppercase tracking-wider text-emerald-400 mb-2">
+                    <span>360 Virtual Tours (Optional)</span>
+                    <span className="ml-2 bg-emerald-900/50 text-emerald-400 px-2 py-0.5 rounded-full text-[10px]">PREMIUM</span>
+                  </label>
+                  <p className="text-slate-500 text-sm mb-4">Upload equirectangular panoramic images (.jpg or .png) to create an immersive 3D viewing experience.</p>
+                  
+                  <div className="border-2 border-dashed border-slate-700 hover:border-emerald-500 rounded-3xl p-8 text-center bg-slate-950/40 transition mb-6">
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/jpeg, image/png"
+                      onChange={handleVirtualTourUpload}
+                      id="property-virtual-tours-input"
+                      className="hidden"
+                    />
+                    <label htmlFor="property-virtual-tours-input" className="flex flex-col items-center cursor-pointer">
+                      <div className="w-16 h-16 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center mb-4">
+                        <Maximize className="w-6 h-6 text-emerald-400" />
+                      </div>
+                      <span className="text-sm font-bold text-slate-300">Click to upload 360 photos</span>
+                      <span className="text-xs text-slate-500 mt-2">Max 5 panoramas (2:1 aspect ratio recommended)</span>
+                    </label>
+                  </div>
+
+                  {virtualTourFiles.length > 0 && (
+                    <div className="space-y-4">
+                      {virtualTourFiles.map((file, index) => (
+                        <div key={index} className="flex flex-col sm:flex-row gap-4 items-center bg-slate-900/50 p-4 rounded-2xl border border-slate-800">
+                          <div className="w-full sm:w-24 h-16 bg-slate-800 rounded-xl overflow-hidden shrink-0">
+                            <img src={URL.createObjectURL(file)} alt="360 preview" className="w-full h-full object-cover opacity-70" />
+                          </div>
+                          <div className="flex-grow w-full">
+                            <label className="block text-xs text-slate-400 mb-1">Room / Area Label</label>
+                            <input
+                              type="text"
+                              value={virtualTourMetadata[index]?.room || ''}
+                              onChange={(e) => handleVirtualTourLabel(index, e.target.value)}
+                              placeholder="e.g. Living Room, Master Bedroom"
+                              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:border-emerald-500 outline-none"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeVirtualTour(index)}
+                            className="p-3 text-red-400 hover:bg-red-400/10 rounded-xl transition"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {/* Memory Storage UI - 360 Tours */}
+                  <div className="mt-6 bg-slate-900/50 rounded-xl p-4 border border-slate-800">
+                    <div className="flex justify-between items-end mb-2">
+                      <span className="text-[10px] font-black tracking-widest uppercase text-slate-500">360 Storage Used</span>
+                      <span className="text-sm font-bold text-emerald-400">{current360SizeMB.toFixed(2)} MB <span className="text-slate-500 text-xs">/ {MAX_360_MB} MB</span></span>
+                    </div>
+                    <div className="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800/50">
+                      <div 
+                        className={`h-full rounded-full transition-all duration-500 ${current360SizeMB >= MAX_360_MB ? 'bg-red-500' : 'bg-emerald-500'}`} 
+                        style={{ width: `${v360Progress}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
 
               {/* Navigation Controls */}
               <div className="flex items-center justify-between border-t border-slate-800 pt-6 mt-8">

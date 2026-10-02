@@ -110,6 +110,24 @@ const PropertyDetails = () => {
         }
     };
 
+    const handleMessageSeller = async (targetId) => {
+        if (!user) {
+            navigate('/login');
+            return;
+        }
+        if (user.role !== 'BUYER') {
+            navigate('/messages');
+            return;
+        }
+        try {
+            const response = await api.post(`/conversations/property/${targetId}`, {});
+            navigate(`/messages?conversation=${response.data.conversation.id}`);
+        } catch (error) {
+            console.error("Error creating/fetching conversation:", error?.message);
+            toast.error("Failed to start conversation");
+        }
+    };
+
     const handleContactSeller = async () => {
         if (!user) {
             navigate('/login');
@@ -483,7 +501,7 @@ const PropertyDetails = () => {
                         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Similar Properties You May Like</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                             {similarProperties.map((simProp) => (
-                                <PropertyCard key={simProp.id} prop={simProp} />
+                                <PropertyCard key={simProp.id} prop={simProp} handleMessageSeller={handleMessageSeller} />
                             ))}
                         </div>
                     </div>
@@ -545,6 +563,7 @@ const PropertyDetails = () => {
                                 height={'100vh'}
                                 width={'100%'}
                                 littlePlanet={false}
+                                useXmpData={false}
                             />
                         </div>
                     </m.div>

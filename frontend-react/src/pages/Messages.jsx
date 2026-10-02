@@ -61,6 +61,7 @@ const getInitials = (name) => {
 };
 
 const Messages = () => {
+    const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const { user } = useAuth();
     const messagesEndRef = useRef(null);
