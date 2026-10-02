@@ -12,7 +12,8 @@ export const useMapSearch = () => {
     const [loading, setLoading] = useState(false);
     const [activeMarkerId, setActiveMarkerId] = useState(null);
     const [hoveredPropId, setHoveredPropId] = useState(null);
-    const [searchMode, setSearchMode] = useState(savedSearch ? 'polygon' : 'bounds'); 
+    const [searchMode, setSearchMode] = useState(savedSearch ? 'polygon' : 'bounds');
+    const [isDrawMode, setIsDrawMode] = useState(false); 
     const [isFeasibilityOpen, setIsFeasibilityOpen] = useState(false);
     const [maxPriceFilter, setMaxPriceFilter] = useState(null);
     const [selectedDistrict, setSelectedDistrict] = useState(null);
@@ -177,6 +178,8 @@ export const useMapSearch = () => {
 
     return {
         properties,
+        isDrawMode,
+        setIsDrawMode,
         loading,
         activeMarkerId,
         setActiveMarkerId,

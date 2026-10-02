@@ -110,24 +110,24 @@ const ReportsPage = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         <div className="admin-stat-card">
           <span className="admin-stat-label">Total Revenue Collected</span>
-          <div className="text-2xl sm:text-3xl font-black text-emerald-400">
+          <div className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400">
             LKR {totalRevenue.toLocaleString()}
           </div>
-          <p className="text-xs text-slate-400 mt-1 font-semibold">100% Settled via Gateway</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-semibold">100% Settled via Gateway</p>
         </div>
         <div className="admin-stat-card">
           <span className="admin-stat-label">Completed Transactions</span>
-          <div className="text-2xl sm:text-3xl font-black text-white">
+          <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
             {transactions.filter(t => t.status === "Completed").length}
           </div>
-          <p className="text-xs text-slate-400 mt-1 font-semibold">Successful listing activations</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-semibold">Successful listing activations</p>
         </div>
         <div className="admin-stat-card">
           <span className="admin-stat-label">Average Fee per Listing</span>
-          <div className="text-2xl sm:text-3xl font-black text-blue-400">
+          <div className="text-2xl sm:text-3xl font-black text-blue-600 dark:text-blue-400">
             LKR {transactions.length > 0 ? Math.round(totalRevenue / (transactions.length || 1)).toLocaleString() : "1,500"}
           </div>
-          <p className="text-xs text-slate-400 mt-1 font-semibold">Standard Moderation Tier</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-semibold">Standard Moderation Tier</p>
         </div>
       </div>
 
@@ -147,7 +147,7 @@ const ReportsPage = () => {
           <tbody>
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={6} className="text-center py-12 text-slate-400">
+                <td colSpan={6} className="text-center py-12 text-slate-500 dark:text-slate-400">
                   No transaction records found.
                 </td>
               </tr>
@@ -155,21 +155,21 @@ const ReportsPage = () => {
             {filtered.map((t) => (
               <tr key={t.id}>
                 <td>
-                  <span className="font-mono text-xs font-bold text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded-lg border border-blue-500/20">
+                  <span className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-500/10 px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-500/20">
                     {t.id}
                   </span>
                 </td>
                 <td>
-                  <div className="font-bold text-white text-xs sm:text-sm line-clamp-1">{t.listing}</div>
-                  <div className="text-[10px] text-slate-400 mt-0.5">{t.paymentId}</div>
+                  <div className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm line-clamp-1">{t.listing}</div>
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{t.paymentId}</div>
                 </td>
-                <td className="text-xs font-semibold text-slate-300">{t.seller}</td>
+                <td className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t.seller}</td>
                 <td>
-                  <span className="font-black text-emerald-400 text-sm">
+                  <span className="font-black text-emerald-600 dark:text-emerald-400 text-sm">
                     LKR {t.amount.toLocaleString()}
                   </span>
                 </td>
-                <td className="text-xs text-slate-400">{t.date}</td>
+                <td className="text-xs text-slate-500 dark:text-slate-400">{t.date}</td>
                 <td>
                   <span className="admin-badge admin-badge-approved">
                     {t.status}

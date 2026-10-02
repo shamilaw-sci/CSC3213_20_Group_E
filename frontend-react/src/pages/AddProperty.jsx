@@ -363,7 +363,7 @@ const AddProperty = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans pb-16 selection:bg-blue-600 selection:text-white">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans pb-16 selection:bg-blue-600 selection:text-white">
       <Navbar />
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
@@ -374,27 +374,27 @@ const AddProperty = () => {
             <button
               type="button"
               onClick={() => navigate(user?.role === "SELLER" ? "/seller-dashboard" : "/")}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-slate-900 border border-slate-800 text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800 transition cursor-pointer mb-2"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer mb-2"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Back to Dashboard</span>
             </button>
-            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
               Create New Property Listing
             </h1>
-            <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
               Guided 4-step spatial listing publisher with official deed moderation
             </p>
           </div>
 
-          <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-4 py-2 rounded-2xl self-start sm:self-auto">
+          <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-2 rounded-2xl self-start sm:self-auto">
             <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span className="text-xs font-bold text-slate-300">Official Seller Studio</span>
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Official Seller Studio</span>
           </div>
         </div>
 
         {/* Stepper Progress Bar */}
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-4 sm:p-6 mb-8 shadow-xl">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 sm:p-6 mb-8 shadow-xl">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {STEPS.map((s) => {
               const isActive = currentStep === s.id;
@@ -412,20 +412,20 @@ const AddProperty = () => {
                     isActive
                       ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30"
                       : isPast
-                      ? "bg-slate-800/80 text-emerald-400 hover:bg-slate-800"
-                      : "bg-slate-950/40 text-slate-500 hover:text-slate-300"
+                      ? "bg-slate-100/80 dark:bg-slate-800/80 text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      : "bg-slate-50/40 dark:bg-slate-950/40 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                   }`}
                 >
                   <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs shrink-0 ${
-                    isActive ? "bg-white text-blue-900" : isPast ? "bg-emerald-500/20 text-emerald-400" : "bg-slate-800 text-slate-400"
+                    isActive ? "bg-white text-blue-900" : isPast ? "bg-emerald-500/20 text-emerald-400" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
                   }`}>
                     {isPast ? "✓" : s.id}
                   </div>
                   <div className="min-w-0">
-                    <span className={`block text-xs font-bold truncate ${isActive ? "text-white" : "text-slate-300"}`}>
+                    <span className={`block text-xs font-bold truncate ${isActive ? "text-white" : "text-slate-700 dark:text-slate-300"}`}>
                       {s.title}
                     </span>
-                    <span className="block text-[10px] text-slate-400 font-medium truncate">
+                    <span className="block text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate">
                       {s.subtitle}
                     </span>
                   </div>
@@ -434,7 +434,7 @@ const AddProperty = () => {
             })}
           </div>
 
-          <div className="w-full bg-slate-800 h-1.5 rounded-full mt-4 overflow-hidden">
+          <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-4 overflow-hidden">
             <div
               className="bg-gradient-to-r from-blue-600 via-indigo-500 to-emerald-400 h-full transition-all duration-500"
               style={{ width: `${(currentStep / 4) * 100}%` }}
@@ -457,7 +457,7 @@ const AddProperty = () => {
         )}
 
         {/* Step Content Container */}
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl">
           
           {/* ════════════════════════════════════════════════════════════
               STEP 1: CATEGORY & BASIC INFO
@@ -466,7 +466,7 @@ const AddProperty = () => {
             <m.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
               
               <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-slate-400 mb-3">
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">
                   Select Property Asset Class <span className="text-blue-400">*</span>
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -485,18 +485,18 @@ const AddProperty = () => {
                         onClick={() => handleTypeSelect(cat.id)}
                         className={`p-5 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between group ${
                           isSelected
-                            ? "border-blue-500 bg-blue-600/15 text-white shadow-lg shadow-blue-500/15"
-                            : "border-slate-800 bg-slate-950/60 text-slate-400 hover:border-slate-700 hover:text-slate-200"
+                            ? "border-blue-500 bg-blue-600/15 text-blue-900 dark:text-white shadow-lg shadow-blue-500/15"
+                            : "border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/60 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700 hover:text-slate-800 dark:hover:text-slate-200"
                         }`}
                       >
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${
-                          isSelected ? "bg-blue-600 text-white" : "bg-slate-800 text-slate-400 group-hover:text-white"
+                          isSelected ? "bg-blue-600 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white"
                         }`}>
                           <Icon className="w-5 h-5" />
                         </div>
                         <div>
-                          <h4 className="font-bold text-sm text-white">{cat.title}</h4>
-                          <p className="text-[11px] text-slate-400 mt-1 line-clamp-2">{cat.desc}</p>
+                          <h4 className="font-bold text-sm text-slate-900 dark:text-white">{cat.title}</h4>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">{cat.desc}</p>
                         </div>
                       </div>
                     );
@@ -506,7 +506,7 @@ const AddProperty = () => {
 
               {/* Title */}
               <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-slate-400 mb-2">
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                   Property Headline Title <span className="text-blue-400">*</span>
                 </label>
                 <input
@@ -515,7 +515,7 @@ const AddProperty = () => {
                   value={formData.title}
                   onChange={handleChange}
                   placeholder={getTitlePlaceholder()}
-                  className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 placeholder:text-slate-600"
+                  className="w-full bg-white/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 placeholder:text-slate-400 dark:placeholder:text-slate-600"
                 />
                 <span className="text-[11px] text-slate-500 mt-1 block">
                   Tip: Include district, bedrooms, and signature amenities for highest buyer visibility.
@@ -525,7 +525,7 @@ const AddProperty = () => {
               {/* Price & Period */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-slate-400 mb-2">
+                  <label className="block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                     Price (Rs.) <span className="text-blue-400">*</span>
                   </label>
                   <div className="flex gap-2.5">
@@ -537,7 +537,7 @@ const AddProperty = () => {
                         value={formData.price}
                         onChange={handleChange}
                         placeholder="Enter Price"
-                        className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl pl-10 pr-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 placeholder:text-slate-600"
+                        className="w-full bg-white/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl pl-10 pr-4 py-3.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 placeholder:text-slate-400 dark:placeholder:text-slate-600"
                       />
                     </div>
 
@@ -546,7 +546,7 @@ const AddProperty = () => {
                         name="pricePeriod"
                         value={formData.pricePeriod || "Month"}
                         onChange={handleChange}
-                        className="bg-slate-950/80 border border-slate-800 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 cursor-pointer font-bold shrink-0"
+                        className="bg-white/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 cursor-pointer font-bold shrink-0"
                       >
                         <option value="Month">/ Month</option>
                         <option value="Year">/ Year</option>
@@ -562,14 +562,14 @@ const AddProperty = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-slate-400 mb-2">
+                  <label className="block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                     District <span className="text-blue-400">*</span>
                   </label>
                   <select
                     name="district"
                     value={formData.district}
                     onChange={handleDistrictChange}
-                    className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 cursor-pointer"
+                    className="w-full bg-white/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 cursor-pointer"
                   >
                     <option value="">Select District</option>
                     {sriLankaDistricts.map((d) => (
@@ -582,7 +582,7 @@ const AddProperty = () => {
               {/* Contact Phone & Category */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-slate-400 mb-2">
+                  <label className="block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                     Contact Number (WhatsApp / Call) <span className="text-blue-400">*</span>
                   </label>
                   <div className="relative">
@@ -593,16 +593,16 @@ const AddProperty = () => {
                       value={formData.contactNumber}
                       onChange={handleChange}
                       placeholder="e.g. 0771234567"
-                      className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl pl-10 pr-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 placeholder:text-slate-600"
+                      className="w-full bg-white/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl pl-10 pr-4 py-3.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 placeholder:text-slate-400 dark:placeholder:text-slate-600"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-slate-400 mb-2">
+                  <label className="block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                     Listing Type
                   </label>
-                  <div className="px-4 py-3.5 rounded-2xl bg-slate-950/40 border border-slate-800/80 text-sm font-bold text-slate-300">
+                  <div className="px-4 py-3.5 rounded-2xl bg-slate-50/40 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800/80 text-sm font-bold text-slate-700 dark:text-slate-300">
                     {isRentType ? "For Lease / Rental" : "For Sale / Outright Purchase"}
                   </div>
                 </div>
@@ -610,7 +610,7 @@ const AddProperty = () => {
 
               
                 {/* Navigation Controls */}
-              <div className="flex items-center justify-end border-t border-slate-800 pt-6 mt-8">
+              <div className="flex items-center justify-end border-t border-slate-200 dark:border-slate-800 pt-6 mt-8">
                 <button
                   type="button"
                   onClick={nextStep}
@@ -632,7 +632,7 @@ const AddProperty = () => {
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-slate-400 mb-2">
+                  <label className="block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                     Nearby Town / City <span className="text-blue-400">*</span>
                   </label>
                   <input
@@ -641,12 +641,12 @@ const AddProperty = () => {
                     value={formData.city}
                     onChange={handleChange}
                     placeholder="e.g. Kadawatha, Colombo 07, Kandy Town"
-                    className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500"
+                    className="w-full bg-white/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-slate-400 mb-2">
+                  <label className="block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                     Full Address
                   </label>
                   <input
@@ -655,14 +655,14 @@ const AddProperty = () => {
                     value={formData.address}
                     onChange={handleChange}
                     placeholder="e.g. 123, Main Road, Kadawatha"
-                    className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500"
+                    className="w-full bg-white/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
                   />
                 </div>
               </div>
 
               <div>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
-                  <label className="text-xs font-black uppercase tracking-wider text-slate-400">
+                  <label className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     Geospatial Mapping Mode
                   </label>
                   <div className="flex items-center gap-2">
@@ -675,7 +675,7 @@ const AddProperty = () => {
                       className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
                         locationMode === "point"
                           ? "bg-blue-600 text-white"
-                          : "bg-slate-800 text-slate-400 hover:text-white"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                       }`}
                     >
                       Single Pin Location
@@ -686,7 +686,7 @@ const AddProperty = () => {
                       className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
                         locationMode === "boundary"
                           ? "bg-blue-600 text-white"
-                          : "bg-slate-800 text-slate-400 hover:text-white"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                       }`}
                     >
                       Draw Boundary Polygon
@@ -695,7 +695,7 @@ const AddProperty = () => {
                       type="button"
                       onClick={handleGetGPS}
                       className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
-                        gpsActive ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-300 hover:text-white"
+                        gpsActive ? "bg-emerald-600 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
                       }`}
                     >
                       <Compass className="w-3.5 h-3.5" />
@@ -704,7 +704,7 @@ const AddProperty = () => {
                   </div>
                 </div>
 
-                <div className="h-80 w-full rounded-2xl overflow-hidden border border-slate-700 relative shadow-inner">
+                <div className="h-80 w-full rounded-2xl overflow-hidden border border-slate-300 dark:border-slate-700 relative shadow-inner">
                   <MapContainer
                     center={[formData.latitude || 6.9271, formData.longitude || 79.8612]}
                     zoom={14}
@@ -729,7 +729,7 @@ const AddProperty = () => {
                     )}
                   </MapContainer>
 
-                  <div className="absolute bottom-3 left-3 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-700 text-[11px] text-slate-300 font-semibold z-[1000]">
+                  <div className="absolute bottom-3 left-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 text-[11px] text-slate-700 dark:text-slate-300 font-semibold z-[1000]">
                     {locationMode === "point"
                       ? "📍 Click anywhere on map to position property pin"
                       : `📐 Click to add boundary points (${boundaryCoordinates.length} selected)`}
@@ -748,11 +748,11 @@ const AddProperty = () => {
               </div>
 
               {/* Navigation Controls */}
-              <div className="flex items-center justify-between border-t border-slate-800 pt-6 mt-8">
+              <div className="flex items-center justify-between border-t border-slate-200 dark:border-slate-800 pt-6 mt-8">
                 <button
                   type="button"
                   onClick={prevStep}
-                  className="px-5 py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs sm:text-sm transition flex items-center gap-2 cursor-pointer"
+                  className="px-5 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-bold text-xs sm:text-sm transition flex items-center gap-2 cursor-pointer"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   <span>Previous Step</span>
@@ -780,7 +780,7 @@ const AddProperty = () => {
               {!isLandType && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-xs font-black uppercase tracking-wider text-slate-400 mb-2">
+                    <label className="block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                       Bedrooms
                     </label>
                     <div className="relative">
@@ -791,13 +791,13 @@ const AddProperty = () => {
                         value={formData.bedrooms}
                         onChange={handleChange}
                         placeholder="e.g. 3"
-                        className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl pl-10 pr-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500"
+                        className="w-full bg-white/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl pl-10 pr-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-black uppercase tracking-wider text-slate-400 mb-2">
+                    <label className="block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                       Bathrooms
                     </label>
                     <div className="relative">
@@ -808,7 +808,7 @@ const AddProperty = () => {
                         value={formData.bathrooms}
                         onChange={handleChange}
                         placeholder="e.g. 2"
-                        className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl pl-10 pr-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500"
+                        className="w-full bg-white/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl pl-10 pr-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
                       />
                     </div>
                   </div>
@@ -817,7 +817,7 @@ const AddProperty = () => {
 
               {!isLandType && (
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-slate-400 mb-2">
+                  <label className="block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                     House Size (sqft)
                   </label>
                   <div className="relative">
@@ -828,7 +828,7 @@ const AddProperty = () => {
                       value={formData.houseSize}
                       onChange={handleChange}
                       placeholder="e.g. 1800"
-                      className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl pl-10 pr-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500"
+                      className="w-full bg-white/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl pl-10 pr-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
                     />
                   </div>
                 </div>
@@ -836,7 +836,7 @@ const AddProperty = () => {
 
               {(isLandType || isHouseType) && (
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-slate-400 mb-2">
+                  <label className="block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                     Land Size (Perches)
                   </label>
                   <input
@@ -845,13 +845,13 @@ const AddProperty = () => {
                     value={formData.landSize}
                     onChange={handleChange}
                     placeholder="e.g. 15"
-                    className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500"
+                    className="w-full bg-white/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
                   />
                 </div>
               )}
 
               <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-slate-400 mb-2">
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                   Description
                 </label>
                 <textarea
@@ -860,16 +860,16 @@ const AddProperty = () => {
                   value={formData.description}
                   onChange={handleChange}
                   placeholder="Describe the key features of your property..."
-                  className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 placeholder:text-slate-600"
+                  className="w-full bg-white/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 placeholder:text-slate-400 dark:placeholder:text-slate-600"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-slate-400 mb-2">
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                   High-Definition Photographs ({images.length}/8) <span className="text-blue-400">*</span>
                 </label>
                 
-                <div className="border-2 border-dashed border-slate-700 hover:border-blue-500 rounded-3xl p-8 text-center bg-slate-950/40 transition">
+                <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 rounded-3xl p-8 text-center bg-slate-50/40 dark:bg-slate-950/40 transition">
                   <input
                     type="file"
                     multiple
@@ -882,15 +882,15 @@ const AddProperty = () => {
                     <div className="w-14 h-14 rounded-2xl bg-blue-600/20 text-blue-400 flex items-center justify-center mb-3">
                       <Upload className="w-6 h-6" />
                     </div>
-                    <span className="text-sm font-bold text-white">Click to Upload HD Photographs</span>
-                    <span className="text-xs text-slate-400 mt-1">Automatic browser compression up to 1920px (Max 8 photos)</span>
+                    <span className="text-sm font-bold text-slate-900 dark:text-white">Click to Upload HD Photographs</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 mt-1">Automatic browser compression up to 1920px (Max 8 photos)</span>
                   </label>
                 </div>
 
                 {previewUrls.length > 0 && (
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
                     {previewUrls.map((url, i) => (
-                      <div key={i} className="relative aspect-video rounded-xl overflow-hidden border border-slate-700 group">
+                      <div key={i} className="relative aspect-video rounded-xl overflow-hidden border border-slate-300 dark:border-slate-700 group">
                         <img src={url} alt="" className="w-full h-full object-cover" />
                         <button
                           type="button"
@@ -910,12 +910,12 @@ const AddProperty = () => {
                 )}
               </div>
                   {/* Memory Storage UI - HD Photos */}
-                  <div className="mt-6 bg-slate-900/50 rounded-xl p-4 border border-slate-800">
+                  <div className="mt-6 bg-white/50 dark:bg-slate-900/50 rounded-xl p-4 border border-slate-200 dark:border-slate-800">
                     <div className="flex justify-between items-end mb-2">
                       <span className="text-[10px] font-black tracking-widest uppercase text-slate-500">HD Storage Used</span>
                       <span className="text-sm font-bold text-blue-400">{currentHDSizeMB.toFixed(2)} MB <span className="text-slate-500 text-xs">/ {MAX_HD_MB} MB</span></span>
                     </div>
-                    <div className="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800/50">
+                    <div className="w-full h-1.5 bg-slate-50 dark:bg-slate-950 rounded-full overflow-hidden border border-slate-200/50 dark:border-slate-800/50">
                       <div 
                         className={`h-full rounded-full transition-all duration-500 ${currentHDSizeMB >= MAX_HD_MB ? 'bg-red-500' : 'bg-blue-500'}`} 
                         style={{ width: `${hdProgress}%` }}
@@ -925,14 +925,14 @@ const AddProperty = () => {
 
 
                 {/* 360 Virtual Tours Section */}
-                <div className="pt-8 mt-8 border-t border-slate-800">
+                <div className="pt-8 mt-8 border-t border-slate-200 dark:border-slate-800">
                   <label className="block text-xs font-black uppercase tracking-wider text-emerald-400 mb-2">
                     <span>360 Virtual Tours (Optional)</span>
                     <span className="ml-2 bg-emerald-900/50 text-emerald-400 px-2 py-0.5 rounded-full text-[10px]">PREMIUM</span>
                   </label>
                   <p className="text-slate-500 text-sm mb-4">Upload equirectangular panoramic images (.jpg or .png) to create an immersive 3D viewing experience.</p>
                   
-                  <div className="border-2 border-dashed border-slate-700 hover:border-emerald-500 rounded-3xl p-8 text-center bg-slate-950/40 transition mb-6">
+                  <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-emerald-500 rounded-3xl p-8 text-center bg-slate-50/40 dark:bg-slate-950/40 transition mb-6">
                     <input
                       type="file"
                       multiple
@@ -942,10 +942,10 @@ const AddProperty = () => {
                       className="hidden"
                     />
                     <label htmlFor="property-virtual-tours-input" className="flex flex-col items-center cursor-pointer">
-                      <div className="w-16 h-16 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center mb-4">
+                      <div className="w-16 h-16 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center mb-4">
                         <Maximize className="w-6 h-6 text-emerald-400" />
                       </div>
-                      <span className="text-sm font-bold text-slate-300">Click to upload 360 photos</span>
+                      <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Click to upload 360 photos</span>
                       <span className="text-xs text-slate-500 mt-2">Max 5 panoramas (2:1 aspect ratio recommended)</span>
                     </label>
                   </div>
@@ -953,18 +953,18 @@ const AddProperty = () => {
                   {virtualTourFiles.length > 0 && (
                     <div className="space-y-4">
                       {virtualTourFiles.map((file, index) => (
-                        <div key={index} className="flex flex-col sm:flex-row gap-4 items-center bg-slate-900/50 p-4 rounded-2xl border border-slate-800">
-                          <div className="w-full sm:w-24 h-16 bg-slate-800 rounded-xl overflow-hidden shrink-0">
+                        <div key={index} className="flex flex-col sm:flex-row gap-4 items-center bg-white/50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+                          <div className="w-full sm:w-24 h-16 bg-slate-100 dark:bg-slate-800 rounded-xl overflow-hidden shrink-0">
                             <img src={URL.createObjectURL(file)} alt="360 preview" className="w-full h-full object-cover opacity-70" />
                           </div>
                           <div className="flex-grow w-full">
-                            <label className="block text-xs text-slate-400 mb-1">Room / Area Label</label>
+                            <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Room / Area Label</label>
                             <input
                               type="text"
                               value={virtualTourMetadata[index]?.room || ''}
                               onChange={(e) => handleVirtualTourLabel(index, e.target.value)}
                               placeholder="e.g. Living Room, Master Bedroom"
-                              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:border-emerald-500 outline-none"
+                              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
                             />
                           </div>
                           <button
@@ -979,12 +979,12 @@ const AddProperty = () => {
                     </div>
                   )}
                   {/* Memory Storage UI - 360 Tours */}
-                  <div className="mt-6 bg-slate-900/50 rounded-xl p-4 border border-slate-800">
+                  <div className="mt-6 bg-white/50 dark:bg-slate-900/50 rounded-xl p-4 border border-slate-200 dark:border-slate-800">
                     <div className="flex justify-between items-end mb-2">
                       <span className="text-[10px] font-black tracking-widest uppercase text-slate-500">360 Storage Used</span>
                       <span className="text-sm font-bold text-emerald-400">{current360SizeMB.toFixed(2)} MB <span className="text-slate-500 text-xs">/ {MAX_360_MB} MB</span></span>
                     </div>
-                    <div className="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800/50">
+                    <div className="w-full h-1.5 bg-slate-50 dark:bg-slate-950 rounded-full overflow-hidden border border-slate-200/50 dark:border-slate-800/50">
                       <div 
                         className={`h-full rounded-full transition-all duration-500 ${current360SizeMB >= MAX_360_MB ? 'bg-red-500' : 'bg-emerald-500'}`} 
                         style={{ width: `${v360Progress}%` }}
@@ -995,11 +995,11 @@ const AddProperty = () => {
 
 
               {/* Navigation Controls */}
-              <div className="flex items-center justify-between border-t border-slate-800 pt-6 mt-8">
+              <div className="flex items-center justify-between border-t border-slate-200 dark:border-slate-800 pt-6 mt-8">
                 <button
                   type="button"
                   onClick={prevStep}
-                  className="px-5 py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs sm:text-sm transition flex items-center gap-2 cursor-pointer"
+                  className="px-5 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-bold text-xs sm:text-sm transition flex items-center gap-2 cursor-pointer"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   <span>Previous Step</span>
@@ -1024,14 +1024,14 @@ const AddProperty = () => {
           {currentStep === 4 && (
             <m.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
               
-              <div className="border-b border-slate-800 pb-4">
+              <div className="border-b border-slate-200 dark:border-slate-800 pb-4">
                 <div className="flex items-center gap-2">
                   <span className="px-3 py-1 rounded-xl bg-blue-500/20 text-blue-300 border border-blue-500/30 text-xs font-black uppercase">
                     Final Step 4 of 4
                   </span>
-                  <h3 className="text-xl font-black text-white">Review & Confirm Your Listing</h3>
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white">Review & Confirm Your Listing</h3>
                 </div>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   Please verify all details carefully. You can edit any section before proceeding to payment.
                 </p>
               </div>
@@ -1040,10 +1040,10 @@ const AddProperty = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 
                 {/* 1. Category & Price Summary */}
-                <div className="p-5 rounded-3xl bg-slate-950/70 border border-slate-800 flex flex-col justify-between">
+                <div className="p-5 rounded-3xl bg-slate-50/70 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">1. Category & Price</span>
+                      <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">1. Category & Price</span>
                       <button
                         type="button"
                         onClick={() => goToStep(1)}
@@ -1056,26 +1056,26 @@ const AddProperty = () => {
 
                     <div className="space-y-2 text-xs">
                       <div>
-                        <span className="text-slate-400 block">Type:</span>
-                        <strong className="text-white text-sm">{formData.type} ({formData.listingType})</strong>
+                        <span className="text-slate-500 dark:text-slate-400 block">Type:</span>
+                        <strong className="text-slate-900 dark:text-white text-sm">{formData.type} ({formData.listingType})</strong>
                       </div>
                       <div>
-                        <span className="text-slate-400 block">Price:</span>
+                        <span className="text-slate-500 dark:text-slate-400 block">Price:</span>
                         <strong className="text-emerald-400 text-sm">{formatLKRPreview(formData.price, isRentType ? formData.pricePeriod : null)}</strong>
                       </div>
                       <div>
-                        <span className="text-slate-400 block">Contact Phone:</span>
-                        <span className="text-slate-200">{formData.contactNumber || "-"}</span>
+                        <span className="text-slate-500 dark:text-slate-400 block">Contact Phone:</span>
+                        <span className="text-slate-800 dark:text-slate-200">{formData.contactNumber || "-"}</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* 2. Spatial Location Summary */}
-                <div className="p-5 rounded-3xl bg-slate-950/70 border border-slate-800 flex flex-col justify-between">
+                <div className="p-5 rounded-3xl bg-slate-50/70 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">2. Spatial Location</span>
+                      <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">2. Spatial Location</span>
                       <button
                         type="button"
                         onClick={() => goToStep(2)}
@@ -1088,15 +1088,15 @@ const AddProperty = () => {
 
                     <div className="space-y-2 text-xs">
                       <div>
-                        <span className="text-slate-400 block">District:</span>
-                        <strong className="text-white">{formData.district}</strong>
+                        <span className="text-slate-500 dark:text-slate-400 block">District:</span>
+                        <strong className="text-slate-900 dark:text-white">{formData.district}</strong>
                       </div>
                       <div>
-                        <span className="text-slate-400 block">Town / Address:</span>
-                        <span className="text-slate-200">{formData.city || formData.address || "-"}</span>
+                        <span className="text-slate-500 dark:text-slate-400 block">Town / Address:</span>
+                        <span className="text-slate-800 dark:text-slate-200">{formData.city || formData.address || "-"}</span>
                       </div>
                       <div>
-                        <span className="text-slate-400 block">Mapping Coordinates:</span>
+                        <span className="text-slate-500 dark:text-slate-400 block">Mapping Coordinates:</span>
                         <span className="text-blue-400 font-mono text-[11px]">
                           {locationMode === "boundary" ? `Polygon (${boundaryCoordinates.length} vertices)` : `${Number(formData.latitude).toFixed(4)}, ${Number(formData.longitude).toFixed(4)}`}
                         </span>
@@ -1106,10 +1106,10 @@ const AddProperty = () => {
                 </div>
 
                 {/* 3. Specs & Media Summary */}
-                <div className="p-5 rounded-3xl bg-slate-950/70 border border-slate-800 flex flex-col justify-between">
+                <div className="p-5 rounded-3xl bg-slate-50/70 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">3. Specs & Photos</span>
+                      <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">3. Specs & Photos</span>
                       <button
                         type="button"
                         onClick={() => goToStep(3)}
@@ -1123,21 +1123,21 @@ const AddProperty = () => {
                     <div className="space-y-2 text-xs">
                       {!isLandType && (
                         <div>
-                          <span className="text-slate-400 block">Bedrooms / Baths:</span>
-                          <span className="text-slate-200">{formData.bedrooms || 0} Beds · {formData.bathrooms || 0} Baths</span>
+                          <span className="text-slate-500 dark:text-slate-400 block">Bedrooms / Baths:</span>
+                          <span className="text-slate-800 dark:text-slate-200">{formData.bedrooms || 0} Beds · {formData.bathrooms || 0} Baths</span>
                         </div>
                       )}
                       <div>
-                        <span className="text-slate-400 block">Size:</span>
-                        <span className="text-slate-200">{formData.landSize ? `${formData.landSize} Perches` : ""}{formData.houseSize ? ` · ${formData.houseSize} sqft` : ""}</span>
+                        <span className="text-slate-500 dark:text-slate-400 block">Size:</span>
+                        <span className="text-slate-800 dark:text-slate-200">{formData.landSize ? `${formData.landSize} Perches` : ""}{formData.houseSize ? ` · ${formData.houseSize} sqft` : ""}</span>
                       </div>
                       <div>
-                        <span className="text-slate-400 block">Photographs:</span>
+                        <span className="text-slate-500 dark:text-slate-400 block">Photographs:</span>
                         <span className="text-emerald-400 font-bold">{images.length} Photos Attached</span>
                         </div>
                         {virtualTourFiles.length > 0 && (
                           <div>
-                            <span className="text-slate-400 block">360° Tours:</span>
+                            <span className="text-slate-500 dark:text-slate-400 block">360° Tours:</span>
                             <span className="text-emerald-400 font-bold">{virtualTourFiles.length} Panorama{virtualTourFiles.length > 1 ? 's' : ''} Attached</span>
                           </div>
                         )}
@@ -1160,11 +1160,11 @@ const AddProperty = () => {
 
               {/* Live Buyer Card Preview */}
               <div>
-                <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-3">
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">
                   Live Showcase Card (As Viewed by Buyers on Live Map)
                 </h4>
-                <div className="bg-slate-950 rounded-3xl border border-slate-800 overflow-hidden max-w-md mx-auto shadow-2xl">
-                  <div className="aspect-video w-full bg-slate-800 relative">
+                <div className="bg-slate-50 dark:bg-slate-950 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden max-w-md mx-auto shadow-2xl">
+                  <div className="aspect-video w-full bg-slate-100 dark:bg-slate-800 relative">
                     {previewUrls[0] ? (
                       <img src={previewUrls[0]} alt="" className="w-full h-full object-cover" />
                     ) : (
@@ -1176,20 +1176,20 @@ const AddProperty = () => {
                       {formData.type}
                     </div>
                     <div className="absolute bottom-3 left-3">
-                      <span className="text-xl font-black text-white drop-shadow-md">
+                      <span className="text-xl font-black text-slate-900 dark:text-white drop-shadow-md">
                         {formatLKRPreview(formData.price, isRentType ? formData.pricePeriod : null) || `Rs. ${formData.price}`}
                       </span>
                     </div>
                   </div>
 
                   <div className="p-5">
-                    <h4 className="font-bold text-white text-base line-clamp-1">{formData.title || "Property Title"}</h4>
-                    <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
+                    <h4 className="font-bold text-slate-900 dark:text-white text-base line-clamp-1">{formData.title || "Property Title"}</h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1">
                       <MapPin className="w-3.5 h-3.5 text-blue-400" />
                       <span>{formData.city ? `${formData.city}, ${formData.district}` : formData.district}</span>
                     </p>
 
-                    <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-slate-800 text-xs text-slate-300 font-semibold">
+                    <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 font-semibold">
                       {formData.bedrooms && <span>🛏️ {formData.bedrooms} Beds</span>}
                       {formData.bathrooms && <span>🚿 {formData.bathrooms} Baths</span>}
                       {formData.houseSize && <span>🏠 {formData.houseSize} sqft</span>}
@@ -1207,28 +1207,28 @@ const AddProperty = () => {
                   </div>
                   <div>
                     <span className="text-xs font-black text-emerald-400 uppercase tracking-wider">One-Time Activation Fee</span>
-                    <h4 className="text-xl font-black text-white">
-                      Rs. {parseFloat(paymentConfig.listingFee || 500).toLocaleString()} <span className="text-xs font-normal text-slate-400">LKR</span>
+                    <h4 className="text-xl font-black text-slate-900 dark:text-white">
+                      Rs. {parseFloat(paymentConfig.listingFee || 500).toLocaleString()} <span className="text-xs font-normal text-slate-500 dark:text-slate-400">LKR</span>
                     </h4>
-                    <p className="text-xs text-slate-300 mt-0.5">
+                    <p className="text-xs text-slate-700 dark:text-slate-300 mt-0.5">
                       Secured via Central Bank of Sri Lanka approved PayHere Payment Gateway
                     </p>
                   </div>
                 </div>
 
-                <div className="text-xs text-slate-400 sm:text-right">
-                  <span className="block font-bold text-white">✓ Deed Verification</span>
+                <div className="text-xs text-slate-500 dark:text-slate-400 sm:text-right">
+                  <span className="block font-bold text-slate-900 dark:text-white">✓ Deed Verification</span>
                   <span className="block">✓ PostGIS Map Broadcast</span>
                   <span className="block">✓ Unlimited Buyer Leads</span>
                 </div>
               </div>
 
               {/* Final Step Controls */}
-              <div className="flex items-center justify-between border-t border-slate-800 pt-6 mt-8">
+              <div className="flex items-center justify-between border-t border-slate-200 dark:border-slate-800 pt-6 mt-8">
                 <button
                   type="button"
                   onClick={() => goToStep(3)}
-                  className="px-5 py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs sm:text-sm transition flex items-center gap-2 cursor-pointer"
+                  className="px-5 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-bold text-xs sm:text-sm transition flex items-center gap-2 cursor-pointer"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   <span>Back to Specs & Photos</span>

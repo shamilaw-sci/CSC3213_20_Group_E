@@ -3,6 +3,8 @@ import { m } from 'framer-motion';
 import { ArrowDown, Compass, Building2, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+let hasSeenPreloader = false;
+
 const hotspots = [
     { 
         id: 1, 
@@ -30,16 +32,20 @@ const hotspots = [
 export default function DarkHero() {
     const navigate = useNavigate();
     const [hoveredHotspot, setHoveredHotspot] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isFirstVisit] = useState(!hasSeenPreloader);
+    const [isLoading, setIsLoading] = useState(isFirstVisit);
     const [searchQuery, setSearchQuery] = useState('');
 
     // After 2.0 seconds, hide preloader
     useEffect(() => {
-        const timer = setTimeout(() => {
-            setIsLoading(false);
-        }, 2000);
-        return () => clearTimeout(timer);
-    }, []);
+        if (isLoading) {
+            const timer = setTimeout(() => {
+                hasSeenPreloader = true;
+                setIsLoading(false);
+            }, 2000);
+            return () => clearTimeout(timer);
+        }
+    }, [isLoading]);
 
     const handleSearchSubmit = (e) => {
         e.preventDefault();
@@ -52,14 +58,14 @@ export default function DarkHero() {
             {/* --- PRELOADER ANIMATION --- */}
             <m.div 
                 className="absolute inset-0 z-[100] flex items-center justify-center bg-black overflow-hidden pointer-events-none"
-                initial={{ opacity: 1 }}
+                initial={isFirstVisit ? { opacity: 1 } : false}
                 animate={{ opacity: isLoading ? 1 : 0 }}
                 transition={{ duration: 0.5, delay: 1.5, ease: "easeInOut" }}
             >
                 <div className="flex items-center justify-center w-full h-full relative">
                     {/* Left Word (Thirasara) Sliding Left */}
                     <m.div 
-                        initial={{ x: 0 }}
+                        initial={isFirstVisit ? { x: 0 } : false}
                         animate={{ x: "-10%" }}
                         transition={{ duration: 0.8, delay: 0.7, ease: [0.16, 1, 0.3, 1] }}
                         className="absolute right-[50%] flex justify-end w-1/2 pr-4 md:pr-8 z-20"
@@ -72,7 +78,7 @@ export default function DarkHero() {
 
                     {/* Growing Reveal Image in center */}
                     <m.div 
-                        initial={{ clipPath: "inset(0 50% 0 50%)", opacity: 0 }}
+                        initial={isFirstVisit ? { clipPath: "inset(0 50% 0 50%)", opacity: 0 } : false}
                         animate={{ clipPath: "inset(0 0% 0 0%)", opacity: 1 }}
                         transition={{ duration: 0.8, delay: 0.7, ease: [0.16, 1, 0.3, 1] }}
                         className="relative z-10 flex items-center justify-center overflow-hidden h-full w-full"
@@ -82,7 +88,7 @@ export default function DarkHero() {
 
                     {/* Right Word (Properties) Sliding Right */}
                     <m.div 
-                        initial={{ x: 0 }}
+                        initial={isFirstVisit ? { x: 0 } : false}
                         animate={{ x: "10%" }}
                         transition={{ duration: 0.8, delay: 0.7, ease: [0.16, 1, 0.3, 1] }}
                         className="absolute left-[50%] flex justify-start w-1/2 pl-4 md:pl-8 z-20"
@@ -97,7 +103,7 @@ export default function DarkHero() {
             <m.div 
                 className="absolute inset-0 z-0 bg-cover bg-center"
                 style={{ backgroundImage: "url('/images/modern_villa_hero.jpg')" }}
-                initial={{ scale: 1.15 }}
+                initial={isFirstVisit ? { scale: 1.15 } : false}
                 animate={{ scale: isLoading ? 1.15 : 1 }}
                 transition={{ duration: 1.2, ease: "easeOut" }}
             >
@@ -123,7 +129,7 @@ export default function DarkHero() {
                             
                             {/* Detailed Architectural Tooltip Reveal */}
                             <m.div
-                                initial={{ scale: 0.85, opacity: 0, x: -10 }}
+                                initial={isFirstVisit ? { scale: 0.85, opacity: 0, x: -10 } : false}
                                 animate={{ 
                                     scale: hoveredHotspot === spot.id ? 1 : 0.85, 
                                     opacity: hoveredHotspot === spot.id ? 1 : 0,
@@ -149,7 +155,7 @@ export default function DarkHero() {
             <div className="absolute inset-0 z-20 flex flex-col items-center justify-center pointer-events-none px-4 -mt-10 sm:-mt-14">
                 <div className="overflow-hidden pb-1">
                     <m.h1 
-                        initial={{ y: "100%", opacity: 0 }}
+                        initial={isFirstVisit ? { y: "100%", opacity: 0 } : false}
                         animate={{ y: isLoading ? "100%" : 0, opacity: isLoading ? 0 : 1 }}
                         transition={{ duration: 0.6, delay: 0, ease: [0.16, 1, 0.3, 1] }} 
                         className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-thin tracking-[0.2em] uppercase text-white/95 drop-shadow-2xl text-center"
@@ -159,7 +165,7 @@ export default function DarkHero() {
                 </div>
                 <div className="overflow-hidden mt-[-10px] sm:mt-[-15px] pb-3">
                     <m.h2
-                        initial={{ y: "100%", opacity: 0 }}
+                        initial={isFirstVisit ? { y: "100%", opacity: 0 } : false}
                         animate={{ y: isLoading ? "100%" : 0, opacity: isLoading ? 0 : 1 }}
                         transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
                         className="text-lg sm:text-2xl md:text-4xl lg:text-5xl font-light tracking-[0.3em] uppercase text-white/75 drop-shadow-lg text-center"
@@ -170,7 +176,7 @@ export default function DarkHero() {
 
                 {/* Instant Frosted Search Capsule */}
                 <m.div
-                    initial={{ y: 30, opacity: 0 }}
+                    initial={isFirstVisit ? { y: 30, opacity: 0 } : false}
                     animate={{ y: isLoading ? 30 : 0, opacity: isLoading ? 0 : 1 }}
                     transition={{ duration: 0.5, delay: 0.3 }}
                     className="pointer-events-auto mt-4 sm:mt-5 w-full max-w-lg lg:max-w-xl px-4"
@@ -200,7 +206,7 @@ export default function DarkHero() {
 
             {/* Bottom Content Strip (Fully Visible in 100vh Initial Window Viewport) */}
             <m.div 
-                initial={{ y: 30, opacity: 0 }}
+                initial={isFirstVisit ? { y: 30, opacity: 0 } : false}
                 animate={{ y: isLoading ? 30 : 0, opacity: isLoading ? 0 : 1 }}
                 transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
                 className="absolute bottom-4 sm:bottom-6 md:bottom-8 w-full z-30 px-6 sm:px-10 lg:px-12 grid grid-cols-1 md:grid-cols-3 gap-6 items-end pointer-events-none"

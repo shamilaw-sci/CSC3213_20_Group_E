@@ -77,7 +77,9 @@ const MapSearch = () => {
         handleFreehandData,
         clearBoundary,
         handleSearch,
-        filteredProperties
+        filteredProperties,
+        isDrawMode,
+        setIsDrawMode
     } = useMapSearch();
 
     const getMapboxStyleUrl = () => {
@@ -189,15 +191,18 @@ const MapSearch = () => {
                             floodData={floodData}
                             showLandslideZones={showLandslideZones}
                             landslideData={landslideData}
+                            isDrawMode={isDrawMode}
                         />
 
                         <FreehandDrawControl 
                             onPolygonComplete={handleFreehandData} 
                             onDrawDelete={clearBoundary} 
                             controlRef={drawControlRef} 
+                            isDrawMode={isDrawMode}
+                            setIsDrawMode={setIsDrawMode}
                         >
-                            <div className="bg-white/90 backdrop-blur-sm p-4 rounded-xl shadow-lg border border-gray-200 transition-all hover:shadow-xl w-full">
-                                <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2 text-sm">
+                            <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm p-4 rounded-xl shadow-lg border border-gray-200 dark:border-slate-700 transition-all hover:shadow-xl w-full">
+                                <h4 className="font-bold text-gray-800 dark:text-gray-100 mb-2 flex items-center gap-2 text-sm">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                     </svg>
@@ -205,15 +210,15 @@ const MapSearch = () => {
                                 </h4>
                                 <div className="flex flex-col space-y-3 mt-3">
                                     <label className="flex items-center gap-2 cursor-pointer group">
-                                        <input type="checkbox" checked={showFloodZones} onChange={(e) => { e.stopPropagation(); setShowFloodZones(e.target.checked); }} className="form-checkbox h-4 w-4 text-blue-500 rounded border-gray-300 focus:ring-blue-500 transition duration-150 ease-in-out" />
-                                        <span className="text-sm font-medium text-gray-700 group-hover:text-blue-600 transition-colors flex items-center gap-2">
+                                        <input type="checkbox" checked={showFloodZones} onChange={(e) => { e.stopPropagation(); setShowFloodZones(e.target.checked); }} className="form-checkbox h-4 w-4 text-blue-500 rounded border-gray-300 dark:border-slate-600 dark:bg-slate-800 focus:ring-blue-500 transition duration-150 ease-in-out" />
+                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors flex items-center gap-2">
                                             <div className="w-3 h-3 bg-blue-500 rounded-full shadow-sm"></div>
                                             Flood Zones
                                         </span>
                                     </label>
                                     <label className="flex items-center gap-2 cursor-pointer group">
-                                        <input type="checkbox" checked={showLandslideZones} onChange={(e) => { e.stopPropagation(); setShowLandslideZones(e.target.checked); }} className="form-checkbox h-4 w-4 text-red-500 rounded border-gray-300 focus:ring-red-500 transition duration-150 ease-in-out" />
-                                        <span className="text-sm font-medium text-gray-700 group-hover:text-red-600 transition-colors flex items-center gap-2">
+                                        <input type="checkbox" checked={showLandslideZones} onChange={(e) => { e.stopPropagation(); setShowLandslideZones(e.target.checked); }} className="form-checkbox h-4 w-4 text-red-500 rounded border-gray-300 dark:border-slate-600 dark:bg-slate-800 focus:ring-red-500 transition duration-150 ease-in-out" />
+                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors flex items-center gap-2">
                                             <div className="w-3 h-3 bg-red-500 rounded-full shadow-sm"></div>
                                             Landslide Zones
                                         </span>
@@ -223,6 +228,7 @@ const MapSearch = () => {
                         </FreehandDrawControl>
 
                         <MarkerClusterGroup
+                            key={`${searchMode}-${filteredProperties.length}-${currentPolygon?.slice(0,20)}`}
                             chunkedLoading
                             maxClusterRadius={50}
                             showCoverageOnHover={false}

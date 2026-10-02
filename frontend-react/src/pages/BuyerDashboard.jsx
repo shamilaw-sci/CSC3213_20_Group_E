@@ -285,7 +285,8 @@ const BuyerDashboard = () => {
                         { key: 'favorites', label: `Saved Shortlist (${favorites.length})`, icon: Heart },
                         { key: 'searches', label: `Search Radars (${savedSearches.length})`, icon: Search },
                         { key: 'calculator', label: 'Home Loan & EMI Planner', icon: Calculator },
-                        { key: 'dueDiligence', label: 'Due-Diligence Checklist', icon: FileText }
+                        { key: 'dueDiligence', label: 'Due-Diligence Checklist', icon: FileText },
+                        { key: 'upgrade', label: 'Become a Seller', icon: ArrowUpRight }
                     ].map(({ key, label, icon: Icon }) => (
                         <button
                             key={key}
@@ -293,8 +294,8 @@ const BuyerDashboard = () => {
                             onClick={() => handleTabChange(key)}
                             className={`px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider whitespace-nowrap transition cursor-pointer flex items-center gap-2 ${
                                 activeTab === key
-                                    ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
-                                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                                    ? key === 'upgrade' ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20' : 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
+                                    : key === 'upgrade' ? 'text-amber-500 border border-amber-500/30 hover:bg-amber-50 dark:hover:bg-amber-500/10' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
                             }`}
                         >
                             <Icon className="w-4 h-4" />
@@ -833,9 +834,83 @@ const BuyerDashboard = () => {
                     </div>
                 )}
 
+                {/* ── TAB: BECOME A SELLER ─────────────────────────────────── */}
+                {activeTab === 'upgrade' && (
+                    <UpgradeToSellerTab user={user} />
+                )}
+
             </div>
 
             <Footer />
+        </div>
+    );
+};
+
+// ── Upgrade to Seller Tab ─────────────────────────────────────────────────────
+const UpgradeToSellerTab = ({ user }) => {
+    const [submitted, setSubmitted] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    const handleRequest = async () => {
+        setLoading(true);
+        try {
+            await api.post('/auth/request-role-upgrade');
+            setSubmitted(true);
+            toast.success('Your request has been submitted! An admin will review it shortly.');
+        } catch (err) {
+            const msg = err?.response?.data?.message || 'Failed to submit request. Please try again.';
+            toast.error(msg);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="space-y-6 animate-in fade-in duration-150 max-w-2xl mx-auto">
+            <div className="rounded-2xl bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-500/20 p-8 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-4">
+                    <ArrowUpRight className="w-8 h-8" />
+                </div>
+                <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Become a Seller</h2>
+                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-6">
+                    Want to list your property on Thirasara? Upgrade your account to a Seller role and start reaching thousands of potential buyers across Sri Lanka.
+                </p>
+
+                <div className="grid grid-cols-3 gap-4 mb-8 text-left">
+                    {[
+                        { icon: '🏠', title: 'List Properties', desc: 'Post your properties with photos, details, and pricing' },
+                        { icon: '📊', title: 'Track Performance', desc: 'Monitor views, inquiries, and buyer interest in real time' },
+                        { icon: '💬', title: 'Connect with Buyers', desc: 'Communicate directly with interested buyers via messaging' },
+                    ].map((item) => (
+                        <div key={item.title} className="p-4 rounded-xl bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                            <div className="text-2xl mb-2">{item.icon}</div>
+                            <div className="font-bold text-slate-900 dark:text-white text-sm mb-1">{item.title}</div>
+                            <div className="text-xs text-slate-500 dark:text-slate-400">{item.desc}</div>
+                        </div>
+                    ))}
+                </div>
+
+                {submitted ? (
+                    <div className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold text-sm">
+                        <Check className="w-5 h-5" />
+                        Request submitted! An admin will review and approve your account shortly.
+                    </div>
+                ) : (
+                    <button
+                        type="button"
+                        onClick={handleRequest}
+                        disabled={loading}
+                        className="px-8 py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-white font-black text-sm shadow-lg shadow-amber-500/30 transition disabled:opacity-50 cursor-pointer flex items-center gap-2 mx-auto"
+                    >
+                        <ArrowUpRight className="w-4 h-4" />
+                        {loading ? 'Submitting...' : 'Request Seller Upgrade'}
+                    </button>
+                )}
+
+                <p className="text-xs text-slate-400 mt-4">
+                    Your current role: <span className="font-bold text-amber-400">{user?.role}</span> · Requests are reviewed within 24 hours.
+                </p>
+            </div>
         </div>
     );
 };

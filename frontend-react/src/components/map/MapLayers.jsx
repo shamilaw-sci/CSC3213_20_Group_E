@@ -10,13 +10,15 @@ const MapLayers = ({
     showFloodZones,
     floodData,
     showLandslideZones,
-    landslideData
+    landslideData,
+    isDrawMode
 }) => {
     return (
         <>
             <GeoJSON 
-                key={selectedDistrict} 
+                key={`${selectedDistrict}-${isDrawMode}`} 
                 data={districtsData} 
+                interactive={!isDrawMode}
                 style={(feature) => {
                     const districtName = feature.properties.shapeName || feature.properties.name;
                     const isSelected = selectedDistrict === districtName;

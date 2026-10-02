@@ -19,7 +19,7 @@ const DonutChart = ({ segments, size = 120 }) => {
 
   return (
     <svg width={size} height={size} viewBox="0 0 120 120">
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--admin-border)" strokeWidth="20" />
+      <circle cx={cx} cy={cy} r={r} fill="none" className="stroke-slate-200 dark:stroke-slate-800" strokeWidth="20" />
       {arcs.map((arc) => {
         if (!arc) return null;
         const { seg, i, dash, gap, strokeDashoffset } = arc;
@@ -33,8 +33,8 @@ const DonutChart = ({ segments, size = 120 }) => {
           />
         );
       })}
-      <text x={cx} y={cy - 6} textAnchor="middle" fill="var(--admin-text-secondary)" fontSize="9">TOTAL</text>
-      <text x={cx} y={cy + 10} textAnchor="middle" fill="var(--admin-text-primary)" fontSize="14" fontWeight="600">
+      <text x={cx} y={cy - 6} textAnchor="middle" className="fill-slate-500 dark:fill-slate-400" fontSize="9">TOTAL</text>
+      <text x={cx} y={cy + 10} textAnchor="middle" className="fill-slate-900 dark:fill-white" fontSize="14" fontWeight="600">
         {total}
       </text>
     </svg>
@@ -108,7 +108,7 @@ const AnalyticsPage = () => {
       </div>
 
       {loading ? (
-        <div style={{ padding: "40px 0", textAlign: "center", color: "var(--admin-text-secondary)" }}>
+        <div className="text-slate-500 dark:text-slate-400" style={{ padding: "40px 0", textAlign: "center",  }}>
           Loading real-time analytics...
         </div>
       ) : (
@@ -132,20 +132,20 @@ const AnalyticsPage = () => {
             <div className="admin-card">
               <div className="admin-card-header">
                 <span className="admin-card-title">Revenue Trends</span>
-                <span style={{ fontSize: "0.75rem", color: "var(--admin-text-secondary)" }}>Monthly Revenue (LKR)</span>
+                <span className="text-slate-500 dark:text-slate-400" style={{ fontSize: "0.75rem"}}>Monthly Revenue (LKR)</span>
               </div>
               <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 140 }}>
                 {revenue.map(({ label, value }) => {
                   const num = Number(value || 0);
                   return (
                     <div key={label} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, height: "100%", justifyContent: "flex-end" }}>
-                      <span style={{ fontSize: "0.6rem", color: "var(--admin-text-secondary)" }}>{num > 0 ? (num/1000).toFixed(1)+'k' : '0'}</span>
+                      <span className="text-slate-500 dark:text-slate-400" style={{ fontSize: "0.6rem"}}>{num > 0 ? (num/1000).toFixed(1)+'k' : '0'}</span>
                       <div style={{
                         width: "100%", borderRadius: "4px 4px 0 0",
                         background: "var(--admin-gold)", height: `${(num / maxRevenue) * 100}%`,
                         minHeight: 4, transition: "height 0.5s ease"
                       }} />
-                      <span style={{ fontSize: "0.7rem", color: "var(--admin-text-secondary)" }}>{label}</span>
+                      <span className="text-slate-500 dark:text-slate-400" style={{ fontSize: "0.7rem"}}>{label}</span>
                     </div>
                   );
                 })}
@@ -155,7 +155,7 @@ const AnalyticsPage = () => {
             <div className="admin-card">
               <div className="admin-card-header">
                 <span className="admin-card-title">User Growth</span>
-                <span style={{ fontSize: "0.75rem", color: "var(--admin-text-secondary)" }}>Cumulative registrations</span>
+                <span className="text-slate-500 dark:text-slate-400" style={{ fontSize: "0.75rem"}}>Cumulative registrations</span>
               </div>
               <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 140 }}>
                 {userGrowth.map((d) => {
@@ -163,13 +163,13 @@ const AnalyticsPage = () => {
                   const val = Number(d.value ?? d.users ?? 0);
                   return (
                     <div key={label} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, height: "100%", justifyContent: "flex-end" }}>
-                      <span style={{ fontSize: "0.7rem", color: "var(--admin-text-secondary)" }}>{val}</span>
+                      <span className="text-slate-500 dark:text-slate-400" style={{ fontSize: "0.7rem"}}>{val}</span>
                       <div style={{
                         width: "100%", borderRadius: "4px 4px 0 0",
                         background: "var(--admin-info)", height: `${(val / maxGrowth) * 100}%`,
                         minHeight: 4, transition: "height 0.5s ease"
                       }} />
-                      <span style={{ fontSize: "0.7rem", color: "var(--admin-text-secondary)" }}>{label}</span>
+                      <span className="text-slate-500 dark:text-slate-400" style={{ fontSize: "0.7rem"}}>{label}</span>
                     </div>
                   );
                 })}
@@ -181,7 +181,7 @@ const AnalyticsPage = () => {
             <div className="admin-card">
               <div className="admin-card-header">
                 <span className="admin-card-title">Listing Types</span>
-                <span style={{ fontSize: "0.75rem", color: "var(--admin-text-secondary)" }}>By property category</span>
+                <span className="text-slate-500 dark:text-slate-400" style={{ fontSize: "0.75rem"}}>By property category</span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
                 <DonutChart segments={listingTypeSegments} />
@@ -197,7 +197,7 @@ const AnalyticsPage = () => {
                       </div>
                     );
                   })}
-                  {listingTypeSegments.length === 0 && <span style={{fontSize:"0.85rem", color:"var(--admin-text-muted)"}}>No properties yet.</span>}
+                  {listingTypeSegments.length === 0 && <span className="text-slate-400 dark:text-slate-500" style={{fontSize:"0.85rem"}}>No properties yet.</span>}
                 </div>
               </div>
             </div>
@@ -205,7 +205,7 @@ const AnalyticsPage = () => {
             <div className="admin-card">
               <div className="admin-card-header">
                 <span className="admin-card-title">User Roles</span>
-                <span style={{ fontSize: "0.75rem", color: "var(--admin-text-secondary)" }}>Buyers vs Sellers</span>
+                <span className="text-slate-500 dark:text-slate-400" style={{ fontSize: "0.75rem"}}>Buyers vs Sellers</span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
                 <DonutChart segments={roleSegments} />
