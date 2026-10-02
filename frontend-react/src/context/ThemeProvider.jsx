@@ -16,15 +16,27 @@ export const ThemeProvider = ({ children }) => {
     useEffect(() => {
         const root = window.document.documentElement;
         
-        root.classList.remove('light', 'dark');
+        const applyTheme = (currentTheme) => {
+            root.classList.remove('light', 'dark');
+            if (currentTheme === 'system') {
+                const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                root.classList.add(systemTheme);
+                setIsDark(systemTheme === 'dark');
+            } else {
+                root.classList.add(currentTheme);
+                setIsDark(currentTheme === 'dark');
+            }
+        };
 
+        applyTheme(theme);
+
+        // Listen for system theme changes dynamically
         if (theme === 'system') {
-            const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-            root.classList.add(systemTheme);
-            setIsDark(systemTheme === 'dark');
-        } else {
-            root.classList.add(theme);
-            setIsDark(theme === 'dark');
+            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            const handleChange = () => applyTheme('system');
+            
+            mediaQuery.addEventListener('change', handleChange);
+            return () => mediaQuery.removeEventListener('change', handleChange);
         }
     }, [theme]);
 

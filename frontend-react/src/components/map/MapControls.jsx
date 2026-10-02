@@ -91,15 +91,15 @@ export const MapEvents = ({ onBoundsChange, onMapClick, searchMode }) => {
     useEffect(() => {
         let timeoutId;
         const handleMoveEnd = () => {
-            if (searchModeRef.current === 'bounds') {
-                clearTimeout(timeoutId);
-                timeoutId = setTimeout(() => {
-                    onBoundsChange(map.getBounds());
-                }, 150); // Optimized to 150ms for instant spatial loading
-            }
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                onBoundsChange(map.getBounds());
+            }, 150); // Optimized to 150ms for instant spatial loading
         };
 
-        map.on('moveend', handleMoveEnd);
+        if (searchMode === 'bounds') {
+            map.on('moveend', handleMoveEnd);
+        }
         map.on('click', onMapClick);
 
         return () => {
@@ -107,7 +107,7 @@ export const MapEvents = ({ onBoundsChange, onMapClick, searchMode }) => {
             map.off('click', onMapClick);
             clearTimeout(timeoutId);
         };
-    }, [map, onBoundsChange, onMapClick]);
+    }, [map, onBoundsChange, onMapClick, searchMode]);
 
     return null;
 };
@@ -116,9 +116,8 @@ export const MapEvents = ({ onBoundsChange, onMapClick, searchMode }) => {
  * 🚀 Freehand Draw Component
  * (Handles freehand drawing logic)
  */
-export const FreehandDrawControl = ({ onPolygonComplete, onDrawDelete, controlRef, children }) => {
+export const FreehandDrawControl = ({ onPolygonComplete, onDrawDelete, controlRef, children, isDrawMode, setIsDrawMode }) => {
     const map = useMap();
-    const [isDrawMode, setIsDrawMode] = useState(false);
     const drawnItemsRef = useRef(new L.FeatureGroup());
 
     useEffect(() => {
@@ -152,6 +151,7 @@ export const FreehandDrawControl = ({ onPolygonComplete, onDrawDelete, controlRe
         const drawnItems = drawnItemsRef.current;
 
         const onMouseDown = (e) => {
+            e.originalEvent.preventDefault(); // Prevent browser text selection while drawing
             isDrawing = true;
             drawnItems.clearLayers();
             points = [e.latlng];
@@ -170,18 +170,32 @@ export const FreehandDrawControl = ({ onPolygonComplete, onDrawDelete, controlRe
             drawnItems.removeLayer(polyline);
 
             if (points.length > 3) {
-                L.polygon(points, { color: '#006aff', weight: 3, fillOpacity: 0.2 }).addTo(drawnItems);
+                // Simplify points to max 80 to stay under the 100-vertex backend limit.
+                // We evenly sample the drawn points to reduce them while keeping the shape.
+                const MAX_POINTS = 80;
+                let simplified = points;
+                if (points.length > MAX_POINTS) {
+                    const step = points.length / MAX_POINTS;
+                    simplified = [];
+                    for (let i = 0; i < MAX_POINTS; i++) {
+                        simplified.push(points[Math.floor(i * step)]);
+                    }
+                    // Always include last point to close shape properly
+                    simplified.push(points[points.length - 1]);
+                }
+
+                L.polygon(simplified, { color: '#006aff', weight: 3, fillOpacity: 0.2 }).addTo(drawnItems);
                 
-                // Construct WKT in Lng Lat order
-                let wktPoints = points.map(pt => `${pt.lng} ${pt.lat}`).join(', ');
-                wktPoints += `, ${points[0].lng} ${points[0].lat}`; 
+                // Construct WKT in Lng Lat order (closing the ring)
+                let wktPoints = simplified.map(pt => `${pt.lng} ${pt.lat}`).join(', ');
+                wktPoints += `, ${simplified[0].lng} ${simplified[0].lat}`; 
                 
                 onPolygonComplete(`POLYGON((${wktPoints}))`);
             } else {
                 map.dragging.enable();
             }
             
-            setIsDrawMode(false); // Disable draw mode after drawing is complete
+            setIsDrawMode(false);
             map.dragging.enable();
         };
 
@@ -197,7 +211,7 @@ export const FreehandDrawControl = ({ onPolygonComplete, onDrawDelete, controlRe
     }, [map, isDrawMode, onPolygonComplete]);
 
     return (
-        <div className="leaflet-draw-control flex flex-col gap-3 z-[1000]">
+        <div className="leaflet-draw-control flex flex-col gap-3 z-[1000] select-none">
             <button aria-label="Accessible interactive control" type="button" 
                 onClick={(e) => {
                     e.stopPropagation();

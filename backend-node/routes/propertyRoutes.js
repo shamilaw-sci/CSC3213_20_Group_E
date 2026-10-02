@@ -13,7 +13,7 @@ router.get('/', validate(getPropertiesSchema), getProperties);
 
 // 2. Add new property (Protected route - requires authentication)
 // Accepts up to 10 images with 5MB limit each and strict MIME validation
-router.post('/', protect, propertyImageUpload.array('images', 10), validate(addPropertySchema), addProperty);
+router.post('/', protect, propertyImageUpload.fields([{ name: 'images', maxCount: 10 }, { name: 'virtualTours', maxCount: 5 }]), validate(addPropertySchema), addProperty);
 
 // 3. Get properties submitted by the logged-in seller
 router.get('/my-listings', protect, validate(getPropertiesSchema), getMyProperties);

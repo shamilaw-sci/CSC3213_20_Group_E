@@ -26,6 +26,8 @@ export default function usePropertyForm() {
   const [boundaryCoordinates, setBoundaryCoordinates] = useState([]);
   const [images, setImages] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
+  const [virtualTourFiles, setVirtualTourFiles] = useState([]);
+  const [virtualTourMetadata, setVirtualTourMetadata] = useState([]);
   const [draftPropertyId, setDraftPropertyId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
@@ -126,6 +128,14 @@ export default function usePropertyForm() {
         submitData.append("images", image);
       });
 
+      virtualTourFiles.forEach((file) => {
+        submitData.append("virtualTours", file);
+      });
+
+      if (virtualTourMetadata.length > 0) {
+        submitData.append("virtualTourMetadata", JSON.stringify(virtualTourMetadata));
+      }
+
       // 1. Dispatch API request to backend to save property
       const response = await api.post('/properties', submitData, {
         headers: {
@@ -166,6 +176,10 @@ export default function usePropertyForm() {
     setImages,
     previewUrls,
     setPreviewUrls,
+    virtualTourFiles,
+    setVirtualTourFiles,
+    virtualTourMetadata,
+    setVirtualTourMetadata,
     loading,
     message,
     setMessage,

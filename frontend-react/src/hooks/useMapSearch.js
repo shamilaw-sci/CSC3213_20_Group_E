@@ -12,7 +12,8 @@ export const useMapSearch = () => {
     const [loading, setLoading] = useState(false);
     const [activeMarkerId, setActiveMarkerId] = useState(null);
     const [hoveredPropId, setHoveredPropId] = useState(null);
-    const [searchMode, setSearchMode] = useState(savedSearch ? 'polygon' : 'bounds'); 
+    const [searchMode, setSearchMode] = useState(savedSearch ? 'polygon' : 'bounds');
+    const [isDrawMode, setIsDrawMode] = useState(false); 
     const [isFeasibilityOpen, setIsFeasibilityOpen] = useState(false);
     const [maxPriceFilter, setMaxPriceFilter] = useState(null);
     const [selectedDistrict, setSelectedDistrict] = useState(null);
@@ -52,6 +53,7 @@ export const useMapSearch = () => {
         beds: savedSearch?.beds ? String(savedSearch.beds) : 'Any',
         baths: savedSearch?.baths ? String(savedSearch.baths) : 'Any',
         exactMatch: false,
+        has360Tour: false,
         propTypes: { 
             House: savedSearch?.property_type === 'House' || !savedSearch?.property_type, 
             Land: savedSearch?.property_type === 'Land' || !savedSearch?.property_type, 
@@ -168,12 +170,16 @@ export const useMapSearch = () => {
                 matchesBaths = filters.exactMatch ? propBaths === targetBaths : propBaths >= targetBaths;
             }
 
-            return matchesSearch && matchesMinPrice && matchesMaxPrice && matchesFeasibilityPrice && matchesType && matchesBeds && matchesBaths && matchesListingType;
+            const matches360 = filters.has360Tour ? (prop.virtual_tours && prop.virtual_tours.length > 0) : true;
+
+            return matchesSearch && matchesMinPrice && matchesMaxPrice && matchesFeasibilityPrice && matchesType && matchesBeds && matchesBaths && matchesListingType && matches360;
         });
     }, [properties, filters, maxPriceFilter]);
 
     return {
         properties,
+        isDrawMode,
+        setIsDrawMode,
         loading,
         activeMarkerId,
         setActiveMarkerId,

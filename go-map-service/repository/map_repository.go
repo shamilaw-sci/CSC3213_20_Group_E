@@ -72,7 +72,7 @@ func (r *MapRepository) SearchProperties(ctx context.Context, req models.SearchR
 	r.mu.RUnlock()
 
 	// 2. High-Speed PostGIS Spatial Query (Points + Polygons with Index operators)
-	query := `SELECT p.id, p.title, p.description, p.price, p.latitude, p.longitude, p.images, p.bedrooms, p.bathrooms, p.land_size, p.type, p.city, p.listing_type
+	query := `SELECT p.id, p.title, p.description, p.price, p.latitude, p.longitude, p.images, p.bedrooms, p.bathrooms, p.land_size, p.type, p.city, p.listing_type, p.virtual_tours
 			  FROM properties p
 			  WHERE p.status = 'approved'
 			  AND (
@@ -125,10 +125,11 @@ func (r *MapRepository) SearchProperties(ctx context.Context, req models.SearchR
 		var price, lat, lng, landSize *float64
 		var beds, baths *int
 		var images *[]string
+		var virtualTours interface{}
 
-		err := rows.Scan(&id, &title, &description, &price, &lat, &lng, &images, &beds, &baths, &landSize, &propType, &city, &listingType)
+		err := rows.Scan(&id, &title, &description, &price, &lat, &lng, &images, &beds, &baths, &landSize, &propType, &city, &listingType, &virtualTours)
 		if err != nil {
-			zap.L().Warn("Row Scan Error (Skipping property)", zap.Error(err))
+			zap.L().Warn("Error scanning row", zap.Error(err))
 			continue
 		}
 
@@ -162,6 +163,7 @@ func (r *MapRepository) SearchProperties(ctx context.Context, req models.SearchR
 			City:        city,
 			ListingType: listingType,
 			Address:     city,
+			VirtualTours: virtualTours,
 		}
 
 		properties = append(properties, propData)

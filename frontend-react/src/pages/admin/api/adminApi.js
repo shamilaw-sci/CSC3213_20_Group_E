@@ -150,3 +150,13 @@ export const fetchReportedContent = () =>
 
 export const resolveReport = (reportId, action) =>
   unwrap(adminApi.patch(`/admin/reported/${reportId}/resolve`, { action }));
+
+// ─── Role Upgrade Requests ─────────────────────────────────────────────────────
+export const fetchRoleRequests = (status = 'pending') =>
+  unwrap(adminApi.get('/admin/role-requests', { params: { status } }));
+
+export const approveRoleRequest = (requestId) =>
+  unwrap(adminApi.patch(`/admin/role-requests/${requestId}/approve`));
+
+export const rejectRoleRequest = (requestId) =>
+  unwrap(adminApi.patch(`/admin/role-requests/${requestId}/reject`));

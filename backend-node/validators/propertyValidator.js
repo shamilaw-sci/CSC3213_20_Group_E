@@ -13,6 +13,7 @@ const addPropertySchema = z.object({
         latitude: z.coerce.number().min(-90).max(90),
         longitude: z.coerce.number().min(-180).max(180),
         boundary: z.string().optional().nullable(), // WKT Polygon string
+        virtualTourMetadata: z.string().optional().nullable(),
     }),
 });
 
@@ -26,6 +27,7 @@ const updatePropertySchema = z.object({
         bedrooms: z.coerce.number().int().nonnegative().optional().nullable(),
         bathrooms: z.coerce.number().int().nonnegative().optional().nullable(),
         landSize: z.coerce.number().nonnegative().optional().nullable(),
+        virtualTourMetadata: z.string().optional().nullable(),
     }),
 });
 

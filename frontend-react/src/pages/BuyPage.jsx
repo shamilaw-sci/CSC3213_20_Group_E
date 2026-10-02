@@ -66,12 +66,13 @@ const BuyPage = () => {
     // Filters
     const [filters, setFilters] = useState({
         searchTerm: '',
-        listingType: 'Sale',
+        listingType: 'Sale', // 'Sale', 'Rent', 'Sold'
         minPrice: '',
         maxPrice: '',
         beds: 'Any',
         baths: 'Any',
         exactMatch: false,
+        has360Tour: false,
         propTypes: { House: true, Land: true, Apartment: true, Villa: true }
     });
 
@@ -159,7 +160,10 @@ const BuyPage = () => {
                 matchesBaths = filters.exactMatch ? propBaths === targetBaths : propBaths >= targetBaths;
             }
 
-            return matchesSearch && matchesMinPrice && matchesMaxPrice && matchesType && matchesBeds && matchesBaths && matchesListingType;
+            // 360 Tour
+            const matches360 = filters.has360Tour ? (prop.virtual_tours && prop.virtual_tours.length > 0) : true;
+
+            return matchesSearch && matchesMinPrice && matchesMaxPrice && matchesType && matchesBeds && matchesBaths && matchesListingType && matches360;
         });
     }, [properties, filters]);
 

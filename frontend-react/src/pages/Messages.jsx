@@ -61,6 +61,7 @@ const getInitials = (name) => {
 };
 
 const Messages = () => {
+    const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const { user } = useAuth();
     const messagesEndRef = useRef(null);
@@ -103,7 +104,7 @@ const Messages = () => {
 
     useEffect(() => {
         if (!selectedId) return;
-        setSearchParams({ conversation: selectedId });
+        setSearchParams({ conversation: selectedId }, { replace: true });
 
         const controller = new AbortController();
         const loadMessages = async () => {
@@ -214,15 +215,11 @@ const Messages = () => {
                     <div className="flex items-center gap-3">
                         <button
                             type="button"
-                            onClick={() => {
-                                if (user?.role === 'SELLER') navigate('/seller-dashboard');
-                                else if (user?.role === 'AGENT') navigate('/agent-dashboard');
-                                else navigate(-1);
-                            }}
+                            onClick={() => navigate(-1)}
                             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition shadow-xs cursor-pointer"
                         >
                             <ArrowLeft className="w-4 h-4" />
-                            <span>{user?.role === 'SELLER' ? '← Dashboard' : user?.role === 'AGENT' ? '← Agent Hub' : '← Back'}</span>
+                            <span>{user?.role === 'SELLER' ? 'Dashboard' : user?.role === 'AGENT' ? 'Agent Hub' : 'Back'}</span>
                         </button>
                         <div>
                             <h1 className="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">Messages & Inquiries</h1>
@@ -256,24 +253,24 @@ const Messages = () => {
                     </m.div>
                 )}
 
-                <div className="bg-white border border-gray-200/80 rounded-2xl overflow-hidden grid grid-cols-1 md:grid-cols-[360px_1fr] flex-1 shadow-2xl shadow-blue-900/5 min-h-0 max-h-full">
+                <div className="bg-white dark:bg-gray-900 border border-gray-200/80 dark:border-gray-800 rounded-2xl overflow-hidden grid grid-cols-1 md:grid-cols-[360px_1fr] flex-1 shadow-2xl shadow-blue-900/5 min-h-0 max-h-full">
                     
                     {/* Sidebar */}
-                    <aside className="border-r border-gray-100 bg-white flex flex-col min-h-0">
-                        <div className="p-5 border-b border-gray-100 bg-gray-50/50">
-                            <h2 className="font-bold text-gray-900">Conversations</h2>
+                    <aside className="border-r border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 flex flex-col min-h-0">
+                        <div className="p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50">
+                            <h2 className="font-bold text-gray-900 dark:text-white">Conversations</h2>
                         </div>
                         
                         <div className="overflow-y-auto flex-1">
-                            {loading && <div className="p-8 text-center text-gray-400">Loading conversations...</div>}
+                            {loading && <div className="p-8 text-center text-gray-400 dark:text-gray-500">Loading conversations...</div>}
                             
                             {!loading && conversations.length === 0 && (
                                 <div className="p-8 text-center flex flex-col items-center justify-center h-full">
                                     <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4 text-blue-500">
                                         <MessageSquare className="w-8 h-8" />
                                     </div>
-                                    <h2 className="font-bold text-gray-900 mb-2">No conversations yet</h2>
-                                    <p className="text-sm text-gray-500 mb-6">Start from a property card or contact support.</p>
+                                    <h2 className="font-bold text-gray-900 dark:text-white mb-2">No conversations yet</h2>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Start from a property card or contact support.</p>
                                     <button aria-label="Accessible interactive control" type="button" onClick={startSupport} className="px-6 py-2.5 rounded-full bg-blue-600 text-white font-bold hover:bg-blue-700 transition-all shadow-sm">
                                         Contact Support
                                     </button>
@@ -290,7 +287,7 @@ const Messages = () => {
                                     <button aria-label="Accessible interactive control" type="button"
                                         key={conversation.id}
                                         onClick={() => setSelectedId(conversation.id)}
-                                        className={`w-full text-left p-3 my-1.5 mx-2 rounded-2xl transition-all duration-200 flex items-center gap-3 ${isActive ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'hover:bg-gray-100 text-gray-800'} max-w-[calc(100%-16px)]`}
+                                        className={`w-full text-left p-3 my-1.5 mx-2 rounded-2xl transition-all duration-200 flex items-center gap-3 ${isActive ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-800 dark:text-gray-200'} max-w-[calc(100%-16px)]`}
                                     >
                                         
                                         {/* Avatar */}
@@ -306,17 +303,17 @@ const Messages = () => {
 
                                         <div className="flex-1 min-w-0">
                                             <div className="flex justify-between items-center mb-0.5">
-                                                <h3 className={`font-bold truncate pr-2 text-[15px] ${isActive ? 'text-white' : 'text-gray-900'}`}>{title}</h3>
+                                                <h3 className={`font-bold truncate pr-2 text-[15px] ${isActive ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{title}</h3>
                                                 {conversation.last_message?.created_at && (
-                                                    <span className={`text-[10px] font-semibold whitespace-nowrap ${isActive ? 'text-blue-100' : 'text-gray-400'}`}>
+                                                    <span className={`text-[10px] font-semibold whitespace-nowrap ${isActive ? 'text-blue-100' : 'text-gray-400 dark:text-gray-500'}`}>
                                                         {formatMessageTime(conversation.last_message.created_at)}
                                                     </span>
                                                 )}
                                             </div>
-                                            <p className={`text-xs truncate mb-1 font-medium ${isActive ? 'text-blue-100' : 'text-gray-500'}`}>{subtitle}</p>
+                                            <p className={`text-xs truncate mb-1 font-medium ${isActive ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'}`}>{subtitle}</p>
                                             
                                             <div className="flex justify-between items-center">
-                                                <p className={`text-[13px] truncate pr-4 ${isActive ? 'text-white/90' : 'text-gray-500'}`}>
+                                                <p className={`text-[13px] truncate pr-4 ${isActive ? 'text-white/90' : 'text-gray-500 dark:text-gray-400'}`}>
                                                     {conversation.last_message?.body || 'No messages yet'}
                                                 </p>
                                                 {conversation.unread_count > 0 && (
@@ -333,11 +330,11 @@ const Messages = () => {
                     </aside>
 
                     {/* Chat Area */}
-                    <section className="flex flex-col bg-[#F8FAFC] min-h-0 relative">
+                    <section className="flex flex-col bg-[#F8FAFC] dark:bg-gray-950 min-h-0 relative">
                         {selectedConversation ? (
                             <>
                                 {/* Chat Header */}
-                                <div className="h-20 border-b border-gray-100 px-6 py-4 flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-10">
+                                <div className="h-20 border-b border-gray-100 dark:border-gray-800 px-6 py-4 flex items-center justify-between bg-white/80 dark:bg-gray-900/80 backdrop-blur-md sticky top-0 z-10">
                                     <div className="flex items-center gap-4">
                                         <div className={`w-11 h-11 rounded-full flex items-center justify-center text-white font-bold overflow-hidden ${selectedConversation.type === 'support' ? 'bg-gradient-to-br from-indigo-500 to-purple-600' : 'bg-gradient-to-br from-blue-500 to-cyan-500'} shadow-sm border-2 border-white ring-2 ${getParticipant(selectedConversation, user)?.role === 'SELLER' ? 'ring-orange-400' : 'ring-blue-400'}`}>
                                             {selectedConversation.type === 'support' ? <ShieldAlert className="w-6 h-6" /> : (
@@ -350,7 +347,7 @@ const Messages = () => {
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-2">
-                                                <h2 className="font-extrabold text-lg text-gray-900 leading-tight">
+                                                <h2 className="font-extrabold text-lg text-gray-900 dark:text-white leading-tight">
                                                     {getConversationTitle(selectedConversation, user)}
                                                 </h2>
                                                 {selectedConversation.type !== 'support' && (
@@ -361,7 +358,7 @@ const Messages = () => {
                                                     </span>
                                                 )}
                                             </div>
-                                            <p className="text-xs font-medium text-gray-500 mt-0.5">
+                                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">
                                                 {getConversationSubtitle(selectedConversation)}
                                             </p>
                                         </div>
@@ -370,7 +367,7 @@ const Messages = () => {
                                     {selectedConversation.type !== 'support' && !selectedConversation.support_requested && (
                                         <button aria-label="Accessible interactive control" type="button" 
                                             onClick={requestSupportForCurrent}
-                                            className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-red-50 text-gray-600 hover:text-red-600 border border-gray-200 hover:border-red-200 rounded-full font-bold text-sm transition-colors shadow-sm"
+                                            className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-red-50 text-gray-600 dark:text-gray-300 hover:text-red-600 border border-gray-200 hover:border-red-200 rounded-full font-bold text-sm transition-colors shadow-sm"
                                             title="Report or Request Admin Support"
                                         >
                                             <ShieldAlert className="w-4 h-4" />
@@ -386,14 +383,14 @@ const Messages = () => {
                                 </div>
 
                                 {/* Messages View */}
-                                <div className="flex-1 p-4 md:p-6 overflow-y-auto space-y-3 bg-[#f8f9fa]">
-                                    {messagesLoading && <div className="text-center text-gray-400 py-4">Loading messages...</div>}
+                                <div className="flex-1 p-4 md:p-6 overflow-y-auto space-y-3 bg-[#f8f9fa] dark:bg-gray-950">
+                                    {messagesLoading && <div className="text-center text-gray-400 dark:text-gray-500 py-4">Loading messages...</div>}
                                     {!messagesLoading && messages.length === 0 && (
-                                        <div className="h-full flex items-center justify-center text-center text-gray-500 flex-col">
-                                            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 text-gray-300 shadow-sm">
+                                        <div className="h-full flex items-center justify-center text-center text-gray-500 dark:text-gray-400 flex-col">
+                                            <div className="w-16 h-16 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center mb-4 text-gray-300 dark:text-gray-600 shadow-sm">
                                                 <MessageSquare className="w-8 h-8" />
                                             </div>
-                                            <p className="font-bold text-gray-900 mb-1">It's quiet here</p>
+                                            <p className="font-bold text-gray-900 dark:text-white mb-1">It's quiet here</p>
                                             <p className="text-sm">Send the first message to start the conversation.</p>
                                         </div>
                                     )}
@@ -410,7 +407,7 @@ const Messages = () => {
                                             >
                                                 <div className={`flex flex-col ${mine ? 'items-end' : 'items-start'} max-w-[85%] md:max-w-[70%]`}>
                                                     {!mine && (
-                                                        <div className="text-[11px] font-medium mb-1 px-2 text-gray-500">
+                                                        <div className="text-[11px] font-medium mb-1 px-2 text-gray-500 dark:text-gray-400">
                                                             {getSenderName(message, selectedConversation, user)}
                                                         </div>
                                                     )}
@@ -418,7 +415,7 @@ const Messages = () => {
                                                     <div className={`px-4 py-2.5 shadow-sm ${
                                                         mine 
                                                             ? 'bg-[#007AFF] text-white rounded-[20px] rounded-br-[4px]' 
-                                                            : 'bg-white border border-gray-100 text-gray-900 rounded-[20px] rounded-tl-[4px]'
+                                                            : 'bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 text-gray-900 dark:text-gray-100 rounded-[20px] rounded-tl-[4px]'
                                                     }`}>
                                                         {message.body && <p className="text-[15px] whitespace-pre-wrap leading-snug">{message.body}</p>}
                                                         
@@ -427,7 +424,7 @@ const Messages = () => {
                                                                 href={message.attachment_url}
                                                                 target="_blank"
                                                                 rel="noopener noreferrer"
-                                                                className={`block mt-2 rounded-xl overflow-hidden border ${mine ? 'border-blue-400/30 bg-blue-500/20' : 'border-gray-200 bg-gray-50'} hover:opacity-90 transition-opacity`}
+                                                                className={`block mt-2 rounded-xl overflow-hidden border ${mine ? 'border-blue-400/30 bg-blue-500/20' : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800'} hover:opacity-90 transition-opacity`}
                                                             >
                                                                 {message.attachment_type?.startsWith('image/') ? (
                                                                     <img src={message.attachment_url} alt="Attachment" className="max-h-60 w-auto object-cover" />
@@ -443,7 +440,7 @@ const Messages = () => {
                                                         )}
                                                     </div>
                                                     
-                                                    <p className={`text-[10px] font-medium mt-1 px-1.5 ${mine ? 'text-gray-400' : 'text-gray-400'}`}>
+                                                    <p className={`text-[10px] font-medium mt-1 px-1.5 ${mine ? 'text-gray-400 dark:text-gray-500' : 'text-gray-400 dark:text-gray-500'}`}>
                                                         {formatMessageTime(message.created_at)}
                                                     </p>
                                                 </div>
@@ -454,7 +451,7 @@ const Messages = () => {
                                 </div>
 
                                 {/* Chat Input */}
-                                <div className="p-3 md:p-4 bg-white border-t border-gray-200/60 flex flex-col">
+                                <div className="p-3 md:p-4 bg-white dark:bg-gray-900 border-t border-gray-200/60 dark:border-gray-800 flex flex-col">
                                     {attachment && (
                                         <div className="mb-3 mx-4 flex items-center justify-between rounded-xl bg-blue-50 border border-blue-100 px-4 py-2 text-sm text-blue-700">
                                             <div className="flex items-center gap-2 truncate">
@@ -468,12 +465,12 @@ const Messages = () => {
                                     )}
                                     
                                     <form onSubmit={sendMessage} className="flex items-end gap-2 px-1">
-                                        <label htmlFor="uid_q6997xk0" className="p-2.5 rounded-full text-gray-400 hover:text-blue-600 hover:bg-gray-100 transition-colors cursor-pointer flex-shrink-0 mb-1">
+                                        <label htmlFor="uid_q6997xk0" className="p-2.5 rounded-full text-gray-400 dark:text-gray-500 hover:text-blue-600 hover:bg-gray-100 transition-colors cursor-pointer flex-shrink-0 mb-1">
                                             <Paperclip className="w-5 h-5" />
                                             <input aria-label="Accessible interactive control" id="uid_q6997xk0" type="file" accept="image/*,.pdf" className="hidden" onChange={(event) => setAttachment(event.target.files?.[0] || null)} />
                                         </label>
                                         
-                                        <div className="flex-1 bg-gray-100 rounded-3xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-200 transition-all border border-transparent">
+                                        <div className="flex-1 bg-gray-100 dark:bg-gray-800 rounded-3xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-100 dark:focus-within:ring-blue-900/50 focus-within:border-blue-200 dark:focus-within:border-blue-800 transition-all border border-transparent">
                                             <textarea aria-label="Accessible interactive control"
                                                 value={draft}
                                                 onChange={(event) => setDraft(event.target.value)}
@@ -484,7 +481,7 @@ const Messages = () => {
                                                     }
                                                 }}
                                                 placeholder="Type a message..."
-                                                className="w-full max-h-32 bg-transparent px-4 py-3 focus:outline-none text-gray-800 resize-none overflow-y-auto leading-relaxed"
+                                                className="w-full max-h-32 bg-transparent px-4 py-3 focus:outline-none text-gray-800 dark:text-gray-200 resize-none overflow-y-auto leading-relaxed"
                                                 rows="1"
                                                 style={{ minHeight: '48px' }}
                                             />
@@ -499,14 +496,14 @@ const Messages = () => {
                                         </button>
                                     </form>
                                     <div className="text-center mt-1">
-                                        <span className="text-[10px] text-gray-400 font-medium hidden md:inline-block">Press Enter to send, Shift+Enter for new line</span>
+                                        <span className="text-[10px] text-gray-400 dark:text-gray-500 font-medium hidden md:inline-block">Press Enter to send, Shift+Enter for new line</span>
                                     </div>
                                 </div>
                             </>
                         ) : (
-                            <div className="flex-1 flex flex-col items-center justify-center text-gray-400 bg-gray-50">
+                            <div className="flex-1 flex flex-col items-center justify-center text-gray-400 dark:text-gray-500 bg-gray-50">
                                 <MessageSquare className="w-16 h-16 mb-4 text-gray-300" />
-                                <p className="text-lg font-medium text-gray-500">Select a conversation to start chatting</p>
+                                <p className="text-lg font-medium text-gray-500 dark:text-gray-400">Select a conversation to start chatting</p>
                             </div>
                         )}
                     </section>

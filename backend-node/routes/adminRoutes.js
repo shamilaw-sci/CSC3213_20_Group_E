@@ -63,4 +63,9 @@ router.patch("/boosts/:id", adminController.toggleBoost);
 router.get("/reported", adminController.getReportedContent);
 router.patch("/reported/:id/resolve", adminController.resolveReport);
 
+// ─── Role Upgrade Requests ────────────────────────────────────
+router.get("/role-requests", adminController.getRoleRequests);
+router.patch("/role-requests/:id/approve", adminController.approveRoleRequest);
+router.patch("/role-requests/:id/reject", adminController.rejectRoleRequest);
+
 module.exports = router;

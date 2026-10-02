@@ -236,6 +236,54 @@ const adminRepository = {
                 { onConflict: 'setting_key' }
             );
         if (error) throw error;
+    },
+
+    // 18. Get Role Upgrade Requests (with user info)
+    getRoleRequests: async (statusFilter) => {
+        let query = supabase
+            .from('role_requests')
+            .select(`
+                id, requested_role, status, reason, created_at,
+                user:users(id, name, email, role)
+            `)
+            .order('created_at', { ascending: false });
+        if (statusFilter) query = query.eq('status', statusFilter);
+        const { data, error } = await query;
+        if (error) throw error;
+        return data || [];
+    },
+
+    // 19. Create Role Request (called from user-side auth controller)
+    createRoleRequest: async (userId, requestedRole) => {
+        // Delete any previous pending request for this user before inserting
+        await supabase.from('role_requests').delete().eq('user_id', userId).eq('status', 'pending');
+        const { data, error } = await supabase
+            .from('role_requests')
+            .insert({ user_id: userId, requested_role: requestedRole, status: 'pending' })
+            .select()
+            .single();
+        if (error) throw error;
+        return data;
+    },
+
+    // 20. Resolve Role Request (approve or reject)
+    resolveRoleRequest: async (requestId, status) => {
+        const { error } = await supabase
+            .from('role_requests')
+            .update({ status, updated_at: new Date().toISOString() })
+            .eq('id', requestId);
+        if (error) throw error;
+    },
+
+    // 21. Get single Role Request by id
+    getRoleRequestById: async (requestId) => {
+        const { data, error } = await supabase
+            .from('role_requests')
+            .select(`id, requested_role, status, user_id, user:users(id, name, email, role)`)
+            .eq('id', requestId)
+            .single();
+        if (error) throw error;
+        return data;
     }
 };
 

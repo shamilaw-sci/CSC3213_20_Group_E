@@ -17,10 +17,10 @@ const MortgageCalculator = ({ propertyPrice }) => {
             (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
 
     return (
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 mt-8">
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 mt-8 w-full">
             <h3 className="text-2xl font-bold text-gray-900 mb-6">Mortgage Calculator</h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="flex flex-col gap-8">
                 <div className="space-y-4">
                     <div>
                         <label htmlFor="a11y" className="block text-sm font-bold text-gray-700 mb-1">Home Price (Rs.)</label>

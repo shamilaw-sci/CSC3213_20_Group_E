@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from '../../context/UserAuthContext';
-import { Bell, MessageSquare, User, PlusCircle, Compass, Calendar } from "lucide-react";
+import { useTheme } from '../../context/ThemeProvider';
+import { Bell, MessageSquare, User, PlusCircle, Compass, Calendar, Sun, Moon } from "lucide-react";
 import usePoll from '../../hooks/usePoll';
 import "./Navbar.css";
 
@@ -11,6 +12,11 @@ import "./Navbar.css";
 const Navbar = ({ transparent = false }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { isDark, changeTheme } = useTheme();
+
+  const toggleTheme = () => {
+    changeTheme(isDark ? "light" : "dark");
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -262,6 +268,20 @@ const Navbar = ({ transparent = false }) => {
                 <span>+ Add Property</span>
               </button>
             )}
+
+            {/* Theme Toggle Button */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className={`p-2 rounded-xl transition cursor-pointer ${
+                transparent 
+                  ? 'text-white hover:bg-white/15' 
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+              }`}
+              title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            >
+              {isDark ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-yellow-400" />}
+            </button>
 
             {/* Map Search Pill */}
             <button

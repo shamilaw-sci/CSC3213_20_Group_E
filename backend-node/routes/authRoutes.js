@@ -11,7 +11,8 @@ const {
     resetPassword,
     getMe,
     logoutUser,
-    updateProfile
+    updateProfile,
+    requestRoleUpgrade
 } = require('../controllers/authController');
 const { googleLogin, facebookLogin, appleLogin } = require('../controllers/socialAuthController');
 
@@ -53,5 +54,8 @@ router.put('/profile', protect, updateProfile);
 router.post('/google', googleLogin);
 router.post('/facebook', facebookLogin);
 router.post('/apple', appleLogin);
+
+// 10. Role Upgrade Request (Buyer → Seller)
+router.post('/request-role-upgrade', protect, requestRoleUpgrade);
 
 module.exports = router;

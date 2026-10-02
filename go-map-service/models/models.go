@@ -26,4 +26,5 @@ type PropertyResponse struct {
 	City        *string   `json:"city"`
 	ListingType *string   `json:"listing_type"`
 	Address     *string   `json:"address"` // Mapping city to address
+	VirtualTours interface{} `json:"virtual_tours"`
 }

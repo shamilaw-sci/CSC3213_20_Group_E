@@ -348,6 +348,25 @@ const updateProfile = async(req, res, next) => {
     }
 };
 
+// 9. Buyer requests role upgrade to Seller
+const requestRoleUpgrade = async(req, res, next) => {
+    try {
+        const user = await userRepository.findById(req.user.id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        if (user.role !== 'BUYER') {
+            return res.status(400).json({ message: 'Only BUYER accounts can request an upgrade to Seller.' });
+        }
+
+        const adminRepository = require('../repositories/adminRepository');
+        await adminRepository.createRoleRequest(user.id, 'SELLER');
+
+        res.status(201).json({ message: 'Your request to become a Seller has been submitted. An admin will review it shortly.' });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     registerUser,
     loginUser,
@@ -357,5 +376,6 @@ module.exports = {
     logoutUser,
     getMe,
     updateProfile,
+    requestRoleUpgrade,
     setTokenCookie
 };
