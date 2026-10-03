@@ -15,6 +15,7 @@ const PropertyCard = ({ prop, handleMessageSeller, isActive, onMouseEnter, onMou
     const [showAnimation, setShowAnimation] = useState(false);
 
     const isCompared = compareList.some(p => p.id === prop.id);
+    const isOwner = Boolean(user && prop && (prop.seller_id === user.id || prop.user_id === user.id));
 
     useEffect(() => {
         // Since we are rendering multiple cards, ideally favorites should be fetched globally.
@@ -100,12 +101,14 @@ const PropertyCard = ({ prop, handleMessageSeller, isActive, onMouseEnter, onMou
                             </div>
                         )}
                     </div>
-                    <button aria-label="Accessible interactive control" type="button" 
-                        onClick={toggleFavorite}
-                        className={`transition-colors drop-shadow-md p-2 rounded-full backdrop-blur-sm pointer-events-auto ${isFavorite ? 'bg-white text-red-500' : 'bg-black/20 text-white hover:bg-white hover:text-red-500'}`}
-                    >
-                        <Heart className={`w-5 h-5 transition-colors ${isFavorite ? 'fill-current' : ''}`} />
-                    </button>
+                    {!isOwner && (
+                        <button aria-label="Accessible interactive control" type="button" 
+                            onClick={toggleFavorite}
+                            className={`transition-colors drop-shadow-md p-2 rounded-full backdrop-blur-sm pointer-events-auto ${isFavorite ? 'bg-white text-red-500' : 'bg-black/20 text-white hover:bg-white hover:text-red-500'}`}
+                        >
+                            <Heart className={`w-5 h-5 transition-colors ${isFavorite ? 'fill-current' : ''}`} />
+                        </button>
+                    )}
                 </div>
             </div>
 

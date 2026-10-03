@@ -113,7 +113,7 @@ function App() {
               </ProtectedRoute>
             } />
             <Route path="/my-properties" element={
-              <ProtectedRoute allowedRoles={['SELLER']}>
+              <ProtectedRoute allowedRoles={['SELLER', 'AGENT']}>
                 <MyProperties />
               </ProtectedRoute>
             } />

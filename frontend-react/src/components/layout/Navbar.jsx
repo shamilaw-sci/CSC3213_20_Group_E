@@ -208,8 +208,8 @@ const Navbar = ({ transparent = false }) => {
                 <button
                   type="button"
                   onClick={() =>
-                    navigate(user?.role === "SELLER" ? "/add-property" : "/login", {
-                      state: user?.role === "SELLER" ? null : { message: "Please log in as a Seller to add a property." }
+                    navigate(isSeller || isAgent ? "/add-property" : "/login", {
+                      state: isSeller || isAgent ? null : { message: "Please log in as a Seller or Agent to add a property." }
                     })
                   }
                   className={`px-3.5 py-2 rounded-xl text-sm font-semibold transition duration-150 cursor-pointer ${
@@ -253,8 +253,8 @@ const Navbar = ({ transparent = false }) => {
           {/* --- Zone 3: Right Actions, Search, Alerts & Profile --- */}
           <div className="flex items-center space-x-2 sm:space-x-3.5 h-full flex-shrink-0">
             
-            {/* Direct "+ Add Property" Luxury CTA for Sellers */}
-            {isSeller && (
+            {/* Direct "+ Add Property" CTA for Sellers & Agents */}
+            {(isSeller || isAgent) && (
               <button
                 type="button"
                 onClick={() => navigate("/add-property")}

@@ -8,7 +8,7 @@ import Footer from '../components/layout/Footer';
 import MortgageCalculator from '../components/property/MortgageCalculator';
 import PropertyCard from '../components/property/PropertyCard';
 import PriceAnalyticsDashboard from '../components/analytics/PriceAnalyticsDashboard';
-import { Bed, Bath, Maximize, MapPin, Heart, MessageCircle, ChevronLeft, ChevronRight, Loader2, X, Share2, Compass, Layers } from 'lucide-react';
+import { Bed, Bath, Maximize, MapPin, Heart, MessageCircle, ChevronLeft, ChevronRight, Loader2, X, Share2, Compass, Layers, Building2 } from 'lucide-react';
 import { ReactPhotoSphereViewer } from 'react-photo-sphere-viewer';
 import '@photo-sphere-viewer/core/index.css';
 import { MapContainer, TileLayer, Marker, Polygon, Popup } from 'react-leaflet';
@@ -48,6 +48,7 @@ const PropertyDetails = () => {
     const [similarProperties, setSimilarProperties] = useState([]);
     const [similarLoading, setSimilarLoading] = useState(true);
     const [priceInsight, setPriceInsight] = useState(null);
+    const isOwner = Boolean(user && property && (property.seller_id === user.id || property.user_id === user.id));
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -383,26 +384,47 @@ const PropertyDetails = () => {
                             
                             {/* Actions */}
                             <div className="flex flex-col gap-3 mt-4">
-                                <button aria-label="Contact Seller" type="button" 
-                                    onClick={handleContactSeller}
-                                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg hover:shadow-blue-600/30 flex items-center justify-center gap-2"
-                                >
-                                    <MessageCircle className="w-5 h-5" />
-                                    Contact Seller
-                                </button>
+                                {isOwner ? (
+                                    <button aria-label="Manage Property" type="button" 
+                                        onClick={() => navigate(user.role === 'AGENT' ? '/agent-dashboard' : '/seller-dashboard')}
+                                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg hover:shadow-emerald-600/30 flex items-center justify-center gap-2 cursor-pointer"
+                                    >
+                                        <Building2 className="w-5 h-5" />
+                                        Manage Your Listing
+                                    </button>
+                                ) : (
+                                    <button aria-label="Contact Seller" type="button" 
+                                        onClick={handleContactSeller}
+                                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg hover:shadow-blue-600/30 flex items-center justify-center gap-2 cursor-pointer"
+                                    >
+                                        <MessageCircle className="w-5 h-5" />
+                                        Contact Seller
+                                    </button>
+                                )}
                                 
                                 <div className="flex gap-3">
-                                    <button aria-label="Save Favorite" type="button" 
-                                        onClick={handleToggleFavorite}
-                                        disabled={isFavLoading}
-                                        className={`flex-1 py-3 rounded-xl border transition-colors flex items-center justify-center gap-2 font-medium text-sm ${isFavorite ? 'border-red-200 bg-red-50 text-red-500 dark:bg-red-900/20 dark:border-red-900/50' : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
-                                    >
-                                        <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
-                                        {isFavorite ? 'Saved' : 'Save'}
-                                    </button>
+                                    {!isOwner && (
+                                        <button aria-label="Save Favorite" type="button" 
+                                            onClick={handleToggleFavorite}
+                                            disabled={isFavLoading}
+                                            className={`flex-1 py-3 rounded-xl border transition-colors flex items-center justify-center gap-2 font-medium text-sm cursor-pointer ${isFavorite ? 'border-red-200 bg-red-50 text-red-500 dark:bg-red-900/20 dark:border-red-900/50' : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
+                                        >
+                                            <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
+                                            {isFavorite ? 'Saved' : 'Save'}
+                                        </button>
+                                    )}
                                     
-                                    <button aria-label="Share" type="button" className="p-3 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300">
+                                    <button 
+                                        aria-label="Share" 
+                                        type="button" 
+                                        onClick={() => {
+                                            navigator.clipboard?.writeText(window.location.href);
+                                            toast.success("Listing link copied to clipboard!");
+                                        }}
+                                        className={`${isOwner ? 'w-full' : 'p-3'} rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300 flex items-center justify-center gap-2 font-medium text-sm cursor-pointer`}
+                                    >
                                         <Share2 className="w-4 h-4" />
+                                        {isOwner && <span>Share Listing</span>}
                                     </button>
                                 </div>
                             </div>
