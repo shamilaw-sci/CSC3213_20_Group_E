@@ -1,9 +1,20 @@
 const favoritesRepository = require('../repositories/favoritesRepository');
+const propertyRepository = require('../repositories/propertyRepository');
 
 const toggleFavorite = async (req, res, next) => {
     try {
         const propertyId = req.params.propertyId;
         const userId = req.user.id;
+
+        // Check property ownership to prevent sellers from inflating own favorites
+        const property = await propertyRepository.getPropertyById(propertyId);
+        if (!property) {
+            return res.status(404).json({ message: "Property not found." });
+        }
+
+        if (property.seller_id === userId) {
+            return res.status(400).json({ message: "You cannot favorite your own property listing." });
+        }
 
         // Check if it's already favorited
         const { data: existing, error: checkError } = await favoritesRepository.findFavorite(userId, propertyId);
