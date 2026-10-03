@@ -603,13 +603,16 @@ const AgentProfile = () => {
                   <p className="text-xs text-slate-500">Authentic feedback from verified property buyers and sellers</p>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setShowReviewModal(true)}
-                  className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition cursor-pointer shadow-md shadow-amber-500/20"
-                >
-                  <Star className="w-3.5 h-3.5 fill-current" /> Write a Review
-                </button>
+                {/* Only buyers and sellers can write a review - not the agent themselves or other agents/admins */}
+                {user && !isOwner && (user.role === 'BUYER' || user.role === 'SELLER') && (
+                  <button
+                    type="button"
+                    onClick={() => setShowReviewModal(true)}
+                    className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition cursor-pointer shadow-md shadow-amber-500/20"
+                  >
+                    <Star className="w-3.5 h-3.5 fill-current" /> Write a Review
+                  </button>
+                )}
               </div>
 
               {/* Reviews List */}
