@@ -61,6 +61,14 @@ const postReview = async (req, res, next) => {
         const { rating, comment } = req.body;
         const reviewer_id = req.user.id;
 
+        if (reviewer_id === id) {
+            return res.status(400).json({ message: "You cannot review your own profile." });
+        }
+
+        if (req.user.role !== 'BUYER' && req.user.role !== 'SELLER') {
+            return res.status(403).json({ message: "Only buyers and sellers can leave reviews for agents." });
+        }
+
         if (!rating || rating < 1 || rating > 5) {
             return res.status(400).json({ message: "Rating must be between 1 and 5" });
         }
@@ -77,6 +85,10 @@ const bookViewing = async (req, res, next) => {
     try {
         const { id } = req.params; // Agent ID
         const { client_name, client_email, client_phone, property_id, viewing_type, preferred_date, preferred_time, notes } = req.body;
+
+        if (req.user && req.user.id === id) {
+            return res.status(400).json({ message: "You cannot book a viewing or consultation with yourself." });
+        }
 
         const lead = await agentRepository.createViewingLead(id, {
             client_name,

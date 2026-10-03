@@ -426,14 +426,16 @@ const AgentProfile = () => {
                   </button>
                 )}
 
-                <button
-                  type="button"
-                  onClick={handleStartChat}
-                  className="px-5 py-3 rounded-2xl bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-md transition cursor-pointer"
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  <span>Direct Chat</span>
-                </button>
+                {!isOwner && (
+                  <button
+                    type="button"
+                    onClick={handleStartChat}
+                    className="px-5 py-3 rounded-2xl bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-md transition cursor-pointer"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    <span>Direct Chat</span>
+                  </button>
+                )}
 
                 {agentData.phone && (
                   <a
@@ -603,13 +605,16 @@ const AgentProfile = () => {
                   <p className="text-xs text-slate-500">Authentic feedback from verified property buyers and sellers</p>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setShowReviewModal(true)}
-                  className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition cursor-pointer shadow-md shadow-amber-500/20"
-                >
-                  <Star className="w-3.5 h-3.5 fill-current" /> Write a Review
-                </button>
+                {/* Only buyers and sellers can write a review - not the agent themselves or other agents/admins */}
+                {user && !isOwner && (user.role === 'BUYER' || user.role === 'SELLER') && (
+                  <button
+                    type="button"
+                    onClick={() => setShowReviewModal(true)}
+                    className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition cursor-pointer shadow-md shadow-amber-500/20"
+                  >
+                    <Star className="w-3.5 h-3.5 fill-current" /> Write a Review
+                  </button>
+                )}
               </div>
 
               {/* Reviews List */}
@@ -721,25 +726,27 @@ const AgentProfile = () => {
               </div>
             </div>
 
-            {/* Quick Consultation Booking Banner */}
-            <div className="p-6 rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-xl space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
-                <KeyRound className="w-5 h-5 text-amber-300" />
+            {/* Quick Consultation Booking Banner (Clients Only) */}
+            {!isOwner && (
+              <div className="p-6 rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-xl space-y-3">
+                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                  <KeyRound className="w-5 h-5 text-amber-300" />
+                </div>
+                <h4 className="text-base font-black tracking-tight">
+                  Looking for Bespoke Property Acquisition?
+                </h4>
+                <p className="text-xs text-blue-100 leading-relaxed">
+                  Connect directly with {agentData.name} for exclusive off-market listings, title verification, and tailored property investment advisory.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowBookingModal(true)}
+                  className="w-full py-2.5 px-4 rounded-xl bg-white text-blue-900 hover:bg-blue-50 font-black text-xs uppercase tracking-wider shadow-md transition cursor-pointer"
+                >
+                  Schedule Private Consultation
+                </button>
               </div>
-              <h4 className="text-base font-black tracking-tight">
-                Looking for Bespoke Property Acquisition?
-              </h4>
-              <p className="text-xs text-blue-100 leading-relaxed">
-                Connect directly with {agentData.name} for exclusive off-market listings, title verification, and tailored property investment advisory.
-              </p>
-              <button
-                type="button"
-                onClick={() => setShowBookingModal(true)}
-                className="w-full py-2.5 px-4 rounded-xl bg-white text-blue-900 hover:bg-blue-50 font-black text-xs uppercase tracking-wider shadow-md transition cursor-pointer"
-              >
-                Schedule Private Consultation
-              </button>
-            </div>
+            )}
 
           </div>
 
