@@ -1,5 +1,7 @@
 const express = require('express');
 const request = require('supertest');
+// Numeric validation uses the mocked repository, not a configured database.
+jest.mock('../config/supabase', () => ({}));
 jest.mock('../repositories/propertyRepository', () => ({ addProperty: jest.fn(), getPropertyById: jest.fn(), updateMyProperty: jest.fn() }));
 const repo = require('../repositories/propertyRepository');
 const validate = require('../middleware/validate');

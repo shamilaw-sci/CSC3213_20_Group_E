@@ -36,3 +36,13 @@ Go follows the module's minimum version (currently 1.26.0); local baseline used 
 Full lint remains known debt (51 errors, 10 warnings), not a passing CI gate. Existing audits can fail on newly disclosed vulnerabilities. Duplicate service/general checks remain deliberately in place for this small increment.
 
 Required merge checks are repository branch-protection/ruleset settings; this change does not enable them, open a PR, push, deploy or apply SQL.
+
+## First remote run: backend test isolation correction
+
+The owner supplied the backend CI log for commit 8358ee4: three suites failed during module initialization (`supabaseUrl is required`), with 24 suites and 214 tests passing. Local baseline had not exposed this because local environment configuration was available.
+
+Reproduced locally by overriding SUPABASE_URL with an invalid test URL and SUPABASE_KEY with a test-only value: inquiries, authorization and propertyNumericValidation failed to initialize; the other 24 suites/214 tests passed. No real credentials were needed for this diagnosis.
+
+Added explicit client mocks only to those three test files. Authorization repository auto-mocks still evaluate imported modules; numeric validation imports a controller with a client dependency; the inquiry app imports unrelated controllers that construct separate SDK clients. Those clients are outside the behavior exercised by these tests.
+
+With the same invalid configuration, all 27 suites/232 tests now pass. Application code, workflow secrets and database configuration are unchanged. A new GitHub run after the owner pushes is still needed to verify the remote result; the separate frontend failure has not yet been diagnosed.

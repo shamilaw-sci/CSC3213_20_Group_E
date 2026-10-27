@@ -1,3 +1,6 @@
+// These controller tests never query Supabase; repository auto-mocks still load
+// their modules, so isolate the client before those modules are evaluated.
+jest.mock('../config/supabase', () => ({}));
 const { postReview, bookViewing } = require('../controllers/agentController');
 const { toggleFavorite } = require('../controllers/favoritesController');
 const agentRepository = require('../repositories/agentRepository');

@@ -2,6 +2,9 @@ const request = require('supertest');
 const jwt = require('jsonwebtoken');
 jest.mock('../repositories/inquiryRepository', () => ({ create: jest.fn(), list: jest.fn() }), { virtual: true });
 jest.mock('../config/supabase', () => ({ from: jest.fn().mockReturnThis(), select: jest.fn().mockReturnThis(), eq: jest.fn().mockReturnThis(), single: jest.fn() }));
+// The full app imports saved-search/feasibility controllers, which create their
+// own clients. Inquiry requests do not use those clients or their credentials.
+jest.mock('@supabase/supabase-js', () => ({ createClient: jest.fn(() => ({})) }));
 const repo = require('../repositories/inquiryRepository');
 const db = require('../config/supabase');
 const app = require('../server');
