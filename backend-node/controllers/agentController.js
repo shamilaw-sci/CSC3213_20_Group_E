@@ -39,7 +39,7 @@ const getAgentProfile = async (req, res, next) => {
         const { id } = req.params;
         const agent = await agentRepository.getAgentProfile(id);
 
-        if (!agent) {
+        if (!agent || agent.role !== 'AGENT') {
             return res.status(404).json({ message: "Agent not found" });
         }
         
@@ -101,17 +101,10 @@ const bookViewing = async (req, res, next) => {
             notes
         });
 
-        // Also check if buyer user exists in database to create/link conversation
+        // Only a verified session may create a conversation in an account's name.
+        // Guest contact details remain on the lead without identifying an account.
         try {
-            let buyerId = req.user?.id;
-            if (!buyerId && client_email) {
-                const { data: userRow } = await supabase
-                    .from('users')
-                    .select('id')
-                    .eq('email', client_email)
-                    .maybeSingle();
-                buyerId = userRow?.id;
-            }
+            const buyerId = req.user?.id;
 
             if (buyerId && buyerId !== id) {
                 // Find or create conversation

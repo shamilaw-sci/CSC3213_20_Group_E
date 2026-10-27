@@ -1,6 +1,7 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../context/api';
+import { useAuth } from '../context/UserAuthContext';
 
 /**
  * Generic data-fetching hook upgraded with TanStack Query.
@@ -13,12 +14,14 @@ import api from '../context/api';
 export default function useFetch(url, options = {}) {
   const { enabled = true, initialData = null, params = null } = options;
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   // Create a stable, unique cache key based on URL and params
   // TanStack Query uses this to cache and deduplicate requests automatically.
-  const queryKey = [url, params];
+  const userId = user?.id ?? null;
+  const queryKey = useMemo(() => [userId, url, params], [userId, url, params]);
 
-  const { data, isLoading, isFetching, error, refetch } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey,
     queryFn: async () => {
       if (!url) return null;
@@ -26,7 +29,7 @@ export default function useFetch(url, options = {}) {
       return res.data;
     },
     enabled: Boolean(enabled && url),
-    initialData,
+    initialData: initialData === null ? undefined : initialData,
     // Cache remains fresh for 1 minute before refetching in background
     staleTime: 60 * 1000, 
   });

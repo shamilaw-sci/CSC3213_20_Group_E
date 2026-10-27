@@ -10,6 +10,7 @@ export const usePayhere = (setMessage) => {
   const [paymentConfig, setPaymentConfig] = useState({
     listingFee: "500.00",
     merchantId: "1236024", // Fallback sandbox ID
+    sandbox: true,
   });
 
   // Fetch dynamic payment configuration
@@ -21,6 +22,7 @@ export const usePayhere = (setMessage) => {
           setPaymentConfig({
             listingFee: res.data.listing_fee || "500.00",
             merchantId: res.data.merchant_id || "1236024",
+            sandbox: res.data.sandbox !== false,
           });
         }
       })
@@ -29,27 +31,29 @@ export const usePayhere = (setMessage) => {
 
   // Trigger PayHere after property is successfully saved as Draft
   const triggerPayment = async (propertyId) => {
-    const amount = paymentConfig.listingFee;
 
     try {
       const response = await api.post('/payment/generate-hash', {
-        order_id: propertyId,
-        amount: amount,
+        property_id: propertyId,
       });
 
-      const hash = response.data.hash;
+      const checkout = response.data;
+      if (!checkout.order_id || !checkout.amount || !checkout.hash || !checkout.merchant_id ||
+          checkout.currency !== 'LKR' || typeof checkout.sandbox !== 'boolean') {
+        throw new Error('Incomplete locked checkout response');
+      }
 
       const payment = {
-        sandbox: true,
-        merchant_id: paymentConfig.merchantId,
+        sandbox: checkout.sandbox,
+        merchant_id: checkout.merchant_id,
         return_url: `${window.location.origin}/seller-dashboard`,
         cancel_url: `${window.location.origin}/seller-dashboard`,
         notify_url: `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/payment/notify`,
-        order_id: propertyId,
+        order_id: checkout.order_id,
         items: "Thirasara Property Listing Fee",
-        amount: amount,
-        currency: "LKR",
-        hash: hash,
+        amount: checkout.amount,
+        currency: checkout.currency,
+        hash: checkout.hash,
         first_name: user?.name?.split(" ")[0] || "Seller",
         last_name: user?.name?.split(" ")[1] || "Name",
         email: user?.email || "seller@gmail.com",
@@ -59,19 +63,29 @@ export const usePayhere = (setMessage) => {
         country: "Sri Lanka",
       };
 
-      window.payhere.onCompleted = async function onCompleted(orderId) {
+      window.payhere.onCompleted = async function onCompleted() {
         try {
           await api.post('/payment/confirm-client-success', {
-            property_id: orderId || propertyId,
-            payment_id: orderId || `PAY-${Date.now()}`
+            property_id: propertyId,
+            order_id: checkout.order_id,
           });
         } catch (confirmErr) {
           console.warn("Client confirmation note:", confirmErr);
         }
-
+        let confirmed = false;
+        let listingStatus;
+        try {
+          const { data } = await api.get(`/properties/${propertyId}`);
+          confirmed = data.property?.payment_status === 'Paid';
+          listingStatus = data.property?.status;
+        } catch (statusError) {
+          console.warn('Payment status check unavailable:', statusError);
+        }
         setMessage({
-          type: "success",
-          text: `Payment confirmed! Property is now submitted for Super Admin deed verification.`,
+          type: confirmed ? "success" : "info",
+          text: confirmed
+            ? `Payment confirmed! Listing status: ${listingStatus || 'pending'}.`
+            : 'Checkout completed; awaiting server confirmation. Check the listing payment status in your dashboard before retrying.',
         });
         setTimeout(() => navigate(user?.role === "SELLER" ? "/seller-dashboard" : "/agent-dashboard"), 2500);
       };

@@ -190,10 +190,13 @@ const getListingById = async(req, res, next) => {
 
 const approveListing = async(req, res, next) => {
     try {
-        const data = await adminRepository.updateListingStatus(req.params.id, {
-            status: 'approved',
-            rejection_reason: null
-        });
+        const data = await adminRepository.approveListingOnce(req.params.id);
+        if (!data) {
+            const existing = await adminRepository.getListingByIdWithTransactions(req.params.id);
+            if (!existing) return res.status(404).json({ message: 'Listing not found' });
+            return res.status(200).json({ message: 'Listing already approved' });
+        }
+        checkSavedSearchMatches(data).catch(error => console.error('Saved-search alerts failed:', error.message));
 
         const sellerEmail = data ?.seller ?.email;
         const sellerName = data ?.seller ?.name || 'Seller';

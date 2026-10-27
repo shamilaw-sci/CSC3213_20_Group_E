@@ -52,6 +52,7 @@ const MapSearch = () => {
 
     const {
         loading,
+        error,
         activeMarkerId,
         setActiveMarkerId,
         hoveredPropId,
@@ -95,10 +96,12 @@ const MapSearch = () => {
 
     return (
         <div className="flex flex-col h-screen bg-white">
+            {error && <div role="alert" className="px-4 py-3 bg-red-50 text-red-700">{error}</div>}
             <MapTopBar 
                 filters={filters} 
                 handleSearch={handleSearch} 
                 currentPolygon={currentPolygon} 
+                maxPriceFilter={maxPriceFilter}
                 setIsFeasibilityOpen={setIsFeasibilityOpen} 
             />
             

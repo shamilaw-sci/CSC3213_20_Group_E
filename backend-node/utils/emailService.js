@@ -15,10 +15,11 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-const sendEmail = async (to, subject, html) => {
+const sendEmail = async (to, subject, html, strict = false) => {
     try {
         if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
             logger.warn('Email not sent because EMAIL_USER or EMAIL_PASS is missing');
+            if (strict) throw new Error('Email credentials unavailable');
             return;
         }
 
@@ -52,6 +53,7 @@ const sendEmail = async (to, subject, html) => {
         logger.info('Email sent', { to, subject, response: info.response });
     } catch (error) {
         logger.error('Failed to send email', error);
+        if (strict) throw error;
     }
 };
 
@@ -149,7 +151,7 @@ const sendPaymentReceipt = (email, propertyTitle, amount) => {
         <p style="color: #475569; margin-bottom: 10px;"><strong>What happens next?</strong></p>
         <p style="color: #64748b; font-size: 15px; margin-top: 0;">Your property is now pending administrative review. This usually takes less than 24 hours. We will notify you via email as soon as it goes live on the platform.</p>
     `;
-    return sendEmail(email, subject, getBaseHtmlTemplate("Payment Receipt", content));
+    return sendEmail(email, subject, getBaseHtmlTemplate("Payment Receipt", content), true);
 };
 
 const sendListingStatusEmail = (email, propertyTitle, status, reason = '') => {

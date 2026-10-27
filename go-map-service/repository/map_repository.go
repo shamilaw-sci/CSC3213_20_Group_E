@@ -4,8 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
-	"strings"
+	"encoding/json"
 	"sync"
 	"time"
 
@@ -49,14 +48,8 @@ func NewMapRepository(pool *pgxpool.Pool) *MapRepository {
 }
 
 func (r *MapRepository) getCacheKey(req models.SearchRequest) string {
-	raw := fmt.Sprintf("%s|%v|%v|%v|%v",
-		req.Polygon,
-		req.Beds,
-		req.Baths,
-		req.Type,
-		req.ListingType,
-	)
-	hash := sha256.Sum256([]byte(raw))
+	raw, _ := json.Marshal(req)
+	hash := sha256.Sum256(raw)
 	return hex.EncodeToString(hash[:])
 }
 
@@ -71,45 +64,7 @@ func (r *MapRepository) SearchProperties(ctx context.Context, req models.SearchR
 	}
 	r.mu.RUnlock()
 
-	// 2. High-Speed PostGIS Spatial Query (Points + Polygons with Index operators)
-	query := `SELECT p.id, p.title, p.description, p.price, p.latitude, p.longitude, p.images, p.bedrooms, p.bathrooms, p.land_size, p.type, p.city, p.listing_type, p.virtual_tours
-			  FROM properties p
-			  WHERE p.status = 'approved'
-			  AND (
-			      (p.boundary IS NOT NULL AND (p.boundary::geometry && ST_GeomFromText($1, 4326) OR ST_Intersects(p.boundary::geometry, ST_GeomFromText($1, 4326))))
-			      OR
-			      (p.boundary IS NULL AND p.longitude IS NOT NULL AND p.latitude IS NOT NULL AND ST_Intersects(ST_SetSRID(ST_MakePoint(p.longitude, p.latitude), 4326), ST_GeomFromText($1, 4326)))
-			  )`
-	
-	args := []interface{}{req.Polygon}
-	paramCount := 1
-
-	if req.Beds != nil {
-		paramCount++
-		query += fmt.Sprintf(" AND p.bedrooms >= $%d", paramCount)
-		args = append(args, *req.Beds)
-	}
-	if req.Baths != nil {
-		paramCount++
-		query += fmt.Sprintf(" AND p.bathrooms >= $%d", paramCount)
-		args = append(args, *req.Baths)
-	}
-	if req.Type != nil && *req.Type != "" {
-		paramCount++
-		// Escape SQL LIKE wildcard characters (_, %) to prevent unexpected wildcard matching (L3 fix)
-		escapedType := strings.ReplaceAll(*req.Type, "%", "\\%")
-		escapedType = strings.ReplaceAll(escapedType, "_", "\\_")
-		query += fmt.Sprintf(" AND p.type ILIKE $%d", paramCount)
-		args = append(args, fmt.Sprintf("%%%s%%", escapedType))
-	}
-	if req.ListingType != nil && *req.ListingType != "" {
-		paramCount++
-		query += fmt.Sprintf(" AND p.listing_type = $%d", paramCount)
-		args = append(args, *req.ListingType)
-	}
-
-	// Limit results to 100 properties per spatial request to prevent bulk scraping (M3 fix)
-	query += " LIMIT 100"
+	query, args := buildSearchQuery(req)
 
 	rows, err := r.Pool.Query(ctx, query, args...)
 	if err != nil {
@@ -149,20 +104,20 @@ func (r *MapRepository) SearchProperties(ctx context.Context, req models.SearchR
 		}
 
 		propData := models.PropertyResponse{
-			ID:          id,
-			Title:       safeTitle,
-			Description: description,
-			Price:       safePrice,
-			Latitude:    lat,
-			Longitude:   lng,
-			Images:      safeImages,
-			Bedrooms:    beds,
-			Bathrooms:   baths,
-			LandSize:    landSize,
-			Type:        propType,
-			City:        city,
-			ListingType: listingType,
-			Address:     city,
+			ID:           id,
+			Title:        safeTitle,
+			Description:  description,
+			Price:        safePrice,
+			Latitude:     lat,
+			Longitude:    lng,
+			Images:       safeImages,
+			Bedrooms:     beds,
+			Bathrooms:    baths,
+			LandSize:     landSize,
+			Type:         propType,
+			City:         city,
+			ListingType:  listingType,
+			Address:      city,
 			VirtualTours: virtualTours,
 		}
 

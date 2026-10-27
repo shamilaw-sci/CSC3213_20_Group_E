@@ -71,6 +71,16 @@ const uploadAvatar = async (fileName, buffer, mimeType) => {
     return data.publicUrl;
 };
 
+// Compare-and-set prevents two simultaneous uses of the same reset link.
+const resetPasswordOnce = async (id, previousHash, passwordHash) => {
+    const { data, error } = await supabase.from('users')
+        .update({ password_hash: passwordHash })
+        .eq('id', id).eq('password_hash', previousHash)
+        .select('id').maybeSingle();
+    if (error) throw error;
+    return data;
+};
+
 const getAgentsForAI = async () => {
     const { data, error } = await supabase
         .from('users')
@@ -87,5 +97,6 @@ module.exports = {
     createUser,
     createAgentProfile,
     updateProfile,
+    resetPasswordOnce,
     uploadAvatar
 };

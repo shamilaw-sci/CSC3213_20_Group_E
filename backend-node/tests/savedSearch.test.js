@@ -53,6 +53,44 @@ beforeEach(() => {
 });
 
 describe('POST /api/saved-searches', () => {
+    const filters = { version: 1, searchTerm: 'Kandy', listingType: 'Rent', minPrice: 10000, maxPrice: 50000, beds: 0, baths: 1, exactMatch: true, has360Tour: true, propTypes: { House: false, Land: false, Apartment: true, Villa: false } };
+
+    it('persists validated full criteria and derives legacy fields from the same values', async () => {
+        const db = createClient();
+        queueLoggedInUser(db);
+        db.__queue.push({ data: [{ id: 'full-search', filters }], error: null });
+        const res = await request(app).post('/api/saved-searches').set('Authorization', `Bearer ${authToken()}`)
+            .send({ title: 'Kandy rentals', filters, beds: 20, property_type: 'Land' });
+        expect(res.status).toBe(201);
+        expect(db.insert).toHaveBeenCalledWith([expect.objectContaining({ user_id: TEST_USER_ID, filters, beds: 0, baths: 1, property_type: 'Apartment' })]);
+    });
+
+    it.each([
+        { ...filters, minPrice: 60000 },
+        { ...filters, listingType: 'ADMIN' },
+        { ...filters, beds: -1 },
+        { ...filters, has360Tour: 'false' },
+        { ...filters, version: 999 },
+    ])('rejects invalid full criteria before inserting', async invalid => {
+        const db = createClient();
+        queueLoggedInUser(db);
+        const res = await request(app).post('/api/saved-searches').set('Authorization', `Bearer ${authToken()}`)
+            .send({ title: 'Invalid', filters: invalid });
+        expect(res.status).toBe(400);
+        expect(db.insert).not.toHaveBeenCalled();
+    });
+
+    it('does not silently save a broader legacy search when the filters column is unavailable', async () => {
+        const db = createClient();
+        queueLoggedInUser(db);
+        db.__queue.push({ data: null, error: { code: 'PGRST204', message: "Could not find the 'filters' column of 'saved_searches'" } });
+        const res = await request(app).post('/api/saved-searches').set('Authorization', `Bearer ${authToken()}`)
+            .send({ title: 'Kandy rentals', filters });
+        expect(res.status).toBe(503);
+        expect(db.insert).toHaveBeenCalledTimes(1);
+        expect(res.body.message).toContain('not saved');
+    });
+
     it('returns 401 without an auth token', async () => {
         const res = await request(app).post('/api/saved-searches').send({ title: 'My Search' });
         expect(res.statusCode).toBe(401);

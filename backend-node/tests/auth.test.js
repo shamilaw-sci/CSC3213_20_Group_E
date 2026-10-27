@@ -46,6 +46,17 @@ describe('Authentication & Security API', () => {
         mockSupabase._insertResult = undefined;
     });
 
+    it('clears the HttpOnly authentication cookie when an admin signs out', async () => {
+        const res = await request(app)
+            .post('/api/auth/logout')
+            .set('Cookie', 'token=existing-admin-session');
+
+        expect(res.statusCode).toBe(200);
+        expect(res.headers['set-cookie']).toEqual(expect.arrayContaining([
+            expect.stringMatching(/^token=;.*Expires=Thu, 01 Jan 1970.*HttpOnly/i),
+        ]));
+    });
+
     describe('POST /api/auth/register', () => {
         it('should block Role Spoofing (ADMIN attempt defaults to BUYER)', async() => {
             mockSupabase.single.mockResolvedValueOnce({ data: null });

@@ -80,16 +80,20 @@ const DashboardPage = () => {
   const [userGrowth, setUserGrowth] = useState([]);
   const [pendingListings, setPendingListings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [failedSections, setFailedSections] = useState([]);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [s, r, u, pending] = await Promise.all([
+        const results = await Promise.allSettled([
           fetchDashboardStats(),
           fetchRevenueData("monthly"),
           fetchUserGrowth(),
           fetchListings({ status: "pending" }),
         ]);
+        const names = ['statistics', 'revenue', 'user growth', 'pending listings'];
+        setFailedSections(results.flatMap((result, index) => result.status === 'rejected' ? [names[index]] : []));
+        const [s, r, u, pending] = results.map(result => result.status === 'fulfilled' ? result.value : null);
         if (s) setStats(s);
         if (r?.data) setRevenue(r.data);
         if (u?.data) setUserGrowth(u.data);
@@ -107,6 +111,7 @@ const DashboardPage = () => {
         }
       } catch (err) {
         console.error("Failed to load dashboard data:", err);
+        setFailedSections(['statistics', 'revenue', 'user growth', 'pending listings']);
       } finally {
         setLoading(false);
       }
@@ -160,8 +165,12 @@ const DashboardPage = () => {
     }
   ];
 
+  if (loading) return <p role="status" className="text-slate-300 p-6">Loading dashboard…</p>;
+  if (failedSections.includes('statistics')) return <p role="alert" className="text-amber-300 p-6">Dashboard statistics are unavailable. Reload to try again.</p>;
+
   return (
     <div className="space-y-8 pb-12 font-sans text-slate-100">
+      {failedSections.length > 0 && <p role="alert" className="text-amber-300">Unable to load {failedSections.join(', ')}. Reload to try again.</p>}
       
       {/* 1. High-Contrast Official Amber Moderation Banner */}
       {stats.pendingApproval > 0 && (
@@ -267,7 +276,7 @@ const DashboardPage = () => {
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
-          <BarChart data={revenue} colorClass="from-blue-600 to-cyan-500" suffix="LKR" />
+          {failedSections.includes('revenue') ? <p>Revenue data is unavailable.</p> : <BarChart data={revenue} colorClass="from-blue-600 to-cyan-500" suffix="LKR" />}
         </m.div>
 
         {/* User Growth Card */}
@@ -297,7 +306,7 @@ const DashboardPage = () => {
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
-          <BarChart data={userGrowth} colorClass="from-purple-600 to-indigo-500" suffix="accounts" />
+          {failedSections.includes('user growth') ? <p>User growth data is unavailable.</p> : <BarChart data={userGrowth} colorClass="from-purple-600 to-indigo-500" suffix="accounts" />}
         </m.div>
 
       </div>
@@ -381,7 +390,8 @@ const DashboardPage = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/80">
-                {pendingListings.length === 0 && (
+                {failedSections.includes('pending listings') && <tr><td colSpan={5} className="py-10 text-center">Pending listings are unavailable.</td></tr>}
+                {!failedSections.includes('pending listings') && pendingListings.length === 0 && (
                   <tr>
                     <td colSpan={5} className="text-center py-10">
                       <div className="flex flex-col items-center">

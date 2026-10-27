@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
 import { Outlet } from "react-router-dom";
-import { verifyAdminSession } from "../api/adminApi";
+import { verifyAdminSession, adminLogout } from "../api/adminApi";
 
 const AdminAuthContext = createContext(null);
 
@@ -70,7 +70,9 @@ export const AdminAuthProvider = () => {
     setAdmin(adminData);
   };
 
-  const logout = () => {
+  const logout = async () => {
+    // Keep the session visible if the server could not clear its HttpOnly cookie.
+    await adminLogout();
     localStorage.removeItem("admin_token");
     localStorage.removeItem("admin_data");
     setAdmin(null);

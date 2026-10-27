@@ -72,6 +72,7 @@ const MyProperties = () => {
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col font-sans">
             <Navbar />
+            {payMessage.text && <p role={payMessage.type === 'error' ? 'alert' : 'status'} className="mx-auto w-full max-w-7xl px-6 py-4 text-sm bg-blue-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100">{payMessage.text}</p>}
             
             {/* Header with Dashboard Navigation */}
             <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">

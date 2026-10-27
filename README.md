@@ -41,6 +41,7 @@ Useful variables:
 - `ALLOWED_ORIGIN` - Go map-service CORS origin
 - `VITE_API_URL` - frontend API base URL, defaults to `http://localhost:5000`
 - `LOG_LEVEL` - backend log level: `debug`, `info`, `warn`, or `error`
+- `PAYHERE_MODE` - defaults to `sandbox`; only the explicit value `live` enables live checkout. Use matching gateway credentials when intentionally enabling live mode.
 
 ## Development
 

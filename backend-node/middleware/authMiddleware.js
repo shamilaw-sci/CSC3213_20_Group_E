@@ -4,8 +4,8 @@ const supabase = require('../config/supabase');
 const protect = async (req, res, next) => {
     let token = req.cookies?.token; // Extract token from HttpOnly cookie
 
-    // Fallback: Extract token from Authorization header (Bearer token format)
-    if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    // An explicit API credential takes precedence over an ambient browser cookie.
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
         token = req.headers.authorization.split(' ')[1];
     }
 
@@ -16,6 +16,11 @@ const protect = async (req, res, next) => {
     try {
         // Verify token with secret key
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        // Existing login tokens have no type; purpose-specific tokens are not sessions.
+        if (decoded.type !== undefined) {
+            return res.status(401).json({ message: "Invalid authentication token." });
+        }
         
         // Fetch fresh user from DB to avoid stale roles in JWT
         const { data: user, error } = await supabase
@@ -28,6 +33,10 @@ const protect = async (req, res, next) => {
             return res.status(401).json({ message: "User not found or session invalid." });
         }
 
+        if (user.role === 'BANNED') {
+            return res.status(403).json({ message: "This account has been banned." });
+        }
+
         req.user = user; // Attach fresh user data to request
         next(); // Allow request to proceed
     } catch (error) {
@@ -38,7 +47,7 @@ const protect = async (req, res, next) => {
 const optionalAuth = async (req, res, next) => {
     let token = req.cookies?.token;
 
-    if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
         token = req.headers.authorization.split(' ')[1];
     }
 
@@ -48,13 +57,15 @@ const optionalAuth = async (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        if (decoded.type !== undefined) return next();
+
         const { data: user, error } = await supabase
             .from('users')
             .select('id, role, name, email')
             .eq('id', decoded.id)
             .single();
 
-        if (!error && user) {
+        if (!error && user && user.role !== 'BANNED') {
             req.user = user;
         }
     } catch (error) {

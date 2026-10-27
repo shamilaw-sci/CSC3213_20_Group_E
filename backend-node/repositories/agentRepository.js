@@ -136,6 +136,7 @@ const agentRepository = {
             let status = 'New';
             if (l.lifecycle_status === 'Attempted Contact') status = 'Contacted';
             else if (l.lifecycle_status === 'Active') status = 'Showing';
+            else if (l.lifecycle_status === 'Offer') status = 'Offer';
             else if (l.lifecycle_status === 'Closed') status = 'Closed';
 
             const noteMatch = l.lead_source?.match(/Note:\s*["']?([^"']+)["']?/i);
@@ -223,7 +224,8 @@ const agentRepository = {
         // If not in conversations, try updating leads table
         let lifecycle_status = 'New';
         if (lead_status === 'Contacted') lifecycle_status = 'Attempted Contact';
-        else if (lead_status === 'Showing' || lead_status === 'Offer') lifecycle_status = 'Active';
+        else if (lead_status === 'Showing') lifecycle_status = 'Active';
+        else if (lead_status === 'Offer') lifecycle_status = 'Offer';
         else if (lead_status === 'Closed') lifecycle_status = 'Closed';
 
         const { data: lead, error: leadError } = await supabase

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAdminAuth } from "../context/AdminAuthContext";
 import { fetchDashboardStats } from "../api/adminApi";
+import toast from "react-hot-toast";
 import { 
   LayoutDashboard, 
   List, 
@@ -27,9 +28,13 @@ const Sidebar = () => {
       .catch(() => setPendingListings(0));
   }, []);
 
-  const handleLogout = () => {
-    logout();
-    navigate("/admin/login");
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/admin/login");
+    } catch {
+      toast.error("Sign out failed. Please try again.");
+    }
   };
 
   const navItems = [
@@ -45,6 +50,7 @@ const Sidebar = () => {
     { path: "/admin/agent-approvals", icon: UserCheck, label: "Agent Approvals" },
     { path: "/admin/analytics", icon: BarChart3, label: "Analytics" },
     { path: "/admin/messages", icon: MessageSquare, label: "Messages" },
+    { path: "/admin/inquiries", icon: MessageSquare, label: "Inquiries" },
     { path: "/admin/reports", icon: FileText, label: "Reports" },
     { path: "/admin/audit-logs", icon: ShieldAlert, label: "Audit Logs" },
     { path: "/admin/settings", icon: Settings, label: "Settings" },

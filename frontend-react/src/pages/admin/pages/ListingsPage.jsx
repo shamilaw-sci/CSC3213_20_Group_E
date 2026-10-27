@@ -278,7 +278,7 @@ const ListingDetailsModal = ({ listing, onApprove, onReject, onClose, loading })
                   <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 block truncate">
                     Rs. {Number(listing.price || 0).toLocaleString("en-LK")}
                   </span>
-                  {listing.price_period && (
+                  {listing.listing_type?.toLowerCase() === 'rent' && listing.price_period && (
                     <span className="text-[10px] font-bold text-slate-400">/{listing.price_period}</span>
                   )}
                 </div>
@@ -718,7 +718,7 @@ const ListingsPage = () => {
                     <span className="text-xs font-black text-slate-900 dark:text-white">
                       Rs. {Number(listing.price || 0).toLocaleString("en-LK")}
                     </span>
-                    {listing.price_period && (
+                    {listing.listing_type?.toLowerCase() === 'rent' && listing.price_period && (
                       <span className="text-[10px] text-slate-400 block">/{listing.price_period}</span>
                     )}
                   </td>

@@ -4,11 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import AdvancedSearchBar from '../../components/property/AdvancedSearchBar';
 import api from '../../context/api';
 import toast from 'react-hot-toast';
+import { serializeSavedSearchFilters } from '../../utils/savedSearchFilters';
 
 const MapTopBar = ({
     filters,
     handleSearch,
     currentPolygon,
+    maxPriceFilter,
     setIsFeasibilityOpen
 }) => {
     const navigate = useNavigate();
@@ -22,12 +24,15 @@ const MapTopBar = ({
         if (!searchTitle) return;
         
         try {
+            const savedFilters = serializeSavedSearchFilters(filters, maxPriceFilter);
+            const activeTypes = Object.keys(savedFilters.propTypes).filter(type => savedFilters.propTypes[type]);
             await api.post('/saved-searches', {
                 title: searchTitle,
                 polygon: currentPolygon,
-                beds: filters.beds !== 'Any' ? parseInt(filters.beds) : null,
-                baths: filters.baths !== 'Any' ? parseInt(filters.baths) : null,
-                property_type: null // Or stringify selected types if needed
+                beds: savedFilters.beds,
+                baths: savedFilters.baths,
+                property_type: activeTypes.length === 1 ? activeTypes[0] : null,
+                filters: savedFilters,
             });
             alert("Search saved successfully!");
         } catch (error) {
@@ -53,7 +58,7 @@ const MapTopBar = ({
                 </div>
 
                 <div className="flex-1 max-w-4xl px-4">
-                    <AdvancedSearchBar initialFilters={filters} onSearch={handleSearch} />
+                    <AdvancedSearchBar key={JSON.stringify(filters)} initialFilters={filters} onSearch={handleSearch} />
                 </div>
 
                 <div className="flex gap-4">

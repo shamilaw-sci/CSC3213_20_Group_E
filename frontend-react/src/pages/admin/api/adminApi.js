@@ -40,6 +40,9 @@ export const adminLogin = (email, password) =>
 export const verifyAdminSession = () =>
   unwrap(adminApi.get('/admin/verify'));
 
+export const adminLogout = () =>
+  unwrap(adminApi.post('/auth/logout'));
+
 // ─── Dashboard Stats ──────────────────────────────────────────────────────────
 export const fetchDashboardStats = () =>
   unwrap(adminApi.get('/admin/dashboard/stats'));
@@ -49,6 +52,9 @@ export const fetchRevenueData = (period = 'monthly') =>
 
 export const fetchUserGrowth = () =>
   unwrap(adminApi.get('/admin/dashboard/user-growth'));
+
+export const fetchInquiries = (page = 1) =>
+  unwrap(adminApi.get('/admin/inquiries', { params: { page } }));
 
 // ─── Listings Management ──────────────────────────────────────────────────────
 export const fetchListings = (params = {}) =>

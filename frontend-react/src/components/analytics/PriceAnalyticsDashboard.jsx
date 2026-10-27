@@ -3,41 +3,39 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as
 import { Info, TrendingUp, AlertTriangle, CheckCircle } from 'lucide-react';
 import api from '../../context/api';
 
-const PriceAnalyticsDashboard = ({ propertyId, currentPrice, assessmentNumber }) => {
+const PriceAnalyticsDashboard = ({ propertyId, assessmentNumber, insight }) => {
     const [historyData, setHistoryData] = useState([]);
-    const [prediction, setPrediction] = useState(null);
+    const [isSimulated, setIsSimulated] = useState(false);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        let active = true;
+        setLoading(true);
+        setHistoryData([]);
+        setIsSimulated(false);
         const fetchAnalytics = async () => {
             try {
                 // Fetch history
                 const histRes = await api.get('/analytics/history', { params: { assessmentNumber } });
-                const formattedHistory = histRes.data.data.map(d => ({
+                const formattedHistory = (histRes.data.data || []).map(d => ({
                     year: new Date(d.sale_date).getFullYear().toString(),
                     price: d.sale_price / 1000000 // Convert to millions for display
                 }));
-                setHistoryData(formattedHistory);
-
-                // Simulate average area price based on current property for demo if real API is just stubbed
-                const areaAverage = currentPrice * 1.05; // Dummy logic: market is 5% higher
-
-                // Fetch prediction
-                const predRes = await api.post('/analytics/valuation', {
-                    propertyData: { price: currentPrice },
-                    areaAverage: areaAverage
-                });
-                
-                setPrediction(predRes.data.prediction);
+                if (active) {
+                    setHistoryData(formattedHistory);
+                    // Only explicit real-data responses may be presented as history.
+                    setIsSimulated(histRes.data.isSimulated !== false);
+                }
             } catch (error) {
                 console.error("Analytics fetch error:", error);
             } finally {
-                setLoading(false);
+                if (active) setLoading(false);
             }
         };
 
         fetchAnalytics();
-    }, [propertyId, currentPrice, assessmentNumber]);
+        return () => { active = false; };
+    }, [propertyId, assessmentNumber]);
 
     if (loading) {
         return (
@@ -47,10 +45,8 @@ const PriceAnalyticsDashboard = ({ propertyId, currentPrice, assessmentNumber })
         );
     }
 
-    if (!prediction) return null;
-
-    const isGoodDeal = prediction.status === 'Good Deal';
-    const isOverpriced = prediction.status === 'Overpriced';
+    const isGoodDeal = insight?.level === 'great_deal';
+    const isOverpriced = insight?.level === 'above_market';
 
     return (
         <div className="w-full bg-white dark:bg-slate-900/50 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm mt-6 mb-8">
@@ -66,14 +62,16 @@ const PriceAnalyticsDashboard = ({ propertyId, currentPrice, assessmentNumber })
                         {isGoodDeal ? <CheckCircle className="text-emerald-500 w-5 h-5" /> : 
                          isOverpriced ? <AlertTriangle className="text-rose-500 w-5 h-5" /> : 
                          <Info className="text-amber-500 w-5 h-5" />}
-                        <span className="font-semibold text-lg text-slate-800 dark:text-slate-100">{prediction.status}</span>
+                        <span className="font-semibold text-lg text-slate-800 dark:text-slate-100">{insight?.label || 'Price comparison unavailable'}</span>
                     </div>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">{prediction.reason}</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">{insight
+                        ? `Based on asking prices from ${insight.sampleSize} comparable listings; ${Math.abs(insight.percentVsAverage)}% ${insight.percentVsAverage < 0 ? 'below' : 'above'} the average per square foot. This is not a sale valuation.`
+                        : 'Not enough comparable listing data to assess this price.'}</p>
                 </div>
                 <div className="text-right">
-                    <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1">Estimated Value</p>
+                    <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1">Comparable average / sqft</p>
                     <p className="text-3xl font-black text-slate-900 dark:text-white">
-                        LKR {(prediction.estimatedValue / 1000000).toFixed(1)}M
+                        {insight ? `LKR ${insight.averagePricePerSqft.toLocaleString()}` : 'Unavailable'}
                     </p>
                 </div>
             </div>
@@ -82,6 +80,7 @@ const PriceAnalyticsDashboard = ({ propertyId, currentPrice, assessmentNumber })
                 {/* Line Chart: Historical Price */}
                 <div className="flex flex-col">
                     <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4 uppercase tracking-wide">Historical Price Trend (Millions LKR)</h4>
+                    <p className="text-sm text-slate-500 mb-3">{historyData.length === 0 ? 'Sale history is unavailable.' : isSimulated ? 'Sample history — illustrative data, not recorded sales for this property.' : 'Recorded sales for this assessment number.'}</p>
                     <div className="h-64 w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={historyData}>
@@ -106,27 +105,27 @@ const PriceAnalyticsDashboard = ({ propertyId, currentPrice, assessmentNumber })
                 </div>
 
                 {/* Bar Chart: Market Comparison */}
-                <div className="flex flex-col">
-                    <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4 uppercase tracking-wide">Area Average Comparison</h4>
+                {insight && <div className="flex flex-col">
+                    <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4 uppercase tracking-wide">Asking Price Comparison (LKR / sqft)</h4>
                     <div className="h-64 w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={[
-                                { name: 'This Property', price: currentPrice / 1000000, fill: isGoodDeal ? '#10b981' : isOverpriced ? '#f43f5e' : '#3b82f6' },
-                                { name: 'Area Average', price: prediction.estimatedValue / 1000000, fill: '#94a3b8' }
+                                { name: 'This Property', price: insight.pricePerSqft, fill: isGoodDeal ? '#10b981' : isOverpriced ? '#f43f5e' : '#3b82f6' },
+                                { name: 'Comparable Average', price: insight.averagePricePerSqft, fill: '#94a3b8' }
                             ]}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.2} vertical={false} />
                                 <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickMargin={10} />
-                                <YAxis stroke="#64748b" fontSize={12} tickFormatter={(val) => `${val}M`} />
+                                <YAxis stroke="#64748b" fontSize={12} />
                                 <RechartsTooltip 
                                     cursor={{fill: 'transparent'}}
                                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                    formatter={(value) => [`LKR ${value}M`, 'Price']}
+                                    formatter={(value) => [`LKR ${value}`, 'Asking price / sqft']}
                                 />
                                 <Bar dataKey="price" radius={[6, 6, 0, 0]} barSize={60} />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
-                </div>
+                </div>}
             </div>
         </div>
     );

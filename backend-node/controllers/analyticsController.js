@@ -27,7 +27,7 @@ exports.getPropertyHistory = async (req, res) => {
         const { data, error } = await query;
         if (error) throw error;
         
-        res.status(200).json({ success: true, data });
+        res.status(200).json({ success: true, isSimulated: false, data });
     } catch (error) {
         console.error('Error fetching property history:', error);
         res.status(500).json({ success: false, message: 'Server error fetching history' });

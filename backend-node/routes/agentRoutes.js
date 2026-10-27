@@ -6,7 +6,7 @@ const {
     updateAgentProfile, resubmitApplication, getDashboardStats,
     deleteLead, cancelBuyerAppointment
 } = require('../controllers/agentController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, optionalAuth } = require('../middleware/authMiddleware');
 const validate = require('../middleware/validate');
 const { reviewSchema, updateLeadSchema, updateProfileSchema, bookViewingSchema } = require('../validators/agentValidator');
 
@@ -19,7 +19,7 @@ router.delete('/leads/:id', protect, deleteLead);
 router.put('/profile', protect, validate(updateProfileSchema), updateAgentProfile);
 router.get('/', getAgents);
 router.get('/:id', getAgentProfile);
-router.post('/:id/book-viewing', validate(bookViewingSchema), bookViewing);
+router.post('/:id/book-viewing', optionalAuth, validate(bookViewingSchema), bookViewing);
 router.post('/:id/reviews', protect, validate(reviewSchema), postReview);
 router.post('/resubmit', protect, resubmitApplication);
 

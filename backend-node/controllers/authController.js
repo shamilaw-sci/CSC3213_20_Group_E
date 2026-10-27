@@ -1,7 +1,10 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { createHmac } = require('node:crypto');
 const { sendWelcomeEmail, sendPasswordResetEmail } = require('../utils/emailService');
 const userRepository = require('../repositories/userRepository');
+const passwordResetVersion = (passwordHash) => createHmac('sha256', process.env.JWT_SECRET)
+    .update(passwordHash || '').digest('hex');
 
 const setTokenCookie = (res, token) => {
     res.cookie('token', token, {
@@ -168,7 +171,7 @@ const forgotPassword = async(req, res, next) => {
 
         // Security best practice: Always return same message regardless of whether email exists
         if (user && user.role !== 'BANNED') {
-            const resetToken = jwt.sign({ id: user.id, type: 'password_reset' },
+            const resetToken = jwt.sign({ id: user.id, type: 'password_reset', version: passwordResetVersion(user.password_hash) },
                 process.env.JWT_SECRET, { expiresIn: '15m' }
             );
             const resetLink = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}`;
@@ -206,11 +209,17 @@ const resetPassword = async(req, res, next) => {
         if (!user) {
             return res.status(404).json({ message: "User account not found." });
         }
+        if (user.role === 'BANNED' || !user.password_hash || decoded.version !== passwordResetVersion(user.password_hash)) {
+            return res.status(400).json({ message: "Invalid or expired password reset token. Please request a new link." });
+        }
 
         const salt = await bcrypt.genSalt(10);
         const password_hash = await bcrypt.hash(newPassword, salt);
 
-        await userRepository.updateProfile(user.id, { password_hash });
+        const updated = await userRepository.resetPasswordOnce(user.id, user.password_hash, password_hash);
+        if (!updated) {
+            return res.status(400).json({ message: "This reset link has already been used. Please request a new link." });
+        }
 
         res.status(200).json({ message: "Password reset successful. You can now log in with your new password." });
     } catch (error) {
@@ -236,7 +245,7 @@ const logoutUser = (req, res) => {
 const getMe = async(req, res, next) => {
     try {
         let token = req.cookies?.token;
-        if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+        if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
             token = req.headers.authorization.split(' ')[1];
         }
 

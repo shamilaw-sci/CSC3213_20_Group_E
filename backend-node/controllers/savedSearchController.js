@@ -11,19 +11,23 @@ const savedSearchRepository = require('../repositories/savedSearchRepository');
 const saveSearch = async(req, res, next) => {
     try {
         const userId = req.user.id;
-        const { title, polygon, beds, baths, property_type } = req.body;
-
-
-        const { data, error } = await savedSearchRepository.insertSavedSearch({
+        const { title, polygon, beds, baths, property_type, filters } = req.body;
+        const selectedTypes = filters ? Object.keys(filters.propTypes).filter(type => filters.propTypes[type]) : [];
+        const searchData = {
             user_id: userId,
             title: title || 'My Saved Search',
             polygon,
-            beds,
-            baths,
-            property_type
-        });
+            beds: filters ? filters.beds : beds,
+            baths: filters ? filters.baths : baths,
+            property_type: filters ? (selectedTypes.length === 1 ? selectedTypes[0] : null) : property_type,
+        };
+        if (filters) searchData.filters = filters;
+        const { data, error } = await savedSearchRepository.insertSavedSearch(searchData);
 
         if (error) {
+            if (filters && ['42703', 'PGRST204'].includes(error.code) && /filters/i.test(error.message || '')) {
+                return res.status(503).json({ message: 'Full search saving is temporarily unavailable. Your search was not saved.' });
+            }
             if (error.message.includes('relation "public.saved_searches" does not exist')) {
                 return next(new Error("saved_searches table does not exist in the database."));
             }
@@ -116,7 +120,7 @@ const checkSavedSearchMatches = async(property) => {
 
         const { data: activeSearches, error } = await supabase
             .from('saved_searches')
-            .select('id, title, polygon, beds, baths, property_type, users(email)')
+            .select('*, users(email)')
             .eq('email_alerts_enabled', true);
 
         if (error) {

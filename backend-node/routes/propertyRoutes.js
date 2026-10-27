@@ -3,7 +3,7 @@ const router = express.Router();
 const { propertyImageUpload } = require('../middleware/uploadMiddleware');
 
 const { addProperty, getProperties, getMyProperties, updateMyProperty, deleteMyProperty, getPropertyById, incrementViews, getSimilarProperties, getPriceInsight, searchProperties } = require('../controllers/propertyController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, optionalAuth } = require('../middleware/authMiddleware');
 const validate = require('../middleware/validate');
 const { addPropertySchema, updatePropertySchema, getPropertiesSchema } = require('../validators/propertyValidator');
 const { searchPropertiesSchema } = require('../validators/searchValidator');
@@ -35,6 +35,6 @@ router.get('/:id/price-insight', getPriceInsight);
 
 // 1.5 Get specific property by ID
 // Must be after /my-listings to prevent overriding
-router.get('/:id', getPropertyById);
+router.get('/:id', optionalAuth, getPropertyById);
 
 module.exports = router;

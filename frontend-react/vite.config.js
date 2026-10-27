@@ -37,6 +37,10 @@ export default defineConfig({
     }
   },
   test: {
+    // This package declares only a module entry; resolve it explicitly for Node tests.
+    alias: {
+      'react-photo-sphere-viewer': path.resolve(__dirname, 'node_modules/react-photo-sphere-viewer/dist/index.js'),
+    },
     globals: true,
     environment: 'jsdom',
     setupFiles: './setupTests.js',

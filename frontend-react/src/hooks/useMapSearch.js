@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getWKTFromBounds } from '../components/map/MapControls';
+import { restoreSavedSearchFilters } from '../utils/savedSearchFilters';
 
 const DEFAULT_SRI_LANKA_BOUNDS_WKT = 'POLYGON((79.2 10.1, 82.3 10.1, 82.3 5.5, 79.2 5.5, 79.2 10.1))';
 
@@ -10,11 +11,12 @@ export const useMapSearch = () => {
 
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
     const [activeMarkerId, setActiveMarkerId] = useState(null);
     const [hoveredPropId, setHoveredPropId] = useState(null);
-    const [searchMode, setSearchMode] = useState(savedSearch ? 'polygon' : 'bounds');
+    const [searchMode, setSearchMode] = useState(savedSearch?.polygon ? 'polygon' : 'bounds');
     const [isDrawMode, setIsDrawMode] = useState(false); 
-    const [isFeasibilityOpen, setIsFeasibilityOpen] = useState(false);
+    const [isFeasibilityOpen, setIsFeasibilityOpen] = useState(new URLSearchParams(location.search).get('feasibility') === '1');
     const [maxPriceFilter, setMaxPriceFilter] = useState(null);
     const [selectedDistrict, setSelectedDistrict] = useState(null);
     
@@ -45,24 +47,21 @@ export const useMapSearch = () => {
         }
     }, [showLandslideZones, landslideData]);
     
-    const [filters, setFilters] = useState({
-        searchTerm: '',
-        listingType: location.pathname === '/rent' ? 'Rent' : 'Sale',
-        minPrice: '',
-        maxPrice: '',
-        beds: savedSearch?.beds ? String(savedSearch.beds) : 'Any',
-        baths: savedSearch?.baths ? String(savedSearch.baths) : 'Any',
-        exactMatch: false,
-        has360Tour: false,
-        propTypes: { 
-            House: savedSearch?.property_type === 'House' || !savedSearch?.property_type, 
-            Land: savedSearch?.property_type === 'Land' || !savedSearch?.property_type, 
-            Apartment: savedSearch?.property_type === 'Apartment' || !savedSearch?.property_type, 
-            Villa: savedSearch?.property_type === 'Villa' || !savedSearch?.property_type
-        }
-    });
+    const [filters, setFilters] = useState(() => restoreSavedSearchFilters(savedSearch, location.pathname, location.search));
 
     const drawControlRef = useRef(null);
+
+    useEffect(() => {
+        if (savedSearch) {
+            setFilters(restoreSavedSearchFilters(savedSearch, location.pathname, location.search));
+            setCurrentPolygon(savedSearch.polygon || DEFAULT_SRI_LANKA_BOUNDS_WKT);
+            setSearchMode(savedSearch.polygon ? 'polygon' : 'bounds');
+            setMaxPriceFilter(null);
+            return;
+        }
+        const searchTerm = new URLSearchParams(location.search).get('search') || '';
+        setFilters(previous => previous.searchTerm === searchTerm ? previous : { ...previous, searchTerm });
+    }, [savedSearch, location.search, location.pathname]);
 
     // Fetch properties whenever polygon or filters change
     useEffect(() => {
@@ -71,6 +70,7 @@ export const useMapSearch = () => {
         const controller = new AbortController();
         const fetchProps = async () => {
             setLoading(true);
+            setError(null);
             try {
                 const apiUrl = import.meta.env.VITE_MAP_API_URL || 'http://localhost:8080/api/map/search';
                 
@@ -80,6 +80,14 @@ export const useMapSearch = () => {
                 
                 const activeTypes = Object.keys(filters.propTypes).filter(k => filters.propTypes[k]);
                 if (activeTypes.length === 1) payload.type = activeTypes[0];
+                if (activeTypes.length > 0) payload.types = activeTypes;
+                if (filters.searchTerm) payload.search_term = filters.searchTerm;
+                if (filters.minPrice !== '') payload.min_price = Number(filters.minPrice);
+                const priceCaps = [filters.maxPrice === '' ? null : Number(filters.maxPrice), maxPriceFilter]
+                    .filter(value => value !== null && Number.isFinite(value));
+                if (priceCaps.length) payload.max_price = Math.min(...priceCaps);
+                payload.exact_match = Boolean(filters.exactMatch);
+                payload.has_360_tour = Boolean(filters.has360Tour);
                 
                 if (filters.listingType) payload.listing_type = filters.listingType;
 
@@ -91,13 +99,15 @@ export const useMapSearch = () => {
                 });
                 if (!res.ok) throw new Error('Map service failed');
                 const data = await res.json();
-                setProperties(data.properties || []);
+                if (!controller.signal.aborted) setProperties(data.properties || []);
             } catch (error) {
-                if (error.name !== 'AbortError') {
+                if (!controller.signal.aborted && error.name !== 'AbortError') {
+                    setProperties([]);
+                    setError('Unable to load properties. Please try your search again.');
                     console.error("🔥 Search error:", error.message);
                 }
             } finally {
-                setLoading(false);
+                if (!controller.signal.aborted) setLoading(false);
             }
         };
         
@@ -109,7 +119,7 @@ export const useMapSearch = () => {
             clearTimeout(timeoutId);
             controller.abort();
         };
-    }, [currentPolygon, filters]);
+    }, [currentPolygon, filters, maxPriceFilter]);
 
     const handleBoundsChange = useCallback((bounds) => {
         const boundsWKT = getWKTFromBounds(bounds);
@@ -178,6 +188,7 @@ export const useMapSearch = () => {
 
     return {
         properties,
+        error,
         isDrawMode,
         setIsDrawMode,
         loading,

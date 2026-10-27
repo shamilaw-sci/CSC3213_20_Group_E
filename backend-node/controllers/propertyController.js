@@ -87,9 +87,9 @@ const addProperty = async(req, res, next) => {
             district: district || null,
             city: city || null,
             contact_number: contactNumber || null,
-            bedrooms: bedrooms || null,
-            bathrooms: bathrooms || null,
-            land_size: landSize || null,
+            bedrooms: bedrooms ?? null,
+            bathrooms: bathrooms ?? null,
+            land_size: landSize ?? null,
             house_size: houseSize || null,
             latitude,
             longitude,
@@ -204,9 +204,9 @@ const updateMyProperty = async(req, res, next) => {
             district,
             city,
             contact_number: contactNumber || null,
-            bedrooms: bedrooms || null,
-            bathrooms: bathrooms || null,
-            land_size: landSize || null,
+            bedrooms: bedrooms ?? null,
+            bathrooms: bathrooms ?? null,
+            land_size: landSize ?? null,
             house_size: houseSize || null,
             status: "pending",
             rejection_reason: null,
@@ -270,7 +270,10 @@ const getPropertyById = async(req, res, next) => {
     try {
         const data = await propertyRepository.getPropertyById(req.params.id);
 
-        if (!data) {
+        const canViewPrivateListing = req.user && data && (
+            req.user.id === data.seller_id || req.user.role === 'ADMIN'
+        );
+        if (!data || (data.status !== 'approved' && !canViewPrivateListing)) {
             return res.status(404).json({ message: "Property not found." });
         }
 
@@ -334,7 +337,7 @@ const getPriceInsight = async(req, res, next) => {
 
         const { data: target, error: targetError } = await supabase
             .from("properties")
-            .select("id, type, price, bedrooms, bathrooms, latitude, longitude, house_size, land_size")
+            .select("id, type, listing_type, price, bedrooms, bathrooms, latitude, longitude, house_size, land_size")
             .eq("id", id)
             .single();
 
@@ -344,7 +347,7 @@ const getPriceInsight = async(req, res, next) => {
 
         const { data: candidates, error: candidatesError } = await supabase
             .from("properties")
-            .select("id, type, price, bedrooms, bathrooms, latitude, longitude, house_size, land_size")
+            .select("id, type, listing_type, price, bedrooms, bathrooms, latitude, longitude, house_size, land_size")
             .eq("status", "approved")
             .neq("id", id)
             .limit(200);

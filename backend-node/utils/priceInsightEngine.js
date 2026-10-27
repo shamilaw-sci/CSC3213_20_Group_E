@@ -5,7 +5,8 @@
 
 /** Picks the most relevant size field for a property (sqft). */
 function getPropertySize(property) {
-    const size = property?.house_size ?? property?.land_size;
+    // Listing forms store house_size in sqft and land_size in perches.
+    const size = property?.house_size ?? (property?.land_size == null ? null : Number(property.land_size) * 272.25);
     return Number.isFinite(Number(size)) && Number(size) > 0 ? Number(size) : null;
 }
 
@@ -64,6 +65,8 @@ function calculatePriceInsight(targetProperty, comparableProperties = []) {
     if (targetPps === null) return null;
 
     const comparablePpsValues = comparableProperties
+        .filter(property => (!targetProperty.type || String(property.type || '').toLowerCase() === String(targetProperty.type).toLowerCase()) &&
+            (!targetProperty.listing_type || String(property.listing_type || '').toLowerCase() === String(targetProperty.listing_type).toLowerCase()))
         .map(pricePerSqft)
         .filter((v) => v !== null);
 

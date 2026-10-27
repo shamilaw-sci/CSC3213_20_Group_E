@@ -49,13 +49,29 @@ const PropertyDetails = () => {
     const [similarLoading, setSimilarLoading] = useState(true);
     const [priceInsight, setPriceInsight] = useState(null);
     const isOwner = Boolean(user && property && (property.seller_id === user.id || property.user_id === user.id));
+    const userId = user?.id;
 
     useEffect(() => {
+        let active = true;
         window.scrollTo(0, 0);
+        setLoading(true);
+        setError(null);
+        setProperty(null);
+        setIsFavorite(false);
+        setIsFavLoading(false);
+        setCurrentImageIndex(0);
+        setCurrentTourIndex(0);
+        setShowGallery(false);
+        setShowVirtualTour(false);
+        setShowAnimation(false);
+        setSimilarProperties([]);
+        setSimilarLoading(true);
+        setPriceInsight(null);
         const fetchProperty = async () => {
             try {
                 // Fetch property details
                 const res = await api.get(`/properties/${id}`);
+                if (!active) return;
                 setProperty(res.data.property);
 
                 // Track view silently in background
@@ -63,31 +79,34 @@ const PropertyDetails = () => {
 
                 // Fetch similar properties silently in background
                 api.get(`/properties/${id}/similar`)
-                    .then(simRes => setSimilarProperties(simRes.data.properties || []))
+                    .then(simRes => { if (active) setSimilarProperties(simRes.data.properties || []); })
                     .catch(() => {})
-                    .finally(() => setSimilarLoading(false));
+                    .finally(() => { if (active) setSimilarLoading(false); });
 
                 // Fetch statistical price insight silently in background
                 api.get(`/properties/${id}/price-insight`)
-                    .then(priceRes => setPriceInsight(priceRes.data.insight || null))
+                    .then(priceRes => { if (active) setPriceInsight(priceRes.data.insight || null); })
                     .catch(() => {});
 
                 // If user is logged in, check if it's a favorite
-                if (user) {
-                    const favRes = await api.get('/favorites');
-                    const favList = favRes.data.favorites || [];
-                    if (favList.some(f => f.property_id === id)) {
-                        setIsFavorite(true);
+                if (userId) {
+                    try {
+                        const favRes = await api.get('/favorites');
+                        const favList = favRes.data.favorites || [];
+                        if (active) setIsFavorite(favList.some(f => f.id === id));
+                    } catch {
+                        // Favorite availability must not hide an otherwise valid listing.
                     }
                 }
             } catch (err) {
-                setError(err.response?.data?.message || "Failed to load property.");
+                if (active) setError(err.response?.data?.message || "Failed to load property.");
             } finally {
-                setLoading(false);
+                if (active) setLoading(false);
             }
         };
         fetchProperty();
-    }, [id, user]);
+        return () => { active = false; };
+    }, [id, userId]);
 
     const handleToggleFavorite = async () => {
         if (!user) {
@@ -442,6 +461,7 @@ const PropertyDetails = () => {
                             <PriceAnalyticsDashboard 
                                 propertyId={property.id} 
                                 currentPrice={property.price} 
+                                insight={priceInsight}
                                 assessmentNumber={property.assessment_number || ''} 
                             />
                         )}

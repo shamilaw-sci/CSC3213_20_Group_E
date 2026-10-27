@@ -95,6 +95,16 @@ const adminRepository = {
         return listing;
     },
 
+    // Only the request that changes moderation state should send match alerts.
+    approveListingOnce: async (id) => {
+        const { data, error } = await supabase.from('properties')
+            .update({ status: 'approved', rejection_reason: null })
+            .eq('id', id).neq('status', 'approved')
+            .select('*, seller:users!properties_seller_id_fkey(name, email)').maybeSingle();
+        if (error) throw error;
+        return data;
+    },
+
     // 7. Update Listing Status
     updateListingStatus: async (id, updates) => {
         const { data, error } = await supabase

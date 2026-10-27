@@ -763,7 +763,7 @@ const ProfileSettings = () => {
                                                     <div>
                                                         <div className="flex items-center justify-between mb-3">
                                                             <span className="font-bold text-slate-900 dark:text-white text-sm">
-                                                                {s.name || 'Custom Search Alert'}
+                                                                {s.title || s.name || 'Custom Search Alert'}
                                                             </span>
                                                             <button 
                                                                 onClick={() => handleDeleteSearch(s.id)}
@@ -782,20 +782,20 @@ const ProfileSettings = () => {
                                                         <button aria-label="Toggle email alerts for this saved search" type="button"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                handleToggleSearchAlerts(search.id, search.email_alerts_enabled !== false);
+                                                                handleToggleSearchAlerts(s.id, s.email_alerts_enabled !== false);
                                                             }}
                                                             className={`mt-3 flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors ${
-                                                                search.email_alerts_enabled !== false
+                                                                s.email_alerts_enabled !== false
                                                                     ? 'text-green-700 bg-green-50 dark:bg-green-900/30 dark:text-green-400'
                                                                     : 'text-gray-400 bg-gray-100 dark:bg-gray-800'
                                                             }`}
                                                         >
                                                             <Bell className="h-3.5 w-3.5" />
-                                                            {search.email_alerts_enabled !== false ? 'Email alerts on' : 'Email alerts off'}
+                                                            {s.email_alerts_enabled !== false ? 'Email alerts on' : 'Email alerts off'}
                                                         </button>
                                                     </div>
                                                     <button 
-                                                        onClick={() => navigate(`/buy?${new URLSearchParams(s).toString()}`)}
+                                                        onClick={() => navigate('/map', { state: { savedSearch: s } })}
                                                         className="w-full py-2 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-1"
                                                     >
                                                         <span>Run Search Radar</span>

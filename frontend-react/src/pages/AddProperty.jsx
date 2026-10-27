@@ -448,6 +448,7 @@ const AddProperty = () => {
             className={`mb-6 p-4 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-3 shadow-lg ${
               message.type === "success"
                 ? "bg-emerald-950/60 text-emerald-300 border border-emerald-500/40"
+                : message.type === "info" ? "bg-blue-950/60 text-blue-300 border border-blue-500/40"
                 : "bg-red-950/60 text-red-300 border border-red-500/40"
             }`}
           >

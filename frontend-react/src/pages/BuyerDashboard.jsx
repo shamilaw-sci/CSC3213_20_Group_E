@@ -588,7 +588,7 @@ const BuyerDashboard = () => {
                                         <div>
                                             <div className="flex items-center justify-between mb-3">
                                                 <span className="font-bold text-slate-900 dark:text-white text-sm">
-                                                    {s.name || 'Custom Search Alert'}
+                                                    {s.title || 'Custom Search Alert'}
                                                 </span>
                                                 <button 
                                                     onClick={() => handleDeleteSearch(s.id)}
@@ -606,7 +606,7 @@ const BuyerDashboard = () => {
                                             </div>
                                         </div>
                                         <button 
-                                            onClick={() => navigate(`/buy?${new URLSearchParams(s).toString()}`)}
+                                            onClick={() => navigate('/map', { state: { savedSearch: s } })}
                                             className="w-full py-2 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-1"
                                         >
                                             <span>Run Search Radar</span>

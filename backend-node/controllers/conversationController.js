@@ -167,12 +167,13 @@ const getConversations = async (req, res, next) => {
         const lastMessageMap = new Map();
         const unreadCountMap = new Map();
 
-        messages.forEach((message) => {
+        const messagesWithReceipts = await conversationRepository.withReadReceipts(messages, req.user.id, conversations);
+        messagesWithReceipts.forEach((message) => {
             if (!lastMessageMap.has(message.conversation_id)) {
                 lastMessageMap.set(message.conversation_id, message);
             }
 
-            if (!message.read_at && message.sender_id !== req.user.id) {
+            if (!message.viewer_read_at && message.sender_id !== req.user.id) {
                 unreadCountMap.set(
                     message.conversation_id,
                     (unreadCountMap.get(message.conversation_id) || 0) + 1
@@ -202,9 +203,10 @@ const getMessages = async (req, res, next) => {
 
         const messages = await conversationRepository.getMessagesByConversationId(conversation.id);
 
-        await conversationRepository.markMessagesAsRead(conversation.id, req.user.id);
+        await conversationRepository.markMessagesAsRead(conversation.id, req.user.id, messages);
+        const messagesWithReceipts = await conversationRepository.withReadReceipts(messages, req.user.id, [conversation]);
 
-        res.status(200).json({ conversation, messages });
+        res.status(200).json({ conversation, messages: messagesWithReceipts });
     } catch (error) {
         next(error);
     }

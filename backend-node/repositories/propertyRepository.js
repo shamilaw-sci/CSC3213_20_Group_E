@@ -34,6 +34,19 @@ const propertyRepository = {
         return data;
     },
 
+    // Listings start pending; payment must never overwrite an admin decision.
+    markListingPaidOnce: async (id) => {
+        const { data, error } = await supabase
+            .from('properties')
+            .update({ payment_status: 'Paid' })
+            .eq('id', id)
+            .or('payment_status.is.null,payment_status.neq.Paid')
+            .select('id, seller_id, title, status, payment_status')
+            .maybeSingle();
+        if (error) throw error;
+        return data;
+    },
+
     // 1. Add Property
     addProperty: async (propertyData) => {
         const { data, error } = await supabase

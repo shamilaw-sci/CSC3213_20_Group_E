@@ -19,6 +19,7 @@ router.use(protect, adminController.requireAdmin);
 
 // Verify admin session validity with database
 router.get("/verify", adminController.verifyAdmin);
+router.get('/inquiries', require('../middleware/validate')(require('../validators/inquiryValidator').listInquiriesSchema), require('../controllers/inquiryController').listInquiries);
 
 // ─── Dashboard Stats ────────────────────────────────────────
 router.get("/dashboard/stats", adminController.getDashboardStats);

@@ -75,6 +75,7 @@ app.use('/api/agents', agentRoutes);
 const adminRoutes = require('./routes/adminRoutes');
 const favoritesRoutes = require('./routes/favoritesRoutes'); // Added favorites route
 app.use('/api/admin', adminRoutes);
+app.use('/api/inquiries', require('./routes/inquiryRoutes'));
 // Routes: /api/admin/login, /api/admin/dashboard/stats, etc.
 // ----------------------------------------
 
@@ -183,6 +184,7 @@ if (process.env.VERCEL) {
             process.exit(1);
         }
         console.log(`Server is running on port ${PORT}`);
+        require('./utils/paymentReceiptQueue').start();
     });
 }
 
