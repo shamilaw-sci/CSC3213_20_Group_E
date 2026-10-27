@@ -46,3 +46,11 @@ Reproduced locally by overriding SUPABASE_URL with an invalid test URL and SUPAB
 Added explicit client mocks only to those three test files. Authorization repository auto-mocks still evaluate imported modules; numeric validation imports a controller with a client dependency; the inquiry app imports unrelated controllers that construct separate SDK clients. Those clients are outside the behavior exercised by these tests.
 
 With the same invalid configuration, all 27 suites/232 tests now pass. Application code, workflow secrets and database configuration are unchanged. A new GitHub run after the owner pushes is still needed to verify the remote result; the separate frontend failure has not yet been diagnosed.
+
+## Frontend lockfile compatibility correction
+
+The owner confirmed Backend CI passed for 251fcbe. General CI showed Go passing, backend npm audit failing, and frontend npm ci rejecting AJV dependency placements. The runner used Node 20.20.2/npm 10.8.2; local baseline used Node 24.14.1/npm 11.11.0.
+
+Reproduced the exact frontend EUSAGE/AJV errors using npm 10.8.2 locally, so the package-manager difference is sufficient to reproduce the failure even on local Node 24. Repaired the lockfile using npm 10.8.2 package-lock-only resolution, then retained only AJV/ajv-formats/json-schema-traverse placement corrections. Preserved all unrelated entries and platform metadata. Assertions confirmed the package/version set and root requirements are identical to the committed lockfile; package.json and installed node_modules were not changed.
+
+Final npm 10.8.2 ci --dry-run --ignore-scripts --no-audit --no-fund exited 0. This is install-plan validation, not an actual clean Linux install or a Node 20 test/build run; GitHub must verify those after push. Backend audit findings remain separate unresolved work. The CI audit gate remains enabled.
