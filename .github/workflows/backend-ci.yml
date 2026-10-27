@@ -2,13 +2,18 @@ name: Backend CI
 
 on:
   push:
-    branches: [ developer, dgpiumal_dev ]
+    branches: [ developer, dgpiumal_dev, version-3.0 ]
     paths:
       - 'backend-node/**'
+      - '.github/workflows/backend-ci.yml'
   pull_request:
-    branches: [ developer, dgpiumal_dev ]
+    branches: [ developer, dgpiumal_dev, version-3.0 ]
     paths:
       - 'backend-node/**'
+      - '.github/workflows/backend-ci.yml'
+
+permissions:
+  contents: read
 
 jobs:
   build-and-test:
@@ -29,7 +34,7 @@ jobs:
           cache-dependency-path: backend-node/package-lock.json
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Run tests
-        run: npm test
+        run: npm test -- --runInBand
