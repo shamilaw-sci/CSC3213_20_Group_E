@@ -19,7 +19,7 @@ const PAGE_TITLES = {
 const Topbar = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { theme, isDark, changeTheme } = useTheme();
+  const { isDark, changeTheme } = useTheme();
   const [pendingCount, setPendingCount] = useState(0);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");

@@ -35,7 +35,7 @@ const DEFAULT_SETTINGS = {
 };
 
 const SettingsPage = () => {
-  const { theme, isDark, changeTheme } = useTheme();
+  const { theme, changeTheme } = useTheme();
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);

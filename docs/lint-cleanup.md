@@ -34,3 +34,16 @@ Fresh verification on 2026-10-28:
 - Final diff/whitespace review includes this evidence update. Remote CI for batch 2 remains pending the owner's manual commit/push.
 
 Rollback remains an isolated revert of this batch. Phase 3 is still in progress; no lint rules were disabled or findings hidden with ignore-pattern renaming.
+
+## Batch 3: unused state and theme bindings (2026-10-29)
+
+The owner reported remote CI successful for batch 2, commit `52cc462`. Batch 3 removes six unused bindings from BuyerCommandHub (three), FeaturedResidences (one), admin Topbar (one) and admin SettingsPage (one). Array holes preserve the loading setters and all their existing updates. Calculator state hooks retain their values without binding unused setters; theme hooks retain the used fields. Hook call order, initial values, requests, effects and markup remain unchanged. This intentionally preserves currently invisible loading state updates rather than changing render timing as part of lint cleanup.
+
+Fresh verification across the midnight checkpoint, 2026-10-28/29:
+
+- Full ESLint scan with the existing configuration: **23 errors, 10 warnings**, down from 29 errors. All four changed files have zero findings. Remaining errors: 14 no-unused-vars, 2 no-undef, 2 static-components, 2 purity, 3 immutability; warnings remain unchanged.
+- Existing frontend suite: **14 files, 40 tests passed**, outside the sandbox.
+- Production build passed with RAYON_NUM_THREADS=1. Existing large-chunk and Lottie direct-eval warnings remain.
+- Final whitespace and diff review covers only these four source files and this progress record. No new behavior tests were added for omitted bindings; live flow coverage is not claimed.
+
+Remote CI remains pending the owner's manual commit/push. Rollback is an isolated revert of this batch; Phase 3 remains in progress.

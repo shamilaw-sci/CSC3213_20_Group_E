@@ -14,12 +14,12 @@ const BuyerCommandHub = () => {
 
     const [appointments, setAppointments] = useState([]);
     const [favorites, setFavorites] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [, setLoading] = useState(true);
 
     // Quick Home Loan Calculator State
     const [calcPrice, setCalcPrice] = useState(35000000);
-    const [calcTenureYears, setCalcTenureYears] = useState(20);
-    const [calcInterestRate, setCalcInterestRate] = useState(11.5);
+    const [calcTenureYears] = useState(20);
+    const [calcInterestRate] = useState(11.5);
 
     const monthlyEMI = useMemo(() => {
         const principalLoan = calcPrice * 0.8; // 20% down

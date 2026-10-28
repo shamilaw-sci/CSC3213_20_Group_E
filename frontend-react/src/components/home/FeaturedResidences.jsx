@@ -57,7 +57,7 @@ const formatLKR = (num) => {
 export default function FeaturedResidences() {
     const navigate = useNavigate();
     const [properties, setProperties] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchCurated = async () => {
