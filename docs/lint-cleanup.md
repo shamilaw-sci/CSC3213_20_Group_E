@@ -47,3 +47,16 @@ Fresh verification across the midnight checkpoint, 2026-10-28/29:
 - Final whitespace and diff review covers only these four source files and this progress record. No new behavior tests were added for omitted bindings; live flow coverage is not claimed.
 
 Remote CI remains pending the owner's manual commit/push. Rollback is an isolated revert of this batch; Phase 3 remains in progress.
+
+## Batch 4: admin and map bindings (2026-10-29)
+
+The owner reported remote CI successful for batch 3, commit `069ab54`. Batch 4 removes five unused bindings across admin ReportsPage (two unused filter setters), admin MessagesPage (unused loading value), admin ListingsPage (unused isLoading query field), and MapSidebar (unused setActiveMarkerId prop binding). Filter state hooks/defaults, loading setter calls, the query and all event handlers remain unchanged. Callers may continue passing the unused prop. No rules were disabled.
+
+Fresh verification:
+
+- Full ESLint scan, same scope/configuration: **18 errors, 10 warnings**, down from 23 errors. All four changed files have zero findings. Remaining errors: 9 no-unused-vars, 2 no-undef, 2 static-components, 2 purity, 3 immutability; warnings remain 8 exhaustive-deps and 2 incompatible-library.
+- Existing frontend suite: **14 files, 40 tests passed**, outside the sandbox.
+- Production build passed with RAYON_NUM_THREADS=1; existing large-chunk and Lottie direct-eval warnings remain.
+- Final whitespace/diff review includes the four source files and this evidence update. No live browser-flow verification is claimed.
+
+Remote CI is pending the owner's manual commit/push. Rollback is an isolated revert of this batch. Phase 3 remains in progress.

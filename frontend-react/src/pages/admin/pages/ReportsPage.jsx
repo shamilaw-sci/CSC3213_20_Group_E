@@ -15,8 +15,8 @@ import {
 
 const ReportsPage = () => {
   const [transactions, setTransactions] = useState([]);
-  const [typeFilter, setTypeFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [typeFilter] = useState("all");
+  const [statusFilter] = useState("all");
   const [exporting, setExporting] = useState(false);
   const [toastMsg, setToastMsg] = useState(null);
 

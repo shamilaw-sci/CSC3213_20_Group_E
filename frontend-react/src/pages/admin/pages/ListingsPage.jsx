@@ -513,7 +513,7 @@ const ListingsPage = () => {
   const [rejectTarget, setRejectTarget] = useState(null);
   const [detailsTarget, setDetailsTarget] = useState(null);
 
-  const { data: listings = [], isLoading } = useQuery({
+  const { data: listings = [] } = useQuery({
     queryKey: ['adminListings', filter],
     queryFn: async () => {
       const data = await fetchListings({ status: filter === "all" ? undefined : filter });

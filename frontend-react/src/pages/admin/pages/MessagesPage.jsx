@@ -49,7 +49,7 @@ const MessagesPage = () => {
   const [messages, setMessages] = useState([]);
   const [draft, setDraft] = useState("");
   const [attachment, setAttachment] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [toastMsg, setToastMsg] = useState(null);
