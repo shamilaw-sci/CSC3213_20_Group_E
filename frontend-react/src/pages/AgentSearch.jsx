@@ -4,7 +4,6 @@ import { Search, Star, MapPin, Award, User, Building2, ShieldCheck, ChevronRight
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import { Player } from '@lottiefiles/react-lottie-player';
-import useFetch from '../hooks/useFetch';
 import useDebounce from '../hooks/useDebounce';
 import api from '../context/api';
 

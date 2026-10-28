@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { fetchDashboardStats, fetchRevenueData, fetchUserGrowth } from "../api/adminApi";
 import "../styles/admin-global.css";
-import toast from 'react-hot-toast';
 
 // Simple SVG Donut Chart
 const DonutChart = ({ segments, size = 120 }) => {

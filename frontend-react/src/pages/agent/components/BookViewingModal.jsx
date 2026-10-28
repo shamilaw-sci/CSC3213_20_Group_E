@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
 import api from '../../../context/api';
 import { useAuth } from '../../../context/UserAuthContext';
 import { 

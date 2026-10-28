@@ -21,3 +21,16 @@ Verification:
 These checks do not establish live browser-flow coverage. The batch adds no new behavior requiring a new regression test. The owner performs commit/push; remote CI for this batch remains pending. Rollback is an isolated revert of the batch commit, retaining other phases' work.
 
 Next: another small group of unused bindings, reviewing each initializer for side effects. Hook lifecycle, nested component identity and render-time purity findings require separate behavior-focused changes. Phase 3 is complete only when the agreed lint scope has zero errors and relevant tests/build pass; this checkpoint does not meet that completion criterion.
+
+## Batch 2: seven more unused imports
+
+The owner reported remote CI successful for batch 1, commit `5905ece`. Batch 2 starts from that commit and removes seven unused import bindings across BookViewingModal (four), MapControls (one), AgentSearch (one) and admin AnalyticsPage (one). No hook calls, state initialization, event handlers or markup changed. Booking-date purity, map effect dependencies and AgentSearch's unused state/value findings remain separate work.
+
+Fresh verification on 2026-10-28:
+
+- Full ESLint scan, same scope/configuration: **29 errors, 10 warnings**, down from 36 errors. Remaining errors: 20 no-unused-vars, 2 no-undef, 2 static-components, 2 purity, 3 immutability. Warnings remain 8 exhaustive-deps and 2 incompatible-library.
+- Frontend tests: **14 files, 40 tests passed**, outside the sandbox.
+- Production build: passed with RAYON_NUM_THREADS=1; existing large-chunk and Lottie direct-eval warnings remain.
+- Final diff/whitespace review includes this evidence update. Remote CI for batch 2 remains pending the owner's manual commit/push.
+
+Rollback remains an isolated revert of this batch. Phase 3 is still in progress; no lint rules were disabled or findings hidden with ignore-pattern renaming.
