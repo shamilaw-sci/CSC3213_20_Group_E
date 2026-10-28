@@ -136,7 +136,7 @@ export const FreehandDrawControl = ({ onPolygonComplete, onDrawDelete, controlRe
         return () => {
             map.removeLayer(drawnItems);
         };
-    }, [map, controlRef, onDrawDelete]);
+    }, [map, controlRef, onDrawDelete, setIsDrawMode]);
 
     useEffect(() => {
         if (!isDrawMode) {
@@ -208,7 +208,7 @@ export const FreehandDrawControl = ({ onPolygonComplete, onDrawDelete, controlRe
             map.off('mousemove', onMouseMove);
             map.off('mouseup', onMouseUp);
         };
-    }, [map, isDrawMode, onPolygonComplete]);
+    }, [map, isDrawMode, onPolygonComplete, setIsDrawMode]);
 
     return (
         <div className="leaflet-draw-control flex flex-col gap-3 z-[1000] select-none">

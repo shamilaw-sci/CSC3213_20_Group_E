@@ -91,6 +91,12 @@ const Messages = () => {
         }
     }, [selectedId]);
 
+    const scrollToBottom = useCallback(() => {
+        setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+    }, []);
+
     useEffect(() => {
         loadConversations();
     }, [loadConversations]);
@@ -118,7 +124,7 @@ const Messages = () => {
 
         loadMessages();
         return () => controller.abort();
-    }, [selectedId, setSearchParams]);
+    }, [selectedId, setSearchParams, scrollToBottom]);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -139,12 +145,6 @@ const Messages = () => {
 
         return () => { clearInterval(interval); controller.abort(); };
     }, [selectedId, loadConversations]);
-
-    const scrollToBottom = () => {
-        setTimeout(() => {
-            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
-    };
 
     const startSupport = async () => {
         try {

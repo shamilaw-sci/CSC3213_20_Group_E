@@ -11,6 +11,55 @@ const customIcon = new L.Icon({
   iconAnchor: [12, 41],
 });
 
+// Internal component to handle leaflet map clicks
+const LocationMarker = ({ formData, setFormData, boundaryCoordinates, setBoundaryCoordinates, locationMode }) => {
+  useMapEvents({
+    click(e) {
+      if (locationMode === "point") {
+        setFormData({
+          ...formData,
+          latitude: e.latlng.lat,
+          longitude: e.latlng.lng,
+        });
+      } else {
+        setBoundaryCoordinates([
+          ...boundaryCoordinates,
+          [e.latlng.lat, e.latlng.lng],
+        ]);
+      }
+    },
+  });
+
+  return (
+    <>
+      {locationMode === "point" && formData.latitude !== null && (
+        <Marker
+          position={[formData.latitude, formData.longitude]}
+          icon={customIcon}
+        />
+      )}
+
+      {boundaryCoordinates.length > 0 && (
+        <Polygon
+          positions={boundaryCoordinates}
+          pathOptions={{ color: "blue", fillColor: "blue", fillOpacity: 0.3 }}
+        />
+      )}
+
+      {locationMode === "boundary" &&
+        boundaryCoordinates.map((pos, idx) => (
+          <CircleMarker
+            key={idx}
+            center={pos}
+            radius={5}
+            pathOptions={{ color: "red", fillColor: "red", fillOpacity: 1 }}
+          />
+        ))}
+    </>
+  );
+};
+
+
 /**
  * LocationPicker Component
  * Handles exact point placement (Drop Pin or GPS) and land boundary drawing.
@@ -51,54 +100,6 @@ const LocationPicker = ({
         alert("Unable to retrieve your location.");
         setGpsActive(false);
       }
-    );
-  };
-
-  // Internal component to handle leaflet map clicks
-  const LocationMarker = () => {
-    useMapEvents({
-      click(e) {
-        if (locationMode === "point") {
-          setFormData({
-            ...formData,
-            latitude: e.latlng.lat,
-            longitude: e.latlng.lng,
-          });
-        } else {
-          setBoundaryCoordinates([
-            ...boundaryCoordinates,
-            [e.latlng.lat, e.latlng.lng],
-          ]);
-        }
-      },
-    });
-
-    return (
-      <>
-        {locationMode === "point" && formData.latitude !== null && (
-          <Marker
-            position={[formData.latitude, formData.longitude]}
-            icon={customIcon}
-          />
-        )}
-
-        {boundaryCoordinates.length > 0 && (
-          <Polygon
-            positions={boundaryCoordinates}
-            pathOptions={{ color: "blue", fillColor: "blue", fillOpacity: 0.3 }}
-          />
-        )}
-
-        {locationMode === "boundary" &&
-          boundaryCoordinates.map((pos, idx) => (
-            <CircleMarker
-              key={idx}
-              center={pos}
-              radius={5}
-              pathOptions={{ color: "red", fillColor: "red", fillOpacity: 1 }}
-            />
-          ))}
-      </>
     );
   };
 
@@ -172,7 +173,7 @@ const LocationPicker = ({
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          <LocationMarker />
+          <LocationMarker formData={formData} setFormData={setFormData} boundaryCoordinates={boundaryCoordinates} setBoundaryCoordinates={setBoundaryCoordinates} locationMode={locationMode} />
         </MapContainer>
       </div>
 

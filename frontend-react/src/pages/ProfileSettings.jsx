@@ -32,7 +32,7 @@ const ProfileSettings = () => {
         if (tab && tab !== activeTab) {
             setActiveTab(tab);
         }
-    }, [searchParams]);
+    }, [searchParams, activeTab]);
 
     const handleTabChange = (tabKey) => {
         setActiveTab(tabKey);
@@ -49,6 +49,8 @@ const ProfileSettings = () => {
         confirmPassword: '',
         email_notifications: user?.email_notifications ?? true
     });
+
+    const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || '');
 
     useEffect(() => {
         if (user) {
@@ -75,8 +77,6 @@ const ProfileSettings = () => {
         total_sales: 14,
         total_rentals: 28
     });
-    
-    const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || '');
     
     // UI State
     const [loading, setLoading] = useState(false);

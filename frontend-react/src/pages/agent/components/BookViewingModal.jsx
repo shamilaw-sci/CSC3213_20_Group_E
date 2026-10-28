@@ -49,7 +49,7 @@ import toast from 'react-hot-toast';
 
 const BookViewingModal = ({ agent, listings, onClose, onSuccess }) => {
   const { user } = useAuth();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState(() => ({
     client_name: user?.name || '',
     client_email: user?.email || '',
     client_phone: user?.phone || '',
@@ -58,7 +58,7 @@ const BookViewingModal = ({ agent, listings, onClose, onSuccess }) => {
     preferred_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
     preferred_time: 'Morning (9:00 AM - 12:00 PM)',
     notes: ''
-  });
+  }));
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {

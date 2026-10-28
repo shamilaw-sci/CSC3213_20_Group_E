@@ -77,39 +77,37 @@ const BuyPage = () => {
     });
 
     useEffect(() => {
-        fetchProperties();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [filters]);
+        const fetchProperties = async () => {
+            setLoading(true);
+            try {
+                // Build query params
+                const params = new URLSearchParams();
 
-    const fetchProperties = async () => {
-        setLoading(true);
-        try {
-            // Build query params
-            const params = new URLSearchParams();
-            
-            // Check property types (if only one is selected, pass it, else don't strictly filter or handle multiple in backend)
-            // For now, if exactly one is true, pass it. If multiple are true, we might need a different API approach, 
-            // but we'll stick to basic filtering or handle it mostly on the frontend if the backend doesn't support array.
-            const activeTypes = Object.keys(filters.propTypes).filter(k => filters.propTypes[k]);
-            if (activeTypes.length === 1) {
-                params.append('type', activeTypes[0]);
+                // Check property types (if only one is selected, pass it, else don't strictly filter or handle multiple in backend)
+                // For now, if exactly one is true, pass it. If multiple are true, we might need a different API approach,
+                // but we'll stick to basic filtering or handle it mostly on the frontend if the backend doesn't support array.
+                const activeTypes = Object.keys(filters.propTypes).filter(k => filters.propTypes[k]);
+                if (activeTypes.length === 1) {
+                    params.append('type', activeTypes[0]);
+                }
+
+                if (filters.beds !== 'Any') params.append('beds', filters.beds.replace('+', ''));
+                if (filters.baths !== 'Any') params.append('baths', filters.baths.replace('+', ''));
+                params.append('listing_type', filters.listingType);
+
+                const res = await api.get(`/properties?${params.toString()}`);
+                const fetchedProps = Array.isArray(res.data)
+                    ? res.data
+                    : (res.data?.properties || res.data?.data || []);
+                setProperties(fetchedProps);
+            } catch (error) {
+                (toast.error('Error fetching properties:'), console.error('Error fetching properties:', error));
+            } finally {
+                setLoading(false);
             }
-
-            if (filters.beds !== 'Any') params.append('beds', filters.beds.replace('+', ''));
-            if (filters.baths !== 'Any') params.append('baths', filters.baths.replace('+', ''));
-            params.append('listing_type', filters.listingType);
-
-            const res = await api.get(`/properties?${params.toString()}`);
-            const fetchedProps = Array.isArray(res.data) 
-                ? res.data 
-                : (res.data?.properties || res.data?.data || []);
-            setProperties(fetchedProps);
-        } catch (error) {
-            (toast.error('Error fetching properties:'), console.error('Error fetching properties:', error));
-        } finally {
-            setLoading(false);
-        }
-    };
+        };
+        fetchProperties();
+    }, [filters]);
 
     const handleMessageSeller = (propertyId) => {
         navigate(`/property/${propertyId}`);

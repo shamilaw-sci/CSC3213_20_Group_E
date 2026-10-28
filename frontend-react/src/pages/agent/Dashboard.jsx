@@ -23,13 +23,9 @@ const PIPELINE_STAGES = [
 ];
 
 const AgentDashboard = () => {
-        const { user, logout } = useAuth();
+    const { user } = useAuth();
     const navigate = useNavigate();
 
-    const handleLogout = async () => {
-        await logout();
-        navigate('/login');
-    };
     
     // UI State
     const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'pipeline' | 'properties' | 'messages'
@@ -1162,7 +1158,7 @@ const AgentDashboard = () => {
                                     {selectedLeadDetail.lead_source.split('• Note:')[0]}
                                 </p>
                                 <p className="text-[11px] text-blue-700 dark:text-blue-300">
-                                    Received: {new Date(selectedLeadDetail.created_at || Date.now()).toLocaleString()}
+                                    Received: {selectedLeadDetail.created_at ? new Date(selectedLeadDetail.created_at).toLocaleString() : 'Unknown'}
                                 </p>
                             </div>
                         )}

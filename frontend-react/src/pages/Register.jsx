@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/UserAuthContext';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import toast from 'react-hot-toast';
 import { Player } from '@lottiefiles/react-lottie-player';
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { m, LazyMotion } from 'framer-motion';
 import api from '../context/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,7 +31,7 @@ const Register = () => {
     const {
         register,
         handleSubmit,
-        watch,
+        control,
         setValue,
         formState: { errors, isValid }
     } = useForm({
@@ -47,7 +47,7 @@ const Register = () => {
         mode: 'onChange' // Validates on every keystroke
     });
 
-    const selectedRole = watch('role');
+    const selectedRole = useWatch({ control, name: 'role' });
 
     const onSubmit = async (data) => {
         setLoading(true);

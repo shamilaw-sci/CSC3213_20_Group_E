@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/UserAuthContext';
 import { useForm } from 'react-hook-form';
@@ -47,48 +47,14 @@ const Login = () => {
     const {
         register: registerReset,
         handleSubmit: handleSubmitReset,
-        watch: watchReset,
         formState: { errors: resetErrors, isValid: isResetValid }
     } = useForm({
         resolver: zodResolver(resetSchema),
         mode: 'onChange'
     });
     
-    const resetEmail = watchReset('email');
 
-    // Google Sign-In setup
-    useEffect(() => {
-        if (step !== 1) return;
-
-        const initGoogleAuth = () => {
-            if (window.google?.accounts?.id) {
-                window.google.accounts.id.initialize({
-                    client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-                    callback: handleGoogleResponse
-                });
-                
-                if (googleBtnRef.current) {
-                    window.google.accounts.id.renderButton(
-                        googleBtnRef.current,
-                        { theme: 'outline', size: 'large', width: 350, shape: 'pill' }
-                    );
-                }
-            }
-        };
-
-        if (window.google) {
-            initGoogleAuth();
-        } else {
-            const script = document.createElement('script');
-            script.src = 'https://accounts.google.com/gsi/client';
-            script.async = true;
-            script.defer = true;
-            script.onload = initGoogleAuth;
-            document.body.appendChild(script);
-        }
-    }, [step]);
-
-    const handleGoogleResponse = async (response) => {
+    const handleGoogleResponse = useCallback(async (response) => {
         try {
             const googleRes = await loginWithGoogle(response.credential);
             const loggedUser = googleRes?.user;
@@ -128,7 +94,51 @@ const Login = () => {
             }
             console.error("Google sign-in failed:", err.response?.data?.message || err.message);
         }
-    };
+    }, [loginWithGoogle, location.state, navigate, from]);
+
+    // Google Sign-In setup
+    useEffect(() => {
+        if (step !== 1) return;
+
+        let cancelled = false;
+        let script;
+
+        const initGoogleAuth = () => {
+            if (cancelled) return;
+            if (window.google?.accounts?.id) {
+                window.google.accounts.id.initialize({
+                    client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+                    callback: handleGoogleResponse
+                });
+
+                if (googleBtnRef.current) {
+                    window.google.accounts.id.renderButton(
+                        googleBtnRef.current,
+                        { theme: 'outline', size: 'large', width: 350, shape: 'pill' }
+                    );
+                }
+            }
+        };
+
+        if (window.google) {
+            initGoogleAuth();
+        } else {
+            script = document.createElement('script');
+            script.src = 'https://accounts.google.com/gsi/client';
+            script.async = true;
+            script.defer = true;
+            script.onload = initGoogleAuth;
+            document.body.appendChild(script);
+        }
+
+        return () => {
+            cancelled = true;
+            if (script) {
+                script.onload = null;
+                script.remove();
+            }
+        };
+    }, [step, handleGoogleResponse]);
 
     const handleSocialLogin = (provider) => {
         toast.error(`${provider} login is not yet configured.`);

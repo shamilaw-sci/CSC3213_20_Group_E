@@ -1,6 +1,6 @@
 # Phase 3: incremental lint cleanup
 
-Status: in progress. First checkpoint: 2026-10-28, based on `5a8cddd`.
+Status: **local Phase 3 implementation and verification complete** (2026-10-29). Final owner commit/push and remote CI verification are pending. First checkpoint: 2026-10-28, based on `5a8cddd`. Earlier batch statuses below are historical.
 
 ## Baseline and scope
 
@@ -74,3 +74,50 @@ Fresh verification:
 - Final whitespace/diff review covers the three source files and this progress update. Live browser flows were not rerun.
 
 Remote CI remains pending the owner's manual commit/push. Rollback is an isolated revert of this batch. Phase 3 remains in progress; behavior-related findings require separately scoped fixes.
+
+## Batch 6: remaining simple import and hook-result bindings (2026-10-29)
+
+The owner reported remote CI successful for batch 5, commit `d17c787`. Batch 6 removes three unused bindings: Register's domAnimation import, UserAuthContext's toast import, and MyProperties' paymentConfig hook-result field. Authentication/payment functions, the usePayhere call and its argument remain unchanged. No dependencies, effect logic or markup changed.
+
+Fresh verification:
+
+- Full ESLint scan, same scope/configuration: **11 errors, 10 warnings**, down from 14 errors. UserAuthContext and MyProperties have zero findings; Register retains its existing React Hook Form incompatible-library warning.
+- Remaining errors: 2 no-unused-vars, 2 no-undef, 2 static-components, 2 purity and 3 immutability. Warnings remain 8 exhaustive-deps and 2 incompatible-library.
+- Existing frontend suite: **14 files, 40 tests passed**, outside the sandbox.
+- Production build passed with RAYON_NUM_THREADS=1; existing large-chunk and Lottie direct-eval warnings remain.
+- Final whitespace/diff review covers these three source files and this record. Live authentication and payment flows were not exercised.
+
+Remote CI remains pending the owner's manual commit/push. Rollback is an isolated revert of this batch. Phase 3 remains in progress. Remaining unused findings involve Login's watch call and an unused AgentDashboard logout handler and will be reviewed separately.
+
+## Final Phase 3 cleanup and acceptance (2026-10-29)
+
+The owner requested one commit after finishing the rest of Phase 3, so batch 6 and these final changes remain together in the working tree. Earlier batch commits are retained; no history rewrite, commit or push was performed by the agent.
+
+### Final changes
+
+- Hoisted LocationPicker's LocationMarker and AddProperty's MapClickEvents to module scope, passing current values/setters as props. Parent rerenders retain child component identity instead of remounting map event components.
+- Scoped BuyPage's fetch helper inside its filter effect, made Messages' scroll helper a stable callback declared before use, and declared profile avatar state before its synchronization effect.
+- Stabilized AgentProfile and admin UsersPage fetch callbacks with their actual dependencies. Included the map drawing setter and current tab in relevant effects. No endpoint, permission or payment rules changed.
+- Removed Login's unused reset-email watch subscription and the Agent dashboard's unused logout handler. Google response handling now depends on current auth/navigation inputs; the SDK effect cancels obsolete onload handlers and removes its own pending script on cleanup.
+- Replaced Register's render-time watch call with useWatch for the role field, preserving role-driven Agent details.
+- Used a lazy initializer for the booking form's tomorrow date, retaining its existing UTC/date arithmetic and preserving user edits on rerender. Missing CRM lead timestamps now display `Unknown` rather than an invented current timestamp. Existing timestamps retain their locale formatting.
+- Changed fix-imports.js to Node ESM imports, matching the frontend package module type. Only its syntax was checked; this file-mutating maintenance utility was not executed.
+
+### Regression and independent review evidence
+
+Before the fixes, the new LocationPicker lifecycle test failed with two mounts instead of one, and the Google callback test failed because provider updates left the old login function installed. Both passed after their fixes. A pending-SDK-load test then failed with two script elements; effect cleanup fixed that, and the test also checks that an obsolete saved onload handler cannot initialize Google after a newer render, while the current handler can. An independent reviewer identified the same SDK race and confirmed the correction on re-review with no remaining blockers.
+
+Five new tests cover map event identity/current props, current Google auth callbacks, delayed SDK cleanup, Agent registration role switching, and booking date initialization/edit persistence. API/auth/SDK boundaries are mocked; no live accounts, emails, database writes or payments were exercised. The registration test's initial incorrect Buyer button name was corrected to the actual `Buy Property` label; that test setup failure was not an application defect.
+
+| Acceptance check | Final local result |
+| --- | --- |
+| Full frontend lint, including fix-imports.js | `npm --prefix frontend-react run lint`: exit 0, **0 errors / 0 warnings**, down from 51 / 10. Same ESLint rules and scope; no new rule suppressions. The preexisting BuyPage effect suppression was removed. |
+| Frontend regression suite | `npm --prefix frontend-react test -- --maxWorkers=1`: **18 files, 45 tests passed**, outside the sandbox. |
+| Production bundle | `RAYON_NUM_THREADS=1` with `npm --prefix frontend-react run build`: exit 0, outside the sandbox. |
+| Maintenance utility syntax | `node --check frontend-react/fix-imports.js`: exit 0; utility not executed. |
+| Review | Independent review completed; reported SDK race fixed and re-reviewed. |
+| Final patch hygiene | `git diff --check`: verified after the documentation update. |
+
+Existing production-build warnings about large chunks and Lottie direct eval remain outside lint acceptance. Backend/Go were not changed or rerun for this frontend-only closeout. Fresh Linux/Node 20 CI verification for the final commit remains pending; local Node 24 checks do not replace it. Frontend lint is not yet an enabled workflow gate; adding a recurring lint gate is a separate CI follow-up. Live UI verification and comprehensive E2E coverage are not claimed.
+
+After the owner commits/pushes, verify Frontend CI and Thirasara CI Pipeline for that exact commit before final remote closeout. Rollback should revert that final commit independently, preserving prior phases and batch commits. Next roadmap phase is Phase 4: repeatable database setup, starting with a read-only SQL inventory and migration design; live database changes still require explicit permission.

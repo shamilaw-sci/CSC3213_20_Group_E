@@ -26,7 +26,7 @@ const BuyerDashboard = () => {
         if (tab && tab !== activeTab) {
             setActiveTab(tab);
         }
-    }, [searchParams]);
+    }, [searchParams, activeTab]);
 
     const handleTabChange = (key) => {
         setActiveTab(key);

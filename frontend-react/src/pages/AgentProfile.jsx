@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../context/api';
 import { useAuth } from '../context/UserAuthContext';
@@ -70,7 +70,7 @@ const AgentProfile = () => {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showStudioModal, setShowStudioModal] = useState(false);
 
-  const fetchAgent = async () => {
+  const fetchAgent = useCallback(async () => {
     try {
       const response = await api.get(`/agents/${id}`);
       setAgentData(response.data.agent);
@@ -81,11 +81,11 @@ const AgentProfile = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     fetchAgent();
-  }, [id]);
+  }, [fetchAgent]);
 
   // Quick In-Situ Avatar Upload
   const handleQuickAvatarUpload = (e) => {

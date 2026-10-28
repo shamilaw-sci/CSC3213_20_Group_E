@@ -24,7 +24,7 @@ const MyProperties = () => {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('all');
     const [payMessage, setPayMessage] = useState({ type: '', text: '' });
-    const { triggerPayment, paymentConfig } = usePayhere(setPayMessage);
+    const { triggerPayment } = usePayhere(setPayMessage);
 
     const fetchProperties = async () => {
         try {

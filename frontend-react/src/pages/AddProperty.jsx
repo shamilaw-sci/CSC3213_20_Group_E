@@ -35,6 +35,26 @@ import { useAuth } from "../context/UserAuthContext";
 import Navbar from "../components/layout/Navbar";
 import usePropertyForm from "../hooks/usePropertyForm";
 
+const MapClickEvents = ({ locationMode, setFormData, setGpsActive, setBoundaryCoordinates }) => {
+  useMapEvents({
+    click(e) {
+      if (locationMode === "point") {
+        setFormData((prev) => ({
+          ...prev,
+          latitude: e.latlng.lat,
+          longitude: e.latlng.lng,
+        }));
+        setGpsActive(false);
+      } else if (locationMode === "boundary") {
+        setBoundaryCoordinates((prev) => [...prev, [e.latlng.lat, e.latlng.lng]]);
+      }
+    },
+  });
+  return null;
+};
+
+
+
 // Custom Leaflet marker icon
 const customIcon = new L.Icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
@@ -187,25 +207,6 @@ const AddProperty = () => {
     );
   };
 
-  const MapClickEvents = () => {
-    useMapEvents({
-      click(e) {
-        if (locationMode === "point") {
-          setFormData((prev) => ({
-            ...prev,
-            latitude: e.latlng.lat,
-            longitude: e.latlng.lng,
-          }));
-          setGpsActive(false);
-        } else if (locationMode === "boundary") {
-          setBoundaryCoordinates((prev) => [...prev, [e.latlng.lat, e.latlng.lng]]);
-        }
-      },
-    });
-    return null;
-  };
-
-  
   const handleVirtualTourUpload = (e) => {
     const files = Array.from(e.target.files);
 
@@ -712,7 +713,7 @@ const AddProperty = () => {
                     style={{ height: "100%", width: "100%" }}
                   >
                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                    <MapClickEvents />
+                    <MapClickEvents locationMode={locationMode} setFormData={setFormData} setGpsActive={setGpsActive} setBoundaryCoordinates={setBoundaryCoordinates} />
 
                     {locationMode === "point" && formData.latitude && formData.longitude && (
                       <Marker position={[formData.latitude, formData.longitude]} icon={customIcon} />

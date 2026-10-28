@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
 import { fetchUsers, banUser, unbanUser, updateUserRole, fetchRoleRequests, approveRoleRequest, rejectRoleRequest } from "../api/adminApi";
 import "../styles/admin-global.css";
@@ -63,27 +63,27 @@ const UsersPage = () => {
   const [roleChangeSelections, setRoleChangeSelections] = useState({});
   const [roleChanging, setRoleChanging] = useState({});
 
-  const showToast = (msg, type = "success") => {
+  const showToast = useCallback((msg, type = "success") => {
     setToastMsg({ msg, type });
     setTimeout(() => setToastMsg(null), 3000);
-  };
+  }, []);
 
-  const loadUsers = () => {
+  const loadUsers = useCallback(() => {
     fetchUsers({ role: roleFilter !== "all" ? roleFilter : undefined })
       .then((d) => { if (d?.users) setUsers(d.users); })
       .catch((err) => { toast.error("Failed to load users"); console.error(err); });
-  };
+  }, [roleFilter]);
 
-  const loadRoleRequests = () => {
+  const loadRoleRequests = useCallback(() => {
     setRequestsLoading(true);
     fetchRoleRequests("pending")
       .then((d) => setRoleRequests(d?.requests || []))
       .catch(() => showToast("Failed to load role requests", "error"))
       .finally(() => setRequestsLoading(false));
-  };
+  }, [showToast]);
 
-  useEffect(() => { loadUsers(); }, [roleFilter]);
-  useEffect(() => { if (activeSection === "requests") loadRoleRequests(); }, [activeSection]);
+  useEffect(() => { loadUsers(); }, [loadUsers]);
+  useEffect(() => { if (activeSection === "requests") loadRoleRequests(); }, [activeSection, loadRoleRequests]);
 
   const handleBan = async (reason) => {
     if (!banTarget) return;
