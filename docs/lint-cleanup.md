@@ -60,3 +60,17 @@ Fresh verification:
 - Final whitespace/diff review includes the four source files and this evidence update. No live browser-flow verification is claimed.
 
 Remote CI is pending the owner's manual commit/push. Rollback is an isolated revert of this batch. Phase 3 remains in progress.
+
+## Batch 5: page state bindings (2026-10-29)
+
+The owner reported remote CI successful for batch 4, commit `c2f294e`. Batch 5 removes four unused bindings across AgentSearch (fetchError value and totalRentals local), ProfileSettings (loadingData value), and AddProperty (compressing value). All state hooks, initializers, setters and setter calls remain. The removed totalRentals expression only read a plain API response field and supplied a zero fallback; its value was unused. No request handling, auth/payment behavior, effect dependencies or markup changed. Existing error-display limitations remain; omitting fetchError does not add user-facing error feedback.
+
+Fresh verification:
+
+- Full ESLint scan, same scope/configuration: **14 errors, 10 warnings**, down from 18 errors. AgentSearch has zero findings. AddProperty retains its static-components error; ProfileSettings retains its immutability error and effect-dependency warning.
+- Remaining errors: 5 no-unused-vars, 2 no-undef, 2 static-components, 2 purity and 3 immutability. Warnings remain 8 exhaustive-deps and 2 incompatible-library.
+- Existing frontend suite: **14 files, 40 tests passed**, outside the sandbox.
+- Production build passed with RAYON_NUM_THREADS=1; existing large-chunk and Lottie direct-eval warnings remain.
+- Final whitespace/diff review covers the three source files and this progress update. Live browser flows were not rerun.
+
+Remote CI remains pending the owner's manual commit/push. Rollback is an isolated revert of this batch. Phase 3 remains in progress; behavior-related findings require separately scoped fixes.

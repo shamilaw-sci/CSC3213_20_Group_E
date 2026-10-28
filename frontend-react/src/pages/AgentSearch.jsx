@@ -21,7 +21,7 @@ const AgentSearch = () => {
 
     const [agents, setAgents] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [fetchError, setFetchError] = useState(null);
+    const [, setFetchError] = useState(null);
 
     // Fetches all approved agents directly
     const loadAgents = async () => {
@@ -221,7 +221,6 @@ const AgentSearch = () => {
                             const specialization = prof.specialization || 'Both Sales & Rentals';
                             const licenseNumber = prof.license_number || 'CEA-SL';
                             const totalSales = prof.total_sales || 0;
-                            const totalRentals = prof.total_rentals || 0;
                             
                             return (
                                 <div 

@@ -88,7 +88,7 @@ const ProfileSettings = () => {
     const [favorites, setFavorites] = useState([]);
     const [appointments, setAppointments] = useState([]);
     const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
-    const [loadingData, setLoadingData] = useState(true);
+    const [, setLoadingData] = useState(true);
 
     // ── Mortgage & Loan Calculator State ─────────────────────────────────────
     const [calcPrice, setCalcPrice] = useState(35000000); // 35 Million LKR default

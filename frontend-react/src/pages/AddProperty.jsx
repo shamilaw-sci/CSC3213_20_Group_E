@@ -105,7 +105,7 @@ const AddProperty = () => {
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [gpsActive, setGpsActive] = useState(false);
-  const [compressing, setCompressing] = useState(false);
+  const [, setCompressing] = useState(false);
 
   const {
     formData,
