@@ -1,5 +1,7 @@
 # CI consistency: first increment
 
+Status: **Phase 2 complete for the agreed first increment**, reviewed 2026-10-28 at commit `25ad25d`. Historical checkpoints below describe the work as it happened; the acceptance review at the end is the current status.
+
 ## Purpose
 
 Keep version-3.0 improvements checked before their eventual PR to developer. Preserve the existing workflows and security/build checks; consolidation is a separate future decision.
@@ -18,7 +20,7 @@ Keep version-3.0 improvements checked before their eventual PR to developer. Pre
 
 Node 20 remains the existing CI/Docker runtime major; no production runtime upgrade is included. Local baseline used Node 24.14.1, so local results alone do not prove Node 20 compatibility. setup-node resolves the current Node 20 release, not an exact patch. A supported-runtime migration and exact pinning need separate review across CI, Docker and hosting.
 
-Go follows the module's minimum version (currently 1.26.0); local baseline used 1.26.2. The existing Go Docker image uses a floating tag and remains future reproducibility work.
+Go follows the module's minimum version, now 1.26.10; the Docker builder is pinned to `golang:1.26.10-alpine`. The original local baseline used 1.26.2.
 
 ## Verification performed locally
 
@@ -70,4 +72,20 @@ Local verification of the pending change:
 - Frontend tests passed: 14 files, 40 tests. The sandbox attempt failed before test execution with temporary-file rename EPERM errors; the outside-sandbox rerun passed.
 - Production build passed with RAYON_NUM_THREADS=1. Existing large-chunk and third-party Lottie direct-eval warnings remain.
 
-Phase 2 remains open pending the owner's commit/push of the frontend classification change and evidence update, remote CI verification of that commit, and the remaining acceptance review (including documented failure propagation and runtime-policy limitations). Node CI still uses major 20 while local verification uses Node 24.14.1; exact Node/npm pinning and a supported-runtime migration remain separately reviewed work. Repository-wide lint cleanup is Phase 3 and has not been completed.
+At this checkpoint Phase 2 was open pending commit/push, remote CI and acceptance review. These items are resolved by the review below. Node CI still uses major 20 while local verification uses Node 24.14.1; exact Node/npm pinning and a supported-runtime migration remain separately reviewed work. Repository-wide lint cleanup is Phase 3 and has not been completed.
+
+## Phase 2 acceptance review (2026-10-28)
+
+The owner committed and pushed `25ad25d`. Their GitHub Actions screenshot shows Frontend CI #41 and Thirasara CI Pipeline #54 both successful for that exact commit on version-3.0. Backend CI is path-filtered and was not expected for this frontend/docs change; the general pipeline includes backend verification. This evidence is the owner's supplied run summary rather than a new independent step-log review.
+
+| Criterion | Evidence and result |
+| --- | --- |
+| Relevant branch coverage | Fresh YAML assertions passed for version-3.0 pushes and developer-target PRs in all three workflows. Service path filters remain explicit; general CI has no service path filter. PR event execution itself was not exercised by opening a PR. |
+| Lockfile installs and service checks | Fresh assertions passed for npm ci, backend/frontend test commands, high-severity audit gates, module-derived Go version, uncached Go race tests and Docker dependencies on all three service jobs. Latest general and frontend remote runs are green. |
+| Runtime policy | All Node CI workflows use major 20, matching the existing Node Docker builder major. Go minimum and Docker builder use 1.26.10. Local Node 24 differs; Linux CI supplies the Node 20 execution evidence. Exact Node/npm and image-digest reproducibility are outside this increment. |
+| Failures propagate | Earlier remote backend test initialization failures at 8358ee4 failed Backend CI; after test isolation corrections, the owner confirmed Backend CI passed at 251fcbe. This demonstrates a real test-run failure propagating, though no deliberate assertion-failure experiment was added. Fresh YAML review found no job/step continue-on-error flags or shell failure-suppression fallbacks in these workflows. Docker depends on successful service jobs. |
+| Known debt remains visible | Full lint is still recorded as 51 errors and 10 warnings at the original baseline; it is not advertised as a clean gate. Existing bundle and Lottie warnings remain. |
+
+No application changes, dependency upgrades, live database writes, deployment, PR creation or branch-protection changes were needed for this closeout. Mandatory merge blocking depends on repository rulesets/branch protection and has not been verified or enabled. A runtime migration, exact Node/npm pinning, Docker image digest pinning and removal of duplicate workflow runs remain explicit follow-ups rather than completed claims.
+
+Next roadmap phase: **Phase 3 — lint cleanup**. Re-measure full lint first, preserve the same comparison scope, and address small file groups with behavior checks when hook/lifecycle changes are involved. Rollback of the Phase 2 implementation is through separately reviewed reverts of its commits; retain failing quality gates and do not apply a blanket branch reset. The closeout documentation can be reverted independently.
