@@ -1,6 +1,6 @@
 module go-map-service
 
-go 1.26.0
+go 1.26.10
 
 require (
 	github.com/gin-contrib/gzip v1.2.8
