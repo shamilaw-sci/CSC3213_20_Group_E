@@ -54,3 +54,20 @@ The owner confirmed Backend CI passed for 251fcbe. General CI showed Go passing,
 Reproduced the exact frontend EUSAGE/AJV errors using npm 10.8.2 locally, so the package-manager difference is sufficient to reproduce the failure even on local Node 24. Repaired the lockfile using npm 10.8.2 package-lock-only resolution, then retained only AJV/ajv-formats/json-schema-traverse placement corrections. Preserved all unrelated entries and platform metadata. Assertions confirmed the package/version set and root requirements are identical to the committed lockfile; package.json and installed node_modules were not changed.
 
 Final npm 10.8.2 ci --dry-run --ignore-scripts --no-audit --no-fund exited 0. This is install-plan validation, not an actual clean Linux install or a Node 20 test/build run; GitHub must verify those after push. Backend audit findings remain separate unresolved work. The CI audit gate remains enabled.
+
+## Remote checkpoint and pending frontend classification (2026-10-28)
+
+The owner supplied the summary screenshot for [general CI run 40739262146](https://github.com/shamilaw-sci/CSC3213_20_Group_E/actions/runs/40739262146), commit `2f5b8fc` on `version-3.0`: Success. All four jobs passed: Go tests/build, backend verification/tests, frontend tests/build, and Docker Compose build verification. The screenshot also shows 14 frontend test files and 40 tests passing. This records the supplied run summary, not an independent review of every step log or branch-protection settings.
+
+Commit `2f5b8fc` raises the module minimum to Go 1.26.10 and pins the Docker builder to `golang:1.26.10-alpine`. This supersedes the earlier Go-version/floating-builder notes above. Local uncached Go tests, vet and build passed with Go 1.26.10 outside the sandbox; sandbox test/vet attempts encountered dependency-cache access restrictions.
+
+The pending frontend change moves shadcn 4.23.0 from dependencies to devDependencies without changing its version. The application imports `shadcn/tailwind.css` at build time; both CI and the Docker builder install devDependencies before compiling the static bundle. A build environment that omits devDependencies would not support this build (Vite also requires them).
+
+Local verification of the pending change:
+
+- Compared the lockfile against HEAD: package paths, versions, integrity values and dependency metadata are unchanged; 221 package entries change dependency-classification flags.
+- npm 10.8.2 `ci --dry-run --ignore-scripts --no-audit --no-fund` passed outside the sandbox. This validates the install plan, not a fresh installation. The sandbox attempt failed with registry DNS resolution errors.
+- Frontend tests passed: 14 files, 40 tests. The sandbox attempt failed before test execution with temporary-file rename EPERM errors; the outside-sandbox rerun passed.
+- Production build passed with RAYON_NUM_THREADS=1. Existing large-chunk and third-party Lottie direct-eval warnings remain.
+
+Phase 2 remains open pending the owner's commit/push of the frontend classification change and evidence update, remote CI verification of that commit, and the remaining acceptance review (including documented failure propagation and runtime-policy limitations). Node CI still uses major 20 while local verification uses Node 24.14.1; exact Node/npm pinning and a supported-runtime migration remain separately reviewed work. Repository-wide lint cleanup is Phase 3 and has not been completed.
