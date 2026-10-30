@@ -16,6 +16,8 @@ Thirasara is a multi-service real estate platform for property listings, map-bas
 - Supabase/Postgres database with the required schema
 - Environment files based on the included `.env.example` files
 
+Database setup and isolated verification: [repeatable database setup](docs/database/setup.md). Existing installations must use its adoption procedure; do not replay the fresh baseline against a populated database.
+
 ## Environment
 
 Backend:

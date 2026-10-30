@@ -1,0 +1,5 @@
+supabase/migrations/*.sql text eol=lf
+supabase/migrations.manifest.json text eol=lf
+docs/database/phase4-baseline/* text eol=lf
+docs/database/legacy-sql/*.sql -text
+tools/database/* text eol=lf

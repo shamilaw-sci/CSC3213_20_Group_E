@@ -1,0 +1,72 @@
+[
+  {
+    "originalPath": "supabase/migrations/20260901000001_add_missing_property_columns.sql",
+    "archivePath": "docs/database/legacy-sql/20260901000001_add_missing_property_columns.sql",
+    "sha256": "1F9AC5F87F00E473834DFFF8FBB86D89D6D38750CA7872ABB06664DBBFFB731F"
+  },
+  {
+    "originalPath": "supabase/migrations/20260901000002_add_rejection_reason.sql",
+    "archivePath": "docs/database/legacy-sql/20260901000002_add_rejection_reason.sql",
+    "sha256": "0F4790C439E0A29952EAC840961809654B7F7D3CBF6E903D634F246D779EC59C"
+  },
+  {
+    "originalPath": "supabase/migrations/20260901000003_agent_schema.sql",
+    "archivePath": "docs/database/legacy-sql/20260901000003_agent_schema.sql",
+    "sha256": "1D3FBE22C352AC219697311DDFCCE16F5649197DE58548D5BCF268123F1C0AFC"
+  },
+  {
+    "originalPath": "supabase/migrations/20260901000004_chat_attachments.sql",
+    "archivePath": "docs/database/legacy-sql/20260901000004_chat_attachments.sql",
+    "sha256": "4D545762B87BFE86135B391AA39738A3FF83EADE271E0040782309E1A5DA0DE2"
+  },
+  {
+    "originalPath": "supabase/migrations/20260901000005_chat_updates.sql",
+    "archivePath": "docs/database/legacy-sql/20260901000005_chat_updates.sql",
+    "sha256": "7474CFE8E4C86FA700A745798AC850F2870C5D853CDDC39C02CE1BEAA42A489D"
+  },
+  {
+    "originalPath": "supabase/migrations/20260901000006_favorites.sql",
+    "archivePath": "docs/database/legacy-sql/20260901000006_favorites.sql",
+    "sha256": "31A182545D75C67A25FDF5C0E5C293237D847D3B1BB558B52BEDE463EFAFD7BE"
+  },
+  {
+    "originalPath": "supabase/migrations/20260901000007_increment_views_rpc.sql",
+    "archivePath": "docs/database/legacy-sql/20260901000007_increment_views_rpc.sql",
+    "sha256": "E75006BA3C05EB20BCA22CA94A6673DA131590FB15AF838FE2AF95E4080034D2"
+  },
+  {
+    "originalPath": "supabase/migrations/20260901000008_missing_schema.sql",
+    "archivePath": "docs/database/legacy-sql/20260901000008_missing_schema.sql",
+    "sha256": "B5CE7BC9F87F1A3F60C1AF21E236C0880A5B5202E2982188FBE0A5533F377851"
+  },
+  {
+    "originalPath": "supabase/migrations/20260901000009_profile_updates.sql",
+    "archivePath": "docs/database/legacy-sql/20260901000009_profile_updates.sql",
+    "sha256": "F25F65426C882C846FEE8B9F061EBDA17B77A4BF52EAA13E06B84FB8DA3059AD"
+  },
+  {
+    "originalPath": "supabase/migrations/20260901000010_add_missing_indexes.sql",
+    "archivePath": "docs/database/legacy-sql/20260901000010_add_missing_indexes.sql",
+    "sha256": "74B9DCDC8994D2246ED24FE1FBAC4823963D8F12B831C6B3A93E53A78763C179"
+  },
+  {
+    "originalPath": "supabase/migrations/20260912170000_add_property_sales_history.sql",
+    "archivePath": "docs/database/legacy-sql/20260912170000_add_property_sales_history.sql",
+    "sha256": "C91604F91DF6D26395699FADE01F190DDF646C1AEC0C8D65931722D56E8CA6DD"
+  },
+  {
+    "originalPath": "supabase/migrations/20260913000000_add_virtual_tours_column.sql",
+    "archivePath": "docs/database/legacy-sql/20260913000000_add_virtual_tours_column.sql",
+    "sha256": "A04A72DF122A198324F5CE74944BE3A046B2415E073A541B8E0B2FD8870550C9"
+  },
+  {
+    "originalPath": "supabase/migrations/add_saved_search_alerts.sql",
+    "archivePath": "docs/database/legacy-sql/add_saved_search_alerts.sql",
+    "sha256": "433E665C0C2F6D411DFE7367257707CA5A3404D9EC6614DC4615A6827AE3CDAC"
+  },
+  {
+    "originalPath": "supabase/migrations/feasibility_history.sql",
+    "archivePath": "docs/database/legacy-sql/feasibility_history.sql",
+    "sha256": "2F0F726CE96125DD5C729B70A5F2F9A8FC67CD2A453ECFC4F34DDDA67D10856E"
+  }
+]
