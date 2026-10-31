@@ -92,3 +92,17 @@ When finished, stop only the started test containers, preserving originals and v
 ```powershell
 docker stop --timeout 20 supabase_storage_thirasara-phase4-c supabase_rest_thirasara-phase4-c supabase_db_thirasara-phase4-c
 ```
+
+## Checkout profiles
+
+From backend-node, `node integration/run-checkout.cjs --preflight` is read-only; `node integration/run-checkout.cjs` exercises actual local checkout/order/settlement handlers using dummy signing terms and no gateway or email delivery. The parent compares all eleven application tables, including platform_settings, and the canonical ledger after exact fixture cleanup. Ordinary Jest excludes this explicit integration profile.
+
+`node integration/run-checkout-browser.cjs` launches the separately approved manual PayHere sandbox profile. It verifies the exact retained local DB/REST, API identity, existing HTTPS ngrok tunnel to localhost5000 and free5000/5173 listeners. It reads only existing sandbox merchant credentials into memory; it does not inherit hosted DB or SMTP configuration. The child has a bounded Node heap and one native Rayon worker for this memory-constrained machine. No services are started automatically.
+
+The minimal page uses the actual usePayhere hook with controlled auth/private API transport, and explicit VITE_PAYHERE_NOTIFY_URL pointing to a random per-run ngrok callback. The public bridge permits only its health sentinel and known-order/merchant form callbacks; actual signature validation and settlement remain authoritative. Order response tracking captures originalUrl before mounted Express routers shorten request paths. Verify the public sentinel against the private session journal before opening a gateway payment. Receipt outbox creation is real; delivery is disabled.
+
+Use official sandbox cards only. Gateway completion alone is insufficient: success requires an accepted genuine signed callback, Paid local property/order, exactly one transaction and one pending receipt outbox. Cancellation/decline must leave unpaid state and no transaction/outbox. In the observed Chrome environment frames remained blank; the in-app browser rendered the actual embedded SDK dialog and nested card form. Opening observed gateway URLs directly can validate settlement but does not exercise parent-window dismissal/completion; record that distinction.
+
+The browser process accepts `status` and `stop`. Stop closes ingress/listeners, removes exact owned fixture children/properties/users, then compares eleven complete snapshots and the ledger. Preserve private journals if interrupted. `node integration/recover-checkout-browser.cjs` requires listeners5000/5173 closed, exact local identity, all eleven saved baseline hashes and exact journal ownership. Seller-mode bcrypt hashes must match the separately retained disposable password. An optional created-property journal must belong to the same run. Recovery refuses uncertainty and rolls back if baseline comparison fails; never reset or broadly delete data. Original journals and all evidence remain untracked.
+
+The unfinished `--seller-ui` mode is separate from the verified minimal checkout harness. Full photo-required seller wizard/browser-to-Storage flow is not established by these checkout checks. No actual .env changes, hosted cleanup, deployment or git operations are performed. After successful cleanup stop only the retained DB/REST services as documented above.

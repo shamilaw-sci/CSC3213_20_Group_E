@@ -11,6 +11,7 @@ const { identitySql, validateDatabase } = require('./local-stack.cjs');
 const { snapshotState, assertSameState } = require('./database-state.cjs');
 const { directRestUrl, allowSocket, allowedAppPorts } = require('./network-policy.cjs');
 const { allowPrivate, allowPublic } = require('./checkout-browser-guard.cjs');
+const { trackCheckoutResponse } = require('./checkout-response.cjs');
 const { makeLifecycle, hashState } = require('./checkout-browser-lifecycle.cjs');
 
 if (process.env.PHASE5_LOCAL_APPROVED !== 'stack-c' || process.env.NODE_ENV !== 'test'
@@ -121,13 +122,12 @@ const startup = (async () => {
                 }
             }
             if (!uiAllowed && !allowPrivate(req.method, req.originalUrl, req.body, scope)) return res.sendStatus(404);
-            const json = res.json.bind(res);
-            res.json = value => {
-                if (sellerUI && req.path === '/api/properties' && req.method === 'POST' && res.statusCode === 201 && value?.property?.seller_id === users[0].id) {
+            trackCheckoutResponse(req, res, scope, value => {
+                if (sellerUI && value?.property?.seller_id === users[0].id) {
                     const f = {id:value.property.id,label:value.property.title,user:users[0],createdViaUI:true}; fixtures.push(f); scope.properties.add(f.id);
                     fs.writeFileSync(path.join(evidence,'phase5-seller-created.private.json'),JSON.stringify({run,fixtures}));
                 }
-                if (req.path === '/api/payment/generate-hash' && res.statusCode === 200 && value?.sandbox === true && scope.properties.has(value.property_id) && typeof value.order_id === 'string') scope.orders.add(value.order_id); return json(value); };
+            });
             next();
         }); privateApi.use(app);
         apiServer = await listen(require('node:http').createServer(privateApi), 0); lifecycle.assertActive(); const apiPort = apiServer.address().port; allowedAppPorts.add(apiPort);
@@ -151,7 +151,7 @@ const startup = (async () => {
         const emptyEnv = path.join(evidence, 'checkout-empty-env'); fs.mkdirSync(emptyEnv, { recursive: true });
         vite = await createServer({ configFile: false, root: frontend, envDir: emptyEnv, logLevel: 'error',
             server: { host: '127.0.0.1', port: 5173, strictPort: true },
-            define: { 'import.meta.env.VITE_API_URL': JSON.stringify(process.env.PHASE5_TUNNEL + callbackBase) },
+            define: { 'import.meta.env.VITE_PAYHERE_NOTIFY_URL': JSON.stringify(process.env.PHASE5_TUNNEL + scope.callback) },
             optimizeDeps: { entries: [], noDiscovery: true, include: ['react','react-dom/client','react-router-dom'] },
             plugins: [{ name: 'phase5-checkout-fixture', enforce: 'pre',
                 resolveId(id, importer) { if (id.startsWith('virtual:phase5-')) return '\0'+id;
@@ -171,7 +171,7 @@ const startup = (async () => {
         if (sellerUI) {
             await vite.close();
             vite = await createServer({ root: frontend, envDir: emptyEnv, server:{host:'127.0.0.1',port:5173,strictPort:true},
-                define:{'import.meta.env.VITE_API_URL':JSON.stringify(process.env.PHASE5_TUNNEL + callbackBase)},
+                define:{'import.meta.env.VITE_PAYHERE_NOTIFY_URL':JSON.stringify(process.env.PHASE5_TUNNEL + scope.callback)},
                 plugins:[{name:'phase5-real-ui-api',enforce:'pre',load(id){if(id.replaceAll('\\','/').endsWith('/src/context/api.ts')) return `import axios from 'axios';export default axios.create({baseURL:'http://localhost:${apiPort}/api',withCredentials:true});`;}}] });
             await vite.listen();
             fs.writeFileSync(path.join(evidence,'phase5-seller-login.private.json'),JSON.stringify({email:users[0].email,password:sellerPassword}));

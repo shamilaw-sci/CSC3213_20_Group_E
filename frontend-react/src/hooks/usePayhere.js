@@ -6,7 +6,7 @@ import { useAuth } from "../context/UserAuthContext";
 export const usePayhere = (setMessage) => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   const [paymentConfig, setPaymentConfig] = useState({
     listingFee: "500.00",
     merchantId: "1236024", // Fallback sandbox ID
@@ -33,6 +33,17 @@ export const usePayhere = (setMessage) => {
   const triggerPayment = async (propertyId) => {
 
     try {
+      const explicitNotifyUrl = import.meta.env.VITE_PAYHERE_NOTIFY_URL;
+      let notifyUrl = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/payment/notify`;
+      if (explicitNotifyUrl !== undefined) {
+        const parsedNotifyUrl = new URL(explicitNotifyUrl);
+        if (!/^https:\/\/[^/\\\s]/i.test(explicitNotifyUrl) || parsedNotifyUrl.protocol !== 'https:' || parsedNotifyUrl.username ||
+            parsedNotifyUrl.password || explicitNotifyUrl.includes('#')) {
+          throw new Error('Invalid public PayHere callback URL');
+        }
+        notifyUrl = explicitNotifyUrl;
+      }
+
       const response = await api.post('/payment/generate-hash', {
         property_id: propertyId,
       });
@@ -48,7 +59,7 @@ export const usePayhere = (setMessage) => {
         merchant_id: checkout.merchant_id,
         return_url: `${window.location.origin}/seller-dashboard`,
         cancel_url: `${window.location.origin}/seller-dashboard`,
-        notify_url: `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/payment/notify`,
+        notify_url: notifyUrl,
         order_id: checkout.order_id,
         items: "Thirasara Property Listing Fee",
         amount: checkout.amount,
@@ -104,7 +115,7 @@ export const usePayhere = (setMessage) => {
       };
 
       window.payhere.startPayment(payment);
-      
+
     } catch (error) {
       console.error("Payment Initialization Error:", error);
       setMessage({

@@ -1,5 +1,50 @@
 # Checkout resume checkpoint
 
+## Completed checkout batch
+
+**Status: COMPLETE within the approved scope. Phase5 is now6/6 flows complete.** This section supersedes historical pending/deferral/environment notes below. Owner retains commit/push; base edc93e6 with new uncommitted completion changes. The normal hosted application and user data were not changed.
+
+| Acceptance | Final evidence |
+| --- | --- |
+| Real API repeatability |4/4 twice; eleven full table snapshots and canonical ledger preserved after both runs |
+| Visa SELLER |Genuine signed status2 callback HTTP200; order paid/property Paid; moderation pending unchanged; one transaction/one pending outbox |
+| Mastercard AGENT |Same exact settlement invariants, separate order/payment/provider reference |
+| Cancellation |Actual embedded gateway close triggered production hook private-Draft feedback; order pending/property Unpaid; no transaction/outbox |
+| Documented decline |Official Insufficient Funds card displayed Payment Declined; signed status-2 callback HTTP200; order pending/property Unpaid; no transaction/outbox |
+| Final fixture cleanup |Session19492 exit0; listeners closed, exact fixtures removed, all eleven complete snapshots and canonical ledger matched |
+| Test service shutdown |Retained DB/REST/Storage each confirmed exited; containers/volumes/originals retained |
+| Final regressions |Backend41 suites436/436; frontend26 files144/144; full lint/build exit0 |
+| Review |Focused recovery/hook/harness reviews approved; final code review no blocker; acceptance gaps subsequently closed |
+| Final hygiene |15 changed/new non-evidence files credential/whitespace clean; git diff --check pass; index empty; all five harness/recovery files syntax-valid; temporary5000/5173 listeners confirmed closed |
+
+Final database assertions checked both success orders/callbacks and exact transaction/outbox counts, both unpaid cases and unchanged moderation, signed decline callback and exactly two inert receipt-drain boundary calls. Raw evidence is private: checkout-completion-final-status, checkout-completion-cases, checkout-completion-backend/frontend JSON, API repeat log, recovery-run records and screenshots. Raw callback bodies remain private and must never be staged. No SMTP delivery occurred.
+
+Implemented changes: optional complete HTTPS VITE_PAYHERE_NOTIFY_URL validated before order creation; compatible fallback retained. Actual .env files untouched. Harness order registration now captures originalUrl/method before mounted Express routing (two actual routed-response assertions failed before correction). Recovery supports exact retained bcrypt password validation, rejects malformed/same-run journal ambiguity and requires eleven saved baseline hashes before committing exact cleanup. Interrupted seller and native-allocation-start fixtures were recovered with fullHashCompared=true. Original journals retained/backed up.
+
+Focused hook32/32; combined response/recovery/guard/lifecycle12/12 pass. Final aggregate commands used bounded Node512MB/semi-space4MB, one Vitest thread/native Rayon worker, sequentially. Full lint exit0 and Vite build exit0 (existing large-chunk/Lottie direct-eval warnings). Initial sandbox temporary-directory and Windows native-allocation failures are environment failures, not product assertion failures. Browser launcher now supplies fixed child memory/worker bounds; no Windows settings changed. Only inherited blank-line trailing spaces were removed after the final aggregate; no semantic source changes followed verification. Final docs review accepted completion within the approved scope. All agent-created checkout tabs were closed; the owner's merchant portal/tunnel were left alone.
+
+Browser distinction: Chrome embedded gateway/nested frames stayed blank. Visa/Mastercard used the observed actual official form URLs in separate tabs, producing genuine signed callbacks. The in-app browser rendered the actual embedded SDK/nested card form; cancellation and decline were performed there. Decline Return to Site caused SDK advisory completion; the hook showed awaiting server confirmation and did not claim Paid. Normal full seller wizard and universally functioning Chrome embedded checkout are not established by this batch. Full --seller-ui/photo transport remains outside this completion claim. These limits remain visible; automated tests are not represented as comprehensive deployed E2E.
+
+No new dependencies/schema/normal environment/tunnel settings, hosted writes, real payments/cards, real email, worker activation, staging/commit/push/deployment. Existing hosted authorized orders and normal callback configuration need a separately controlled provider/configuration workflow; no manual Paid toggle. Next roadmap priorities are separate from Phase5 closeout. Remote CI for these uncommitted changes is unavailable until the owner pushes; latest pushed edc93e6 remote result was not independently rechecked.
+
+Official test-card reference checked during the batch: [PayHere Sandbox & Testing](https://support.payhere.lk/sandbox-and-testing). It documents simulated sandbox processing and the exact success/Insufficient Funds test scenarios used.
+
+## Historical execution notes (superseded by completion above)
+
+## Active completion continuation — 2026-10-31
+
+Owner resumed Checkout and approved docs/superpowers/specs/2026-10-31-checkout-completion-design.md. Changes are uncommitted on version-3.0 after edc93e6; owner retains git actions.
+
+- Interrupted seller fixture recovery passed with exact users absent, zero orders removed, all eleven persisted baseline hashes and canonical ledger matching. Original journals backed up privately. Recovery now supports bcrypt by checking the retained exact disposable password and rejects incomplete baselines/malformed created journals; focused independent review approved.
+- Hook supports optional complete HTTPS VITE_PAYHERE_NOTIFY_URL, validates explicit values before creating an order and preserves old fallback when absent. No actual .env changed. Meaningful regression failures observed before fix; hook32/32 and focused lint pass. Independent focused review approved.
+- Harness callback404 root cause reproduced: mounted Express routers shorten req.path during res.json, skipping order registration. Tracker captures originalUrl/method before routing. Actual routed-response tests failed twice before correction; combined response/recovery/guard/lifecycle12/12 passed. Focused review approved; callback signature and known-order guards remain intact.
+- Real checkout API profile4/4 twice; eleven complete snapshots and ledger preserved after both runs.
+- First new browser launch failed in native allocation before payment. Its exact fixtures recovered afterward with fullHashCompared=true. Current launcher bounds child heap512MB/semi-space4MB and native Rayon workers1; subsequent launch succeeded.
+- Current active browser session19492 is the minimal approved harness (not seller wizard), sandbox only, local DB/REST, delivery disabled. Public ngrok sentinel matches current run via system HTTP client; Node external fetch reports UND_ERR_SOCKET, other side closed. Private session/journal files identify exact run; never replay an earlier callback.
+- Embedded gateway/card frames still remain about:blank. Opening their observed official URLs in separate tabs loads the actual sandbox form. Visa form handed to owner for card entry; awaiting result. This workaround does not establish a functioning embedded dialog or seller wizard. Mastercard/cancel/decline and final aggregates/cleanup remain pending. Do not mark Phase5 complete.
+
+When resuming, inspect this active session before starting a new one. If session19492 is alive, use status/stop; otherwise exact recovery requires latest journal and eleven hashes. Payment tab is a user handoff. No normal app/tunnel settings, hosted data, email or worker changed.
+
 Confirmed user-run checkout root cause (2026-10-31): read-only request to the running Vite-served usePayhere module showed VITE_API_URL=http://localhost:5000. The production hook derives notify_url from this setting, so actual notification destination is http://localhost:5000/api/payment/notify, unreachable by PayHere servers. Ngrok current request history was empty. User screenshots show sandbox Authorized payments while actual UI shows the synthetic listing Drafts(Unpaid). This user-run app uses the normal seller account/data, not the earlier isolated seller fixture; do not claim local fixture isolation or delete its listing. Fix direction: separate public webhook URL from browser API base, set sandbox notify to the verified ngrok HTTPS URL, retain signature validation; existing authorized orders require verified provider callback reconciliation, not a manual Paid toggle or another payment. No configuration/data change made in this diagnosis.
 
 URGENT RESUME: seller session10564 exited1 with pg Connection terminated unexpectedly during stop, without preservation PASS. Exact seller/agent and seeded property fixtures may remain; cleanup/baseline comparison NOT verified. Do not start another fixture or overwrite current private journal. Existing recovery script assumes not-a-login-hash, while seller mode uses bcrypt hashes, so it must not be blindly run. Restore memory/DB connectivity, validate current journal and exact IDs, then recover with the persisted eleven baseline hashes. No new user-created property/payment was submitted.

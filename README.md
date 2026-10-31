@@ -42,6 +42,7 @@ Useful variables:
 - `DATABASE_URL` - Go map-service database URL
 - `ALLOWED_ORIGIN` - Go map-service CORS origin
 - `VITE_API_URL` - frontend API base URL, defaults to `http://localhost:5000`
+- `VITE_PAYHERE_NOTIFY_URL` - optional complete public PayHere callback URL (for example, `https://your-public-host/api/payment/notify`). An explicit value must use HTTPS without credentials or a fragment; invalid values stop checkout before an order is created. If absent, checkout retains `${VITE_API_URL}/api/payment/notify`, with the localhost API default above. Local gateway testing needs a publicly reachable callback, such as the scoped HTTPS tunnel URL; localhost cannot receive PayHere server notifications. This frontend setting is public and must not contain secrets. Payment confirmation still requires server settlement.
 - `LOG_LEVEL` - backend log level: `debug`, `info`, `warn`, or `error`
 - `PAYHERE_MODE` - defaults to `sandbox`; only the explicit value `live` enables live checkout. Use matching gateway credentials when intentionally enabling live mode.
 

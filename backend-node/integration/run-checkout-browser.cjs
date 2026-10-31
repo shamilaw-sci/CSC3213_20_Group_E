@@ -31,7 +31,8 @@ async function freePort(port) {
         const source = require('dotenv').parse(fs.readFileSync(path.join(__dirname, '../.env')));
         if (source.PAYHERE_MERCHANT_ID !== '1236024' || !source.PAYHERE_MERCHANT_SECRET) throw new Error('Observed sandbox merchant credentials unavailable.');
         const env = Object.fromEntries(['PATH','SystemRoot','WINDIR','TEMP','TMP','COMSPEC','PATHEXT'].filter(k => process.env[k]).map(k => [k, process.env[k]]));
-        Object.assign(env, { NODE_ENV: 'test', JWT_SECRET: 'phase5-browser-fixtures-only', SUPABASE_URL: local.apiUrl,
+        Object.assign(env, { NODE_ENV: 'test', NODE_OPTIONS: '--max-old-space-size=512 --max-semi-space-size=4', RAYON_NUM_THREADS: '1',
+            JWT_SECRET: 'phase5-browser-fixtures-only', SUPABASE_URL: local.apiUrl,
             SUPABASE_KEY: key, PHASE5_DATABASE: JSON.stringify(local.database), PHASE5_LOCAL_APPROVED: 'stack-c',
             PAYHERE_MODE: 'sandbox', PAYHERE_MERCHANT_ID: source.PAYHERE_MERCHANT_ID,
             PAYHERE_MERCHANT_SECRET: source.PAYHERE_MERCHANT_SECRET, PHASE5_TUNNEL: tunnel, CLIENT_URL: 'http://localhost:5173' });

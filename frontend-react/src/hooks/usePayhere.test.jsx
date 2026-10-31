@@ -11,11 +11,57 @@ vi.mock('react-router-dom', () => ({ useNavigate: () => state.navigate }));
 describe('PayHere checkout mode', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        vi.stubEnv('VITE_PAYHERE_NOTIFY_URL', undefined);
+        vi.stubEnv('VITE_API_URL', undefined);
         state.user = { id: 'seller-1', role: 'SELLER' };
         window.payhere = { startPayment: vi.fn() };
         api.post.mockResolvedValue({ data: { hash: 'test-hash', order_id: 'checkout-1', amount: '750.00', currency: 'LKR', merchant_id: 'test-merchant', sandbox: true } });
     });
-    afterEach(() => { cleanup(); delete window.payhere; vi.restoreAllMocks(); });
+    afterEach(() => { cleanup(); delete window.payhere; vi.restoreAllMocks(); vi.unstubAllEnvs(); });
+
+    test('uses the complete public callback URL ahead of a localhost API URL', async () => {
+        vi.stubEnv('VITE_API_URL', 'http://localhost:5000');
+        vi.stubEnv('VITE_PAYHERE_NOTIFY_URL', 'https://checkout.example.test/scoped/payment/notify?run=test');
+        api.get.mockResolvedValue({ data: {} });
+        const { result } = renderHook(() => usePayhere(vi.fn()));
+        await act(async () => { await result.current.triggerPayment('property-1'); });
+        expect(window.payhere.startPayment).toHaveBeenCalledWith(expect.objectContaining({
+            notify_url: 'https://checkout.example.test/scoped/payment/notify?run=test',
+        }));
+    });
+
+    test.each([
+        '', ' ', 'not-a-url', '/api/payment/notify', '//checkout.example.test/notify',
+        'http://checkout.example.test/notify', 'ftp://checkout.example.test/notify',
+        'https:checkout.example.test/notify', 'https:///checkout.example.test/notify',
+        'https://user:password@checkout.example.test/notify',
+        'https://checkout.example.test/notify#fragment', 'https://checkout.example.test/notify#',
+    ])('invalid explicit callback %j refuses checkout before creating an order', async notifyUrl => {
+        vi.stubEnv('VITE_PAYHERE_NOTIFY_URL', notifyUrl);
+        api.get.mockResolvedValue({ data: {} });
+        vi.spyOn(console, 'error').mockImplementation(() => {});
+        const message = vi.fn();
+        const { result } = renderHook(() => usePayhere(message));
+        vi.useFakeTimers();
+        try {
+            await act(async () => { await result.current.triggerPayment('property-1'); });
+            expect(api.post).not.toHaveBeenCalled();
+            expect(window.payhere.startPayment).not.toHaveBeenCalled();
+            expect(message).toHaveBeenCalledWith(expect.objectContaining({ type: 'error' }));
+            act(() => vi.advanceTimersByTime(3000));
+        } finally { vi.useRealTimers(); }
+    });
+
+    test.each([
+        [undefined, 'http://localhost:5000/api/payment/notify'],
+        ['https://api.example.test', 'https://api.example.test/api/payment/notify'],
+    ])('absent callback preserves the API-derived fallback for %s', async (apiUrl, expected) => {
+        vi.stubEnv('VITE_API_URL', apiUrl);
+        api.get.mockResolvedValue({ data: {} });
+        const { result } = renderHook(() => usePayhere(vi.fn()));
+        await act(async () => { await result.current.triggerPayment('property-1'); });
+        expect(window.payhere.startPayment).toHaveBeenCalledWith(expect.objectContaining({ notify_url: expected }));
+    });
 
     test.each([[true, true], [false, false], [undefined, true]])(
         'uses server sandbox value %s, safely defaulting to %s', async (serverMode, expected) => {
