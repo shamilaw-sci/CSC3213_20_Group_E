@@ -52,3 +52,18 @@ test('conversation Offer keeps its existing status and ownership path', async ()
     expect(writes.some(w => w.table === 'leads')).toBe(false);
     expect((await repo.getAgentLeads('agent1')).find(l => l.id === 'conv1').lead_status).toBe('Offer');
 });
+
+test('direct metadata persists and partial updates preserve omitted lifecycle and metadata', async () => {
+    await repo.updateLeadMetadata('lead1', 'agent1', 'Offer', '1-3 Months', true);
+    expect(direct[0]).toMatchObject({ lifecycle_status: 'Offer', timeframe_to_move: '1-3 Months', pre_approval_status: true });
+    await repo.updateLeadMetadata('lead1', 'agent1', undefined, undefined, false);
+    expect(direct[0]).toMatchObject({ lifecycle_status: 'Offer', timeframe_to_move: '1-3 Months', pre_approval_status: false });
+    const partial = writes.filter(write => write.table === 'leads').at(-1);
+    expect(partial.update).not.toHaveProperty('lifecycle_status');
+    expect(partial.update).not.toHaveProperty('timeframe_to_move');
+    expect(partial.filters).toEqual([['lead_id', 'lead1'], ['assigned_agent_id', 'agent1']]);
+    await repo.updateLeadMetadata('lead1', 'agent1', undefined, 'ASAP');
+    expect(direct[0]).toMatchObject({ lifecycle_status: 'Offer', timeframe_to_move: 'ASAP', pre_approval_status: false });
+    await repo.updateLeadMetadata('lead1', 'agent1', 'Showing');
+    expect(direct[0]).toMatchObject({ lifecycle_status: 'Active', timeframe_to_move: 'ASAP', pre_approval_status: false });
+});

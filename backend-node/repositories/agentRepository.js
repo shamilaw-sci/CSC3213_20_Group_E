@@ -228,12 +228,14 @@ const agentRepository = {
         else if (lead_status === 'Offer') lifecycle_status = 'Offer';
         else if (lead_status === 'Closed') lifecycle_status = 'Closed';
 
+        const updates = { updated_at: new Date().toISOString() };
+        if (lead_status !== undefined) updates.lifecycle_status = lifecycle_status;
+        if (timeframe !== undefined) updates.timeframe_to_move = timeframe;
+        if (pre_approved !== undefined) updates.pre_approval_status = pre_approved;
+
         const { data: lead, error: leadError } = await supabase
             .from('leads')
-            .update({ 
-                lifecycle_status,
-                updated_at: new Date().toISOString()
-            })
+            .update(updates)
             .eq('lead_id', id)
             .eq('assigned_agent_id', seller_id)
             .select();

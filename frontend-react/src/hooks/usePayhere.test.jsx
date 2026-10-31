@@ -3,13 +3,15 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { usePayhere } from './usePayhere';
 
 const api = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
+const state = vi.hoisted(() => ({ user: { id: 'seller-1', role: 'SELLER' }, navigate: vi.fn() }));
 vi.mock('../context/api', () => ({ default: api }));
-vi.mock('../context/UserAuthContext', () => ({ useAuth: () => ({ user: { id: 'seller-1', role: 'SELLER' } }) }));
-vi.mock('react-router-dom', () => ({ useNavigate: () => vi.fn() }));
+vi.mock('../context/UserAuthContext', () => ({ useAuth: () => ({ user: state.user }) }));
+vi.mock('react-router-dom', () => ({ useNavigate: () => state.navigate }));
 
 describe('PayHere checkout mode', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        state.user = { id: 'seller-1', role: 'SELLER' };
         window.payhere = { startPayment: vi.fn() };
         api.post.mockResolvedValue({ data: { hash: 'test-hash', order_id: 'checkout-1', amount: '750.00', currency: 'LKR', merchant_id: 'test-merchant', sandbox: true } });
     });
@@ -67,4 +69,56 @@ describe('PayHere checkout mode', () => {
         await act(async () => { await result.current.triggerPayment('property-1'); });
         expect(window.payhere.startPayment).not.toHaveBeenCalled();
     });
+    test.each(['SELLER', 'AGENT'])('%s cancellation and SDK error preserve drafts and navigate to its dashboard', async role => {
+        state.user = { id: 'owner', role };
+        api.get.mockResolvedValue({ data: {} });
+        const message = vi.fn();
+        const { result } = renderHook(() => usePayhere(message));
+        await act(async () => { await result.current.triggerPayment('property-1'); });
+        vi.useFakeTimers();
+        try {
+            act(() => window.payhere.onDismissed());
+            expect(message).toHaveBeenLastCalledWith(expect.objectContaining({ text: expect.stringContaining('private Draft') }));
+            expect(api.post).toHaveBeenCalledTimes(1);
+            act(() => vi.advanceTimersByTime(3000));
+            expect(state.navigate).toHaveBeenLastCalledWith(role === 'SELLER' ? '/seller-dashboard' : '/agent-dashboard');
+            act(() => window.payhere.onError('synthetic decline'));
+            expect(message).toHaveBeenLastCalledWith({ type: 'error', text: 'Payment Error: synthetic decline. Listing is safely saved in your Drafts.' });
+            expect(api.post).toHaveBeenCalledTimes(1);
+            act(() => vi.advanceTimersByTime(3000));
+            expect(state.navigate).toHaveBeenCalledTimes(2);
+        } finally { vi.useRealTimers(); }
+    });
+    test.each(['Unpaid', 'Paid'])('completion trusts property status %s rather than advisory confirmation', async payment_status => {
+        api.get.mockResolvedValueOnce({ data: {} }).mockResolvedValueOnce({ data: { property: { payment_status, status: 'approved' } } });
+        const message = vi.fn();
+        const { result } = renderHook(() => usePayhere(message));
+        await act(async () => { await result.current.triggerPayment('property-1'); });
+        vi.useFakeTimers();
+        try {
+            await act(async () => { await window.payhere.onCompleted('wrong-browser-order'); });
+            expect(api.post).toHaveBeenLastCalledWith('/payment/confirm-client-success', { property_id: 'property-1', order_id: 'checkout-1' });
+            expect(api.get).toHaveBeenLastCalledWith('/properties/property-1');
+            expect(message).toHaveBeenLastCalledWith(expect.objectContaining({ type: payment_status === 'Paid' ? 'success' : 'info',
+                text: expect.stringContaining(payment_status === 'Paid' ? 'Payment confirmed!' : 'awaiting server confirmation') }));
+            act(() => vi.advanceTimersByTime(2500));
+            expect(state.navigate).toHaveBeenLastCalledWith('/seller-dashboard');
+        } finally { vi.useRealTimers(); }
+    });
+    test.each([{ currency: 'USD' }, { sandbox: 'true' }, { merchant_id: '' }, { amount: '' }, { hash: '' }, { order_id: '' }])(
+        'invalid locked terms %j refuse the SDK', async invalid => {
+            api.get.mockResolvedValue({ data: {} });
+            api.post.mockResolvedValue({ data: { hash: 'h', order_id: 'o', amount: '500.00', currency: 'LKR', merchant_id: 'm', sandbox: true, ...invalid } });
+            vi.spyOn(console, 'error').mockImplementation(() => {});
+            const message = vi.fn();
+            const { result } = renderHook(() => usePayhere(message));
+            vi.useFakeTimers();
+            try {
+                await act(async () => { await result.current.triggerPayment('property-1'); });
+                expect(window.payhere.startPayment).not.toHaveBeenCalled();
+                expect(message).toHaveBeenCalledWith(expect.objectContaining({ type: 'error' }));
+                act(() => vi.advanceTimersByTime(3000));
+            } finally { vi.useRealTimers(); }
+        }
+    );
 });

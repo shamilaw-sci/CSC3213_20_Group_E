@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const { cleanupPropertyImages } = require('../utils/propertyImageCleanup');
 
 const adminRepository = {
     // 1. Admin Login
@@ -122,11 +123,13 @@ const adminRepository = {
 
     // 8. Delete Listing
     deleteListing: async (id) => {
-        const { error } = await supabase
+        const { data, error } = await supabase
             .from('properties')
             .delete()
-            .eq('id', id);
+            .eq('id', id)
+            .select('id,seller_id,images,virtual_tours');
         if (error) throw error;
+        if (data?.length) await cleanupPropertyImages(supabase, data[0]);
     },
 
     // 9. Get Users

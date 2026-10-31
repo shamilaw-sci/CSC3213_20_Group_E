@@ -61,6 +61,7 @@ const AgentDashboard = () => {
             
             setStats(statsRes.data.stats || {});
             setLeads(leadsRes.data.leads || []);
+            setSelectedLeadDetail(prev => prev ? (leadsRes.data.leads || []).find(lead => lead.id === prev.id) || null : null);
             setProperties(propsRes.data.properties || []);
         } catch (error) {
             toast.error("Failed to load agent hub data");
@@ -133,6 +134,7 @@ const AgentDashboard = () => {
 
     // Update Lead Pipeline Status
     const handleStatusChange = async (leadId, newStatus) => {
+        const previousStatus = leads.find(lead => lead.id === leadId)?.lead_status;
         try {
             setLeads(prev => prev.map(l => l.id === leadId ? { ...l, lead_status: newStatus } : l));
             await api.put(`/agents/leads/${leadId}`, { lead_status: newStatus });
@@ -140,6 +142,8 @@ const AgentDashboard = () => {
             // Silently refresh stats
             fetchDashboardData(true);
         } catch (error) {
+            setLeads(prev => prev.map(lead => lead.id === leadId ? { ...lead, lead_status: previousStatus } : lead));
+            setSelectedLeadDetail(prev => prev?.id === leadId ? { ...prev, lead_status: previousStatus } : prev);
             toast.error("Failed to update lead status");
             fetchDashboardData(true);
         }

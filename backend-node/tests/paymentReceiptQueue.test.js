@@ -20,3 +20,12 @@ test('successful send marks only its claimed lease sent', async () => {
     expect(query.eq.mock.calls).toEqual([['order_id', 'o1'], ['lease_id', 'lease']]);
     expect(query.update).toHaveBeenCalledWith(expect.objectContaining({ status: 'sent' }));
 });
+test('acknowledgement error is logged after send and does not imply SMTP exactly-once', async () => {
+    db.rpc.mockResolvedValue({ data: [{ order_id: 'owned', recipient: 'test@example.test', property_title: 'Test', amount: 500, lease_id: 'lease' }] });
+    const error = new Error('Synthetic acknowledgement failure');
+    const query = { update: jest.fn(() => query), eq: jest.fn(() => query), then: resolve => Promise.resolve({ error }).then(resolve) };
+    db.from.mockReturnValue(query);
+    await drain('owned');
+    expect(mail.sendPaymentReceipt).toHaveBeenCalledTimes(1);
+    expect(require('../utils/logger').error).toHaveBeenCalledWith('Payment receipt delivery pending retry', { order_id: 'owned', error: error.message });
+});

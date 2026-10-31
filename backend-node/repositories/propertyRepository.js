@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const { cleanupPropertyImages } = require('../utils/propertyImageCleanup');
 
 const propertyRepository = {
     // Shared: Get property by ID
@@ -118,16 +119,15 @@ const propertyRepository = {
 
     // 5. Delete My Property
     deleteMyProperty: async (id, sellerId) => {
-        const { data: prop, error: checkError } = await supabase
+        const { data, error } = await supabase
             .from('properties')
-            .select('id')
+            .delete()
             .eq('id', id)
             .eq('seller_id', sellerId)
-            .single();
-        if (checkError || !prop) return false; // Not found or unauthorized
-
-        const { error } = await supabase.from('properties').delete().eq('id', id);
+            .select('id,seller_id,images,virtual_tours');
         if (error) throw error;
+        if (!data?.length) return false; // Not found or unauthorized
+        await cleanupPropertyImages(supabase, data[0]);
         return true;
     },
 
