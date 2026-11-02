@@ -111,3 +111,57 @@ test('runs the saved search by navigating with the entire persisted criteria and
     expect(api.patch).not.toHaveBeenCalled();
     expect(api.delete).not.toHaveBeenCalled();
 });
+
+async function mountSearchesForCharacterization() {
+    await act(async () => {
+        render(<MemoryRouter initialEntries={['/profile?tab=searches']}>
+            <ProfileSettings /><RouteEvidence />
+        </MemoryRouter>);
+    });
+}
+
+test.each([false, true])('empty/search-fetch-failure preserves Start Searching navigation (reject %s)', async reject => {
+    api.get.mockImplementation(async url => {
+        if (url === '/saved-searches' && reject) throw new Error('Controlled search read failure');
+        return { data: url === '/saved-searches' ? { savedSearches: [] } : {} };
+    });
+    await mountSearchesForCharacterization();
+    expect(api.get).toHaveBeenCalledWith('/saved-searches');
+    expect(screen.getByText('No saved search alerts')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Run Search Radar' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Start Searching' }));
+    expect(JSON.parse(screen.getByTestId('route').textContent).pathname).toBe('/buy');
+    expect(api.patch).not.toHaveBeenCalled();
+    expect(api.delete).not.toHaveBeenCalled();
+});
+
+test.each([
+    [{ title: 'Current title', name: 'Legacy name' }, 'Current title'],
+    [{ title: '', name: 'Legacy name' }, 'Legacy name'],
+    [{ title: '', name: '' }, 'Custom Search Alert'],
+])('legacy title/default-alert contract remains unchanged (%j)', async (fields, expectedTitle) => {
+    const row = { ...savedSearch, ...fields, email_alerts_enabled: undefined };
+    api.get.mockImplementation(async url => ({ data: url === '/saved-searches' ? { savedSearches: [row] } : {} }));
+    api.patch.mockResolvedValue({ data: {} });
+    await mountSearchesForCharacterization();
+    expect(screen.getByText(expectedTitle)).toBeTruthy();
+    expect(screen.getByText('Email alerts on')).toBeTruthy();
+    toggle();
+    await waitFor(() => expect(api.patch).toHaveBeenCalledExactlyOnceWith('/saved-searches/s1/alerts', { emailAlertsEnabled: false }));
+    expect(screen.getByText('Email alerts off')).toBeTruthy();
+});
+
+test('changing profile tabs preserves saved-search state without repeating initial requests', async () => {
+    api.patch.mockResolvedValue({ data: {} });
+    await renderSearches();
+    toggle();
+    await waitFor(() => expect(screen.getByText('Email alerts off')).toBeTruthy());
+    const reads = api.get.mock.calls.map(([url]) => url);
+    fireEvent.click(screen.getByRole('button', { name: 'Theme & Preferences' }));
+    fireEvent.click(screen.getByRole('button', { name: /Search Radars/ }));
+    await screen.findByText('Saved Kandy');
+    expect(screen.getByText('Email alerts off')).toBeTruthy();
+    expect(api.get.mock.calls.map(([url]) => url)).toEqual(reads);
+    expect(JSON.parse(screen.getByTestId('route').textContent).pathname).toBe('/profile');
+    expect(api.patch).toHaveBeenCalledTimes(1);
+});

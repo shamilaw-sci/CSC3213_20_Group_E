@@ -74,4 +74,22 @@ describe('Property detail loading and favorite state', () => {
         fireEvent.click(screen.getByRole('link', { name: 'Next property' }));
         expect(await screen.findByRole('heading', { name: 'Property b' })).toBeInTheDocument();
     });
+    test('detail card forwards buyer contact and preserves rent price label', async () => {
+        const get = api.get.getMockImplementation();
+        api.get.mockImplementation(url => url === '/properties/a' ? Promise.resolve({ data: { property: { ...property('a'), listing_type: 'Rent', bedrooms: 2, bathrooms: 1, land_size: 5 } } }) : get(url));
+        api.post.mockResolvedValue({ data: { conversation: { id: 'c' } } });
+        mount(); await screen.findByRole('heading', { name: 'Property a' });
+        expect(screen.getByText('/mo')).toBeInTheDocument(); expect(screen.getByText('Beds')).toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', { name: 'Contact Seller' }));
+        await waitFor(() => expect(api.post).toHaveBeenCalledWith('/conversations/property/a', {}));
+    });
+    test('owner detail card shows management instead of contact or favorite controls', async () => {
+        const get = api.get.getMockImplementation();
+        api.get.mockImplementation(url => url === '/properties/a' ? Promise.resolve({ data: { property: { ...property('a'), seller_id: 'buyer-1' } } }) : get(url));
+        mount(); await screen.findByRole('button', { name: 'Manage Property' });
+        expect(screen.queryByRole('button', { name: 'Contact Seller' })).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: 'Save Favorite' })).not.toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Compare Property' })).toBeInTheDocument();
+    });
+
 });

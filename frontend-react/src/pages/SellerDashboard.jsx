@@ -1,3 +1,6 @@
+import SellerConversationsPanel from '../components/dashboard/SellerConversationsPanel';
+import SellerListingsPanel from '../components/dashboard/SellerListingsPanel';
+import SellerKpiCards from '../components/dashboard/SellerKpiCards';
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/UserAuthContext';
@@ -182,89 +185,7 @@ const SellerDashboard = () => {
                 )}
 
                 {/* 1. Top Executive KPI Cards (5 Columns) */}
-                <section aria-label="Key Performance Indicators" className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 sm:gap-4 mb-8">
-                    
-                    {/* Portfolio Value */}
-                    <div className="bg-white dark:bg-gray-900 p-4 sm:p-5 rounded-2xl border border-gray-200/70 dark:border-gray-800 shadow-xs flex flex-col justify-between">
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Portfolio Value</span>
-                            <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                                <DollarSign className="w-4 h-4" />
-                            </div>
-                        </div>
-                        <div className="mt-3">
-                            <div className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight">
-                                {loading ? '...' : formatLKR(stats.totalPortfolioValue)}
-                            </div>
-                            <span className="text-[11px] text-gray-400 dark:text-gray-500 font-medium">Across {stats.total} listings</span>
-                        </div>
-                    </div>
-
-                    {/* Active Listings */}
-                    <div className="bg-white dark:bg-gray-900 p-4 sm:p-5 rounded-2xl border border-gray-200/70 dark:border-gray-800 shadow-xs flex flex-col justify-between">
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Live Listings</span>
-                            <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                                <CheckCircle2 className="w-4 h-4" />
-                            </div>
-                        </div>
-                        <div className="mt-3">
-                            <div className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
-                                {loading ? '...' : stats.approved}
-                                <span className="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
-                            </div>
-                            <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">Active on search</span>
-                        </div>
-                    </div>
-
-                    {/* In Review */}
-                    <div className="bg-white dark:bg-gray-900 p-4 sm:p-5 rounded-2xl border border-gray-200/70 dark:border-gray-800 shadow-xs flex flex-col justify-between">
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Under Review</span>
-                            <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-                                <Clock className="w-4 h-4" />
-                            </div>
-                        </div>
-                        <div className="mt-3">
-                            <div className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight">
-                                {loading ? '...' : stats.pending}
-                            </div>
-                            <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">Admin review &lt; 24h</span>
-                        </div>
-                    </div>
-
-                    {/* Buyer Impressions */}
-                    <div className="bg-white dark:bg-gray-900 p-4 sm:p-5 rounded-2xl border border-gray-200/70 dark:border-gray-800 shadow-xs flex flex-col justify-between">
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Views</span>
-                            <div className="w-8 h-8 rounded-lg bg-cyan-50 dark:bg-cyan-950/40 text-cyan-600 dark:text-cyan-400 flex items-center justify-center">
-                                <Eye className="w-4 h-4" />
-                            </div>
-                        </div>
-                        <div className="mt-3">
-                            <div className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight">
-                                {loading ? '...' : stats.views.toLocaleString()}
-                            </div>
-                            <span className="text-[11px] text-cyan-600 dark:text-cyan-400 font-medium">Buyer impressions</span>
-                        </div>
-                    </div>
-
-                    {/* Buyer Wishlist Saves */}
-                    <div className="bg-white dark:bg-gray-900 p-4 sm:p-5 rounded-2xl border border-gray-200/70 dark:border-gray-800 shadow-xs flex flex-col justify-between col-span-2 sm:col-span-2 lg:col-span-1">
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Shortlisted</span>
-                            <div className="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center">
-                                <Heart className="w-4 h-4" />
-                            </div>
-                        </div>
-                        <div className="mt-3">
-                            <div className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight">
-                                {loading ? '...' : stats.saves.toLocaleString()}
-                            </div>
-                            <span className="text-[11px] text-rose-600 dark:text-rose-400 font-medium">High intent buyers</span>
-                        </div>
-                    </div>
-                </section>
+                <SellerKpiCards loading={loading} stats={stats} formatLKR={formatLKR} />
 
                 {/* 2. Main Analytics & Operational Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -337,106 +258,7 @@ const SellerDashboard = () => {
                         </div>
 
                         {/* Recent Listings Snapshot */}
-                        <div className="bg-white dark:bg-gray-900 p-5 sm:p-6 rounded-2xl border border-gray-200/70 dark:border-gray-800 shadow-xs">
-                            <div className="flex items-center justify-between mb-4">
-                                <div>
-                                    <h2 className="text-base font-bold text-gray-900 dark:text-white">Recent Listings</h2>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">Quick snapshot of your latest property submissions.</p>
-                                </div>
-                                <button 
-                                    onClick={() => navigate('/my-properties')}
-                                    className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-                                >
-                                    View all ({stats.total}) <ArrowRight className="w-3.5 h-3.5" />
-                                </button>
-                            </div>
-
-                            {loading ? (
-                                <div className="py-12 flex justify-center">
-                                    <div className="w-6 h-6 border-3 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                                </div>
-                            ) : recentListings.length === 0 ? (
-                                <div className="text-center py-10 px-4 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-2xl">
-                                    <Building className="w-10 h-10 text-gray-400 mx-auto mb-2" />
-                                    <h3 className="text-sm font-bold text-gray-900 dark:text-white">No properties listed yet</h3>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-sm mx-auto">
-                                        Start reaching thousands of active buyers and renters in Sri Lanka today.
-                                    </p>
-                                    <button
-                                        onClick={() => navigate('/add-property')}
-                                        className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition shadow-xs"
-                                    >
-                                        + List Your First Property
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="divide-y divide-gray-100 dark:divide-gray-800">
-                                    {recentListings.map(prop => (
-                                        <div key={prop.id} className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 group">
-                                            <div className="flex items-center gap-3.5">
-                                                <div className="w-14 h-14 rounded-xl bg-gray-100 dark:bg-gray-800 overflow-hidden flex-shrink-0 relative">
-                                                    {prop.images && prop.images[0] ? (
-                                                        <img src={prop.images[0]} alt={prop.title} className="w-full h-full object-cover group-hover:scale-105 transition" />
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                                            <Building className="w-6 h-6" />
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div>
-                                                    <div className="flex items-center gap-2">
-                                                        <h3 className="text-sm font-bold text-gray-900 dark:text-white line-clamp-1 group-hover:text-blue-600 transition">
-                                                            {prop.title}
-                                                        </h3>
-                                                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 uppercase">
-                                                            {prop.listing_type || 'Sale'}
-                                                        </span>
-                                                    </div>
-                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                                                        {prop.city ? `${prop.city}, ${prop.district || ''}` : 'Sri Lanka'} • <span className="font-bold text-gray-900 dark:text-white">{formatLKR(prop.price)}</span>
-                                                    </p>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex items-center justify-between sm:justify-end gap-3">
-                                                {/* Status Badge */}
-                                                <div>
-                                                    {prop.status === 'approved' && (
-                                                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 dark:text-emerald-300 px-2.5 py-1 rounded-full border border-emerald-200/60 dark:border-emerald-900/50">
-                                                            <CheckCircle2 className="w-3 h-3" /> Live
-                                                        </span>
-                                                    )}
-                                                    {prop.status === 'pending' && (
-                                                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 bg-amber-50 dark:bg-amber-950/50 dark:text-amber-300 px-2.5 py-1 rounded-full border border-amber-200/60 dark:border-amber-900/50">
-                                                            <Clock className="w-3 h-3" /> Reviewing
-                                                        </span>
-                                                    )}
-                                                    {prop.status === 'rejected' && (
-                                                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-red-700 bg-red-50 dark:bg-red-950/50 dark:text-red-300 px-2.5 py-1 rounded-full border border-red-200/60 dark:border-red-900/50">
-                                                            <XCircle className="w-3 h-3" /> Needs Fix
-                                                        </span>
-                                                    )}
-                                                </div>
-
-                                                {/* Views */}
-                                                <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
-                                                    <Eye className="w-3.5 h-3.5 text-gray-400" />
-                                                    <span className="font-semibold">{prop.views_count || 0}</span>
-                                                </div>
-
-                                                <button
-                                                    onClick={() => navigate(`/property/${prop.id}`)}
-                                                    className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-                                                    title="View Property"
-                                                >
-                                                    <ArrowUpRight className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                        <SellerListingsPanel stats={stats} navigate={navigate} loading={loading} recentListings={recentListings} formatLKR={formatLKR} />
                     </div>
 
                     {/* Right 4-Cols: Active Inquiries & Smart AI Advisor */}
@@ -464,52 +286,7 @@ const SellerDashboard = () => {
                         </div>
 
                         {/* Buyer Inquiries Snapshot */}
-                        <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-gray-200/70 dark:border-gray-800 shadow-xs">
-                            <div className="flex items-center justify-between mb-3.5">
-                                <div className="flex items-center gap-2">
-                                    <MessageSquare className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                                    <h2 className="text-sm font-bold text-gray-900 dark:text-white">Active Buyer Chats</h2>
-                                </div>
-                                <Link to="/messages" className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">
-                                    Open Inbox
-                                </Link>
-                            </div>
-
-                            {loading ? (
-                                <div className="py-6 flex justify-center">
-                                    <div className="w-5 h-5 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
-                                </div>
-                            ) : recentConversations.length === 0 ? (
-                                <div className="py-6 text-center text-xs text-gray-400 dark:text-gray-500">
-                                    No active inquiries yet. Inquiries will appear here as soon as buyers message you.
-                                </div>
-                            ) : (
-                                <div className="space-y-2.5">
-                                    {recentConversations.map(conv => (
-                                        <div 
-                                            key={conv.id}
-                                            onClick={() => navigate('/messages')}
-                                            className="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/60 hover:bg-purple-50 dark:hover:bg-purple-950/30 transition cursor-pointer border border-transparent hover:border-purple-200 dark:hover:border-purple-800 flex items-center justify-between"
-                                        >
-                                            <div className="flex items-center gap-2.5">
-                                                <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 font-bold text-xs flex items-center justify-center">
-                                                    {(conv.buyer?.name || 'Buyer').charAt(0).toUpperCase()}
-                                                </div>
-                                                <div>
-                                                    <span className="block text-xs font-bold text-gray-900 dark:text-white">
-                                                        {conv.buyer?.name || 'Prospective Buyer'}
-                                                    </span>
-                                                    <span className="block text-[11px] text-gray-500 dark:text-gray-400 line-clamp-1">
-                                                        {conv.property?.title || 'Property Inquiry'}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <ChevronRight className="w-4 h-4 text-gray-400" />
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                        <SellerConversationsPanel loading={loading} recentConversations={recentConversations} navigate={navigate} />
 
                         {/* Smart AI Sales Advisor */}
                         <div className="bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent dark:from-amber-950/30 dark:via-orange-950/20 p-5 rounded-2xl border border-amber-300/40 dark:border-amber-800/40 shadow-xs">

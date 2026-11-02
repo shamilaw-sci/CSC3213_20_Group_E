@@ -73,6 +73,7 @@ describe('Actual MyProperties with auth provider and controlled HTTP', () => {
     await screen.findByRole('heading', { name: 'Manage My Listings' });
     expect(container.querySelector('.animate-spin')).toBeInTheDocument();
     expect(screen.queryByText('No listings found')).not.toBeInTheDocument();
+    await waitFor(() => expect(finish).toBeTypeOf('function'));
     await act(async () => finish({ data: { properties: [] } }));
     expect(await screen.findByText('No listings found')).toBeInTheDocument();
     expect(container.querySelector('.animate-spin')).not.toBeInTheDocument();

@@ -9,6 +9,8 @@ Thirasara is a multi-service real estate platform for property listings, map-bas
 - `go-map-service` - Go/Gin microservice for PostGIS polygon map searches.
 - `Submissions` - coursework/submission material.
 
+Code navigation: [entry points and feature paths](docs/architecture/code-map.md) · [visible UI controls and style owners](docs/architecture/ui-map.md). These maps currently cover the Profile panels/header/summary/navigation and AddProperty Category & Price / Spatial Location presentation, and grow with verified feature batches.
+
 ## Prerequisites
 
 - Node.js and npm

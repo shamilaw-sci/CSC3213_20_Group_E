@@ -1,0 +1,68 @@
+import { Trash2, Upload } from "lucide-react";
+
+const HDPhotosSection = ({ imageCount, previewUrls, onUpload, onRemove, currentSizeMB, maxSizeMB, progress }) => (
+  <>
+              <div>
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                  High-Definition Photographs ({imageCount}/8) <span className="text-blue-400">*</span>
+                </label>
+                
+                <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 rounded-3xl p-8 text-center bg-slate-50/40 dark:bg-slate-950/40 transition">
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={onUpload}
+                    id="property-photos-input"
+                    className="hidden"
+                  />
+                  <label htmlFor="property-photos-input" className="flex flex-col items-center cursor-pointer">
+                    <div className="w-14 h-14 rounded-2xl bg-blue-600/20 text-blue-400 flex items-center justify-center mb-3">
+                      <Upload className="w-6 h-6" />
+                    </div>
+                    <span className="text-sm font-bold text-slate-900 dark:text-white">Click to Upload HD Photographs</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 mt-1">Automatic browser compression up to 1920px (Max 8 photos)</span>
+                  </label>
+                </div>
+
+                {previewUrls.length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
+                    {previewUrls.map((url, i) => (
+                      <div key={i} className="relative aspect-video rounded-xl overflow-hidden border border-slate-300 dark:border-slate-700 group">
+                        <img src={url} alt="" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => onRemove(i)}
+                          className="absolute top-2 right-2 p-1.5 rounded-lg bg-red-600 text-white opacity-0 group-hover:opacity-100 transition cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                        {i === 0 && (
+                          <span className="absolute bottom-2 left-2 bg-blue-600 text-white text-[10px] font-black px-2 py-0.5 rounded-md">
+                            PRIMARY
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+                  {/* Memory Storage UI - HD Photos */}
+                  <div className="mt-6 bg-white/50 dark:bg-slate-900/50 rounded-xl p-4 border border-slate-200 dark:border-slate-800">
+                    <div className="flex justify-between items-end mb-2">
+                      <span className="text-[10px] font-black tracking-widest uppercase text-slate-500">HD Storage Used</span>
+                      <span className="text-sm font-bold text-blue-400">{currentSizeMB.toFixed(2)} MB <span className="text-slate-500 text-xs">/ {maxSizeMB} MB</span></span>
+                    </div>
+                    <div className="w-full h-1.5 bg-slate-50 dark:bg-slate-950 rounded-full overflow-hidden border border-slate-200/50 dark:border-slate-800/50">
+                      <div 
+                        className={`h-full rounded-full transition-all duration-500 ${currentSizeMB >= maxSizeMB ? 'bg-red-500' : 'bg-blue-500'}`} 
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                  </div>
+
+
+  </>
+);
+
+export default HDPhotosSection;
