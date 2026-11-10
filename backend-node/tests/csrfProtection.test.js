@@ -1,5 +1,7 @@
 const request = require('supertest');
 jest.mock('../config/supabase', () => ({ from: jest.fn() }));
+jest.mock('@supabase/supabase-js', () => ({ createClient: jest.fn(() => ({})) }));
+jest.mock('dotenv', () => ({ config: () => ({}) }));
 jest.mock('../utils/emailService', () => ({
     sendWelcomeEmail: jest.fn(), sendPasswordResetEmail: jest.fn()
 }));
