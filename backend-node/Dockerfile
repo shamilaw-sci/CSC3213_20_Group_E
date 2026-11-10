@@ -1,9 +1,12 @@
 # ==========================================
 # Production Stage
 # ==========================================
-FROM node:20-alpine
+FROM node:24-alpine
 
 WORKDIR /app
+
+# Bound build-time Node memory; this does not set the running service's heap.
+ARG NODE_OPTIONS="--max-old-space-size=512 --max-semi-space-size=4"
 
 # Set production environment
 ENV NODE_ENV=production

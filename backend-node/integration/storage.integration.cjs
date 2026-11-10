@@ -20,7 +20,7 @@ const ids = Object.values(users).map(user => user.id), sessions = {};
 const db = new Client(JSON.parse(process.env.PHASE5_DATABASE));
 let connected = false, server, port;
 const call = (role, method, path) => {
-    const req = request(server)[method](path);
+    const req = request(server)[method](path).set('Origin', process.env.CLIENT_URL || 'http://localhost:5173');
     return role ? req.set('Cookie', sessions[role]) : req;
 };
 const payload = extra => ({ type: 'House', title: `Storage ${run}`, description: 'Isolated synthetic image test property.',

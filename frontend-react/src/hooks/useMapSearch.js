@@ -1,3 +1,4 @@
+import { logClientError } from '../utils/clientLog';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getWKTFromBounds } from '../components/map/MapControls';
@@ -34,7 +35,7 @@ export const useMapSearch = () => {
             fetch('/data/flood_zones.json')
                 .then(res => res.json())
                 .then(data => setFloodData(data))
-                .catch(err => console.error("Error loading flood data", err));
+                .catch(() => logClientError('flood_data_load_failed'));
         }
     }, [showFloodZones, floodData]);
 
@@ -43,7 +44,7 @@ export const useMapSearch = () => {
             fetch('/data/landslide_zones.json')
                 .then(res => res.json())
                 .then(data => setLandslideData(data))
-                .catch(err => console.error("Error loading landslide data", err));
+                .catch(() => logClientError('landslide_data_load_failed'));
         }
     }, [showLandslideZones, landslideData]);
     
@@ -104,7 +105,7 @@ export const useMapSearch = () => {
                 if (!controller.signal.aborted && error.name !== 'AbortError') {
                     setProperties([]);
                     setError('Unable to load properties. Please try your search again.');
-                    console.error("🔥 Search error:", error.message);
+                    logClientError('map_search_failed');
                 }
             } finally {
                 if (!controller.signal.aborted) setLoading(false);

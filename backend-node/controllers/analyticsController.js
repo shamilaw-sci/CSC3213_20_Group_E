@@ -29,7 +29,7 @@ exports.getPropertyHistory = async (req, res) => {
         
         res.status(200).json({ success: true, isSimulated: false, data });
     } catch (error) {
-        console.error('Error fetching property history:', error);
+        console.error('property_history_failed');
         res.status(500).json({ success: false, message: 'Server error fetching history' });
     }
 };
@@ -64,7 +64,7 @@ exports.getAIPrediction = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Error in AI prediction:', error);
+        console.error('valuation_failed');
         res.status(500).json({ success: false, message: 'Failed to generate AI valuation' });
     }
 };

@@ -49,10 +49,10 @@ const sendEmail = async (to, subject, html, strict = false) => {
             attachments
         };
 
-        const info = await transporter.sendMail(mailOptions);
-        logger.info('Email sent', { to, subject, response: info.response });
+        await transporter.sendMail(mailOptions);
+        logger.info('email_sent');
     } catch (error) {
-        logger.error('Failed to send email', error);
+        logger.error('email_delivery_failed');
         if (strict) throw error;
     }
 };

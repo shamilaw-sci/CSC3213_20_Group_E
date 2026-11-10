@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { logClientError } from '../utils/clientLog';
+import { useState, useRef, useEffect } from "react";
 import api from "../context/api";
 import { usePayhere } from "./usePayhere";
 
@@ -32,7 +33,10 @@ export default function usePropertyForm() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
 
-  const { paymentConfig, triggerPayment } = usePayhere(setMessage);
+  const { paymentConfig, triggerPayment, checkoutQuote, checkoutBusy, retryPaymentConfig } = usePayhere(setMessage);
+  const paymentAmount = checkoutQuote?.propertyId === draftPropertyId ? checkoutQuote.amount : paymentConfig.listingFee;
+  const submitting = useRef(false), draftId = useRef(null), mounted = useRef(false);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -40,6 +44,7 @@ export default function usePropertyForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!mounted.current) return;
 
     if (images.length === 0) {
       setMessage({ type: "error", text: "Please upload at least 1 image." });
@@ -54,12 +59,12 @@ export default function usePropertyForm() {
       return;
     }
 
-    if (draftPropertyId) {
-      setMessage({ type: "success", text: "Resuming payment for existing draft..." });
-      await triggerPayment(draftPropertyId);
-      return;
+    if (submitting.current || checkoutBusy) return;
+    if (paymentConfig.status !== 'ready') {
+      setMessage({ type: 'error', text: 'Payment configuration is unavailable. Retry loading it before paying.' }); return;
     }
 
+    submitting.current = true;
     setLoading(true);
     setMessage({
       type: "success",
@@ -67,6 +72,10 @@ export default function usePropertyForm() {
     });
 
     try {
+      if (draftId.current) {
+        setMessage({ type: 'info', text: 'Resuming payment for existing draft...' });
+        await triggerPayment(draftId.current, paymentAmount); return;
+      }
       const submitData = new FormData();
 
       // Construct WKT String for Boundaries
@@ -144,6 +153,8 @@ export default function usePropertyForm() {
       });
 
       const newPropertyId = response.data.property.id;
+      if (!mounted.current) return;
+      draftId.current = newPropertyId;
       setDraftPropertyId(newPropertyId);
 
       setMessage({
@@ -152,15 +163,18 @@ export default function usePropertyForm() {
       });
 
       // 2. Trigger the PayHere payment popup
-      await triggerPayment(newPropertyId);
+      await triggerPayment(newPropertyId, paymentAmount);
     } catch (error) {
-      console.error("Add Property Error:", error.response || error.message);
+      if (!mounted.current) return;
+      logClientError('property_create_failed');
       const backendError =
         error.response?.data?.error ||
         error.response?.data?.message ||
         "Unknown Error";
       setMessage({ type: "error", text: `Failed: ${backendError}` });
-      setLoading(false);
+    } finally {
+      submitting.current = false;
+      if (mounted.current) setLoading(false);
     }
   };
 
@@ -180,10 +194,12 @@ export default function usePropertyForm() {
     setVirtualTourFiles,
     virtualTourMetadata,
     setVirtualTourMetadata,
-    loading,
+    loading: loading || checkoutBusy,
     message,
     setMessage,
     handleSubmit,
     paymentConfig,
+    paymentAmount,
+    retryPaymentConfig,
   };
 };

@@ -3,10 +3,10 @@ const agentRepository = require('../../repositories/agentRepository');
 // Get Appointments booked by current Buyer
 const getMyAppointments = async (req, res, next) => {
     try {
-        const userEmail = req.user.email;
-        const userId = req.user.id;
+        const userId = req.user?.id;
+        if (typeof userId !== 'string' || !userId.trim()) return res.status(401).json({ message: 'Authentication required' });
 
-        const appointments = await agentRepository.getBuyerAppointments(userEmail, userId);
+        const appointments = await agentRepository.getBuyerAppointments(userId);
         res.status(200).json({ appointments });
     } catch (error) {
         next(error);
@@ -17,7 +17,9 @@ const getMyAppointments = async (req, res, next) => {
 const cancelBuyerAppointment = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const success = await agentRepository.deleteBuyerAppointment(id, req.user.email);
+        const userId = req.user?.id;
+        if (typeof userId !== 'string' || !userId.trim()) return res.status(401).json({ message: 'Authentication required' });
+        const success = await agentRepository.deleteBuyerAppointment(id, userId);
         
         if (!success) {
             return res.status(404).json({ message: "Appointment not found or already cancelled" });

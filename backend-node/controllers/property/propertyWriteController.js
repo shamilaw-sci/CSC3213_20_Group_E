@@ -1,4 +1,15 @@
 const propertyRepository = require('../../repositories/propertyRepository');
+const logger = require('../../utils/logger');
+
+const completeUploads = async uploads => {
+    try {
+        return await Promise.all(uploads);
+    } catch (error) {
+        // A rejected upload does not cancel siblings; wait before removing paths.
+        await Promise.allSettled(uploads);
+        throw error;
+    }
+};
 
 const addProperty = async(req, res, next) => {
     let uploadedFiles = [];
@@ -43,7 +54,7 @@ const addProperty = async(req, res, next) => {
                 uploadedFiles.push(filePath);
                 return await propertyRepository.uploadImage(filePath, file.buffer, file.mimetype);
             });
-            imageUrls = await Promise.all(uploadPromises);
+            imageUrls = await completeUploads(uploadPromises);
         }
 
         if (virtualTourFiles.length > 0) {
@@ -54,7 +65,7 @@ const addProperty = async(req, res, next) => {
                 uploadedFiles.push(filePath);
                 return await propertyRepository.uploadImage(filePath, file.buffer, file.mimetype);
             });
-            virtualTourUrls = await Promise.all(uploadPromises);
+            virtualTourUrls = await completeUploads(uploadPromises);
         }
 
         let virtual_tours = [];
@@ -66,7 +77,7 @@ const addProperty = async(req, res, next) => {
                     url: virtualTourUrls[index]
                 })).filter(vt => vt.url); // filter out any missing urls
             } catch (e) {
-                console.error('Error parsing virtualTourMetadata:', e);
+                console.error('virtual_tour_metadata_invalid');
             }
         }
 
@@ -103,7 +114,13 @@ const addProperty = async(req, res, next) => {
         });
     } catch (error) {
         if (uploadedFiles.length > 0) {
-            propertyRepository.removeImages(uploadedFiles).catch((e) => console.error("Rollback failed:", e));
+            try {
+                await propertyRepository.removeImages(uploadedFiles);
+            } catch {
+                logger.error('Property upload rollback requires recovery.', {
+                    event: 'property_upload_rollback_failed', sellerId: req.user.id, paths: uploadedFiles
+                });
+            }
         }
         next(error);
     }

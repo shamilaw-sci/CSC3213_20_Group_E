@@ -1,3 +1,4 @@
+import { logClientError } from '../utils/clientLog';
 import PropertyComparisonSidebar from '../components/property/details/PropertyComparisonSidebar';
 import PropertyCriticalDetails from '../components/property/details/PropertyCriticalDetails';
 import { useState, useEffect } from 'react';
@@ -125,7 +126,7 @@ const PropertyDetails = () => {
                 setTimeout(() => setShowAnimation(false), 1000);
             }
         } catch (err) {
-            console.error('Error toggling favorite:', err?.message);
+            logClientError('favorite_update_failed');
             toast.error('Error updating favorites');
         } finally {
             setIsFavLoading(false);
@@ -145,7 +146,7 @@ const PropertyDetails = () => {
             const response = await api.post(`/conversations/property/${targetId}`, {});
             navigate(`/messages?conversation=${response.data.conversation.id}`);
         } catch (error) {
-            console.error("Error creating/fetching conversation:", error?.message);
+            logClientError('conversation_open_failed');
             toast.error("Failed to start conversation");
         }
     };
@@ -163,7 +164,7 @@ const PropertyDetails = () => {
             const response = await api.post(`/conversations/property/${id}`, {});
             navigate(`/messages?conversation=${response.data.conversation.id}`);
         } catch (error) {
-            console.error("Error creating/fetching conversation:", error?.message);
+            logClientError('conversation_open_failed');
             toast.error("Failed to start conversation");
         }
     };

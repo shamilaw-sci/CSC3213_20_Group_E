@@ -1,3 +1,4 @@
+import { logClientError } from '../../utils/clientLog';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -44,7 +45,7 @@ const BuyerCommandHub = () => {
                 setAppointments(apptRes.data?.appointments || []);
                 setFavorites(favRes.data?.favorites || []);
             } catch (err) {
-                console.error("Buyer hub load error", err);
+                logClientError('buyer_hub_load_failed');
             } finally {
                 setLoading(false);
             }

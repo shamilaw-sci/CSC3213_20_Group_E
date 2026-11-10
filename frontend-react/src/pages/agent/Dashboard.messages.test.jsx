@@ -29,6 +29,8 @@ async function show() {
 }
 const select = () => fireEvent.click(screen.getByRole('button', { name: /AliceHouse/ }));
 const input = () => screen.getByPlaceholderText('Type your reply to buyer...');
+const selectBob = () => fireEvent.click(screen.getAllByRole('button', { name: /Buyer InquiryGeneral Consultation/ })[0]);
+const deferred = () => { let resolve; const promise = new Promise(done => { resolve = done; }); return { promise, resolve }; };
 test('empty list and selection prompt remain explicit', async () => {
   leads = []; await show(); expect(screen.getByText('No active conversations yet')).toBeInTheDocument(); expect(screen.getByText('Select a buyer conversation')).toBeInTheDocument(); expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
 });
@@ -64,4 +66,72 @@ test('send trims FormData, clears draft immediately and waits for post before re
 test('blank draft is disabled and failed send loses submitted draft without refreshing', async () => {
   mocks.api.post.mockRejectedValue(new Error('offline')); await show(); select(); await flush(); fireEvent.change(input(), { target: { value: '   ' } }); expect(screen.getByRole('button', { name: 'Send' })).toBeDisabled();
   fireEvent.change(input(), { target: { value: 'lost' } }); fireEvent.click(screen.getByRole('button', { name: 'Send' })); await waitFor(() => expect(mocks.toast.error).toHaveBeenCalledWith('Failed to send message')); expect(input()).toHaveValue(''); expect(mocks.api.get.mock.calls.filter(([p]) => p.includes('/conversations/'))).toHaveLength(1);
+});
+
+test('late response from A cannot replace messages after B is selected', async () => {
+  const old = deferred(); const base = mocks.api.get.getMockImplementation();
+  mocks.api.get.mockImplementation(path => path === '/conversations/a/messages' ? old.promise
+    : path === '/conversations/b/messages' ? Promise.resolve({ data: { messages: [{ body: 'Current B' }] } }) : base(path));
+  await show(); select(); await flush(); selectBob(); await screen.findByText('Current B');
+  await act(async () => { old.resolve({ data: { messages: [{ body: 'Stale A' }] } }); });
+  expect(screen.getByText('Current B')).toBeInTheDocument(); expect(screen.queryByText('Stale A')).not.toBeInTheDocument();
+});
+
+test('selecting B clears A messages while B response is pending', async () => {
+  const pending = deferred(); const base = mocks.api.get.getMockImplementation();
+  messages = [{ body: 'Visible A' }];
+  mocks.api.get.mockImplementation(path => path === '/conversations/b/messages' ? pending.promise : base(path));
+  await show(); select(); await screen.findByText('Visible A'); selectBob();
+  expect(screen.queryByText('Visible A')).not.toBeInTheDocument();
+  await act(async () => { pending.resolve({ data: { messages: [{ body: 'Visible B' }] } }); });
+  expect(screen.getByText('Visible B')).toBeInTheDocument();
+});
+
+test('older overlapping poll cannot overwrite the latest same-chat response', async () => {
+  const old = deferred(); const base = mocks.api.get.getMockImplementation(); let reads = 0;
+  mocks.api.get.mockImplementation(path => path === '/conversations/a/messages'
+    ? (++reads === 1 ? old.promise : Promise.resolve({ data: { messages: [{ body: 'Newest poll' }] } })) : base(path));
+  await show(); vi.useFakeTimers(); select(); await flush();
+  await act(async () => { vi.advanceTimersByTime(4000); }); await flush();
+  expect(screen.getByText('Newest poll')).toBeInTheDocument();
+  await act(async () => { old.resolve({ data: { messages: [{ body: 'Older poll' }] } }); });
+  expect(screen.getByText('Newest poll')).toBeInTheDocument(); expect(screen.queryByText('Older poll')).not.toBeInTheDocument();
+});
+
+test('late A send completion neither refreshes A nor overwrites B', async () => {
+  const post = deferred(); const base = mocks.api.get.getMockImplementation();
+  mocks.api.post.mockReturnValue(post.promise);
+  mocks.api.get.mockImplementation(path => path === '/conversations/b/messages'
+    ? Promise.resolve({ data: { messages: [{ body: 'B stays visible' }] } }) : base(path));
+  await show(); select(); await flush(); fireEvent.change(input(), { target: { value: 'A reply' } }); fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+  selectBob(); await screen.findByText('B stays visible');
+  await act(async () => { post.resolve({ data: {} }); });
+  expect(screen.getByText('B stays visible')).toBeInTheDocument();
+  expect(mocks.api.get.mock.calls.filter(([path]) => path === '/conversations/a/messages')).toHaveLength(1);
+});
+
+test('old send cannot release a new chat pending-send flag', async () => {
+  const a = deferred(), b = deferred(); mocks.api.post.mockReturnValueOnce(a.promise).mockReturnValueOnce(b.promise);
+  await show(); select(); await flush(); fireEvent.change(input(), { target: { value: 'A reply' } }); fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+  selectBob(); await flush(); fireEvent.change(input(), { target: { value: 'B reply' } });
+  expect(screen.getByRole('button', { name: 'Send' })).toBeEnabled(); fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+  await act(async () => { a.resolve({}); });
+  expect(screen.getByRole('button', { name: 'Send' })).toBeDisabled();
+  await act(async () => { b.resolve({}); });
+  expect(mocks.api.post.mock.calls.map(([path]) => path)).toEqual(['/conversations/a/messages', '/conversations/b/messages']);
+});
+
+test('pending read completing after unmount cannot schedule a scroll timer', async () => {
+  const read = deferred(); const base = mocks.api.get.getMockImplementation();
+  mocks.api.get.mockImplementation(path => path.includes('/conversations/') ? read.promise : base(path));
+  await show(); vi.useFakeTimers(); select(); await flush(); cleanup();
+  await act(async () => { read.resolve({ data: { messages: [] } }); });
+  expect(vi.getTimerCount()).toBe(0); expect(scroll).not.toHaveBeenCalled();
+});
+
+test('unmount clears scroll work from both polling and successful send', async () => {
+  await show(); vi.useFakeTimers(); select(); await flush();
+  fireEvent.change(input(), { target: { value: 'Reply' } }); fireEvent.click(screen.getByRole('button', { name: 'Send' })); await flush();
+  cleanup(); expect(vi.getTimerCount()).toBe(0);
+  await act(async () => { vi.advanceTimersByTime(100); }); expect(scroll).not.toHaveBeenCalled();
 });

@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import usePropertyForm from './usePropertyForm';
 
 const api = vi.hoisted(() => ({ post: vi.fn() }));
-const payment = vi.hoisted(() => ({ triggerPayment: vi.fn(), paymentConfig: { listing_fee: '500.00', sandbox: true } }));
+const payment = vi.hoisted(() => ({ triggerPayment: vi.fn(), paymentConfig: { status: 'ready', listingFee: '500.00', sandbox: true }, checkoutBusy: false, checkoutQuote: null, retryPaymentConfig: vi.fn() }));
 vi.mock('../context/api', () => ({ default: api }));
 vi.mock('./usePayhere', () => ({ usePayhere: () => payment }));
 
@@ -14,6 +14,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   api.post.mockResolvedValue({ data: { property: { id: 'saved-fixture-id' } } });
   payment.triggerPayment.mockResolvedValue(undefined);
+  payment.paymentConfig.status = 'ready'; payment.checkoutBusy = false; payment.checkoutQuote = null;
 });
 afterEach(() => vi.restoreAllMocks());
 
@@ -22,6 +23,22 @@ async function submit(result) {
 }
 
 describe('Actual listing form submission with HTTP and payment boundaries', () => {
+  test('unavailable configuration prevents draft creation', async () => {
+    payment.paymentConfig.status = 'error'; const { result } = renderHook(() => usePropertyForm());
+    act(() => result.current.setImages([image()])); await submit(result);
+    expect(api.post).not.toHaveBeenCalled(); expect(payment.triggerPayment).not.toHaveBeenCalled();
+  });
+  test('captured submit cannot create a listing after unmount', async () => {
+    const view = renderHook(() => usePropertyForm()); act(() => view.result.current.setImages([image()]));
+    const captured = view.result.current.handleSubmit; view.unmount(); await act(async () => captured(submitEvent())); expect(api.post).not.toHaveBeenCalled();
+  });
+  test('synchronous duplicate submission creates one draft and releases saving state', async () => {
+    let finish; api.post.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+    const { result } = renderHook(() => usePropertyForm()); act(() => result.current.setImages([image()]));
+    let first, second; act(() => { first = result.current.handleSubmit(submitEvent()); second = result.current.handleSubmit(submitEvent()); });
+    expect(api.post).toHaveBeenCalledTimes(1); await act(async () => { finish({ data: { property: { id: 'saved-fixture-id' } } }); await Promise.all([first, second]); });
+    expect(result.current.loading).toBe(false); expect(payment.triggerPayment).toHaveBeenCalledExactlyOnceWith('saved-fixture-id', '500.00');
+  });
   test('missing image produces feedback without saving or attempting payment', async () => {
     const { result } = renderHook(() => usePropertyForm());
     await submit(result);
@@ -81,7 +98,7 @@ describe('Actual listing form submission with HTTP and payment boundaries', () =
     });
     expect(body.getAll('images')).toEqual([photo]);
     expect(body.getAll('virtualTours')).toEqual([tour]);
-    expect(payment.triggerPayment).toHaveBeenCalledExactlyOnceWith('saved-fixture-id');
+    expect(payment.triggerPayment).toHaveBeenCalledExactlyOnceWith('saved-fixture-id', '500.00');
     expect(result.current.message.text).toBe('Property saved! Initiating payment gateway...');
   });
 
@@ -101,19 +118,21 @@ describe('Actual listing form submission with HTTP and payment boundaries', () =
     expect(body.get('latitude')).toBe('6');
     expect(body.get('longitude')).toBe('79');
     expect(body.has('virtualTourMetadata')).toBe(false);
-    expect(payment.triggerPayment).toHaveBeenCalledExactlyOnceWith('saved-fixture-id');
+    expect(payment.triggerPayment).toHaveBeenCalledExactlyOnceWith('saved-fixture-id', '500.00');
   });
 
   test('create failure surfaces server feedback and never reaches payment', async () => {
-    const error = { response: { data: { message: 'Fixture validation rejected' } } };
+    const error = { response: { data: { message: 'Fixture validation rejected', private_marker: 'private-form-marker' } }, config: { headers: { Authorization: 'Bearer private-form-marker' } } };
     api.post.mockRejectedValueOnce(error);
-    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
     const { result } = renderHook(() => usePropertyForm());
     act(() => result.current.setImages([image()]));
     await submit(result);
     expect(result.current.message).toEqual({ type: 'error', text: 'Failed: Fixture validation rejected' });
     expect(result.current.loading).toBe(false);
     expect(payment.triggerPayment).not.toHaveBeenCalled();
+    expect(log).toHaveBeenCalledWith('property_create_failed');
+    expect(JSON.stringify(log.mock.calls)).not.toContain('private-form-marker');
   });
 
   test('retry after a payment-boundary failure reuses the saved draft without duplicate creation', async () => {
@@ -126,7 +145,7 @@ describe('Actual listing form submission with HTTP and payment boundaries', () =
     expect(result.current.loading).toBe(false);
     await submit(result);
     expect(api.post).toHaveBeenCalledTimes(1);
-    expect(payment.triggerPayment.mock.calls).toEqual([['saved-fixture-id'], ['saved-fixture-id']]);
+    expect(payment.triggerPayment.mock.calls).toEqual([['saved-fixture-id', '500.00'], ['saved-fixture-id', '500.00']]);
     expect(result.current.message.text).toBe('Resuming payment for existing draft...');
   });
 });

@@ -1,0 +1,27 @@
+# Phase 7 private chat attachment delivery plan
+
+Approved security/privacy scope. Execute inline with TDD, verification-before-completion and independent review. No live database/Storage/config/dependency changes. Do not edit applied baseline migration or its manifest.
+
+**Goal:** Stop returning permanent public attachment URLs; prepare private Storage cutover without moving/deleting historical objects or rewriting message rows.
+
+**Architecture/files:** new backend-node/utils/chatAttachmentDelivery.js resolves only managed chat references within each message's exact conversation namespace. Repository uploadAttachment persists a bucket/object reference instead of a public URL; repository withReadReceipts decorates authorized message reads with120-second signed URLs, including list-preview/unread paths. A dedicated repository decorator covers sendMessage response. Controllers retain participant/admin authority before reading/uploading/signing. Existing legacy public references work only for configured SUPABASE_URL origin and chat bucket/exact conversation namespace. Arbitrary remote URLs, wrong bucket/conversation, signed URLs in persisted rows and encoded traversal are never signed or reflected.
+
+Signing failure/invalid reference returns attachment_url=null and attachment_unavailable=true, with body/message preserved; never fall back to public URL or fail a successful send solely due to presentation signing. Frontend Messages and Admin Messages show a concise unavailable/reload hint. Signed URLs are bearer capabilities valid for120 seconds; issuance is authorized, possession remains sufficient until expiry. Refresh/poll retrieves a fresh link. No per-download session recheck claim.
+
+**Files:** utility + tests/chatAttachmentDelivery.test.js; repositories/conversationRepository.js; controllers/conversationController.js; controller authorization regression test; frontend-react/src/pages/Messages.jsx and pages/admin/pages/MessagesPage.jsx; owner procedure docs/phase7-chat-storage-cutover.md.
+
+- [ ] Write parser/decorator tests: new refs, legacy refs, same-origin/exact namespace; malformed/remote/wrong bucket/conversation, raw/encoded traversal, query/fragment/credentials/control characters; signing success/TTL, no-input mutation, failure with no public fallback and plain messages unchanged.
+- [ ] Demonstrate red for missing utility before implementation; distinguish missing-module red from product regression. Add controller authorization/response tests proving outsider/anonymous cannot trigger signing and authorized reads/send return decorated links. Add repository upload regression proving no getPublicUrl/new permanent reference emission.
+- [ ] Implement utility with bounded concurrency (sequential signing initially), strict path parsing and no raw URL/token logging. Decorate all existing authorized read shapes and send response without storing signed URLs. Preserve fields/read-receipts/unread identities and success semantics.
+- [ ] Add unavailable UI hint to both attachment consumers. Run affected frontend lint/build/tests as appropriate; do not claim real browser/download acceptance from unit checks.
+- [ ] Write owner-only cutover/rollback checklist. Inventory bucket, policies, key privilege, old URL compatibility and existing signed/cached exposure first. Require private bucket AND removal/denial of public/anonymous SELECT/list/sign permissions; custom app JWTs are not Supabase Auth identities. No automatic SQL or Storage mutation here.
+- [ ] Focused backend tests then full backend suite sequentially with512MiB heap/semi-space4; frontend one-thread checks; independent review; syntax/whitespace checks. Real-local Storage checks only after separate cutover setup need is established.
+- [ ] Keep S2 open until owner cutover and real anonymous/outsider/participant/admin/expired-link tests demonstrate access boundaries, old-object compatibility and cleanup preservation. Code tests alone cannot establish private Storage.
+
+References: https://supabase.com/docs/reference/javascript/storage-from-createsignedurl and https://supabase.com/docs/guides/storage/buckets/fundamentals . Supabase changelog markdown fetch was attempted but browser tool rejected content type; no dependency upgrade is performed.
+
+## Execution outcome
+
+Delivery preparation is implemented; S2 closure/cutover remains pending. Utility red was missing-module, followed by existing-repository/controller red4 failed/2 passed. Focused40/40 and full backend742/742 across55 suites passed. Independent bounded read-only review found no actionable introduced defects. Frontend lint/build passed with existing bundle/Lottie warnings. Full frontend test attempts did not produce an acceptance result: unsupported --minWorkers corrected; thread pools stalled and were stopped; fork pool reported native out-of-memory. Record these as runner/resource failures, not product assertion failures or passing tests. No matching Vitest processes remained in the read-only host inspection. No more full reruns without resolving resource conditions.
+
+Plan remains open specifically for fresh frontend suite acceptance, real browser/download checks, owner key/policy review/cutover and real-private-Storage access/expiry/cache verification. Canonical baseline/manifest and all real environments are unchanged. No objects/messages were migrated/deleted and no Git stage/commit/push occurred. See phase7-security-plan.md for endpoint coverage and signing-latency limits.

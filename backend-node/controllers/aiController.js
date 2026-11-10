@@ -1,5 +1,7 @@
+const { publicError } = require('../utils/publicError');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const supabase = require('../config/supabase');
+const { toolArgumentSchemas } = require('../validators/aiValidator');
 
 const searchPropertiesFromDB = async (args) => {
     let query = supabase.from('properties').select('id, title, price, type, city, district, bedrooms, bathrooms, land_size').eq('status', 'approved').limit(5);
@@ -7,14 +9,11 @@ const searchPropertiesFromDB = async (args) => {
     if (args.location) {
         query = query.or(`city.ilike.%${args.location}%,district.ilike.%${args.location}%`);
     }
-    if (args.maxPrice) query = query.lte('price', args.maxPrice);
+    if (args.maxPrice !== undefined) query = query.lte('price', args.maxPrice);
     if (args.type) query = query.ilike('type', `%${args.type}%`);
     
     const { data, error } = await query;
-    if (error) {
-        console.error("Supabase property search error:", error);
-        return [];
-    }
+    if (error) throw error;
     return data;
 };
 
@@ -26,10 +25,7 @@ const searchAgentsFromDB = async (args) => {
     }
     
     const { data, error } = await query;
-    if (error) {
-        console.error("Supabase agent search error:", error);
-        return [];
-    }
+    if (error) throw error;
     return data.map(a => ({
         name: a.name,
         role: a.role,
@@ -71,7 +67,7 @@ const chatWithAI = async (req, res, next) => {
         const { message, history } = req.body;
         
         if (!process.env.GEMINI_API_KEY) {
-            return next(new Error("GEMINI_API_KEY is not configured."));
+            throw new Error('AI configuration unavailable');
         }
 
         const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -118,12 +114,18 @@ IMPORTANT: When suggesting a property from your search tool, ALWAYS format the p
         // If the AI decides it needs to call a tool to answer
         if (functionCalls && functionCalls.length > 0) {
             const call = functionCalls[0];
-            let apiResponse = null;
-
-            if (call.name === 'search_properties') {
-                apiResponse = await searchPropertiesFromDB(call.args);
-            } else if (call.name === 'search_agents') {
-                apiResponse = await searchAgentsFromDB(call.args);
+            let apiResponse = { error: 'Unsupported search tool.' };
+            if (Object.hasOwn(toolArgumentSchemas, call.name)) {
+                const plainArgs = call.args !== null && typeof call.args === 'object'
+                    && Object.getPrototypeOf(call.args) === Object.prototype;
+                const parsed = plainArgs ? toolArgumentSchemas[call.name].safeParse(call.args) : null;
+                if (!parsed?.success) {
+                    apiResponse = { error: 'Invalid search parameters.' };
+                } else if (call.name === 'search_properties') {
+                    apiResponse = await searchPropertiesFromDB(parsed.data);
+                } else {
+                    apiResponse = await searchAgentsFromDB(parsed.data);
+                }
             }
 
             // Append the model's function call request to history
@@ -147,9 +149,9 @@ IMPORTANT: When suggesting a property from your search tool, ALWAYS format the p
 
         // If no tool was needed, just return the direct text response
         return res.status(200).json({ response: responseText });
-    } catch (error) {
-        console.error("AI Error:", error);
-        next(error);
+    } catch {
+        console.error('AI chat request failed');
+        next(publicError('AI_UNAVAILABLE'));
     }
 };
 

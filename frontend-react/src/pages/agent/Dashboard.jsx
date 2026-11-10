@@ -1,3 +1,4 @@
+import { logClientError } from '../../utils/clientLog';
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -45,6 +46,18 @@ const AgentDashboard = () => {
     const [messageInput, setMessageInput] = useState('');
     const [sendingMsg, setSendingMsg] = useState(false);
     const messagesEndRef = useRef(null);
+    const chatSessionRef = useRef(null);
+
+    const handleSelectLead = (lead) => {
+        if (lead === selectedLead) return;
+        if (chatSessionRef.current) {
+            chatSessionRef.current.active = false;
+            clearTimeout(chatSessionRef.current.scrollTimer);
+        }
+        setChatMessages([]);
+        setSendingMsg(false);
+        setSelectedLead(lead);
+    };
 
     // Data State
     const [stats, setStats] = useState(null);
@@ -52,9 +65,18 @@ const AgentDashboard = () => {
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const dashboardSessionRef = useRef(null);
 
     // Fetch Dashboard Data
     const fetchDashboardData = async (isSilent = false) => {
+        const session = dashboardSessionRef.current;
+        if (!session?.active) return;
+        if (session.pendingMutations) {
+            session.refreshQueued = true;
+            return;
+        }
+        const readVersion = ++session.readVersion;
+        const isCurrent = () => session.active && readVersion === session.readVersion;
         if (!isSilent) setLoading(true);
         else setRefreshing(true);
 
@@ -65,16 +87,20 @@ const AgentDashboard = () => {
                 api.get('/properties/my-listings')
             ]);
             
+            if (!isCurrent()) return;
             setStats(statsRes.data.stats || {});
             setLeads(leadsRes.data.leads || []);
             setSelectedLeadDetail(prev => prev ? (leadsRes.data.leads || []).find(lead => lead.id === prev.id) || null : null);
             setProperties(propsRes.data.properties || []);
         } catch (error) {
+            if (!isCurrent()) return;
             toast.error("Failed to load agent hub data");
-            console.error("Dashboard error:", error);
+            logClientError('agent_dashboard_load_failed');
         } finally {
-            setLoading(false);
-            setRefreshing(false);
+            if (isCurrent()) {
+                setLoading(false);
+                setRefreshing(false);
+            }
         }
     };
 
@@ -83,23 +109,52 @@ const AgentDashboard = () => {
             navigate('/profile');
             return;
         }
+        const session = { active: true, readVersion: 0, pendingMutations: 0, refreshQueued: false };
+        dashboardSessionRef.current = session;
         fetchDashboardData();
+        return () => { session.active = false; };
     }, [user, navigate]);
+
+    const beginDashboardMutation = () => {
+        const session = dashboardSessionRef.current;
+        if (!session?.active) return null;
+        ++session.readVersion;
+        ++session.pendingMutations;
+        setRefreshing(true);
+        return session;
+    };
+
+    const finishDashboardMutation = (session, refreshNeeded) => {
+        --session.pendingMutations;
+        session.refreshQueued ||= refreshNeeded;
+        if (!session.active || session.pendingMutations) return;
+        if (session.refreshQueued) {
+            session.refreshQueued = false;
+            fetchDashboardData(true);
+        } else {
+            setRefreshing(false);
+        }
+    };
 
     // Polling Messages when a lead is selected
     useEffect(() => {
-        let timer;
         if (!selectedLead) return;
+        const session = { active: true, readVersion: 0, scrollTimer: null };
+        chatSessionRef.current = session;
         
         const fetchMessages = async () => {
+            if (!session.active) return;
+            const readVersion = ++session.readVersion;
             try {
                 const response = await api.get(`/conversations/${selectedLead.id}/messages`);
+                if (!session.active || readVersion !== session.readVersion) return;
                 setChatMessages(response.data.messages || []);
-                timer = setTimeout(() => {
-                    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+                clearTimeout(session.scrollTimer);
+                session.scrollTimer = setTimeout(() => {
+                    if (session.active) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
                 }, 100);
             } catch (err) {
-                console.error("Failed to fetch messages", err);
+                if (session.active) logClientError('agent_messages_load_failed');
             }
         };
         
@@ -107,15 +162,19 @@ const AgentDashboard = () => {
         const interval = setInterval(fetchMessages, 4000);
         
         return () => {
+            session.active = false;
             clearInterval(interval);
-            if (timer) clearTimeout(timer);
+            clearTimeout(session.scrollTimer);
         };
     }, [selectedLead]);
 
     // Send Message
     const handleSendMessage = async (e) => {
         e.preventDefault();
-        if (!messageInput.trim() || !selectedLead || sendingMsg) return;
+        const session = chatSessionRef.current;
+        if (!messageInput.trim() || !selectedLead || sendingMsg || !session?.active) return;
+        const leadId = selectedLead.id;
+        ++session.readVersion;
         
         const body = messageInput.trim();
         setMessageInput('');
@@ -125,33 +184,40 @@ const AgentDashboard = () => {
             const formData = new FormData();
             formData.append('body', body);
 
-            await api.post(`/conversations/${selectedLead.id}/messages`, formData);
-            const response = await api.get(`/conversations/${selectedLead.id}/messages`);
+            await api.post(`/conversations/${leadId}/messages`, formData);
+            if (!session.active) return;
+            const readVersion = ++session.readVersion;
+            const response = await api.get(`/conversations/${leadId}/messages`);
+            if (!session.active || readVersion !== session.readVersion) return;
             setChatMessages(response.data.messages || []);
-            setTimeout(() => {
-                messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+            clearTimeout(session.scrollTimer);
+            session.scrollTimer = setTimeout(() => {
+                if (session.active) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
             }, 100);
         } catch (error) {
-            toast.error("Failed to send message");
+            if (session.active) toast.error("Failed to send message");
         } finally {
-            setSendingMsg(false);
+            if (session.active) setSendingMsg(false);
         }
     };
 
     // Update Lead Pipeline Status
     const handleStatusChange = async (leadId, newStatus) => {
+        const session = beginDashboardMutation();
+        if (!session) return;
         const previousStatus = leads.find(lead => lead.id === leadId)?.lead_status;
         try {
             setLeads(prev => prev.map(l => l.id === leadId ? { ...l, lead_status: newStatus } : l));
             await api.put(`/agents/leads/${leadId}`, { lead_status: newStatus });
+            if (!session.active) return;
             toast.success(`Lead moved to ${newStatus}`);
-            // Silently refresh stats
-            fetchDashboardData(true);
         } catch (error) {
+            if (!session.active) return;
             setLeads(prev => prev.map(lead => lead.id === leadId ? { ...lead, lead_status: previousStatus } : lead));
             setSelectedLeadDetail(prev => prev?.id === leadId ? { ...prev, lead_status: previousStatus } : prev);
             toast.error("Failed to update lead status");
-            fetchDashboardData(true);
+        } finally {
+            finishDashboardMutation(session, true);
         }
     };
 
@@ -160,15 +226,22 @@ const AgentDashboard = () => {
         if (!window.confirm("Are you sure you want to remove this lead/appointment from your CRM pipeline?")) {
             return;
         }
+        const session = beginDashboardMutation();
+        if (!session) return;
+        let refreshNeeded = false;
 
         try {
             await api.delete(`/agents/leads/${leadId}`);
+            if (!session.active) return;
+            refreshNeeded = true;
             setLeads(prev => prev.filter(l => l.id !== leadId));
             if (selectedLeadDetail?.id === leadId) setSelectedLeadDetail(null);
             toast.success("Lead removed from pipeline successfully");
-            fetchDashboardData(true);
         } catch (err) {
+            if (!session.active) return;
             toast.error(err.response?.data?.message || "Failed to delete lead");
+        } finally {
+            finishDashboardMutation(session, refreshNeeded);
         }
     };
 
@@ -367,7 +440,7 @@ const AgentDashboard = () => {
 
                 {/* ── TAB 2: Client Pipeline & CRM Board ───────────────────────────── */}
                 {activeTab === 'pipeline' && (
-                    <AgentPipelinePanel PIPELINE_STAGES={PIPELINE_STAGES} hideArchivedClosed={hideArchivedClosed} setHideArchivedClosed={setHideArchivedClosed} leads={leads} setSelectedLeadDetail={setSelectedLeadDetail} handleDeleteLead={handleDeleteLead} handleStatusChange={handleStatusChange} setSelectedLead={setSelectedLead} setActiveTab={setActiveTab} />
+                    <AgentPipelinePanel PIPELINE_STAGES={PIPELINE_STAGES} hideArchivedClosed={hideArchivedClosed} setHideArchivedClosed={setHideArchivedClosed} leads={leads} setSelectedLeadDetail={setSelectedLeadDetail} handleDeleteLead={handleDeleteLead} handleStatusChange={handleStatusChange} setSelectedLead={handleSelectLead} setActiveTab={setActiveTab} />
                 )}
 
                 {/* ── TAB 3: Properties Command Grid ───────────────────────────────── */}
@@ -377,14 +450,14 @@ const AgentDashboard = () => {
 
                 {/* ── TAB 4: Unified Live Chat & Communications Hub ───────────────── */}
                 {activeTab === 'messages' && (
-                    <AgentMessagesPanel leads={leads} selectedLead={selectedLead} setSelectedLead={setSelectedLead} chatMessages={chatMessages} user={user} messagesEndRef={messagesEndRef} handleSendMessage={handleSendMessage} messageInput={messageInput} setMessageInput={setMessageInput} sendingMsg={sendingMsg} />
+                    <AgentMessagesPanel leads={leads} selectedLead={selectedLead} setSelectedLead={handleSelectLead} chatMessages={chatMessages} user={user} messagesEndRef={messagesEndRef} handleSendMessage={handleSendMessage} messageInput={messageInput} setMessageInput={setMessageInput} sendingMsg={sendingMsg} />
                 )}
 
             </div>
 
             {/* ── Lead & Appointment Dossier Modal ─────────────────────────────── */}
             {selectedLeadDetail && (
-                <AgentLeadDetailsModal selectedLeadDetail={selectedLeadDetail} setSelectedLeadDetail={setSelectedLeadDetail} navigate={navigate} PIPELINE_STAGES={PIPELINE_STAGES} handleStatusChange={handleStatusChange} handleDeleteLead={handleDeleteLead} setSelectedLead={setSelectedLead} setActiveTab={setActiveTab} />
+                <AgentLeadDetailsModal selectedLeadDetail={selectedLeadDetail} setSelectedLeadDetail={setSelectedLeadDetail} navigate={navigate} PIPELINE_STAGES={PIPELINE_STAGES} handleStatusChange={handleStatusChange} handleDeleteLead={handleDeleteLead} setSelectedLead={handleSelectLead} setActiveTab={setActiveTab} />
             )}
 
             <Footer />

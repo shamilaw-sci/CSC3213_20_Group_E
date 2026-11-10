@@ -7,9 +7,12 @@ Scope: application entry points, the Phase6 extracted Profile panels/shell and A
 | Question | Entry point |
 | --- | --- |
 | Which page opens for a URL? | [App.jsx](../../frontend-react/src/App.jsx): route definitions, protected routes and providers |
+| Where are frontend diagnostic logs classified and constrained? | [clientLog.js](../../frontend-react/src/utils/clientLog.js) allows fixed operation events only; [ESLint config](../../frontend-react/eslint.config.js) guards direct production console calls; [scope/evidence](../phase7-frontend-log-privacy.md) |
+| Where are payment UI terms, requests and SDK lifetime controlled? | [paymentUiBoundary.js](../../frontend-react/src/utils/paymentUiBoundary.js) validates config/locked terms and bounds requests; [usePayhere.js](../../frontend-react/src/hooks/usePayhere.js) owns config/quote/SDK callbacks; [evidence/limits](../phase7-payment-ui-boundary.md) |
 | Which Node handler receives an HTTP request? | [server.js](../../backend-node/server.js), then the named routes module |
 | Where does polygon map search start? | [main.go](../../go-map-service/main.go), then routes, handlers and repository |
 | Where are UI controls/styles? | [UI map](ui-map.md) |
+| Where are session issuance, credential binding and password revocation? | [sessionToken.js](../../backend-node/utils/sessionToken.js), [authMiddleware.js](../../backend-node/middleware/authMiddleware.js), auth/social/Admin controllers; [rollout contract](../phase7-session-rollout.md) |
 | Where are AddProperty Category & Price controls and category objects? | [CategoryPriceStep.jsx](../../frontend-react/src/components/property/create/CategoryPriceStep.jsx), [propertyCategoryOptions.js](../../frontend-react/src/components/property/create/propertyCategoryOptions.js) and [wizard contracts](add-property-inventory.md); later steps remain in the page |
 | What are the actual Profile colors and first token scope? | [Measured baseline](profile-color-inventory.md), [approved one-control design](../superpowers/specs/2026-11-01-profile-action-token-pilot-design.md) and [profile-actions.css](../../frontend-react/src/components/profile/profile-actions.css); only Start Searching consumes these tokens |
 

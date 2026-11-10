@@ -123,6 +123,7 @@ describe('Backend Authorization & Self-Action Prevention', () => {
             mockReq.user = { id: 'buyer-1' };
 
             propertyRepository.getPropertyById.mockResolvedValueOnce(null);
+            favoritesRepository.findFavorite.mockResolvedValueOnce({ data: null, error: null });
 
             await toggleFavorite(mockReq, mockRes, mockNext);
 
@@ -130,7 +131,8 @@ describe('Backend Authorization & Self-Action Prevention', () => {
             expect(mockRes.json).toHaveBeenCalledWith(expect.objectContaining({
                 message: expect.stringMatching(/not found/i)
             }));
-            expect(favoritesRepository.findFavorite).not.toHaveBeenCalled();
+            expect(favoritesRepository.findFavorite).toHaveBeenCalledWith('buyer-1', 'non-existent-prop');
+            expect(favoritesRepository.insertFavorite).not.toHaveBeenCalled();
         });
 
         it('should block a seller from favoriting their own property listing', async () => {
@@ -140,8 +142,10 @@ describe('Backend Authorization & Self-Action Prevention', () => {
             propertyRepository.getPropertyById.mockResolvedValueOnce({
                 id: 'prop-100',
                 seller_id: 'seller-100',
+                status: 'approved',
                 title: 'Luxury Villa'
             });
+            favoritesRepository.findFavorite.mockResolvedValueOnce({ data: null, error: null });
 
             await toggleFavorite(mockReq, mockRes, mockNext);
 
@@ -159,6 +163,7 @@ describe('Backend Authorization & Self-Action Prevention', () => {
             propertyRepository.getPropertyById.mockResolvedValueOnce({
                 id: 'prop-100',
                 seller_id: 'seller-100',
+                status: 'approved',
                 title: 'Luxury Villa'
             });
 

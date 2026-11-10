@@ -2,6 +2,10 @@
 
 These are explicit real-database test commands. Ordinary `npm test` includes pure isolation/network/state guard tests and existing mocked API suites. It does not discover `login-roles.integration.cjs` or `listings.integration.cjs`.
 
+Current appointment-owner change: CRM now requires nullable UUID `leads.buyer_id` and denied anon/authenticated direct lead writes before any API/fixture work. Retained stack-c has not received these changes and the profile must refuse there; do not weaken its existing guards or apply the candidate to make it pass. Earlier CRM10/10 is historical evidence preceding this change. Committed-schema acceptance needs a separately approved target/guard; see [adoption prerequisites](../../docs/phase7-appointment-owner-rollout.md).
+
+The separately approved Phase7 target now passed58/58 real-local cases (new7, CRM10, listings32, saved5, checkout4), all19 table/catalog/ledger preservation and final empty-data verification. Dedicated guards use only59322/59321; original stack-c guards remain unchanged. The new pair is stopped with volume/networks retained. See [commands, bootstrap/provisioning evidence and scope limits](../../docs/phase7-local-acceptance.md). This is not production schema adoption or Storage/browser acceptance.
+
 From `backend-node`, with existing dependencies and the checked local stack running:
 
 ```powershell
@@ -18,6 +22,10 @@ node integration/run-receipts.cjs
 ```
 
 Preflight is read-only. Login/roles seeds seven synthetic users, runs the actual Express auth endpoints through Supertest and deletes only those run-specific UUID/email pairs. It checks the complete starting users snapshot and canonical migration ledger. Each invocation creates a fresh Jest process and fixture IDs, retaining real auth rate limits.
+
+Phase7 update (2026-11-03): Login/roles now has40 scenarios, including legacy-session refusal, real password-reset CAS revocation, cookie/Bearer password-change refresh and dedicated Admin refresh. Reset purpose tokens are created only for exact synthetic fixtures; no forgot-password email delivery is enabled. Changed fixture hashes are restored by exact UUID/email before final owned-user cleanup. Application token fixtures use the shared version2 issuer and known server-side fixture hashes; this does not change Supabase infrastructure JWTs or permit credential export to browser fixtures.
+
+Combined Phase7 follow-up on2026-11-03: guarded CRM10/10, listings32/32, saved searches5/5 and checkout4/4 passed sequentially, including complete starting/ending table snapshots and canonical ledger checks after exact fixture cleanup. These use retained stack-c permissions, not committed candidate ACL hardening. External delivery remained disabled; browser/Storage/receipt-worker profiles were not rerun in that batch.
 
 Listings 2A seeds eight synthetic users and its own moderation properties, then exercises actual creation, ownership, validation, visibility, editing, moderation and deletion. It cleans only properties belonging to those exact run-owned users, before deleting fixture users. This includes recovery of an insert whose API response failed. The shared launcher checks full starting/ending users, properties, transactions, payment_orders and payment_receipt_outbox snapshots plus the ledger, even if the child suite fails. It reports drift without printing table contents. Normal assertion/setup failures run cleanup; abrupt termination may prevent hooks and must be investigated without reset or broad deletion.
 

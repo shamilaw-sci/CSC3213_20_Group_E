@@ -411,6 +411,9 @@ const Messages = () => {
                                                             : 'bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 text-gray-900 dark:text-gray-100 rounded-[20px] rounded-tl-[4px]'
                                                     }`}>
                                                         {message.body && <p className="text-[15px] whitespace-pre-wrap leading-snug">{message.body}</p>}
+                                                        {message.attachment_unavailable && (
+                                                            <p className="mt-2 text-xs">Attachment temporarily unavailable. Refresh to retry.</p>
+                                                        )}
                                                         
                                                         {message.attachment_url && isSafeAttachmentUrl(message.attachment_url) && (
                                                             <a aria-label="Accessible interactive control"

@@ -1,6 +1,7 @@
 const { randomUUID, createHash } = require('node:crypto');
 const request = require('supertest');
 const bcrypt = require('bcryptjs');
+const { issueSessionToken } = require('../utils/sessionToken');
 const { Client } = require('pg');
 const { validateDatabase, identitySql } = require('./local-stack.cjs');
 const { allowedAppPorts } = require('./network-policy.cjs');
@@ -15,6 +16,7 @@ const fixtures = ['locked', 'concurrent', 'conflict', 'agent'].map((name, index)
 const db = new Client(JSON.parse(process.env.PHASE5_DATABASE));
 const ownedOrders = globalThis.__checkoutOrders = new Set();
 let connected = false, server, port, fee;
+let fixturePasswordHash;
 const sessions = new Map();
 const hash = (f, role = 'SELLER', extra = {}) => sessions.get(role).post('/api/payment/generate-hash')
     .send({ property_id: f.id, ...extra });
@@ -41,6 +43,7 @@ beforeAll(async () => {
     const setting = (await db.query("SELECT setting_value FROM public.platform_settings WHERE setting_key='listing_fee'")).rows[0];
     fee = require('../utils/paymentMoney').formatMoney(setting?.setting_value ?? '500.00');
     const passwordHash = await bcrypt.hash(password, 10);
+    fixturePasswordHash = passwordHash;
     for (const user of users) await db.query('INSERT INTO public.users(id,name,email,password_hash,role) VALUES($1,$2,$3,$4,$5)',
         [user.id, `Checkout ${user.role}`, user.email, passwordHash, user.role]);
     for (const f of fixtures) await db.query(`INSERT INTO public.properties(id,seller_id,title,description,price,status,payment_status,type,latitude,longitude,bedrooms,bathrooms,listing_type)
@@ -48,7 +51,7 @@ beforeAll(async () => {
     await new Promise((resolve, reject) => { server = app.listen(0, '127.0.0.1', resolve); server.once('error', reject); });
     port = server.address().port; allowedAppPorts.add(port);
     for (const user of users.filter(u => u.role !== 'BANNED')) {
-        const session = request.agent(server);
+        const session = request.agent(server).set('Origin', process.env.CLIENT_URL || 'http://localhost:5173');
         const login = await session.post('/api/auth/login').send({ email: user.email, password });
         expect(login.status).toBe(200); sessions.set(user.role, session);
     }
@@ -81,7 +84,7 @@ test('real auth, ownership and locked server terms; reuse and advisory completio
     const f = fixtures[0], before = await state(f);
     expect((await request(server).post('/api/payment/generate-hash').send({ property_id: f.id })).status).toBe(401);
     for (const role of ['AGENT', 'BUYER']) expect((await hash(f, role)).status).toBe(403);
-    const banned = require('jsonwebtoken').sign({ id: users[3].id, role: 'SELLER' }, process.env.JWT_SECRET);
+    const banned = issueSessionToken({ ...users[3], role: 'SELLER', password_hash: fixturePasswordHash });
     expect((await request(server).post('/api/payment/generate-hash').set('Authorization', `Bearer ${banned}`).send({ property_id: f.id })).status).toBe(403);
     expect(await state(f)).toEqual(before);
     const response = await hash(f, 'SELLER', { amount: '0.01', currency: 'USD', merchant_id: 'evil', sandbox: false, mode: 'live' });

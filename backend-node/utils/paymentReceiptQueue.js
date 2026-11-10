@@ -1,3 +1,4 @@
+const operationLogContext = require('./operationLogContext');
 const db = require('../config/supabase');
 const { sendPaymentReceipt } = require('./emailService');
 const logger = require('./logger');
@@ -14,12 +15,12 @@ const drain = async (orderId = null) => {
             if (result.error) throw result.error;
         } catch (error) {
             // The lease expires in five minutes; next sweep retries this durable row.
-            logger.error('Payment receipt delivery pending retry', { order_id: receipt.order_id, error: error.message });
+            logger.error('Payment receipt delivery pending retry', operationLogContext({ order_id: receipt.order_id }));
         }
     }
 };
 const start = () => {
-    const tick = () => drain().catch(error => logger.error('Payment receipt queue unavailable', { error: error.message }));
+    const tick = () => drain().catch(error => logger.error('Payment receipt queue unavailable'));
     const timer = setInterval(tick, 60000);
     timer.unref();
     return timer;

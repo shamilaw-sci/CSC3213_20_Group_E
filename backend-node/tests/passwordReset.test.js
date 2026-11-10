@@ -7,7 +7,7 @@ const bcrypt = require('bcryptjs');
 const repo = require('../repositories/userRepository');
 const email = require('../utils/emailService');
 const { forgotPassword, resetPassword } = require('../controllers/authController');
-const response = () => ({ status: jest.fn().mockReturnThis(), json: jest.fn() });
+const response = () => ({ status: jest.fn().mockReturnThis(), json: jest.fn(), clearCookie: jest.fn().mockReturnThis() });
 let user;
 beforeEach(async () => {
     jest.clearAllMocks();

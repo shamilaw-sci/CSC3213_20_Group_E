@@ -142,6 +142,8 @@ const AddProperty = () => {
     setMessage,
     handleSubmit,
     paymentConfig,
+    paymentAmount,
+    retryPaymentConfig,
   } = usePropertyForm();
 
   const MAX_HD_MB = 50; 
@@ -612,6 +614,8 @@ const AddProperty = () => {
                 virtualTourMetadata={virtualTourMetadata}
                 previewUrls={previewUrls}
                 paymentConfig={paymentConfig}
+                paymentAmount={paymentAmount}
+                retryPaymentConfig={retryPaymentConfig}
                 loading={loading}
                 goToStep={goToStep}
                 handleSubmit={handleSubmit}

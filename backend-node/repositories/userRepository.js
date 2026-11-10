@@ -61,7 +61,7 @@ const uploadAvatar = async (fileName, buffer, mimeType) => {
         .from('avatars')
         .upload(fileName, buffer, {
             contentType: mimeType,
-            upsert: true
+            upsert: false
         });
     if (error) throw error;
     

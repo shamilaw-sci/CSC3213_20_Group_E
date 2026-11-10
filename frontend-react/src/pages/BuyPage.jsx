@@ -1,3 +1,4 @@
+import { logClientError } from '../utils/clientLog';
 import React, { useState, useEffect, useMemo } from 'react';
 import { m } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -101,7 +102,7 @@ const BuyPage = () => {
                     : (res.data?.properties || res.data?.data || []);
                 setProperties(fetchedProps);
             } catch (error) {
-                (toast.error('Error fetching properties:'), console.error('Error fetching properties:', error));
+                (toast.error('Error fetching properties:'), logClientError('properties_load_failed'));
             } finally {
                 setLoading(false);
             }

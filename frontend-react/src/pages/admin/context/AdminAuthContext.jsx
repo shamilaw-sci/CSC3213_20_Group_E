@@ -1,3 +1,4 @@
+import { logClientError } from '../../../utils/clientLog';
 import React, { createContext, useState, useEffect, useContext } from "react";
 import { Outlet } from "react-router-dom";
 import { verifyAdminSession, adminLogout } from "../api/adminApi";
@@ -35,11 +36,11 @@ export const AdminAuthProvider = () => {
           try {
             localStorage.setItem("admin_data", JSON.stringify(res.admin));
           } catch (e) {
-            console.error("Storage error:", e);
+            logClientError('admin_profile_cache_write_failed');
           }
         }
       } catch (err) {
-        console.error("Admin session verification failed:", err.message || err);
+        logClientError('admin_session_verification_failed');
         // Clean up invalid or expired credentials
         localStorage.removeItem("admin_token");
         localStorage.removeItem("admin_data");
@@ -65,7 +66,7 @@ export const AdminAuthProvider = () => {
     try {
       localStorage.setItem("admin_data", JSON.stringify(adminData));
     } catch (e) {
-      console.error("Storage write error:", e);
+      logClientError('admin_login_cache_write_failed');
     }
     setAdmin(adminData);
   };

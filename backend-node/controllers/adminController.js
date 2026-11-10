@@ -1,4 +1,4 @@
-const jwt = require('jsonwebtoken');
+const { issueSessionToken } = require('../utils/sessionToken');
 const bcrypt = require('bcryptjs');
 const adminRepository = require('../repositories/adminRepository');
 const { sendListingStatusEmail } = require('../utils/emailService');
@@ -18,9 +18,7 @@ const login = async(req, res, next) => {
             return res.status(401).json({ message: "Invalid admin credentials" });
         }
 
-        const token = jwt.sign({ id: adminUser.id, email: email, role: 'ADMIN' },
-            process.env.JWT_SECRET, { expiresIn: '1d' }
-        );
+        const token = issueSessionToken({ ...adminUser, role: 'ADMIN' }, { extraClaims: { email } });
 
         res.cookie('token', token, {
             httpOnly: true,

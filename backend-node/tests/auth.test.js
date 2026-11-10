@@ -49,6 +49,7 @@ describe('Authentication & Security API', () => {
     it('clears the HttpOnly authentication cookie when an admin signs out', async () => {
         const res = await request(app)
             .post('/api/auth/logout')
+            .set('Origin', process.env.CLIENT_URL || 'http://localhost:5173')
             .set('Cookie', 'token=existing-admin-session');
 
         expect(res.statusCode).toBe(200);

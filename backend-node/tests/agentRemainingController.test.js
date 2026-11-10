@@ -1,6 +1,8 @@
 jest.mock('../config/supabase', () => ({ from: jest.fn() }));
+jest.mock('../utils/logger', () => ({ error: jest.fn() }));
 jest.mock('../repositories/agentRepository', () => ({ getAgentLeads: jest.fn(), updateAgentProfile: jest.fn(), resubmitApplication: jest.fn(), createViewingLead: jest.fn() }));
 const db = require('../config/supabase');
+const logger = require('../utils/logger');
 const repo = require('../repositories/agentRepository');
 const handlers = require('../controllers/agentController');
 const request = (body = {}, role = 'AGENT') => ({ body, user: { id: 'agent', role }, params: { id: 'other' } });
@@ -52,8 +54,8 @@ test.each(['properties', 'leads'])('dashboard forwards %s failure and stops late
     const res = response(); const next = jest.fn(); await handlers.getDashboardStats(request(), res, next);
     expect(next).toHaveBeenCalledWith(error); expect(res.status).not.toHaveBeenCalled(); expect(db.from.mock.calls).toEqual([['properties']]); expect(repo.getAgentLeads).toHaveBeenCalledTimes(stage === 'properties' ? 0 : 1);
 });
-test('profile updates user first, ignores its returned error, converts fields and removes undefined', async () => {
-    db.from.mockImplementation(table => { calls.push(['from', table]); return query(table, { error: new Error('ignored') }); });
+test('profile completes required user write first, converts fields and removes undefined', async () => {
+    db.from.mockImplementation(table => { calls.push(['from', table]); return query(table, { data: { id: 'agent' }, error: null }); });
     repo.updateAgentProfile.mockImplementation(async (...args) => { calls.push(['profile', ...args]); return { id: 'profile' }; });
     const res = response(); await handlers.updateAgentProfile(request({ name: null, avatar_url: '', languages: ['en', 'si'], service_areas: [], total_sales: '', total_rentals: null, bio: null }), res, jest.fn());
     expect(calls[0]).toEqual(['from', 'users']); expect(calls).toContainEqual(['users', 'update', { name: null, avatar_url: '' }]); expect(calls).toContainEqual(['users', 'eq', 'id', 'agent']);
@@ -65,7 +67,7 @@ test('profile leaves strings intact, preserves NaN conversion and skips users wh
     expect(db.from).not.toHaveBeenCalled(); expect(repo.updateAgentProfile).toHaveBeenCalledWith('agent', { languages: 'en', service_areas: null, total_sales: NaN, updated_at: '2026-11-02T00:00:00.000Z' });
 });
 test.each(['user', 'profile'])('profile forwards thrown %s error preserving partial write order', async stage => {
-    const error = new Error('failure'); db.from.mockImplementation(() => { if (stage === 'user') throw error; return query('users', {}); }); repo.updateAgentProfile.mockRejectedValue(error);
+    const error = new Error('failure'); db.from.mockImplementation(() => { if (stage === 'user') throw error; return query('users', { data: { id: 'agent' }, error: null }); }); repo.updateAgentProfile.mockRejectedValue(error);
     const res = response(); const next = jest.fn(); await handlers.updateAgentProfile(request({ name: 'Name' }), res, next);
     expect(next).toHaveBeenCalledWith(error); expect(repo.updateAgentProfile).toHaveBeenCalledTimes(stage === 'user' ? 0 : 1); expect(res.status).not.toHaveBeenCalled();
 });
@@ -83,6 +85,6 @@ test('resubmit forwards repository failure', async () => {
 test('booking persists lead before sequential conversation creation and message; message failure stays nonfatal', async () => {
     const lead = { id: 'lead' }; repo.createViewingLead.mockImplementation(async () => { calls.push(['lead']); return lead; });
     db.from.mockImplementation(table => { calls.push(['from', table]); if (table === 'messages') throw new Error('message failure'); return query(table, { data: calls.filter(c => c[0] === 'from').length === 1 ? null : { id: 'conversation' } }); });
-    const log = jest.spyOn(console, 'error').mockImplementation(() => {}); const res = response(); const next = jest.fn(); await handlers.bookViewing(request(), res, next);
-    expect(calls.filter(c => c[0] === 'lead' || c[0] === 'from')).toEqual([['lead'], ['from', 'conversations'], ['from', 'conversations'], ['from', 'messages']]); expect(log).toHaveBeenCalledWith('Conversation link error on booking (non-fatal):', expect.any(Error)); expect(next).not.toHaveBeenCalled(); expect(res.status).toHaveBeenCalledWith(201); expect(res.json.mock.calls[0][0].lead).toBe(lead); log.mockRestore();
+    const res = response(); const next = jest.fn(); await handlers.bookViewing(request(), res, next);
+    expect(calls.filter(c => c[0] === 'lead' || c[0] === 'from')).toEqual([['lead'], ['from', 'conversations'], ['from', 'conversations'], ['from', 'messages']]); expect(logger.error).toHaveBeenCalledWith('Booking conversation requires recovery.', { event: 'booking_conversation_recovery', leadId: 'lead', agentId: 'other', buyerId: 'agent', stage: 'message' }); expect(next).not.toHaveBeenCalled(); expect(res.status).toHaveBeenCalledWith(201); expect(res.json.mock.calls[0][0].lead).toBe(lead);
 });

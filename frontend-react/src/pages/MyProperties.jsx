@@ -1,3 +1,4 @@
+import { logClientError } from '../utils/clientLog';
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../context/api';
@@ -24,7 +25,8 @@ const MyProperties = () => {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('all');
     const [payMessage, setPayMessage] = useState({ type: '', text: '' });
-    const { triggerPayment } = usePayhere(setPayMessage);
+    const { triggerPayment, paymentConfig, checkoutQuote, checkoutBusy, retryPaymentConfig } = usePayhere(setPayMessage);
+    const paymentAmount = id => checkoutQuote?.propertyId === id ? checkoutQuote.amount : paymentConfig.listingFee;
 
     const fetchProperties = async () => {
         try {
@@ -32,7 +34,7 @@ const MyProperties = () => {
             setProperties(res.data.properties || []);
         } catch (err) {
             toast.error("Failed to load properties");
-            console.error("Failed to load properties", err);
+            logClientError('owned_properties_load_failed');
         } finally {
             setLoading(false);
         }
@@ -54,7 +56,7 @@ const MyProperties = () => {
     };
 
     const handlePayDraft = async (propertyId) => {
-        await triggerPayment(propertyId);
+        await triggerPayment(propertyId, paymentAmount(propertyId));
     };
 
     const getEffectiveStatus = (p) => {
@@ -73,6 +75,11 @@ const MyProperties = () => {
         <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col font-sans">
             <Navbar />
             {payMessage.text && <p role={payMessage.type === 'error' ? 'alert' : 'status'} className="mx-auto w-full max-w-7xl px-6 py-4 text-sm bg-blue-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100">{payMessage.text}</p>}
+            {properties.some(p => getEffectiveStatus(p) === 'draft') && <div className="mx-auto w-full max-w-7xl px-6 py-2">
+                {paymentConfig.status === 'ready' ? <p>{paymentConfig.sandbox ? 'Test checkout' : 'Live checkout'}</p>
+                    : paymentConfig.status === 'error' ? <><p>Payment configuration is unavailable.</p><button type="button" onClick={retryPaymentConfig}>Retry payment configuration</button></>
+                    : <p role="status">Loading payment configuration...</p>}
+            </div>}
             
             {/* Header with Dashboard Navigation */}
             <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
@@ -212,10 +219,11 @@ const MyProperties = () => {
                                                     <button
                                                         type="button"
                                                         onClick={() => handlePayDraft(prop.id)}
+                                                        disabled={paymentConfig.status !== 'ready' || checkoutBusy}
                                                         className="px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-black text-xs hover:bg-amber-400 transition cursor-pointer flex items-center gap-1 shadow-xs"
                                                     >
                                                         <CreditCard className="w-3.5 h-3.5" />
-                                                        <span>Pay Rs. 500</span>
+                                                        <span>{paymentConfig.status === 'ready' ? `Pay Rs. ${Number(paymentAmount(prop.id)).toLocaleString()}` : paymentConfig.status === 'error' ? 'Payment unavailable' : 'Loading payment configuration...'}</span>
                                                     </button>
                                                 </div>
                                             )}

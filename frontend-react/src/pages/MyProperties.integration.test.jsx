@@ -7,7 +7,7 @@ import MyProperties from './MyProperties';
 import { UserAuthProvider } from '../context/UserAuthContext';
 
 const api = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn(), delete: vi.fn() }));
-const payment = vi.hoisted(() => ({ triggerPayment: vi.fn() }));
+const payment = vi.hoisted(() => ({ triggerPayment: vi.fn(), paymentConfig: { status: 'ready', listingFee: '500.00', sandbox: true }, checkoutQuote: null, checkoutBusy: false, retryPaymentConfig: vi.fn() }));
 vi.mock('../context/api', () => ({ default: api }));
 vi.mock('../hooks/usePayhere', () => ({ usePayhere: () => payment }));
 vi.mock('../components/layout/Navbar', () => ({ default: () => null }));

@@ -1,7 +1,7 @@
 const { randomUUID } = require('node:crypto');
 const request = require('supertest');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const { issueSessionToken } = require('../utils/sessionToken');
 const { Client } = require('pg');
 const { identitySql, validateDatabase } = require('./local-stack.cjs');
 const { assertOwnedListings } = require('./database-state.cjs');
@@ -26,7 +26,7 @@ const propertyId = randomUUID();
 let connected = false;
 let server, appPort;
 const call = (role, method, path = '/api/saved-searches') => {
-    const req = request(server)[method](path);
+    const req = request(server)[method](path).set('Origin', process.env.CLIENT_URL || 'http://localhost:5173');
     return role ? req.set('Cookie', sessions[role]) : req;
 };
 const searches = async () => (await db.query('SELECT * FROM public.saved_searches WHERE user_id=ANY($1::uuid[]) ORDER BY id', [userIds])).rows;
@@ -69,7 +69,7 @@ beforeAll(async () => {
         expect(response.status).toBe(200);
         sessions[key] = response.headers['set-cookie'][0].split(';')[0];
     }
-    sessions.BANNED = `token=${jwt.sign({ id: users.BANNED.id, role: 'BANNED' }, process.env.JWT_SECRET, { expiresIn: '5m' })}`;
+    sessions.BANNED = `token=${issueSessionToken({ ...users.BANNED, password_hash: hash }, { expiresIn: '5m' })}`;
     await db.query(`INSERT INTO public.properties(id,seller_id,title,description,price,status,payment_status,type,latitude,longitude,bedrooms,bathrooms,listing_type)
         VALUES($1,$2,$3,'Synthetic saved-search fixture',1500000,'pending','Paid','House',7,80,0,0,'Sale')`,
     [propertyId, users.SELLER.id, `${run} property`]);

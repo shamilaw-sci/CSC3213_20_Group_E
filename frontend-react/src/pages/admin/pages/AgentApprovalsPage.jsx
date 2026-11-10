@@ -1,3 +1,4 @@
+import { logClientError } from '../../../utils/clientLog';
 import React, { useEffect, useState } from 'react';
 import { Check, X, ShieldAlert, FileText, Building, UserCheck, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import * as adminApi from '../api/adminApi';
@@ -21,7 +22,7 @@ const AgentApprovalsPage = () => {
       const data = await adminApi.fetchPendingAgents();
       setAgents(data.agents || []);
     } catch (err) {
-      console.error('Error fetching pending agents:', err);
+      logClientError('admin_pending_agents_load_failed');
     } finally {
       setLoading(false);
     }

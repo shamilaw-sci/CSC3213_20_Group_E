@@ -59,4 +59,15 @@ describe('Admin server logout', () => {
         expect(screen.getByText('Signed in')).toBeInTheDocument();
         expect(localStorage.getItem('admin_token')).toBe('test-admin-token');
     });
+    test('verification failure clears cached session without logging private API context', async () => {
+        const privateError = { message: 'private-admin-token', config: { headers: { Authorization: 'Bearer private-admin-token' } } };
+        api.verifyAdminSession.mockRejectedValueOnce(privateError);
+        const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+        try {
+            showSession(); await screen.findByText('Signed out');
+            expect(localStorage.getItem('admin_token')).toBeNull(); expect(localStorage.getItem('admin_data')).toBeNull();
+            expect(log).toHaveBeenCalledWith('admin_session_verification_failed');
+            expect(JSON.stringify(log.mock.calls)).not.toContain('private-admin-token');
+        } finally { log.mockRestore(); }
+    });
 });

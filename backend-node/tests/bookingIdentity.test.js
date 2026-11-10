@@ -2,6 +2,7 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
+const { issueSessionToken } = require('../utils/sessionToken');
 
 jest.mock('../config/supabase', () => {
     const db = {
@@ -32,7 +33,7 @@ describe('Booking identity at the API boundary', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         agentRepository.createViewingLead.mockResolvedValue({ lead_id: 'test-lead' });
-        db.single.mockResolvedValue({ data: { id: buyerId, role: 'BUYER', email: 'buyer@example.test' }, error: null });
+        db.single.mockResolvedValue({ data: { id: buyerId, role: 'BUYER', email: 'buyer@example.test', password_hash: null }, error: null });
         db.maybeSingle.mockResolvedValue({ data: { id: 'existing-conversation' }, error: null });
     });
 
@@ -40,13 +41,13 @@ describe('Booking identity at the API boundary', () => {
         const response = await request(app).post(`/agents/${agentId}/book-viewing`).send(booking);
 
         expect(response.status).toBe(201);
-        expect(agentRepository.createViewingLead).toHaveBeenCalledWith(agentId, expect.objectContaining({ client_email: booking.client_email }));
+        expect(agentRepository.createViewingLead).toHaveBeenCalledWith(agentId, expect.objectContaining({ client_email: booking.client_email }), null);
         expect(db.from).not.toHaveBeenCalled();
         expect(db.insert).not.toHaveBeenCalled();
     });
 
     test('uses the authenticated identity for a registered buyer conversation', async () => {
-        const token = jwt.sign({ id: buyerId, role: 'BUYER' }, process.env.JWT_SECRET);
+        const token = issueSessionToken({ id: buyerId, role: 'BUYER', password_hash: null });
         const response = await request(app).post(`/agents/${agentId}/book-viewing`)
             .set('Cookie', `token=${token}`).send(booking);
 
@@ -58,8 +59,8 @@ describe('Booking identity at the API boundary', () => {
     });
 
     test('prevents authenticated self-booking through the actual route', async () => {
-        db.single.mockResolvedValue({ data: { id: agentId, role: 'AGENT' }, error: null });
-        const token = jwt.sign({ id: agentId, role: 'AGENT' }, process.env.JWT_SECRET);
+        db.single.mockResolvedValue({ data: { id: agentId, role: 'AGENT', password_hash: null }, error: null });
+        const token = issueSessionToken({ id: agentId, role: 'AGENT', password_hash: null });
         const response = await request(app).post(`/agents/${agentId}/book-viewing`)
             .set('Authorization', `Bearer ${token}`).send(booking);
 

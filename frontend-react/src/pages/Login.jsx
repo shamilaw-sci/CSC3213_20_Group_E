@@ -1,3 +1,4 @@
+import { logClientError } from '../utils/clientLog';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/UserAuthContext';
@@ -92,7 +93,7 @@ const Login = () => {
             } else {
                 toast.error(err.response?.data?.message || err.message || 'Google sign-in failed');
             }
-            console.error("Google sign-in failed:", err.response?.data?.message || err.message);
+            logClientError('google_signin_failed');
         }
     }, [loginWithGoogle, location.state, navigate, from]);
 
@@ -183,7 +184,7 @@ const Login = () => {
             } else {
                 toast.error(err.response?.data?.message || err.message || 'Failed to sign in');
             }
-            console.error("Sign-in failed:", err.response?.data?.message || err.message);
+            logClientError('password_signin_failed');
         } finally {
             setLoading(false);
         }
@@ -197,7 +198,7 @@ const Login = () => {
             toast.success('Reset link sent!');
         } catch (err) {
             toast.error(err.response?.data?.message || err.message || 'Failed to send reset link');
-            console.error("Reset link error:", err.response?.data?.message || err.message);
+            logClientError('password_reset_request_failed');
         } finally {
             setLoading(false);
         }

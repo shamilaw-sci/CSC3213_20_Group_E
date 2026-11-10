@@ -1,4 +1,5 @@
-﻿import React, { useState, useEffect, useCallback } from "react";
+import { logClientError } from '../../../utils/clientLog';
+import React, { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
 import { fetchUsers, banUser, unbanUser, updateUserRole, fetchRoleRequests, approveRoleRequest, rejectRoleRequest } from "../api/adminApi";
 import "../styles/admin-global.css";
@@ -71,7 +72,7 @@ const UsersPage = () => {
   const loadUsers = useCallback(() => {
     fetchUsers({ role: roleFilter !== "all" ? roleFilter : undefined })
       .then((d) => { if (d?.users) setUsers(d.users); })
-      .catch((err) => { toast.error("Failed to load users"); console.error(err); });
+      .catch(() => { toast.error("Failed to load users"); logClientError('admin_users_load_failed'); });
   }, [roleFilter]);
 
   const loadRoleRequests = useCallback(() => {

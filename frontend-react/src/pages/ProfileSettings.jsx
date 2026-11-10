@@ -1,3 +1,4 @@
+import { logClientError } from '../utils/clientLog';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/UserAuthContext';
 import { useTheme } from '../context/ThemeProvider';
@@ -183,7 +184,7 @@ const ProfileSettings = () => {
                 }
             } catch (err) {
                 toast.error("Failed to load profile data");
-                console.error("Failed to load profile data", err);
+                logClientError('profile_load_failed');
             } finally {
                 setLoadingData(false);
             }
@@ -203,6 +204,13 @@ const ProfileSettings = () => {
     const handleAvatarChange = (e) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
+            if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || !file.size || file.size > 3 * 1024 * 1024) {
+                setError('Choose JPEG, PNG or WebP up to 3 MiB.');
+                toast.error('Choose JPEG, PNG or WebP up to 3 MiB.');
+                e.target.value = '';
+                return;
+            }
+            setError(null);
             const reader = new FileReader();
             reader.onloadend = () => {
                 setAvatarUrl(reader.result);
@@ -243,8 +251,19 @@ const ProfileSettings = () => {
             }
 
             const res = await api.put('/auth/profile', updatePayload);
+            if (updatePayload.password && res.data.user?.role === 'ADMIN' && typeof res.data.token === 'string') {
+                try {
+                    localStorage.setItem('admin_token', res.data.token);
+                } catch {
+                    try {
+                        localStorage.removeItem('admin_token');
+                        localStorage.removeItem('admin_data');
+                    } catch { /* Browser storage may be unavailable. */ }
+                    toast.error('Password updated. Sign in again to refresh admin access.');
+                }
+            }
             login(res.data.user);
-            setMessage("Profile updated successfully!");
+            setMessage(res.data.partial ? (res.data.message || 'Profile updated; some fields could not be saved.') : "Profile updated successfully!");
             setFormData(prev => ({ ...prev, currentPassword: '', password: '', confirmPassword: '' }));
         } catch (err) {
             setError(err.response?.data?.message || "Failed to update profile");
@@ -289,7 +308,7 @@ const ProfileSettings = () => {
         } catch (err) {
             // Roll back on failure
             setSavedSearches(prev => prev.map(s => s.id === id ? { ...s, email_alerts_enabled: currentlyEnabled } : s));
-            console.error("Failed to update alert preference");
+            logClientError('alert_preference_update_failed');
         }
     };
 

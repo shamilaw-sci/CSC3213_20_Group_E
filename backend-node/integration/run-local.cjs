@@ -34,6 +34,15 @@ async function runLocal(profileName) {
         await client.query('BEGIN READ ONLY');
         stage = 'database marker and ledger identity';
         validateDatabase((await client.query(identitySql)).rows[0]);
+        if (profileName === 'crm') {
+            stage = 'appointment ownership schema (owner migration required)';
+            const { rows } = await client.query(`SELECT EXISTS (
+                SELECT 1 FROM pg_attribute WHERE attrelid='public.leads'::regclass
+                AND attname='buyer_id' AND atttypid='uuid'::regtype AND NOT attnotnull AND NOT attisdropped
+            ) AND NOT has_any_column_privilege('anon','public.leads','INSERT,UPDATE')
+              AND NOT has_any_column_privilege('authenticated','public.leads','INSERT,UPDATE') AS ready`);
+            if (rows[0]?.ready !== true) throw new Error('Appointment owner schema unavailable.');
+        }
         const before = await snapshotState(client, profile.tables);
         let storage, storageBefore;
         if (profileName === 'storage') {

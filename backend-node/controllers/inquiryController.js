@@ -8,7 +8,7 @@ exports.submitInquiry = async (req, res) => {
         await inquiryRepository.create({ first_name: firstName, last_name: lastName, email, message });
         res.status(201).json({ message: 'Your inquiry has been sent to our team.' });
     } catch (error) {
-        console.error('Inquiry submission failed:', error.code || 'database error');
+        console.error('inquiry_submission_failed');
         unavailable(res);
     }
 };
@@ -20,7 +20,7 @@ exports.listInquiries = async (req, res) => {
         const { data, count } = await inquiryRepository.list((page - 1) * pageSize, page * pageSize - 1);
         res.json({ inquiries: data || [], total: count || 0, page, pageSize });
     } catch (error) {
-        console.error('Inquiry listing failed:', error.code || 'database error');
+        console.error('inquiry_listing_failed');
         unavailable(res);
     }
 };

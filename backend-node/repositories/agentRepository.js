@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const logger = require('../utils/logger');
 
 const agentRepository = {
     // 1. Get all agents
@@ -48,7 +49,10 @@ const agentRepository = {
     },
 
     // 3.1 Create Viewing / Consultation Lead
-    createViewingLead: async (agentId, bookingData) => {
+    createViewingLead: async (agentId, bookingData, buyerId = null) => {
+        if (buyerId !== null && (typeof buyerId !== 'string' || !buyerId.trim())) {
+            throw new Error('Valid appointment owner required.');
+        }
         const { client_name, client_email, client_phone, property_id, viewing_type, preferred_date, preferred_time, notes } = bookingData;
         
         let leadSource = viewing_type ? `Booking (${viewing_type}): ${preferred_date || 'Flexible'} ${preferred_time || ''}` : 'Direct Profile Booking';
@@ -60,6 +64,7 @@ const agentRepository = {
             .from('leads')
             .insert([{
                 assigned_agent_id: agentId,
+                buyer_id: buyerId,
                 property_id: property_id || null,
                 client_name,
                 client_email,
@@ -129,7 +134,7 @@ const agentRepository = {
             .eq('assigned_agent_id', agentId)
             .order('created_at', { ascending: false });
 
-        if (directError) console.error("Direct leads fetch error:", directError);
+        if (directError) console.error('direct_leads_fetch_failed');
 
         const normalizedDirectLeads = (directData || []).map(l => {
             // Map lead_lifecycle to CRM stages: 'New', 'Contacted', 'Showing', 'Offer', 'Closed'
@@ -171,8 +176,9 @@ const agentRepository = {
     },
 
     // 4.1 Get Appointments for a Buyer
-    getBuyerAppointments: async (userEmail, userId) => {
-        let query = supabase
+    getBuyerAppointments: async (userId) => {
+        if (typeof userId !== 'string' || !userId.trim()) throw new Error('Valid appointment owner required.');
+        const query = supabase
             .from('leads')
             .select(`
                 lead_id, assigned_agent_id, property_id, client_name, client_email, client_phone,
@@ -180,11 +186,8 @@ const agentRepository = {
                 properties (id, title, images, price, city, district),
                 assigned_agent:users!leads_assigned_agent_id_fkey (id, name, avatar_url, phone, email, agent_profiles(agency_name, license_number))
             `)
-            .order('created_at', { ascending: false });
-
-        if (userEmail) {
-            query = query.eq('client_email', userEmail);
-        }
+            .order('created_at', { ascending: false })
+            .eq('buyer_id', userId);
 
         const { data, error } = await query;
         if (error) throw error;
@@ -268,12 +271,13 @@ const agentRepository = {
     },
 
     // 5.2 Cancel / Delete Appointment (Buyer)
-    deleteBuyerAppointment: async (leadId, userEmail) => {
+    deleteBuyerAppointment: async (leadId, userId) => {
+        if (typeof userId !== 'string' || !userId.trim()) throw new Error('Valid appointment owner required.');
         const { data, error } = await supabase
             .from('leads')
             .delete()
             .eq('lead_id', leadId)
-            .eq('client_email', userEmail)
+            .eq('buyer_id', userId)
             .select();
 
         if (error) throw error;
@@ -283,11 +287,12 @@ const agentRepository = {
     // 6. Update Agent Profile
     updateAgentProfile: async (agentId, updates) => {
         // Check if agent profile row already exists
-        const { data: existing } = await supabase
+        const { data: existing, error: lookupError } = await supabase
             .from('agent_profiles')
             .select('agent_id, agency_name')
             .eq('agent_id', agentId)
             .maybeSingle();
+        if (lookupError) throw lookupError;
 
         if (existing) {
             const { data, error } = await supabase
@@ -313,17 +318,28 @@ const agentRepository = {
 
     // 7. Resubmit Application
     resubmitApplication: async (agentId, profileUpdates) => {
-        const { error: profileError } = await supabase
+        const { data: profile, error: profileError } = await supabase
             .from('agent_profiles')
             .update(profileUpdates)
-            .eq('agent_id', agentId);
+            .eq('agent_id', agentId)
+            .select('agent_id').single();
         if (profileError) throw profileError;
+        if (profile?.agent_id !== agentId) throw new Error('Agent application update could not be confirmed.');
 
-        const { error: userError } = await supabase
-            .from('users')
-            .update({ role: 'PENDING_AGENT', updated_at: new Date().toISOString() })
-            .eq('id', agentId);
-        if (userError) throw userError;
+        try {
+            const { data: user, error: userError } = await supabase
+                .from('users')
+                .update({ role: 'PENDING_AGENT', updated_at: new Date().toISOString() })
+                .eq('id', agentId).eq('role', 'REJECTED_AGENT')
+                .select('id').single();
+            if (userError) throw userError;
+            if (user?.id !== agentId) throw new Error('Agent application role transition could not be confirmed.');
+        } catch (error) {
+            logger.error('Agent resubmission requires recovery after profile write.', {
+                event: 'agent_resubmission_partial_write', agentId
+            });
+            throw error;
+        }
     },
 
     // 8. Get Active Listings Count

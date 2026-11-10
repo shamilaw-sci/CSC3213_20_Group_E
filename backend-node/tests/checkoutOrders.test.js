@@ -44,6 +44,12 @@ test('another owner cannot initialize checkout', async () => {
     expect(res.status).toHaveBeenCalledWith(403);
     expect(orders.create).not.toHaveBeenCalled();
 });
+test('fee read failure prevents checkout order and hash', async () => {
+    settings.getSettingValue.mockRejectedValueOnce(new Error('synthetic settings failure'));
+    const res = response(), next = jest.fn();
+    await generateHash({ user: { id: 'seller' }, body: { property_id: 'property1' } }, res, next);
+    expect(orders.create).not.toHaveBeenCalled(); expect(res.json).not.toHaveBeenCalled(); expect(next).toHaveBeenCalledTimes(1);
+});
 test('verified callback uses locked fee A instead of current fee B', async () => {
     const res = response();
     await processWebhook({ body: notification() }, res, jest.fn());

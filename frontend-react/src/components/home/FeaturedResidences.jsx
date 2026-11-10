@@ -1,3 +1,4 @@
+import { logClientError } from '../../utils/clientLog';
 import React, { useEffect, useState } from 'react';
 import { m } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -73,7 +74,7 @@ export default function FeaturedResidences() {
                     setProperties(fallbackResidences);
                 }
             } catch (err) {
-                console.error("Failed to load featured properties, using curated showcase:", err);
+                logClientError('featured_properties_load_failed');
                 setProperties(fallbackResidences);
             } finally {
                 setLoading(false);

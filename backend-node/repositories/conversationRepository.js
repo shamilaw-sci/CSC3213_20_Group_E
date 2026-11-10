@@ -1,5 +1,7 @@
 const supabase = require('../config/supabase');
 const { decorateMessages } = require('../utils/messageReceipts');
+const { withSignedAttachments } = require('../utils/chatAttachmentDelivery');
+const { returnedMessageInsertError } = require('../utils/chatMessageFailure');
 
 const conversationRepository = {
     // 1. Get Conversation by ID
@@ -175,8 +177,11 @@ const conversationRepository = {
                 if (!data || data.length < 1000) break;
             }
         }
-        return decorateMessages(messages, receipts, userId, conversations);
+        return withSignedAttachments(supabase, decorateMessages(messages, receipts, userId, conversations), process.env.SUPABASE_URL);
     },
+
+    // Only call after the controller has established conversation access.
+    withAttachmentUrls: messages => withSignedAttachments(supabase, messages, process.env.SUPABASE_URL),
 
     // 14. Upload attachment
     uploadAttachment: async (fileName, buffer, mimeType) => {
@@ -187,11 +192,18 @@ const conversationRepository = {
             });
         if (error) throw error;
 
-        const { data } = supabase.storage
-            .from('chat-attachments')
-            .getPublicUrl(fileName);
-        
-        return data.publicUrl;
+        return `chat-attachments/${fileName}`;
+    },
+
+    removeAttachment: async (conversationId, objectKey) => {
+        const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (typeof conversationId !== 'string' || !uuid.test(conversationId)
+            || typeof objectKey !== 'string' || !objectKey.startsWith(`${conversationId}/`)
+            || !/^\d+-[a-f0-9]{32}\.[a-z0-9]+$/.test(objectKey.slice(conversationId.length + 1))) {
+            throw new Error('Invalid chat cleanup key.');
+        }
+        const { error } = await supabase.storage.from('chat-attachments').remove([objectKey]);
+        if (error) throw error;
     },
 
     // 15. Create message
@@ -201,7 +213,7 @@ const conversationRepository = {
             .insert([insertData])
             .select()
             .single();
-        if (error) throw error;
+        if (error) throw returnedMessageInsertError(error);
         return data;
     },
 

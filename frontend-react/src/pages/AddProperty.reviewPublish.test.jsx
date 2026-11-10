@@ -6,7 +6,7 @@ import AddProperty from './AddProperty';
 import { UserAuthProvider } from '../context/UserAuthContext';
 
 const api = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
-const payment = vi.hoisted(() => ({ triggerPayment: vi.fn(), paymentConfig: { listingFee: '500.00', sandbox: true } }));
+const payment = vi.hoisted(() => ({ triggerPayment: vi.fn(), paymentConfig: { status: 'ready', listingFee: '500.00', sandbox: true } }));
 const compression = vi.hoisted(() => vi.fn());
 vi.mock('../context/api', () => ({ default: api }));
 vi.mock('../hooks/usePayhere', () => ({ usePayhere: () => payment }));
@@ -144,8 +144,7 @@ describe('Review and publish through the actual parent', () => {
     expect(screen.getByText('Kitchen')).toBeInTheDocument();
     expect(screen.getByText('Garden')).toBeInTheDocument();
   });
-  test('fallback fee, pending disabled state and save error are rendered', async () => {
-    payment.paymentConfig.listingFee = 0;
+  test('confirmed fee, pending disabled state and save error are rendered', async () => {
     let reject;
     api.post.mockImplementationOnce(() => new Promise((_, fail) => { reject = fail; }));
     vi.spyOn(console, 'error').mockImplementation(() => {});

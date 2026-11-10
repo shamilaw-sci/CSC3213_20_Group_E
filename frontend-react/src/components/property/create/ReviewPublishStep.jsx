@@ -1,7 +1,7 @@
 import React from "react";
 import { ArrowLeft, Compass, CreditCard, Edit3, Lock, MapPin } from "lucide-react";
 
-const ReviewPublishStep = ({ formData, isRentType, isLandType, images, virtualTourFiles, virtualTourMetadata, previewUrls, paymentConfig, loading, goToStep, handleSubmit, formatLKRPreview, locationMode, boundaryCoordinates }) => (
+const ReviewPublishStep = ({ formData, isRentType, isLandType, images, virtualTourFiles, virtualTourMetadata, previewUrls, paymentConfig, paymentAmount, retryPaymentConfig, loading, goToStep, handleSubmit, formatLKRPreview, locationMode, boundaryCoordinates }) => (
   <>
               
               <div className="border-b border-slate-200 dark:border-slate-800 pb-4">
@@ -188,11 +188,13 @@ const ReviewPublishStep = ({ formData, isRentType, isLandType, images, virtualTo
                   <div>
                     <span className="text-xs font-black text-emerald-400 uppercase tracking-wider">One-Time Activation Fee</span>
                     <h4 className="text-xl font-black text-slate-900 dark:text-white">
-                      Rs. {parseFloat(paymentConfig.listingFee || 500).toLocaleString()} <span className="text-xs font-normal text-slate-500 dark:text-slate-400">LKR</span>
+                      {paymentConfig.status === 'ready' ? `Rs. ${Number(paymentAmount).toLocaleString()}` : 'Payment configuration unavailable'} <span className="text-xs font-normal text-slate-500 dark:text-slate-400">LKR</span>
                     </h4>
                     <p className="text-xs text-slate-700 dark:text-slate-300 mt-0.5">
-                      Secured via Central Bank of Sri Lanka approved PayHere Payment Gateway
+                      Pay securely with PayHere
                     </p>
+                    {paymentConfig.status === 'ready' && <p className="text-xs">{paymentConfig.sandbox ? 'Test checkout' : 'Live checkout'}</p>}
+                    {paymentConfig.status === 'error' && <button type="button" onClick={retryPaymentConfig}>Retry payment configuration</button>}
                   </div>
                 </div>
 
@@ -217,14 +219,15 @@ const ReviewPublishStep = ({ formData, isRentType, isLandType, images, virtualTo
                 <button
                   type="button"
                   onClick={handleSubmit}
-                  disabled={loading}
+                  disabled={loading || paymentConfig.status !== 'ready'}
                   className="px-8 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-black text-sm transition flex items-center gap-2 shadow-xl shadow-emerald-600/30 cursor-pointer"
                 >
                   <Lock className="w-4 h-4" />
                   <span>
                     {loading
                       ? "Processing Payment..."
-                      : `Proceed to Payment (Rs. ${parseFloat(paymentConfig.listingFee || 500).toLocaleString()}) →`}
+                      : paymentConfig.status === 'ready' ? `Proceed to Payment (Rs. ${Number(paymentAmount).toLocaleString()}) →`
+                      : paymentConfig.status === 'error' ? 'Payment unavailable' : 'Loading payment configuration...'}
                   </span>
                 </button>
               </div>

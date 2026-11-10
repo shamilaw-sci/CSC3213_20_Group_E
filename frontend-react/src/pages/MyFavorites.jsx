@@ -1,3 +1,4 @@
+import { logClientError } from '../utils/clientLog';
 import React from 'react';
 import { Heart, MapPin } from 'lucide-react';
 import { m } from "framer-motion";
@@ -22,7 +23,7 @@ const MyFavorites = () => {
                 favorites: prev.favorites.filter(p => p.id !== propertyId)
             }));
         } catch (err) {
-            (toast.error("Failed to remove favorite"), console.error("Failed to remove favorite", err));
+            (toast.error("Failed to remove favorite"), logClientError('favorite_remove_failed'));
         }
     };
 

@@ -6,7 +6,7 @@ import AddProperty from './AddProperty';
 import { UserAuthProvider } from '../context/UserAuthContext';
 
 const api = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
-const payment = vi.hoisted(() => ({ triggerPayment: vi.fn(), paymentConfig: { listingFee: '500.00', sandbox: true } }));
+const payment = vi.hoisted(() => ({ triggerPayment: vi.fn(), paymentConfig: { status: 'ready', listingFee: '500.00', sandbox: true } }));
 const compression = vi.hoisted(() => vi.fn());
 vi.mock('../context/api', () => ({ default: api }));
 vi.mock('../hooks/usePayhere', () => ({ usePayhere: () => payment }));

@@ -1,3 +1,4 @@
+import { logClientError } from '../utils/clientLog';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Calculator, X, DollarSign, Wallet, Percent, Calendar, Save, History, Trash2 } from 'lucide-react';
 import { AnimatePresence, m } from "framer-motion";
@@ -30,7 +31,7 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
             const res = await api.get('/feasibility/history');
             setHistory(res.data.history || []);
         } catch (err) {
-            console.error('Failed to load feasibility history', err);
+            logClientError('feasibility_history_load_failed');
         } finally {
             setHistoryLoading(false);
         }
@@ -100,7 +101,7 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
             await api.delete(`/feasibility/history/${id}`);
             setHistory((prev) => prev.filter((entry) => entry.id !== id));
         } catch (err) {
-            console.error('Failed to delete history entry', err);
+            logClientError('feasibility_history_delete_failed');
         }
     };
 

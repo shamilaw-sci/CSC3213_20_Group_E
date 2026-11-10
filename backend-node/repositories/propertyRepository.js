@@ -137,7 +137,7 @@ const propertyRepository = {
         const { data, error } = await supabase.rpc('increment_property_views', { property_id: id });
         
         if (error) {
-            console.error(`Atomic RPC failed for property ${id}:`, error);
+            console.error('property_atomic_rpc_failed');
             throw error; // Fail loudly rather than using a race-condition prone fallback
         }
         

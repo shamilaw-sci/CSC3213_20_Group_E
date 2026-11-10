@@ -1,3 +1,4 @@
+import { logClientError } from '../../../utils/clientLog';
 import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { fetchAuditLogs } from "../api/adminApi";
@@ -34,7 +35,7 @@ const AuditLogsPage = () => {
   useEffect(() => {
     fetchAuditLogs()
       .then((d) => { if (d?.logs?.length) setLogs(d.logs); })
-      .catch((err) => { toast.error("Failed to fetch audit logs"); console.error(err); });
+      .catch(() => { toast.error("Failed to fetch audit logs"); logClientError('admin_audit_logs_load_failed'); });
   }, []);
 
   const filtered = logs.filter((l) => {

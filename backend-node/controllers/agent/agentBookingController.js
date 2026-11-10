@@ -1,5 +1,6 @@
 const agentRepository = require('../../repositories/agentRepository');
 const supabase = require('../../config/supabase');
+const logger = require('../../utils/logger');
 
 // Post a review for an agent
 const postReview = async (req, res, next) => {
@@ -46,25 +47,29 @@ const bookViewing = async (req, res, next) => {
             preferred_date,
             preferred_time,
             notes
-        });
+        }, req.user?.id || null);
+        if (!lead) throw new Error('Viewing request could not be confirmed.');
 
         // Only a verified session may create a conversation in an account's name.
         // Guest contact details remain on the lead without identifying an account.
+        let conversationStage = 'lookup';
         try {
             const buyerId = req.user?.id;
 
             if (buyerId && buyerId !== id) {
                 // Find or create conversation
-                const { data: existingConv } = await supabase
+                const { data: existingConv, error: lookupError } = await supabase
                     .from('conversations')
                     .select('id')
                     .eq('buyer_id', buyerId)
                     .eq('seller_id', id)
                     .maybeSingle();
+                if (lookupError) throw lookupError;
 
                 let convId = existingConv?.id;
                 if (!convId) {
-                    const { data: newConv } = await supabase
+                    conversationStage = 'create';
+                    const { data: newConv, error: createError } = await supabase
                         .from('conversations')
                         .insert([{
                             buyer_id: buyerId,
@@ -75,19 +80,26 @@ const bookViewing = async (req, res, next) => {
                         }])
                         .select()
                         .single();
+                    if (createError) throw createError;
                     convId = newConv?.id;
+                    if (!convId) throw new Error('Booking conversation creation could not be confirmed.');
                 }
 
                 if (convId) {
-                    await supabase.from('messages').insert([{
+                    conversationStage = 'message';
+                    const { error: messageError } = await supabase.from('messages').insert([{
                         conversation_id: convId,
                         sender_id: buyerId,
                         body: `📅 Appointment Request: ${viewing_type || 'Property Tour'} on ${preferred_date || 'Upcoming'} (${preferred_time || 'Flexible'})\nContact: ${client_phone || 'Provided in booking'}\nNotes: ${notes || 'Looking forward to meeting.'}`
                     }]);
+                    if (messageError) throw messageError;
                 }
             }
-        } catch (convErr) {
-            console.error("Conversation link error on booking (non-fatal):", convErr);
+        } catch {
+            logger.error('Booking conversation requires recovery.', {
+                event: 'booking_conversation_recovery', leadId: lead.lead_id || lead.id,
+                agentId: id, buyerId: req.user?.id, stage: conversationStage
+            });
         }
 
         res.status(201).json({

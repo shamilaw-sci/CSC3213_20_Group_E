@@ -1,3 +1,4 @@
+import { logClientError } from '../utils/clientLog';
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/UserAuthContext";
 import { useEffect } from "react";
@@ -36,7 +37,7 @@ const Navbar = ({ transparent = false }) => {
   useEffect(() => {
     if (isError) {
       toast.error("Failed to fetch unread messages");
-      console.error("Failed to fetch unread messages", error);
+      logClientError('unread_messages_load_failed');
     }
   }, [isError, error]);
 

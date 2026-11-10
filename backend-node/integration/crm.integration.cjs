@@ -18,7 +18,7 @@ const cookies = {};
 const db = new Client(JSON.parse(process.env.PHASE5_DATABASE));
 let connected = false, server, port;
 const call = (role, method, path = '/api/agents/leads') => {
-    const req = request(server)[method](path);
+    const req = request(server)[method](path).set('Origin', process.env.CLIENT_URL || 'http://localhost:5173');
     return role ? req.set('Cookie', cookies[role]) : req;
 };
 const put = (id, payload, role = 'AGENT') => call(role, 'put', `/api/agents/leads/${id}`).send(payload);

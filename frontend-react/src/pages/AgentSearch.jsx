@@ -1,3 +1,4 @@
+import { logClientError } from '../utils/clientLog';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Star, MapPin, Award, User, Building2, ShieldCheck, ChevronRight, Phone, Mail } from 'lucide-react';
@@ -32,7 +33,7 @@ const AgentSearch = () => {
             setAgents(res.data?.agents || []);
         } catch (err) {
             setFetchError("Unable to load certified agents at this time.");
-            console.error("Agent fetch error:", err);
+            logClientError('agent_search_failed');
         } finally {
             setLoading(false);
         }

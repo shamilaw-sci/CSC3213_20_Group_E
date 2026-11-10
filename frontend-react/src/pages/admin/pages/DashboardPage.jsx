@@ -1,3 +1,4 @@
+import { logClientError } from '../../../utils/clientLog';
 import React, { useState, useEffect } from "react";
 import { fetchDashboardStats, fetchRevenueData, fetchUserGrowth, fetchListings } from "../api/adminApi";
 import { useNavigate } from "react-router-dom";
@@ -110,7 +111,7 @@ const DashboardPage = () => {
           );
         }
       } catch (err) {
-        console.error("Failed to load dashboard data:", err);
+        logClientError('admin_dashboard_load_failed');
         setFailedSections(['statistics', 'revenue', 'user growth', 'pending listings']);
       } finally {
         setLoading(false);

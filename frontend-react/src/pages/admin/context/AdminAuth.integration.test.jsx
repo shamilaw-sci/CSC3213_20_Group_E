@@ -50,7 +50,7 @@ describe('Admin provider and route guard integration', () => {
     expect(localStorage.getItem('admin_token')).toBeNull();
     expect(localStorage.getItem('admin_data')).toBeNull();
     expect(screen.queryByLabelText('Verified admin')).not.toBeInTheDocument();
-    expect(consoleError).toHaveBeenCalledWith('Admin session verification failed:', 'Invalid session');
+    expect(consoleError).toHaveBeenCalledWith('admin_session_verification_failed');
   });
 
   test('protected content waits for server verification and uses verified identity', async () => {

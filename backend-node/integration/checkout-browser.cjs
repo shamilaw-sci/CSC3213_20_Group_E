@@ -6,6 +6,7 @@ const readline = require('node:readline');
 const { randomUUID } = require('node:crypto');
 const { pathToFileURL } = require('node:url');
 const { Client } = require('pg');
+const { issueSessionToken } = require('../utils/sessionToken');
 const jwt = require('jsonwebtoken');
 const { identitySql, validateDatabase } = require('./local-stack.cjs');
 const { snapshotState, assertSameState } = require('./database-state.cjs');
@@ -22,6 +23,7 @@ const run = randomUUID(), callbackBase = `/phase5/${randomUUID()}`;
 const sellerUI = process.env.PHASE5_SELLER_UI === '1';
 const sellerPassword = sellerUI ? randomUUID() : null;
 const users = ['SELLER','AGENT'].map(role => ({ id: randomUUID(), role, name: `Sandbox ${role === 'SELLER' ? 'Seller' : 'Agent'}`, email: `${run}-${role.toLowerCase()}@example.test` }));
+const fixturePasswordHashes = new Map();
 const fixtures = ['Visa','Mastercard','Cancel','Decline'].map((label, i) => ({ label, id: randomUUID(), user: users[i === 1 ? 1 : 0] }));
 const scope = { properties: new Set(fixtures.map(f => f.id)), orders: new Set(), callback: callbackBase + '/api/payment/notify', health: callbackBase + '/health', merchant: process.env.PAYHERE_MERCHANT_ID };
 const callbacks = [], receiptAttempts = [];
@@ -103,7 +105,12 @@ const startup = (async () => {
         await db.connect(); lifecycle.assertActive(); validateDatabase((await db.query(identitySql)).rows[0]);
         before = await snapshotState(db, tables); lifecycle.assertActive(); seeded = true;
         fs.writeFileSync(path.join(evidence, 'phase5-checkout-browser-fixtures.private.json'), JSON.stringify({ run, users, fixtures, callbackBase, beforeHashes: hashState(before) }, null, 2));
-        for (const u of users) { lifecycle.assertActive(); await db.query('INSERT INTO public.users(id,name,email,password_hash,role) VALUES($1,$2,$3,$4,$5)', [u.id,u.name,u.email,sellerUI ? await require('bcryptjs').hash(sellerPassword,10) : 'not-a-login-hash',u.role]); }
+        for (const u of users) {
+            lifecycle.assertActive();
+            const hash = sellerUI ? await require('bcryptjs').hash(sellerPassword,10) : 'not-a-login-hash';
+            fixturePasswordHashes.set(u.id, hash);
+            await db.query('INSERT INTO public.users(id,name,email,password_hash,role) VALUES($1,$2,$3,$4,$5)', [u.id,u.name,u.email,hash,u.role]);
+        }
         for (const f of fixtures) { lifecycle.assertActive(); await db.query("INSERT INTO public.properties(id,seller_id,title,description,price,status,payment_status,type,latitude,longitude) VALUES($1,$2,$3,'Isolated sandbox checkout',1000,'pending','Unpaid','House',7,80)", [f.id,f.user.id,`${run} ${f.label}`]); }
         lifecycle.assertActive();
         const privateApi = express(); privateApi.use(express.json({ limit: '16kb' }));
@@ -145,7 +152,8 @@ const startup = (async () => {
 
         const frontend = path.resolve(__dirname, '../../frontend-react');
         const { createServer } = await import(pathToFileURL(require.resolve('vite', { paths: [frontend] })).href);
-        const publicFixtures = fixtures.map(f => ({ label: f.label, id: f.id, user: f.user, token: jwt.sign({ id: f.user.id, role: f.user.role }, process.env.JWT_SECRET, { expiresIn: '30m' }) }));
+        const publicFixtures = fixtures.map(f => ({ label: f.label, id: f.id, user: f.user,
+            token: issueSessionToken({ ...f.user, password_hash: fixturePasswordHashes.get(f.user.id) }, { expiresIn: '30m' }) }));
         const apiCode = `const cases=${JSON.stringify(publicFixtures)};async function request(method,url,body){const id=body?.property_id||url.split('/').at(-1);const f=cases.find(x=>x.id===id);const r=await fetch('http://127.0.0.1:${apiPort}/api'+url,{method,headers:{'Content-Type':'application/json',...(f?{Authorization:'Bearer '+f.token}:{})},body:body?JSON.stringify(body):undefined});const data=await r.json();if(!r.ok){const e=new Error(data.error||data.message||'Fixture request failed');e.response={status:r.status,data};throw e;}if(url==='/payment/generate-hash'&&(!data.sandbox||data.merchant_id!==${JSON.stringify(scope.merchant)}))throw new Error('Sandbox terms refused');return {data};}export default{get:url=>request('GET',url),post:(url,body)=>request('POST',url,body)};`;
         const entry = `import React,{useState} from 'react';import{createRoot}from'react-dom/client';import{MemoryRouter}from'react-router-dom';import{TestAuth}from'virtual:phase5-auth';import api from'virtual:phase5-api';import{usePayhere}from'/src/hooks/usePayhere.js';const cases=${JSON.stringify(publicFixtures.map(({token,...f})=>f))};function Case({f}){const[m,setM]=useState(null),[state,S]=useState(null);const{triggerPayment}=usePayhere(setM);return React.createElement('section',null,React.createElement('h2',null,f.label+' — '+f.user.role),React.createElement('button',{onClick:()=>window.payhere?triggerPayment(f.id):setM({text:'SDK unavailable'})},'Start '+f.label),React.createElement('button',{onClick:async()=>S((await api.get('/properties/'+f.id)).data.property)},'Refresh '+f.label),React.createElement('p',{role:'status'},m?.text||'Ready; sandbox only'),React.createElement('pre',null,state?JSON.stringify({payment_status:state.payment_status,status:state.status}):''));}createRoot(document.getElementById('root')).render(React.createElement(MemoryRouter,null,React.createElement('h1',null,'Isolated PayHere sandbox checkout'),React.createElement('p',null,'Test data only. Database is local. Receipt delivery disabled.'),cases.map(f=>React.createElement(TestAuth.Provider,{key:f.id,value:{user:f.user}},React.createElement(Case,{f})))));`;
         const emptyEnv = path.join(evidence, 'checkout-empty-env'); fs.mkdirSync(emptyEnv, { recursive: true });

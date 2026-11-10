@@ -1,3 +1,4 @@
+import { logClientError } from '../../../utils/clientLog';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fetchConversationMessages, fetchConversations, sendConversationMessage } from "../api/adminApi";
 import "../styles/admin-global.css";
@@ -73,7 +74,7 @@ const MessagesPage = () => {
         setSelectedId(list[0].id);
       }
     } catch (err) {
-      console.error("Failed to load conversations:", err);
+      logClientError('admin_conversations_load_failed');
     } finally {
       setLoading(false);
     }
@@ -86,7 +87,7 @@ const MessagesPage = () => {
       const data = await fetchConversationMessages(conversationId);
       setMessages(data?.messages || []);
     } catch (err) {
-      console.error("Failed to load messages:", err);
+      logClientError('admin_messages_load_failed');
     } finally {
       setMessagesLoading(false);
     }
@@ -265,6 +266,9 @@ const MessagesPage = () => {
                           }`}
                         >
                           {m.body}
+                          {m.attachment_unavailable && (
+                            <p className="mt-2 text-xs">Attachment temporarily unavailable. Refresh to retry.</p>
+                          )}
                           {m.attachment_url && isSafeAttachmentUrl(m.attachment_url) && (
                             <div className="mt-2 pt-2 border-t border-white/20">
                               <a

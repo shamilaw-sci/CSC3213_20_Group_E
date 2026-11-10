@@ -12,4 +12,16 @@ const chatSchema = z.object({
   }),
 });
 
-module.exports = { chatSchema };
+// Model tool declarations are guidance; validate model output again before any DB query.
+const literalSearch = max => z.string().trim().min(1).max(max)
+  .regex(/^[\p{L}\p{M}\p{N}\u200c\u200d '.\u2019-]+$/u);
+const toolArgumentSchemas = Object.freeze({
+  search_properties: z.object({
+    location: literalSearch(120).optional(),
+    type: literalSearch(80).optional(),
+    maxPrice: z.number().finite().nonnegative().optional(),
+  }).strict(),
+  search_agents: z.object({ location: literalSearch(120) }).strict(),
+});
+
+module.exports = { chatSchema, toolArgumentSchemas };

@@ -15,16 +15,26 @@ const exportReport = async(req, res, next) => {
         if (!['transactions', 'users', 'listings'].includes(type)) {
             return res.status(400).json({ message: "Invalid report type" });
         }
+        const format = req.query?.format === undefined ? 'csv' : req.query.format;
+        if (!['csv', 'json'].includes(format)) return res.status(400).json({ message: 'Invalid report format' });
 
         const { dataToExport, headers } = await adminRepository.getExportData(type);
+        if (format === 'json') {
+            const rows = dataToExport.map(row => Object.fromEntries(headers.map(key => [key, row[key] ?? null])));
+            res.setHeader('Content-Type', 'application/json; charset=utf-8');
+            res.setHeader('Content-Disposition', `attachment; filename=thirasara-${type}-report.json`);
+            return res.status(200).send(JSON.stringify({ columns: headers, rows }));
+        }
 
         // Sanitize cells against CSV / Spreadsheet Formula Injection (M6 fix)
         const sanitizeCsvCell = (val) => {
             if (val === null || val === undefined) return '""';
             let str = String(val);
-            // Prepend single quote if value starts with formula triggers (=, +, -, @, \t, \r)
-            if (/^[=+\-@\t\r]/.test(str)) {
-                str = "'" + str;
+            // CSV is the spreadsheet display format. JSON preserves source values.
+            const numeric = typeof val === 'number' && Number.isFinite(val);
+            if (!numeric && (/^[\s\u0000-\u001f\u007f-\u009f]*[=+\-@＝＋－＠]/u.test(str)
+                || /^[\u0000-\u001f\u007f-\u009f]/u.test(str))) {
+                str = '\t' + str.replace(/^[\u0000-\u001f\u007f-\u009f]+/u, '');
             }
             return `"${str.replace(/"/g, '""')}"`;
         };
@@ -35,7 +45,7 @@ const exportReport = async(req, res, next) => {
             csvContent += values.join(',') + '\n';
         });
 
-        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
         res.setHeader('Content-Disposition', `attachment; filename=thirasara-${type}-report.csv`);
         res.status(200).send(csvContent);
     } catch (error) {

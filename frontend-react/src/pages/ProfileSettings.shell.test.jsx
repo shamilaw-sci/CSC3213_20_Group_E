@@ -35,7 +35,7 @@ test('identity preserves absent avatar/phone and fallback member/role', async ()
     expect(screen.getByRole('heading', { name: 'Valued Member' })).toBeTruthy();
     expect(screen.getByText('Verified Registered Buyer')).toBeTruthy();
     expect(screen.queryByRole('img', { name: 'Avatar' })).toBeNull(); expect(screen.queryByText('•')).toBeNull();
-    const input = document.getElementById('avatarUpload'); expect(input.type).toBe('file'); expect(input.accept).toBe('image/*'); expect(input.closest('label').htmlFor).toBe('avatarUpload');
+    const input = document.getElementById('avatarUpload'); expect(input.type).toBe('file'); expect(input.accept).toBe('image/jpeg,image/png,image/webp'); expect(input.closest('label').htmlFor).toBe('avatarUpload');
 });
 test('populated identity and controlled FileReader preview stay local', async () => {
     auth.user = { ...auth.user, phone: '+94112223344', avatar_url: '/original.png' };

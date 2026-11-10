@@ -1,4 +1,10 @@
 const adminRepository = require('../../repositories/adminRepository');
+const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const validTarget = (req, res) => {
+    if (typeof req.params.id === 'string' && uuid.test(req.params.id)) return true;
+    res.status(400).json({ message: 'Invalid user ID.' });
+    return false;
+};
 
 const getUsers = async(req, res, next) => {
     try {
@@ -29,6 +35,7 @@ const getUserById = async(req, res, next) => {
 
 const banUser = async(req, res, next) => {
     try {
+        if (!validTarget(req, res)) return;
         await adminRepository.updateUserRole(req.params.id, 'BANNED', null);
         res.status(200).json({ message: "User banned successfully" });
     } catch (error) {
@@ -38,6 +45,7 @@ const banUser = async(req, res, next) => {
 
 const unbanUser = async(req, res, next) => {
     try {
+        if (!validTarget(req, res)) return;
         await adminRepository.updateUserRole(req.params.id, 'BUYER', null);
         res.status(200).json({ message: "User unbanned successfully" });
     } catch (error) {
@@ -47,15 +55,20 @@ const unbanUser = async(req, res, next) => {
 
 const updateUserRole = async(req, res, next) => {
     try {
-        const { role, reason } = req.body;
+        if (!validTarget(req, res)) return;
+        const { role, reason } = req.body || {};
         if (!['BUYER', 'SELLER', 'ADMIN', 'BANNED', 'AGENT', 'PENDING_AGENT', 'REJECTED_AGENT'].includes(role)) {
             return res.status(400).json({ message: "Invalid role specified" });
         }
 
-        await adminRepository.updateUserRole(req.params.id, role, reason);
+        if (reason != null && (typeof reason !== 'string' || reason.length > 2000)) {
+            return res.status(400).json({ message: 'Invalid rejection reason.' });
+        }
+        const normalizedReason = typeof reason === 'string' ? reason.trim() || null : null;
+        await adminRepository.updateUserRole(req.params.id, role, normalizedReason);
         res.status(200).json({ message: `User role updated to ${role}` });
     } catch (error) {
-        console.error("updateUserRole error:", error);
+        console.error('admin_role_update_failed');
         next(error);
     }
 };

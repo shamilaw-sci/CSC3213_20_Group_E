@@ -1,3 +1,4 @@
+const operationLogContext = require('../utils/operationLogContext');
 const crypto = require('crypto');
 const logger = require('../utils/logger');
 const settings = require('../repositories/settingsRepository');
@@ -52,17 +53,17 @@ const processWebhook = async (req, res) => {
         if (!order) {
             const legacy = await properties.getPropertyById(body.order_id);
             if (legacy?.payment_status === 'Paid') return res.status(200).send('OK');
-            logger.warn('Legacy unpaid checkout requires reconciliation', { order_id: body.order_id, payment_id: body.payment_id });
+            logger.warn('Legacy unpaid checkout requires reconciliation', operationLogContext({ order_id: body.order_id }));
             return res.status(409).send('Legacy checkout requires reconciliation');
         }
         if (formatMoney(order.amount) !== amount || order.currency !== body.payhere_currency ||
             order.mode !== mode() || order.merchant_id !== body.merchant_id) return res.status(400).send('Invalid payment terms');
         await orders.settle({ order_id: order.id, payment_id: body.payment_id, amount,
             currency: body.payhere_currency, mode: order.mode, merchant_id: body.merchant_id });
-        await receipts.drain(order.id).catch(error => logger.error('Payment receipt queued', { order_id: order.id, error: error.message }));
+        await receipts.drain(order.id).catch(error => logger.error('Payment receipt queued', operationLogContext({ order_id: order.id })));
         return res.status(200).send('OK');
     } catch (error) {
-        logger.error('Payment settlement failed; gateway may retry', { order_id: body.order_id, error: error.message });
+        logger.error('Payment settlement failed; gateway may retry', operationLogContext({ order_id: body.order_id }));
         return res.status(error.code === '23505' || error.code === 'P0001' ? 409 : 500).send('Payment settlement requires retry or reconciliation');
     }
 };

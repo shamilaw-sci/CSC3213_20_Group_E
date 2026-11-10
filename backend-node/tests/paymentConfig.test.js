@@ -9,6 +9,12 @@ const { getPaymentConfig } = require('../controllers/paymentController');
 const app = express();
 app.get('/config', getPaymentConfig);
 const originalMode = process.env.PAYHERE_MODE;
+test('fee read error cannot return a successful payment config', async () => {
+    settings.getSettingValue.mockRejectedValueOnce(new Error('synthetic fee failure'));
+    const res = { json: jest.fn() }, next = jest.fn();
+    await getPaymentConfig({}, res, next);
+    expect(res.json).not.toHaveBeenCalled(); expect(next).toHaveBeenCalledTimes(1);
+});
 
 describe('Server-controlled PayHere mode', () => {
     afterEach(() => {

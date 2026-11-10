@@ -40,13 +40,13 @@ test.each([true, false, null])('CRM deletion outcome %p', async success => {
 test.each([null, [{ id: 'appointment' }]])('buyer read preserves value and session scope %p', async appointments => {
     repo.getBuyerAppointments.mockResolvedValue(appointments); const request = req({ email: 'foreign', id: 'foreign' }); request.user.role = 'BUYER'; const response = res();
     await handlers.getMyAppointments(request, response, jest.fn());
-    expect(repo.getBuyerAppointments).toHaveBeenCalledWith('session@example.test', 'session-id');
+    expect(repo.getBuyerAppointments).toHaveBeenCalledWith('session-id');
     expect(response.status).toHaveBeenCalledWith(200); expect(response.json).toHaveBeenCalledWith({ appointments });
 });
 test.each([true, false, null])('buyer cancel preserves email scope and outcome %p', async success => {
     repo.deleteBuyerAppointment.mockResolvedValue(success); const request = req({ email: 'foreign' }); request.user.role = 'BUYER'; const response = res();
     await handlers.cancelBuyerAppointment(request, response, jest.fn());
-    expect(repo.deleteBuyerAppointment).toHaveBeenCalledWith('item-id', 'session@example.test'); expect(response.status).toHaveBeenCalledWith(success ? 200 : 404);
+    expect(repo.deleteBuyerAppointment).toHaveBeenCalledWith('item-id', 'session-id'); expect(response.status).toHaveBeenCalledWith(success ? 200 : 404);
     expect(response.json).toHaveBeenCalledWith({ message: success ? 'Scheduled appointment cancelled successfully' : 'Appointment not found or already cancelled' });
 });
 test.each([...crm.map(([h, m]) => [h, m]), ['getMyAppointments', 'getBuyerAppointments'], ['cancelBuyerAppointment', 'deleteBuyerAppointment']])('%s forwards original error', async (handler, method) => {

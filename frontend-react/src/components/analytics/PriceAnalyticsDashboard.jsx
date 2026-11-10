@@ -1,3 +1,4 @@
+import { logClientError } from '../../utils/clientLog';
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { Info, TrendingUp, AlertTriangle, CheckCircle } from 'lucide-react';
@@ -27,7 +28,7 @@ const PriceAnalyticsDashboard = ({ propertyId, assessmentNumber, insight }) => {
                     setIsSimulated(histRes.data.isSimulated !== false);
                 }
             } catch (error) {
-                console.error("Analytics fetch error:", error);
+                logClientError('price_analytics_load_failed');
             } finally {
                 if (active) setLoading(false);
             }

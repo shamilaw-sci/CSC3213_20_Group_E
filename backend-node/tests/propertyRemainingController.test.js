@@ -88,8 +88,8 @@ test('create uploads photos before tours, pairs metadata, then inserts pending d
     expect(repo.uploadImage.mock.calls.map(call => call.slice(1))).toEqual([['photo', 'image/jpeg'], ['tour', 'image/png']]); expect(repo.uploadImage.mock.calls[1][0]).toMatch(/^owner\/360-/);
     expect(repo.addProperty).toHaveBeenCalledWith(expect.objectContaining({ images: ['photo-url'], virtual_tours: [{ room: 'Living', url: 'tour-url' }], listing_type: 'Sale', seller_id: 'owner', status: 'pending', payment_status: 'Unpaid', created_at: expect.any(Date) })); expect(res.status).toHaveBeenCalledWith(201);
 });
-test('create starts rollback without awaiting it before forwarding insert failure', async () => {
-    const error = new Error('insert'); repo.uploadImage.mockResolvedValue('url'); repo.addProperty.mockRejectedValue(error); repo.removeImages.mockReturnValue(new Promise(() => {}));
+test('create completes rollback before forwarding insert failure', async () => {
+    const error = new Error('insert'); repo.uploadImage.mockResolvedValue('url'); repo.addProperty.mockRejectedValue(error); repo.removeImages.mockResolvedValue();
     const req = request(); req.files = { images: [{ originalname: 'photo.jpg' }] }; const next = jest.fn(); await controller.addProperty(req, response(), next);
     expect(repo.removeImages).toHaveBeenCalledWith([repo.uploadImage.mock.calls[0][0]]); expect(next).toHaveBeenCalledWith(error);
 });

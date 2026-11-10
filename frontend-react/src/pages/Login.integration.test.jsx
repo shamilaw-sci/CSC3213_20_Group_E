@@ -111,7 +111,7 @@ describe('Password login through the real auth provider and router', () => {
     expect(await screen.findByText('Invalid email or password.')).toBeInTheDocument();
     await waitFor(() => expect(screen.getByRole('button', { name: 'Sign In', exact: true })).toBeEnabled());
     expect(screen.getByLabelText('Current identity')).toHaveTextContent('anonymous');
-    expect(consoleError).toHaveBeenCalledWith('Sign-in failed:', 'Invalid email or password.');
+    expect(consoleError).toHaveBeenCalledWith('password_signin_failed');
   });
 });
 
@@ -178,6 +178,6 @@ describe('Session restoration and actual role guard decisions', () => {
     expect(screen.getByLabelText('Current identity')).toHaveTextContent('anonymous');
     expect(screen.queryByRole('heading', { name: 'Messages destination' })).not.toBeInTheDocument();
     expect(api.post).toHaveBeenCalledWith('/auth/logout');
-    if (outcome === 'network failure') expect(consoleError).toHaveBeenCalledWith('Logout error:', 'Network unavailable');
+    if (outcome === 'network failure') expect(consoleError).toHaveBeenCalledWith('user_logout_failed');
   });
 });

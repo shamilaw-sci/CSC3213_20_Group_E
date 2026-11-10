@@ -120,16 +120,24 @@ export const fetchTransactionHistory = (params = {}) =>
   unwrap(adminApi.get('/admin/reports/transactions', { params }));
 
 export const exportReport = async (type, filters = {}) => {
+  const format = filters.format === undefined ? 'csv' : filters.format;
+  if (!['transactions', 'users', 'listings'].includes(type) || !['csv', 'json'].includes(format)) {
+    throw new Error('Unsupported report export.');
+  }
   const res = await adminApi.get(`/admin/reports/export/${type}`, {
     params: filters,
     responseType: 'blob',
   });
-  const url = window.URL.createObjectURL(new Blob([res.data]));
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `thirasara-${type}-report.csv`;
-  a.click();
-  window.URL.revokeObjectURL(url);
+  const mediaType = format === 'json' ? 'application/json;charset=utf-8' : 'text/csv;charset=utf-8';
+  const url = window.URL.createObjectURL(new Blob([res.data], { type: mediaType }));
+  try {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `thirasara-${type}-report.${format}`;
+    a.click();
+  } finally {
+    window.URL.revokeObjectURL(url);
+  }
 };
 
 // ─── Audit Logs ───────────────────────────────────────────────────────────────

@@ -1,5 +1,10 @@
 const supabase = require('../config/supabase');
 const { cleanupPropertyImages } = require('../utils/propertyImageCleanup');
+const { publicError } = require('../utils/publicError');
+const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const sameId = (value, expected) => typeof value === 'string' && uuid.test(value) && value.toLowerCase() === expected.toLowerCase();
+const confirmedRequest = (row, userId, role) => row && !Array.isArray(row) && typeof row.id === 'string' && uuid.test(row.id)
+    && sameId(row.user_id, userId) && row.requested_role === role && row.status === 'pending';
 
 const adminRepository = {
     // 1. Admin Login
@@ -174,17 +179,34 @@ const adminRepository = {
 
     // 12. Update User Role
     updateUserRole: async (id, role, reason) => {
-        const { error } = await supabase
+        const { data, error } = await supabase
             .from('users')
             .update({ role })
-            .eq('id', id);
+            .eq('id', id)
+            .select('id, role')
+            .maybeSingle();
         if (error) throw error;
-
-        if (role === 'REJECTED_AGENT' && reason) {
-            await supabase.from('agent_profiles').update({ rejection_reason: reason }).eq('agent_id', id);
-        } else if (role === 'AGENT') {
-            await supabase.from('agent_profiles').update({ rejection_reason: null }).eq('agent_id', id);
+        if (data === null) throw publicError('ADMIN_USER_NOT_FOUND');
+        if (!data || Array.isArray(data) || !sameId(data.id, id) || data.role !== role) {
+            throw new Error('Admin role write unconfirmed.');
         }
+
+        if (role === 'AGENT' || (role === 'REJECTED_AGENT' && reason)) {
+            const rejectionReason = role === 'AGENT' ? null : reason;
+            try {
+                const result = await supabase.from('agent_profiles')
+                    .update({ rejection_reason: rejectionReason }).eq('agent_id', id)
+                    .select('agent_id, rejection_reason').maybeSingle();
+                if (result.error || !result.data || Array.isArray(result.data)
+                    || !sameId(result.data.agent_id, id) || result.data.rejection_reason !== rejectionReason) {
+                    throw new Error('Agent profile write unconfirmed.');
+                }
+            } catch {
+                console.error('admin_role_profile_recovery', { userId: id.toLowerCase(), stage: 'profile_confirmation' });
+                throw publicError('ADMIN_ROLE_PARTIAL');
+            }
+        }
+        return data;
     },
 
     // 13. Get Analytics Counts
@@ -212,7 +234,7 @@ const adminRepository = {
         let headers = [];
 
         if (type === 'transactions') {
-            const { data, error } = await supabase.from('transactions').select('*');
+            const { data, error } = await supabase.from('transactions').select('id, property_id, amount, currency, status, payment_method, created_at');
             if (error) throw error;
             dataToExport = data || [];
             headers = ['id', 'property_id', 'amount', 'currency', 'status', 'payment_method', 'created_at'];
@@ -235,20 +257,27 @@ const adminRepository = {
     getPlatformSettings: async () => {
         const { data, error } = await supabase
             .from('platform_settings')
-            .select('*');
+            .select('setting_key, setting_value')
+            .eq('setting_key', 'listing_fee').maybeSingle();
         if (error) throw error;
+        if (data !== null && (!data || Array.isArray(data) || data.setting_key !== 'listing_fee'
+            || typeof data.setting_value !== 'string')) throw new Error('Setting read unconfirmed.');
         return data;
     },
 
     // 17. Update Setting
     updatePlatformSetting: async (key, value) => {
-        const { error } = await supabase
+        const { data, error } = await supabase
             .from('platform_settings')
             .upsert(
                 { setting_key: key, setting_value: String(value) },
                 { onConflict: 'setting_key' }
-            );
+            ).select('setting_key, setting_value').maybeSingle();
         if (error) throw error;
+        if (!data || Array.isArray(data) || data.setting_key !== key || data.setting_value !== String(value)) {
+            throw new Error('Setting write unconfirmed.');
+        }
+        return data;
     },
 
     // 18. Get Role Upgrade Requests (with user info)
@@ -268,18 +297,32 @@ const adminRepository = {
 
     // 19. Create Role Request (called from user-side auth controller)
     createRoleRequest: async (userId, requestedRole) => {
-        // Delete any previous pending request for this user before inserting
-        await supabase.from('role_requests').delete().eq('user_id', userId).eq('status', 'pending');
         const { data, error } = await supabase
             .from('role_requests')
             .insert({ user_id: userId, requested_role: requestedRole, status: 'pending' })
-            .select()
-            .single();
-        if (error) throw error;
-        return data;
+            .select('id, user_id, requested_role, status')
+            .maybeSingle();
+        if (!error) {
+            if (!confirmedRequest(data, userId, requestedRole)) throw new Error('Seller request write unconfirmed.');
+            return { created: true, request: data };
+        }
+        if (error.code !== '23505') throw error;
+        const existing = await supabase.from('role_requests')
+            .select('id, user_id, requested_role, status')
+            .eq('user_id', userId).eq('status', 'pending').maybeSingle();
+        if (existing.error) throw existing.error;
+        if (!confirmedRequest(existing.data, userId, requestedRole)) throw publicError('SELLER_REQUEST_CONFLICT');
+        return { created: false, request: existing.data };
     },
 
-    // 20. Resolve Role Request (approve or reject)
+    // Atomic resolution requires the separately adopted database function.
+    // Never fall back to sequential user/request writes.
+    resolveSellerRoleRequest: async (requestId, decision) => supabase.rpc('resolve_seller_role_request', {
+        p_request_id: requestId,
+        p_decision: decision
+    }),
+
+    // Legacy primitive; not used by Admin role-request resolution.
     resolveRoleRequest: async (requestId, status) => {
         const { error } = await supabase
             .from('role_requests')

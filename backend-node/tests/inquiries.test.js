@@ -1,5 +1,5 @@
 const request = require('supertest');
-const jwt = require('jsonwebtoken');
+const { issueSessionToken } = require('../utils/sessionToken');
 jest.mock('../repositories/inquiryRepository', () => ({ create: jest.fn(), list: jest.fn() }), { virtual: true });
 jest.mock('../config/supabase', () => ({ from: jest.fn().mockReturnThis(), select: jest.fn().mockReturnThis(), eq: jest.fn().mockReturnThis(), single: jest.fn() }));
 // The full app imports saved-search/feasibility controllers, which create their
@@ -13,7 +13,7 @@ beforeEach(() => {
     jest.clearAllMocks();
     repo.create.mockResolvedValue({ id: 'inquiry-1' });
     repo.list.mockResolvedValue({ data: [{ id: 'inquiry-1', first_name: 'Test', message: payload.message }], count: 1 });
-    db.single.mockResolvedValue({ data: { id: 'admin-1', role: 'ADMIN' }, error: null });
+    db.single.mockResolvedValue({ data: { id: 'admin-1', role: 'ADMIN', password_hash: null }, error: null });
 });
 test('accepts a validated guest inquiry without associating it with a registered identity', async () => {
     const res = await request(app).post('/api/inquiries').send({ ...payload, user_id: 'someone-else' });
@@ -36,13 +36,13 @@ test('requires authentication to read inquiries', async () => {
     expect(repo.list).not.toHaveBeenCalled();
 });
 test('blocks non-admin accounts from reading inquiries', async () => {
-    db.single.mockResolvedValue({ data: { id: 'buyer-1', role: 'BUYER' }, error: null });
-    const token = jwt.sign({ id: 'buyer-1' }, process.env.JWT_SECRET);
+    db.single.mockResolvedValue({ data: { id: 'buyer-1', role: 'BUYER', password_hash: null }, error: null });
+    const token = issueSessionToken({ id: 'buyer-1', password_hash: null });
     expect((await request(app).get('/api/admin/inquiries').set('Authorization', `Bearer ${token}`)).status).toBe(403);
     expect(repo.list).not.toHaveBeenCalled();
 });
 test('lists inquiries for admins with bounded pagination', async () => {
-    const token = jwt.sign({ id: 'admin-1' }, process.env.JWT_SECRET);
+    const token = issueSessionToken({ id: 'admin-1', password_hash: null });
     const res = await request(app).get('/api/admin/inquiries?page=2').set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(200);
     expect(repo.list).toHaveBeenCalledWith(20, 39);

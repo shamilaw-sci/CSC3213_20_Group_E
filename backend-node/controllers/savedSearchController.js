@@ -29,7 +29,7 @@ const saveSearch = async(req, res, next) => {
                 return res.status(503).json({ message: 'Full search saving is temporarily unavailable. Your search was not saved.' });
             }
             if (error.message.includes('relation "public.saved_searches" does not exist')) {
-                return next(new Error("saved_searches table does not exist in the database."));
+                return next(new Error("Saved search saving is temporarily unavailable."));
             }
             throw error;
         }
@@ -51,7 +51,7 @@ const getSavedSearches = async(req, res, next) => {
 
         if (error) {
             if (error.message.includes('relation "public.saved_searches" does not exist')) {
-                return res.status(200).json({ savedSearches: [], message: "Table not created yet." });
+                return res.status(200).json({ savedSearches: [], message: "Saved searches are temporarily unavailable." });
             }
             throw error;
         }
@@ -124,7 +124,7 @@ const checkSavedSearchMatches = async(property) => {
             .eq('email_alerts_enabled', true);
 
         if (error) {
-            logger.error('Failed to load saved searches for matching', error);
+            logger.error('saved_search_matching_load_failed');
             return;
         }
 
@@ -135,7 +135,7 @@ const checkSavedSearchMatches = async(property) => {
                 const email = search.users ?.email;
                 if (!email) return Promise.resolve();
                 return sendSavedSearchAlertEmail(email, search.title, property).catch((err) =>
-                    logger.error('Failed to send saved-search alert email', err)
+                    logger.error('saved_search_email_failed')
                 );
             })
         );
@@ -144,7 +144,7 @@ const checkSavedSearchMatches = async(property) => {
             logger.info('Saved search alerts sent', { propertyId: property.id, matchCount: matches.length });
         }
     } catch (error) {
-        logger.error('checkSavedSearchMatches failed', error);
+        logger.error('saved_search_matching_failed');
     }
 };
 

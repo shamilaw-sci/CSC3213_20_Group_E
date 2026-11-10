@@ -17,7 +17,7 @@ const ProfileHeader = ({ user, avatarUrl, onAvatarChange, onExploreListings, onF
                                 </div>
                                 <label htmlFor="avatarUpload" className="absolute -bottom-1 -right-1 p-2 bg-blue-600 hover:bg-blue-700 rounded-xl text-white cursor-pointer shadow-lg transition-transform transform group-hover:scale-110">
                                     <ImagePlus className="w-4 h-4" />
-                                    <input id="avatarUpload" type="file" accept="image/*" className="hidden" onChange={onAvatarChange} />
+                                    <input id="avatarUpload" type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={onAvatarChange} />
                                 </label>
                             </div>
 

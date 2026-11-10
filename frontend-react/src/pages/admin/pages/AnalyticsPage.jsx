@@ -1,3 +1,4 @@
+import { logClientError } from '../../../utils/clientLog';
 import React, { useCallback, useEffect, useState } from "react";
 import { fetchDashboardStats, fetchRevenueData, fetchUserGrowth } from "../api/adminApi";
 import "../styles/admin-global.css";
@@ -59,7 +60,7 @@ const AnalyticsPage = () => {
       if (r?.data) setRevenue(r.data);
       if (u?.data) setUserGrowth(u.data);
     } catch (err) {
-      console.error("Failed to load analytics:", err);
+      logClientError('admin_analytics_load_failed');
     } finally {
       setLoading(false);
     }

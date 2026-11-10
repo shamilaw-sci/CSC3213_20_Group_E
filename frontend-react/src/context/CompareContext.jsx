@@ -1,3 +1,4 @@
+import { logClientError } from '../utils/clientLog';
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const CompareContext = createContext();
@@ -17,7 +18,7 @@ export function CompareProvider({ children }) {
         try {
             localStorage.setItem('compareList', JSON.stringify(compareList));
         } catch (e) {
-            console.error("Failed to save compare list:", e);
+            logClientError('compare_storage_write_failed');
         }
     }, [compareList]);
 

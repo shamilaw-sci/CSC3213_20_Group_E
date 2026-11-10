@@ -1,10 +1,13 @@
+import { logClientError } from '../utils/clientLog';
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import api from '../context/api';
+import { useAuth } from '../context/UserAuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 export default function ResetPassword() {
+    const auth = useAuth();
     const [params] = useSearchParams();
     const token = params.get('token');
     const [password, setPassword] = useState('');
@@ -22,6 +25,13 @@ export default function ResetPassword() {
         setLoading(true);
         try {
             const { data } = await api.post('/auth/reset-password', { token, newPassword: password });
+            auth?.setUserData?.(null);
+            try {
+                localStorage.removeItem('admin_token');
+                localStorage.removeItem('admin_data');
+            } catch {
+                logClientError('cached_admin_session_clear_failed');
+            }
             setSuccess(data.message || 'Password reset successful. You can now sign in.');
             setPassword('');
             setConfirm('');

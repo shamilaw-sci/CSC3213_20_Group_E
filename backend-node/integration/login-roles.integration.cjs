@@ -1,7 +1,8 @@
-const { randomUUID } = require('node:crypto');
+const { randomUUID, createHmac } = require('node:crypto');
 const request = require('supertest');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { issueSessionToken } = require('../utils/sessionToken');
 const { Client } = require('pg');
 const { validateDatabase, identitySql } = require('./local-stack.cjs');
 const { allowedAppPorts } = require('./network-policy.cjs');
@@ -19,13 +20,17 @@ const db = new Client(JSON.parse(process.env.PHASE5_DATABASE));
 let connected = false;
 let server;
 let appPort;
+let fixtureHash;
 const login = (role, agent = request(server)) => agent.post('/api/auth/login')
     .send({ email: fixtures[role].email, password });
 const adminLogin = () => request(server).post('/api/admin/login').send({ email: fixtures.ADMIN.email, password });
-const tokenFor = (role, claims = {}, options = {}) => jwt.sign({ id: fixtures[role].id, role, ...claims },
-    process.env.JWT_SECRET, { expiresIn: '5m', ...options });
-const credential = (req, token, transport) => req.set(transport === 'cookie' ? 'Cookie' : 'Authorization',
-    transport === 'cookie' ? `token=${token}` : `Bearer ${token}`);
+const tokenFor = (role, claims = {}, options = {}) => issueSessionToken(
+    { ...fixtures[role], ...claims, password_hash: fixtureHash },
+    { expiresIn: '5m', ...options, extraClaims: claims });
+const credential = (req, token, transport) => req
+    .set('Origin', process.env.CLIENT_URL || 'http://localhost:5173')
+    .set(transport === 'cookie' ? 'Cookie' : 'Authorization',
+        transport === 'cookie' ? `token=${token}` : `Bearer ${token}`);
 const expectNoSession = response => {
     expect(response.headers['set-cookie']).toBeUndefined();
     expect(response.body.user).toBeUndefined();
@@ -48,6 +53,7 @@ beforeAll(async () => {
     connected = true;
     validateDatabase((await db.query(identitySql)).rows[0]);
     const hash = await bcrypt.hash(password, 10);
+    fixtureHash = hash;
     // IDs/emails are allocated before insert, so partial setup is also cleaned safely.
     for (const user of Object.values(fixtures)) {
         await db.query('INSERT INTO public.users (id,name,email,password_hash,role) VALUES ($1,$2,$3,$4,$5)',
@@ -181,11 +187,72 @@ describe('Real local database Login/roles chain', () => {
         const agent = request.agent(server);
         expect((await login('SELLER', agent)).status).toBe(200);
         expectIdentity(await agent.get('/api/auth/me'), 'SELLER');
-        const response = await agent.post('/api/auth/logout');
+        const response = await agent.post('/api/auth/logout').set('Origin', process.env.CLIENT_URL || 'http://localhost:5173');
         expect(response.status).toBe(200);
         expect(response.headers['set-cookie']).toEqual(expect.arrayContaining([
             expect.stringMatching(/^token=;.*Path=\/;.*Expires=Thu, 01 Jan 1970.*HttpOnly;.*SameSite=Lax/i),
         ]));
         expect((await agent.get('/api/auth/me')).status).toBe(401);
+    });
+
+    test.each(['cookie', 'bearer'].flatMap(transport => ['/api/auth/me', '/api/admin/verify'].map(route => [transport, route])))
+    ('legacy %s session is rejected by %s', async (transport, route) => {
+        const token = jwt.sign({ id: fixtures.ADMIN.id, role: 'ADMIN' }, process.env.JWT_SECRET, { expiresIn: '5m' });
+        const response = await credential(request(server).get(route), token, transport);
+        expect(response.status).toBe(401); expectNoSession(response);
+    });
+
+    const tokenFromCookie = response => decodeURIComponent(response.headers['set-cookie'][0].split(';')[0].slice('token='.length));
+    const restoreFixtureHash = async role => {
+        const user = fixtures[role];
+        const restored = await db.query('UPDATE public.users SET password_hash=$1 WHERE id=$2 AND email=$3',
+            [fixtureHash, user.id, user.email]);
+        expect(restored.rowCount).toBe(1);
+    };
+
+    test('real reset CAS revokes pre-reset cookie/Bearer and permits fresh login', async () => {
+        const response = await login('BUYER'); expectIdentity(response, 'BUYER');
+        const old = tokenFromCookie(response);
+        const version = createHmac('sha256', process.env.JWT_SECRET).update(fixtureHash).digest('hex');
+        const reset = jwt.sign({ id: fixtures.BUYER.id, type: 'password_reset', version }, process.env.JWT_SECRET, { expiresIn: '5m' });
+        const nextPassword = 'Phase7-reset-fixture-only-123!';
+        try {
+            expect((await request(server).post('/api/auth/reset-password').set('Origin', process.env.CLIENT_URL || 'http://localhost:5173')
+                .send({ token: reset, newPassword: nextPassword })).status).toBe(200);
+            for (const transport of ['cookie', 'bearer']) {
+                expect((await credential(request(server).get('/api/auth/me'), old, transport)).status).toBe(401);
+            }
+            const fresh = await request(server).post('/api/auth/login').send({ email: fixtures.BUYER.email, password: nextPassword });
+            expectIdentity(fresh, 'BUYER');
+            expectIdentity(await credential(request(server).get('/api/auth/me'), tokenFromCookie(fresh), 'cookie'), 'BUYER');
+            expect((await request(server).post('/api/auth/reset-password').send({ token: reset, newPassword: nextPassword })).status).toBe(400);
+        } finally { await restoreFixtureHash('BUYER'); }
+    });
+
+    test.each(['cookie', 'bearer'])('real password change refreshes current %s and revokes old copies', async transport => {
+        const response = await login('SELLER'); expectIdentity(response, 'SELLER');
+        const old = tokenFromCookie(response);
+        try {
+            const updated = await credential(request(server).put('/api/auth/profile'), old, transport)
+                .send({ currentPassword: password, password: 'Phase7-change-fixture-only-123!' });
+            expect(updated.status).toBe(200);
+            const fresh = transport === 'bearer' ? updated.body.token : tokenFromCookie(updated);
+            expect(typeof fresh).toBe('string');
+            expect((await credential(request(server).get('/api/auth/me'), old, transport)).status).toBe(401);
+            expectIdentity(await credential(request(server).get('/api/auth/me'), fresh, transport), 'SELLER');
+            expect(updated.body.user).not.toHaveProperty('password_hash');
+        } finally { await restoreFixtureHash('SELLER'); }
+    });
+
+    test('real Admin password change refreshes its explicit Bearer credential', async () => {
+        const response = await adminLogin(); expect(response.status).toBe(200);
+        try {
+            const updated = await credential(request(server).put('/api/auth/profile'), response.body.token, 'bearer')
+                .send({ currentPassword: password, password: 'Phase7-admin-fixture-only-123!' });
+            expect(updated.status).toBe(200); expect(typeof updated.body.token).toBe('string');
+            expect((await credential(request(server).get('/api/admin/verify'), response.body.token, 'bearer')).status).toBe(401);
+            expect((await credential(request(server).get('/api/admin/verify'), updated.body.token, 'bearer')).status).toBe(200);
+            expect(updated.body.user).not.toHaveProperty('password_hash');
+        } finally { await restoreFixtureHash('ADMIN'); }
     });
 });

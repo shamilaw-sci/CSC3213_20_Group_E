@@ -1,8 +1,10 @@
 const agentRepository = require('../../repositories/agentRepository');
 const supabase = require('../../config/supabase');
+const logger = require('../../utils/logger');
 
 // Update agent profile
 const updateAgentProfile = async (req, res, next) => {
+    let userUpdated = false;
     try {
         const { 
             name,
@@ -30,7 +32,11 @@ const updateAgentProfile = async (req, res, next) => {
             const userUpdates = {};
             if (avatar_url !== undefined) userUpdates.avatar_url = avatar_url;
             if (name !== undefined) userUpdates.name = name;
-            await supabase.from('users').update(userUpdates).eq('id', agentId);
+            const { data: updatedUser, error: userError } = await supabase.from('users').update(userUpdates)
+                .eq('id', agentId).select('id').single();
+            if (userError) throw userError;
+            if (updatedUser?.id !== agentId) throw new Error('User profile update could not be confirmed.');
+            userUpdated = true;
         }
 
         const updates = {
@@ -51,8 +57,12 @@ const updateAgentProfile = async (req, res, next) => {
         Object.keys(updates).forEach(key => updates[key] === undefined && delete updates[key]);
 
         const profile = await agentRepository.updateAgentProfile(agentId, updates);
+        if (!profile) throw new Error('Agent profile update could not be confirmed.');
         res.status(200).json({ message: "Agent profile updated successfully", profile });
     } catch (error) {
+        if (userUpdated) logger.error('Agent profile requires recovery after partial write.', {
+            event: 'agent_profile_partial_write', agentId: req.user.id
+        });
         next(error);
     }
 };

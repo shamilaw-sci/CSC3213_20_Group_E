@@ -2,6 +2,7 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
+const { issueSessionToken } = require('../utils/sessionToken');
 
 jest.mock('../config/supabase', () => ({
     from: jest.fn().mockReturnThis(), select: jest.fn().mockReturnThis(),
@@ -46,8 +47,8 @@ describe('Property detail visibility', () => {
         ['other-1', 'SELLER', 404],
         ['seller-1', 'BANNED', 404],
     ])('applies owner/admin visibility to %s (%s)', async (id, role, expectedStatus) => {
-        db.single.mockResolvedValue({ data: { id, role }, error: null });
-        const token = jwt.sign({ id, role }, process.env.JWT_SECRET);
+        db.single.mockResolvedValue({ data: { id, role, password_hash: null }, error: null });
+        const token = issueSessionToken({ id, role, password_hash: null });
         const response = await request(app).get('/properties/property-1').set('Cookie', `token=${token}`);
         expect(response.status).toBe(expectedStatus);
         if (expectedStatus === 200) expect(response.body.property.contact_number).toBe('private-phone');

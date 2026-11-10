@@ -1,3 +1,4 @@
+import { logClientError } from '../utils/clientLog';
 import SellerConversationsPanel from '../components/dashboard/SellerConversationsPanel';
 import SellerListingsPanel from '../components/dashboard/SellerListingsPanel';
 import SellerKpiCards from '../components/dashboard/SellerKpiCards';
@@ -88,7 +89,7 @@ const SellerDashboard = () => {
                 setRecentListings(properties.slice(0, 4));
                 setRecentConversations(conversations.slice(0, 3));
             } catch (error) {
-                console.error("Error fetching seller stats:", error);
+                logClientError('seller_dashboard_load_failed');
             } finally {
                 setLoading(false);
             }

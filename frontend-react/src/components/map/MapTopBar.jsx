@@ -1,3 +1,4 @@
+import { logClientError } from '../../utils/clientLog';
 import React from 'react';
 import { Menu, Calculator } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -36,7 +37,7 @@ const MapTopBar = ({
             });
             alert("Search saved successfully!");
         } catch (error) {
-            (toast.error("Error saving search"), console.error("Error saving search", error));
+            (toast.error("Error saving search"), logClientError('saved_search_create_failed'));
             if (error.response?.status === 401) {
                 alert("Please log in to save searches.");
             } else {

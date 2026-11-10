@@ -1,3 +1,4 @@
+import { logClientWarning } from '../../utils/clientLog';
 import React, { useEffect, useRef } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -83,7 +84,7 @@ export const MapEvents = ({ onBoundsChange, onMapClick, searchMode }) => {
                     onBoundsChange(initialBounds);
                 }
             } catch (e) {
-                console.warn("Initial map bounds resolution error:", e);
+                logClientWarning('map_bounds_resolution_failed');
             }
         }
     }, [map, searchMode, onBoundsChange]);

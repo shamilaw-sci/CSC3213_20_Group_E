@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import { logClientError } from '../../../utils/clientLog';
+import React, { useState, useEffect, useRef } from "react";
 import { fetchTransactionHistory, exportReport } from "../api/adminApi";
 import "../styles/admin-global.css";
 import { 
@@ -19,15 +20,22 @@ const ReportsPage = () => {
   const [statusFilter] = useState("all");
   const [exporting, setExporting] = useState(false);
   const [toastMsg, setToastMsg] = useState(null);
+  const mounted = useRef(false);
+  const exportLock = useRef(false);
+  const feedbackTimer = useRef(null);
 
   const showToast = (msg, type = "success") => {
     setToastMsg({ msg, type });
-    setTimeout(() => setToastMsg(null), 3000);
+    clearTimeout(feedbackTimer.current);
+    feedbackTimer.current = setTimeout(() => { if (mounted.current) setToastMsg(null); }, 3000);
   };
 
   useEffect(() => {
+    let cancelled = false;
+    mounted.current = true;
     fetchTransactionHistory()
       .then((d) => { 
+        if (cancelled) return;
         if (d?.transactions) {
           const mapped = d.transactions.map((t) => ({
             id: `TXN-${String(t.id).slice(0, 8)}`,
@@ -42,18 +50,24 @@ const ReportsPage = () => {
           setTransactions(mapped);
         }
       })
-      .catch((err) => console.error("Failed to load transactions", err));
+      .catch(() => { if (!cancelled) logClientError('admin_transactions_load_failed'); });
+    return () => { cancelled = true; mounted.current = false; clearTimeout(feedbackTimer.current); };
   }, []);
 
-  const handleExport = async (type) => {
+  const handleExport = async (format) => {
+    if (exportLock.current) return;
+    exportLock.current = true;
     setExporting(true);
+    setToastMsg(null);
+    clearTimeout(feedbackTimer.current);
     try {
-      await exportReport(type, {});
-      showToast(`Exported ${type.toUpperCase()} report successfully!`);
+      await exportReport('transactions', { format });
+      if (mounted.current) showToast('Download started.');
     } catch {
-      showToast("Export generated and logged.", "success");
+      if (mounted.current) showToast('Report download failed. Please try again.', 'error');
     } finally {
-      setExporting(false);
+      exportLock.current = false;
+      if (mounted.current) setExporting(false);
     }
   };
 
@@ -80,8 +94,8 @@ const ReportsPage = () => {
       {/* Header */}
       <div className="admin-page-header">
         <div>
-          <h1>Financial Reports & Revenue Auditing</h1>
-          <p>Track listing fee receipts, commission payouts, and export certified transaction statements</p>
+          <h1>Transaction Reports</h1>
+          <p>View transaction history and download reports.</p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -92,16 +106,16 @@ const ReportsPage = () => {
             className="admin-btn admin-btn-secondary"
           >
             <Download className="w-4 h-4" />
-            <span>Export CSV</span>
+            <span>Export spreadsheet CSV</span>
           </button>
           <button
             type="button"
-            onClick={() => handleExport("pdf")}
+            onClick={() => handleExport("json")}
             disabled={exporting}
             className="admin-btn admin-btn-primary"
           >
             <FileText className="w-4 h-4" />
-            <span>Export PDF</span>
+            <span>Export data JSON</span>
           </button>
         </div>
       </div>

@@ -16,7 +16,7 @@ const getListingById = async(req, res, next) => {
         const listing = await adminRepository.getListingByIdWithTransactions(req.params.id);
         res.status(200).json({ listing });
     } catch (error) {
-        console.error("Failed to get listing by ID:", error.message);
+        console.error('admin_listing_lookup_failed');
         next(error);
     }
 };
@@ -29,7 +29,7 @@ const approveListing = async(req, res, next) => {
             if (!existing) return res.status(404).json({ message: 'Listing not found' });
             return res.status(200).json({ message: 'Listing already approved' });
         }
-        checkSavedSearchMatches(data).catch(error => console.error('Saved-search alerts failed:', error.message));
+        checkSavedSearchMatches(data).catch(error => console.error('saved_search_alerts_failed'));
 
         const sellerEmail = data ?.seller ?.email;
         const sellerName = data ?.seller ?.name || 'Seller';

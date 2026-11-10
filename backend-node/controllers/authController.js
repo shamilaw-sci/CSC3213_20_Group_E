@@ -1,8 +1,11 @@
 const bcrypt = require('bcryptjs');
+const { randomUUID } = require('node:crypto');
+const { parseProfileInput } = require('../validators/profileInput');
 const jwt = require('jsonwebtoken');
 const { createHmac } = require('node:crypto');
 const { sendWelcomeEmail, sendPasswordResetEmail } = require('../utils/emailService');
 const userRepository = require('../repositories/userRepository');
+const { issueSessionToken } = require('../utils/sessionToken');
 const passwordResetVersion = (passwordHash) => createHmac('sha256', process.env.JWT_SECRET)
     .update(passwordHash || '').digest('hex');
 
@@ -14,6 +17,11 @@ const setTokenCookie = (res, token) => {
         maxAge: 24 * 60 * 60 * 1000 // 1 day
     });
 };
+
+const clearTokenCookie = res => res.clearCookie('token', {
+    httpOnly: true, secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', path: '/'
+});
 
 // 1. User Registration - Create new user account
 const registerUser = async(req, res, next) => {
@@ -54,15 +62,13 @@ const registerUser = async(req, res, next) => {
         }
 
         const registeredUser = newUser[0];
-        const token = jwt.sign({ id: registeredUser.id, role: registeredUser.role },
-            process.env.JWT_SECRET, { expiresIn: '1d' }
-        );
+        const token = issueSessionToken({ ...registeredUser, password_hash });
 
         setTokenCookie(res, token);
 
         // Send welcome email asynchronously (non-blocking)
         sendWelcomeEmail(email, name).catch((e) => {
-            console.error("Welcome email failed:", e.message || e);
+            console.error('welcome_email_failed');
         });
 
         res.status(201).json({
@@ -113,9 +119,7 @@ const loginUser = async(req, res, next) => {
         }
 
         // Generate JWT token
-        const token = jwt.sign({ id: user.id, role: user.role },
-            process.env.JWT_SECRET, { expiresIn: '1d' }
-        );
+        const token = issueSessionToken(user);
 
         setTokenCookie(res, token);
 
@@ -177,7 +181,7 @@ const forgotPassword = async(req, res, next) => {
             const resetLink = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}`;
 
             sendPasswordResetEmail(email, user.name, resetLink).catch((e) => {
-                console.error("Password reset email failed:", e.message || e);
+                console.error('password_reset_email_failed');
             });
         }
 
@@ -221,6 +225,7 @@ const resetPassword = async(req, res, next) => {
             return res.status(400).json({ message: "This reset link has already been used. Please request a new link." });
         }
 
+        clearTokenCookie(res);
         res.status(200).json({ message: "Password reset successful. You can now log in with your new password." });
     } catch (error) {
         if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
@@ -232,27 +237,15 @@ const resetPassword = async(req, res, next) => {
 
 // 6. User Logout (M8 Fix - clear cookies with matching attributes)
 const logoutUser = (req, res) => {
-    res.clearCookie('token', {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-        path: '/'
-    });
+    clearTokenCookie(res);
     res.status(200).json({ message: "Logged out successfully" });
 };
 
 // 7. Get Current User Profile
 const getMe = async(req, res, next) => {
     try {
-        let token = req.cookies?.token;
-        if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
-            token = req.headers.authorization.split(' ')[1];
-        }
-
-        if (!token) return res.status(401).json({ message: "Not authenticated" });
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await userRepository.findById(decoded.id);
+        if (!req.user) return res.status(401).json({ message: "Not authenticated" });
+        const user = await userRepository.findById(req.user.id);
 
         if (!user) return res.status(404).json({ message: "User not found" });
 
@@ -264,8 +257,12 @@ const getMe = async(req, res, next) => {
 
 // 8. Update User Profile
 const updateProfile = async(req, res, next) => {
+    let uploadedKey;
     try {
-        const { name, email, phone, password, avatar_url, theme_preference, email_notifications } = req.body;
+        let parsed;
+        try { parsed = parseProfileInput(req.body); }
+        catch { return res.status(400).json({ message: 'Invalid profile input.' }); }
+        const { name, email, phone, password, avatar_url, theme_preference, email_notifications, currentPassword } = parsed.fields;
 
         const user = await userRepository.findFullUserById(req.user.id);
         if (!user) {
@@ -290,31 +287,11 @@ const updateProfile = async(req, res, next) => {
         }
 
         if (phone !== undefined) updates.phone = phone;
-        if (avatar_url !== undefined) {
-            if (avatar_url.startsWith('data:image')) {
-                try {
-                    const parts = avatar_url.split(',');
-                    if (parts.length === 2) {
-                        const mimeType = parts[0].split(':')[1].split(';')[0];
-                        const base64Data = parts[1];
-                        const buffer = Buffer.from(base64Data, 'base64');
-                        const ext = mimeType.split('/')[1] || 'png';
-                        const fileName = `${req.user.id}_${Date.now()}.${ext}`;
-
-                        updates.avatar_url = await userRepository.uploadAvatar(fileName, buffer, mimeType);
-                    }
-                } catch (err) {
-                    console.error("Avatar upload error:", err);
-                }
-            } else {
-                updates.avatar_url = avatar_url;
-            }
-        }
+        if (avatar_url !== undefined) updates.avatar_url = avatar_url;
         if (theme_preference !== undefined) updates.theme_preference = theme_preference;
         if (email_notifications !== undefined) updates.email_notifications = email_notifications;
 
         if (password) {
-            const { currentPassword } = req.body;
             if (!currentPassword) {
                 return res.status(400).json({ message: "Current password is required to change your password." });
             }
@@ -334,10 +311,37 @@ const updateProfile = async(req, res, next) => {
             updates.password_hash = await bcrypt.hash(password, salt);
         }
 
+        if (parsed.avatar) {
+            const key = `${req.user.id}_${randomUUID()}.${parsed.avatar.extension}`;
+            try {
+                const url = await userRepository.uploadAvatar(key, parsed.avatar.bytes, parsed.avatar.mime);
+                uploadedKey = key;
+                const confirmed = parseProfileInput({ avatar_url: url });
+                if (!confirmed.fields.avatar_url || confirmed.avatar) throw new Error('Unconfirmed avatar upload');
+                updates.avatar_url = url;
+            } catch {
+                console.error('profile_avatar_recovery', { userId: req.user.id, objectKey: key });
+                return res.status(503).json({ message: 'Avatar upload unavailable.' });
+            }
+        }
+        let omittedFields = [];
+        const completeUpdate = (updated, message) => {
+            if (updated?.id !== req.user.id) throw new Error('Profile update could not be confirmed.');
+            const { password_hash, ...publicUser } = updated;
+            const result = { message, user: publicUser, ...(omittedFields.length ? { partial: true, omittedFields } : {}) };
+            if (updates.password_hash) {
+                const token = issueSessionToken({ ...user, ...updated, password_hash: updates.password_hash });
+                setTokenCookie(res, token);
+                if (req.user.role === 'ADMIN' || req.headers.authorization?.startsWith('Bearer ')) result.token = token;
+            }
+            return res.status(200).json(result);
+        };
         const { data: updatedUser, error: updateError } = await userRepository.updateProfile(req.user.id, updates);
 
         if (updateError) {
-            if (updateError.message.includes('column') && updateError.message.includes('does not exist')) {
+            if (typeof updateError.message === 'string' && updateError.message.includes('column') && updateError.message.includes('does not exist')) {
+                omittedFields = ['phone','avatar_url','theme_preference','email_notifications'].filter(field => Object.hasOwn(updates,field));
+                if (uploadedKey) { console.error('profile_avatar_recovery', { userId: req.user.id, objectKey: uploadedKey }); uploadedKey = undefined; }
                 delete updates.phone;
                 delete updates.avatar_url;
                 delete updates.theme_preference;
@@ -345,15 +349,16 @@ const updateProfile = async(req, res, next) => {
 
                 const { data: fallbackUser, error: fallbackError } = await userRepository.updateProfile(req.user.id, updates);
                 if (fallbackError) throw fallbackError;
-                return res.status(200).json({ message: "Profile updated", user: fallbackUser });
+                return completeUpdate(fallbackUser, omittedFields.length ? 'Profile updated; some fields could not be saved.' : 'Profile updated');
             }
             throw updateError;
         }
 
-        res.status(200).json({ message: "Profile updated successfully", user: updatedUser });
+        return completeUpdate(updatedUser, 'Profile updated successfully');
 
     } catch (error) {
-        next(error);
+        if (uploadedKey) console.error('profile_avatar_recovery', { userId: req.user.id, objectKey: uploadedKey });
+        next(new Error('Profile update unavailable.'));
     }
 };
 
@@ -368,9 +373,11 @@ const requestRoleUpgrade = async(req, res, next) => {
         }
 
         const adminRepository = require('../repositories/adminRepository');
-        await adminRepository.createRoleRequest(user.id, 'SELLER');
+        const result = await adminRepository.createRoleRequest(user.id, 'SELLER');
 
-        res.status(201).json({ message: 'Your request to become a Seller has been submitted. An admin will review it shortly.' });
+        res.status(result.created ? 201 : 200).json({ message: result.created
+            ? 'Your request to become a Seller has been submitted. An admin will review it shortly.'
+            : 'Your request to become a Seller is already pending review.' });
     } catch (error) {
         next(error);
     }

@@ -1,7 +1,7 @@
 const { randomUUID } = require('node:crypto');
 const request = require('supertest');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const { issueSessionToken } = require('../utils/sessionToken');
 const { Client } = require('pg');
 const { identitySql, validateDatabase } = require('./local-stack.cjs');
 const { assertOwnedListings } = require('./database-state.cjs');
@@ -25,14 +25,15 @@ const db = new Client(JSON.parse(process.env.PHASE5_DATABASE));
 let connected = false;
 let server;
 let appPort;
+let fixtureHash;
 const body = changes => ({ type: 'House', title: `Listing ${run}`, description: 'Synthetic listing for isolated lifecycle verification.',
     price: '1500000', latitude: '7', longitude: '80', bedrooms: '0', bathrooms: '0', landSize: '0',
     boundary: 'POLYGON((80 7,80.001 7,80.001 7.001,80 7.001,80 7))', ...changes });
 const call = (role, method, path) => {
-    const req = request(server)[method](path);
+    const req = request(server)[method](path).set('Origin', process.env.CLIENT_URL || 'http://localhost:5173');
     return role ? req.set('Cookie', sessions[role]) : req;
 };
-const tokenCookie = role => `token=${jwt.sign({ id: users[role].id, role: users[role].role }, process.env.JWT_SECRET, { expiresIn: '5m' })}`;
+const tokenCookie = role => `token=${issueSessionToken({ ...users[role], password_hash: fixtureHash }, { expiresIn: '5m' })}`;
 const row = async id => (await db.query('SELECT p.*,price::text AS price,land_size::text AS land_size FROM public.properties p WHERE id=$1', [id])).rows[0];
 const ownIds = async () => assertOwnedListings((await db.query('SELECT id,seller_id FROM public.properties WHERE seller_id=ANY($1::uuid[]) ORDER BY id', [userIds])).rows, userIds);
 const publicIds = async () => {
@@ -57,6 +58,7 @@ beforeAll(async () => {
     connected = true;
     validateDatabase((await db.query(identitySql)).rows[0]);
     const hash = await bcrypt.hash(password, 10);
+    fixtureHash = hash;
     for (const user of Object.values(users)) {
         await db.query('INSERT INTO public.users(id,name,email,password_hash,role) VALUES($1,$2,$3,$4,$5)',
             [user.id, user.name, user.email, hash, user.role]);

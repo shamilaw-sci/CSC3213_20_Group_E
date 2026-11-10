@@ -1,3 +1,4 @@
+import { logClientError } from '../utils/clientLog';
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/UserAuthContext';
@@ -65,7 +66,7 @@ const Register = () => {
             }
         } catch (err) {
             toast.error(err.response?.data?.message || err.message || 'Failed to register');
-            console.error("Registration error:", err.response?.data?.message || err.message);
+            logClientError('registration_failed');
         } finally {
             setLoading(false);
         }

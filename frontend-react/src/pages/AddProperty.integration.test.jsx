@@ -6,7 +6,7 @@ import AddProperty from './AddProperty';
 import { UserAuthProvider } from '../context/UserAuthContext';
 
 const api = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
-const payment = vi.hoisted(() => ({ triggerPayment: vi.fn(), paymentConfig: { listingFee: '500.00', sandbox: true } }));
+const payment = vi.hoisted(() => ({ triggerPayment: vi.fn(), paymentConfig: { status: 'ready', listingFee: '500.00', sandbox: true } }));
 const compression = vi.hoisted(() => vi.fn());
 vi.mock('../context/api', () => ({ default: api }));
 vi.mock('../hooks/usePayhere', () => ({ usePayhere: () => payment }));
@@ -203,7 +203,7 @@ describe('Rendered AddProperty wizard with real submission hook', () => {
     expect(screen.getByText('Living Room')).toBeInTheDocument();
     expect(payment.triggerPayment).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: /Proceed to Payment/ }));
-    await waitFor(() => expect(payment.triggerPayment).toHaveBeenCalledExactlyOnceWith('wizard-saved-draft'));
+    await waitFor(() => expect(payment.triggerPayment).toHaveBeenCalledExactlyOnceWith('wizard-saved-draft', '500.00'));
     const [path, body, config] = api.post.mock.calls[0];
     expect(path).toBe('/properties');
     expect(body).toBeInstanceOf(FormData);
@@ -250,7 +250,7 @@ describe('Rendered AddProperty wizard with real submission hook', () => {
     fireEvent.click(screen.getByRole('button', { name: /Proceed to Payment/ }));
     await waitFor(() => expect(payment.triggerPayment).toHaveBeenCalledTimes(2));
     expect(api.post).toHaveBeenCalledTimes(1);
-    expect(payment.triggerPayment.mock.calls).toEqual([['wizard-saved-draft'], ['wizard-saved-draft']]);
+    expect(payment.triggerPayment.mock.calls).toEqual([['wizard-saved-draft', '500.00'], ['wizard-saved-draft', '500.00']]);
     expect(screen.getByText('Resuming payment for existing draft...')).toBeInTheDocument();
   });
 
