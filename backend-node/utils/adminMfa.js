@@ -1,6 +1,5 @@
 const crypto = require('node:crypto');
 const jwt = require('jsonwebtoken');
-const supabase = require('../config/supabase');
 const { credentialVersion } = require('./sessionToken');
 const { newTotpSecret, matchingTotpStep } = require('./adminTotp');
 
@@ -24,6 +23,7 @@ function decrypt(value) {
     return Buffer.concat([cipher.update(bytes.subarray(28)), cipher.final()]);
 }
 async function rpc(name, args) {
+    const supabase = require('../config/supabase');
     const { data, error } = await supabase.rpc(name, args);
     if (error) throw new Error('Admin MFA storage unavailable');
     return data;

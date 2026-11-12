@@ -1,11 +1,11 @@
 const { createHash, randomBytes } = require('node:crypto');
-const supabase = require('../config/supabase');
 const { sendEmail } = require('./emailService');
 
 const enabled = () => process.env.EMAIL_VERIFICATION_ENABLED === 'true';
 const digest = token => '\\x' + createHash('sha256').update(token).digest('hex');
 
 async function sendChallenge(user, purpose, target = user.email) {
+    const supabase = require('../config/supabase');
     const token = randomBytes(32).toString('hex');
     const link = new URL('/verify-email', process.env.CLIENT_URL || 'http://localhost:5173');
     link.hash = token;
@@ -24,6 +24,7 @@ async function sendChallenge(user, purpose, target = user.email) {
 
 async function confirmChallenge(token) {
     if (typeof token !== 'string' || !/^[a-f0-9]{64}$/.test(token)) return false;
+    const supabase = require('../config/supabase');
     const { data, error } = await supabase.rpc('consume_email_challenge', { p_token_digest: digest(token) });
     if (error) throw error;
     if (typeof data !== 'string') return false;
