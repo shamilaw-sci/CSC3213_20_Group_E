@@ -1,10 +1,11 @@
+import useDueDiligence from '../hooks/useDueDiligence';
 import BuyerDueDiligencePanel from '../components/dashboard/BuyerDueDiligencePanel';
 import BuyerMortgagePanel from '../components/dashboard/BuyerMortgagePanel';
 import BuyerAppointmentsPanel from '../components/dashboard/BuyerAppointmentsPanel';
 import BuyerFavoritesPanel from '../components/dashboard/BuyerFavoritesPanel';
 import BuyerSavedSearchesPanel from '../components/dashboard/BuyerSavedSearchesPanel';
 import BuyerKpiCards from '../components/dashboard/BuyerKpiCards';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
     Calendar, Heart, Search, Calculator, FileText, User, Clock, 
@@ -83,18 +84,7 @@ const BuyerDashboard = () => {
     }, [calcPrice, calcDownpaymentPercent, calcTenureYears, calcInterestRate]);
 
     // ── Due Diligence Checklist State ────────────────────────────────────────
-    const [checkedItems, setCheckedItems] = useState({
-        extractSearch: true,
-        titleRegistration: false,
-        surveyPlan: true,
-        streetLine: false,
-        nonVesting: false,
-        encumbranceFree: false
-    });
-
-    const toggleCheckItem = (key) => {
-        setCheckedItems(prev => ({ ...prev, [key]: !prev[key] }));
-    };
+    const { checkedItems, toggleCheckItem } = useDueDiligence(user?.id);
 
     // ── Fetch Initial Data ───────────────────────────────────────────────────
     const fetchBuyerData = async (isSilent = false) => {
@@ -300,21 +290,52 @@ const BuyerDashboard = () => {
 };
 
 // ── Upgrade to Seller Tab ─────────────────────────────────────────────────────
-const UpgradeToSellerTab = ({ user }) => {
+export const UpgradeToSellerTab = ({ user }) => {
     const [submitted, setSubmitted] = useState(false);
+    const [rejected, setRejected] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [statusLoading, setStatusLoading] = useState(true);
+    const [statusError, setStatusError] = useState(false);
+    const [statusAttempt, setStatusAttempt] = useState(0);
+    const sessionRef = useRef(null);
+
+    useEffect(() => {
+        const session = {};
+        sessionRef.current = session;
+        let active = true;
+        setLoading(false);
+        setStatusLoading(true);
+        setStatusError(false);
+        setSubmitted(false);
+        setRejected(false);
+        api.get('/auth/request-role-upgrade').then(({ data }) => {
+            if (active) {
+                setSubmitted(data.request?.status === 'pending');
+                setRejected(data.request?.status === 'rejected');
+            }
+        }).catch(() => {
+            if (active) setStatusError(true);
+        }).finally(() => {
+            if (active) setStatusLoading(false);
+        });
+        return () => { active = false; if (sessionRef.current === session) sessionRef.current = null; };
+    }, [user?.id, statusAttempt]);
 
     const handleRequest = async () => {
+        const session = sessionRef.current;
         setLoading(true);
         try {
             await api.post('/auth/request-role-upgrade');
+            if (sessionRef.current !== session) return;
             setSubmitted(true);
+            setRejected(false);
             toast.success('Your request has been submitted! An admin will review it shortly.');
         } catch (err) {
+            if (sessionRef.current !== session) return;
             const msg = err?.response?.data?.message || 'Failed to submit request. Please try again.';
             toast.error(msg);
         } finally {
-            setLoading(false);
+            if (sessionRef.current === session) setLoading(false);
         }
     };
 
@@ -343,10 +364,20 @@ const UpgradeToSellerTab = ({ user }) => {
                     ))}
                 </div>
 
-                {submitted ? (
+                {!statusLoading && !statusError && rejected && (
+                    <p role="status" className="mb-4 rounded-xl border border-red-300 bg-red-50 px-5 py-4 text-sm text-red-800 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200">
+                        Your Seller upgrade request was rejected. You can submit a new request.
+                    </p>
+                )}
+                {statusLoading ? <p role="status">Checking request status...</p> : statusError ? (
+                    <div role="alert">
+                        <p>Unable to check your request status.</p>
+                        <button type="button" onClick={() => setStatusAttempt(value => value + 1)}>Retry status check</button>
+                    </div>
+                ) : submitted ? (
                     <div className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold text-sm">
                         <Check className="w-5 h-5" />
-                        Request submitted! An admin will review and approve your account shortly.
+                        Request submitted! Awaiting admin review.
                     </div>
                 ) : (
                     <button

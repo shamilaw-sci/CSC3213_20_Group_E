@@ -11,6 +11,8 @@ export const useMapSearch = () => {
     const savedSearch = location.state?.savedSearch;
 
     const [properties, setProperties] = useState([]);
+    const [resultSearchTerm, setResultSearchTerm] = useState(null);
+    const routeSearchRef = useRef(location.search);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [activeMarkerId, setActiveMarkerId] = useState(null);
@@ -61,6 +63,13 @@ export const useMapSearch = () => {
             return;
         }
         const searchTerm = new URLSearchParams(location.search).get('search') || '';
+        if (routeSearchRef.current !== location.search) {
+            routeSearchRef.current = location.search;
+            setProperties([]);
+            setResultSearchTerm(null);
+            setCurrentPolygon(DEFAULT_SRI_LANKA_BOUNDS_WKT);
+            setSearchMode('bounds');
+        }
         setFilters(previous => previous.searchTerm === searchTerm ? previous : { ...previous, searchTerm });
     }, [savedSearch, location.search, location.pathname]);
 
@@ -73,7 +82,7 @@ export const useMapSearch = () => {
             setLoading(true);
             setError(null);
             try {
-                const apiUrl = import.meta.env.VITE_MAP_API_URL || 'http://localhost:8080/api/map/search';
+                const apiUrl = import.meta.env.VITE_MAP_API_URL || 'http://localhost:9090/api/map/search';
                 
                 const payload = { polygon: currentPolygon };
                 if (filters.beds !== 'Any') payload.beds = parseInt(filters.beds.replace('+', ''));
@@ -100,7 +109,10 @@ export const useMapSearch = () => {
                 });
                 if (!res.ok) throw new Error('Map service failed');
                 const data = await res.json();
-                if (!controller.signal.aborted) setProperties(data.properties || []);
+                if (!controller.signal.aborted) {
+                    setProperties(data.properties || []);
+                    setResultSearchTerm(filters.searchTerm);
+                }
             } catch (error) {
                 if (!controller.signal.aborted && error.name !== 'AbortError') {
                     setProperties([]);
@@ -123,9 +135,12 @@ export const useMapSearch = () => {
     }, [currentPolygon, filters, maxPriceFilter]);
 
     const handleBoundsChange = useCallback((bounds) => {
+        // Resolve a new place against the country before viewport movements
+        // can restrict it to the previous area's visible map bounds.
+        if (filters.searchTerm && resultSearchTerm !== filters.searchTerm) return;
         const boundsWKT = getWKTFromBounds(bounds);
         setCurrentPolygon(boundsWKT);
-    }, []);
+    }, [filters.searchTerm, resultSearchTerm]);
 
     const handleMapClick = useCallback(() => {
         setActiveMarkerId(null);
@@ -144,6 +159,12 @@ export const useMapSearch = () => {
     }, []);
 
     const handleSearch = (newFilters) => {
+        if (newFilters.searchTerm !== filters.searchTerm) {
+            setProperties([]);
+            setResultSearchTerm(null);
+            setCurrentPolygon(DEFAULT_SRI_LANKA_BOUNDS_WKT);
+            setSearchMode('bounds');
+        }
         setFilters(newFilters);
     };
 
@@ -189,6 +210,7 @@ export const useMapSearch = () => {
 
     return {
         properties,
+        resultSearchTerm,
         error,
         isDrawMode,
         setIsDrawMode,

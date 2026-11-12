@@ -10,7 +10,7 @@ const response = () => { const r = {}; r.status = jest.fn(() => r); r.json = jes
 let calls;
 const query = (table, result) => {
     const q = {};
-    for (const method of ['select', 'eq', 'order', 'maybeSingle', 'update', 'insert', 'single']) q[method] = jest.fn((...args) => { calls.push([table, method, ...args]); return q; });
+    for (const method of ['select', 'eq', 'is', 'order', 'maybeSingle', 'update', 'insert', 'single']) q[method] = jest.fn((...args) => { calls.push([table, method, ...args]); return q; });
     q.then = (resolve, reject) => Promise.resolve(result).then(resolve, reject);
     return q;
 };
@@ -86,5 +86,7 @@ test('booking persists lead before sequential conversation creation and message;
     const lead = { id: 'lead' }; repo.createViewingLead.mockImplementation(async () => { calls.push(['lead']); return lead; });
     db.from.mockImplementation(table => { calls.push(['from', table]); if (table === 'messages') throw new Error('message failure'); return query(table, { data: calls.filter(c => c[0] === 'from').length === 1 ? null : { id: 'conversation' } }); });
     const res = response(); const next = jest.fn(); await handlers.bookViewing(request(), res, next);
+    expect(calls).toContainEqual(['conversations', 'eq', 'type', 'agent']);
+    expect(calls).toContainEqual(['conversations', 'is', 'property_id', null]);
     expect(calls.filter(c => c[0] === 'lead' || c[0] === 'from')).toEqual([['lead'], ['from', 'conversations'], ['from', 'conversations'], ['from', 'messages']]); expect(logger.error).toHaveBeenCalledWith('Booking conversation requires recovery.', { event: 'booking_conversation_recovery', leadId: 'lead', agentId: 'other', buyerId: 'agent', stage: 'message' }); expect(next).not.toHaveBeenCalled(); expect(res.status).toHaveBeenCalledWith(201); expect(res.json.mock.calls[0][0].lead).toBe(lead);
 });

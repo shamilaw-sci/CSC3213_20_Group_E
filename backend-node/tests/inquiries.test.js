@@ -1,4 +1,6 @@
 const request = require('supertest');
+// This suite tests inquiry authorization, independently of local MFA rollout flags.
+process.env.ADMIN_MFA_ENABLED = 'false';
 const { issueSessionToken } = require('../utils/sessionToken');
 jest.mock('../repositories/inquiryRepository', () => ({ create: jest.fn(), list: jest.fn() }), { virtual: true });
 jest.mock('../config/supabase', () => ({ from: jest.fn().mockReturnThis(), select: jest.fn().mockReturnThis(), eq: jest.fn().mockReturnThis(), single: jest.fn() }));

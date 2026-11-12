@@ -319,7 +319,9 @@ const Login = () => {
                                     Continue with Facebook
                                 </Button>
                                 <Button variant="outline" type="button" onClick={() => handleSocialLogin('Apple')} className="w-full max-w-[350px]">
-                                    <img src="https://www.svgrepo.com/show/511330/apple-173.svg" alt="Apple" className="h-4 w-4 mr-2 dark:invert" />
+                                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" className="mr-2 h-4 w-4">
+                                        <path d="M17.05 12.3c.03 3.02 2.65 4.02 2.68 4.03-.02.07-.42 1.44-1.38 2.85-.83 1.22-1.69 2.43-3.05 2.45-1.34.03-1.77-.79-3.3-.79s-2.01.77-3.28.82c-1.31.05-2.31-1.32-3.15-2.53-1.71-2.48-3.02-7-.99-10.06a4.72 4.72 0 0 1 4-2.42c1.29-.02 2.5.88 3.3.88.79 0 2.27-1.09 3.83-.93.65.03 2.47.26 3.64 1.97-.09.06-2.32 1.35-2.3 3.73ZM14.7 4.96c.7-.85 1.17-2.03 1.04-3.2-1.01.04-2.23.67-2.95 1.51-.64.74-1.2 1.94-1.05 3.09 1.12.08 2.26-.57 2.96-1.4Z" />
+                                    </svg>
                                     Continue with Apple
                                 </Button>
                             </div>

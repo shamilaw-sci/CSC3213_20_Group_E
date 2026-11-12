@@ -5,9 +5,15 @@
 
 /** Picks the most relevant size field for a property (sqft). */
 function getPropertySize(property) {
-    // Listing forms store house_size in sqft and land_size in perches.
-    const size = property?.house_size ?? (property?.land_size == null ? null : Number(property.land_size) * 272.25);
-    return Number.isFinite(Number(size)) && Number(size) > 0 ? Number(size) : null;
+    // Contract: house_size is floor sqft; land_size is perches. Never use
+    // plot area as a proxy for missing building floor area.
+    const isLand = String(property?.type || '').toLowerCase() === 'land';
+    const raw = isLand || (!property?.type && property?.house_size == null)
+        ? property?.land_size : property?.house_size;
+    if (!['string', 'number'].includes(typeof raw) || String(raw).trim() === '') return null;
+    const size = Number(raw) * (isLand || (!property?.type && property?.house_size == null) ? 272.25 : 1);
+    // Below 100 sqft is not a usable whole-building floor area for this metric.
+    return Number.isFinite(size) && size > 0 && (isLand || size >= 100) ? size : null;
 }
 
 /** Price per square foot, or null if price/size aren't usable. */
@@ -64,13 +70,22 @@ function calculatePriceInsight(targetProperty, comparableProperties = []) {
     const targetPps = pricePerSqft(targetProperty);
     if (targetPps === null) return null;
 
-    const comparablePpsValues = comparableProperties
+    let comparablePpsValues = comparableProperties
+        .filter(property => !targetProperty.id || property.id !== targetProperty.id)
         .filter(property => (!targetProperty.type || String(property.type || '').toLowerCase() === String(targetProperty.type).toLowerCase()) &&
             (!targetProperty.listing_type || String(property.listing_type || '').toLowerCase() === String(targetProperty.listing_type).toLowerCase()))
         .map(pricePerSqft)
         .filter((v) => v !== null);
 
     if (comparablePpsValues.length < 3) return null; // Not enough data for a fair comparison
+
+    // A robust median fence prevents a corrupt price/area ratio dominating
+    // the arithmetic mean. Retain at least three actual comparable listings.
+    const sorted = [...comparablePpsValues].sort((a, b) => a - b);
+    const midpoint = Math.floor(sorted.length / 2);
+    const median = sorted.length % 2 ? sorted[midpoint] : (sorted[midpoint - 1] + sorted[midpoint]) / 2;
+    comparablePpsValues = comparablePpsValues.filter(value => value >= median / 3 && value <= median * 3);
+    if (comparablePpsValues.length < 3) return null;
 
     const avgPps = mean(comparablePpsValues);
     const z = zScore(targetPps, comparablePpsValues);

@@ -1,6 +1,6 @@
 import { logClientError } from '../../utils/clientLog';
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
     Home, Users, CheckCircle2, BarChart3, 
     MessageSquare, MapPin, Plus, Settings, LogOut, Menu, X,
@@ -21,6 +21,8 @@ import AgentPipelinePanel from '../../components/dashboard/AgentPipelinePanel';
 import AgentLeadDetailsModal from '../../components/dashboard/AgentLeadDetailsModal';
 import toast from 'react-hot-toast';
 
+const conversationIdFor = lead => lead?.is_direct_booking ? lead.conversation_id : lead?.conversation_id || lead?.id;
+
 const PIPELINE_STAGES = [
     { key: 'New', label: 'New Inquiries', color: 'blue' },
     { key: 'Contacted', label: 'Contacted', color: 'indigo' },
@@ -32,6 +34,8 @@ const PIPELINE_STAGES = [
 const AgentDashboard = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
+    const openedAppointmentRef = useRef(null);
 
     
     // UI State
@@ -47,6 +51,14 @@ const AgentDashboard = () => {
     const [sendingMsg, setSendingMsg] = useState(false);
     const messagesEndRef = useRef(null);
     const chatSessionRef = useRef(null);
+    const chatDraftsRef = useRef(new Map());
+    const currentChatRef = useRef(null);
+    const chatAccountSessionRef = useRef(null);
+
+    const handleDraftChange = value => {
+        if (currentChatRef.current) chatDraftsRef.current.set(currentChatRef.current, value);
+        setMessageInput(value);
+    };
 
     const handleSelectLead = (lead) => {
         if (lead === selectedLead) return;
@@ -54,6 +66,11 @@ const AgentDashboard = () => {
             chatSessionRef.current.active = false;
             clearTimeout(chatSessionRef.current.scrollTimer);
         }
+        const previousId = currentChatRef.current;
+        if (previousId) chatDraftsRef.current.set(previousId, messageInput);
+        const nextId = conversationIdFor(lead) || null;
+        currentChatRef.current = nextId;
+        setMessageInput(nextId ? chatDraftsRef.current.get(nextId) || '' : '');
         setChatMessages([]);
         setSendingMsg(false);
         setSelectedLead(lead);
@@ -66,6 +83,37 @@ const AgentDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const dashboardSessionRef = useRef(null);
+
+    useEffect(() => {
+        chatAccountSessionRef.current = {};
+        if (chatSessionRef.current) {
+            chatSessionRef.current.active = false;
+            clearTimeout(chatSessionRef.current.scrollTimer);
+            chatSessionRef.current = null;
+        }
+        chatDraftsRef.current.clear();
+        currentChatRef.current = null;
+        setMessageInput('');
+        setSelectedLead(null);
+        setChatMessages([]);
+        setSendingMsg(false);
+        setSelectedLeadDetail(null);
+        setLeads([]);
+        setStats(null);
+        setProperties([]);
+        openedAppointmentRef.current = null;
+    }, [user?.id]);
+
+    useEffect(() => {
+        const appointmentId = new URLSearchParams(location.search).get('appointment');
+        if (!appointmentId) { openedAppointmentRef.current = null; return; }
+        if (openedAppointmentRef.current === appointmentId) return;
+        const booking = leads.find(lead => lead.is_direct_booking && lead.id === appointmentId);
+        if (!booking) return;
+        openedAppointmentRef.current = appointmentId;
+        setActiveTab('pipeline');
+        setSelectedLeadDetail(booking);
+    }, [location.search, leads]);
 
     // Fetch Dashboard Data
     const fetchDashboardData = async (isSilent = false) => {
@@ -138,7 +186,8 @@ const AgentDashboard = () => {
 
     // Polling Messages when a lead is selected
     useEffect(() => {
-        if (!selectedLead) return;
+        const conversationId = conversationIdFor(selectedLead);
+        if (!conversationId) return;
         const session = { active: true, readVersion: 0, scrollTimer: null };
         chatSessionRef.current = session;
         
@@ -146,12 +195,13 @@ const AgentDashboard = () => {
             if (!session.active) return;
             const readVersion = ++session.readVersion;
             try {
-                const response = await api.get(`/conversations/${selectedLead.id}/messages`);
+                const response = await api.get(`/conversations/${conversationId}/messages`);
                 if (!session.active || readVersion !== session.readVersion) return;
                 setChatMessages(response.data.messages || []);
                 clearTimeout(session.scrollTimer);
                 session.scrollTimer = setTimeout(() => {
-                    if (session.active) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+                    const panel = messagesEndRef.current?.parentElement;
+                    if (session.active && panel) panel.scrollTo({ top: panel.scrollHeight, behavior: 'smooth' });
                 }, 100);
             } catch (err) {
                 if (session.active) logClientError('agent_messages_load_failed');
@@ -173,18 +223,24 @@ const AgentDashboard = () => {
         e.preventDefault();
         const session = chatSessionRef.current;
         if (!messageInput.trim() || !selectedLead || sendingMsg || !session?.active) return;
-        const leadId = selectedLead.id;
+        const leadId = conversationIdFor(selectedLead);
+        if (!leadId) return;
         ++session.readVersion;
         
-        const body = messageInput.trim();
+        const accountSession = chatAccountSessionRef.current;
+        const submittedDraft = messageInput;
+        const body = submittedDraft.trim();
+        chatDraftsRef.current.set(leadId, '');
         setMessageInput('');
         setSendingMsg(true);
+        let delivered = false;
         
         try {
             const formData = new FormData();
             formData.append('body', body);
 
             await api.post(`/conversations/${leadId}/messages`, formData);
+            delivered = true;
             if (!session.active) return;
             const readVersion = ++session.readVersion;
             const response = await api.get(`/conversations/${leadId}/messages`);
@@ -192,10 +248,18 @@ const AgentDashboard = () => {
             setChatMessages(response.data.messages || []);
             clearTimeout(session.scrollTimer);
             session.scrollTimer = setTimeout(() => {
-                if (session.active) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+                const panel = messagesEndRef.current?.parentElement;
+                if (session.active && panel) panel.scrollTo({ top: panel.scrollHeight, behavior: 'smooth' });
             }, 100);
         } catch (error) {
-            if (session.active) toast.error("Failed to send message");
+            if (!delivered && chatAccountSessionRef.current === accountSession) {
+                const draft = chatDraftsRef.current.get(leadId) || submittedDraft;
+                chatDraftsRef.current.set(leadId, draft);
+                if (dashboardSessionRef.current?.active && currentChatRef.current === leadId) {
+                    setMessageInput(current => current || draft);
+                }
+            }
+            if (session.active) toast.error(delivered ? "Message sent, but the conversation could not refresh." : "Failed to send message");
         } finally {
             if (session.active) setSendingMsg(false);
         }
@@ -450,7 +514,7 @@ const AgentDashboard = () => {
 
                 {/* ── TAB 4: Unified Live Chat & Communications Hub ───────────────── */}
                 {activeTab === 'messages' && (
-                    <AgentMessagesPanel leads={leads} selectedLead={selectedLead} setSelectedLead={handleSelectLead} chatMessages={chatMessages} user={user} messagesEndRef={messagesEndRef} handleSendMessage={handleSendMessage} messageInput={messageInput} setMessageInput={setMessageInput} sendingMsg={sendingMsg} />
+                    <AgentMessagesPanel leads={leads} selectedLead={selectedLead} setSelectedLead={handleSelectLead} chatMessages={chatMessages} user={user} messagesEndRef={messagesEndRef} handleSendMessage={handleSendMessage} messageInput={messageInput} setMessageInput={handleDraftChange} sendingMsg={sendingMsg} />
                 )}
 
             </div>

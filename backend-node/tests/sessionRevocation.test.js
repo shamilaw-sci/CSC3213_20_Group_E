@@ -41,14 +41,14 @@ const credential = (query, token, transport) => query.set(transport === 'cookie'
 async function reset() {
     await request(app).post('/forgot').send({ email: user.email });
     const token = new URL(mail.sendPasswordResetEmail.mock.calls[0][2]).searchParams.get('token');
-    return request(app).post('/reset').send({ token, newPassword: 'new-password' });
+    return request(app).post('/reset').send({ token, newPassword: 'new-password-long' });
 }
 
 test.each(['cookie', 'bearer'])('reset revokes existing %s and optional identities; new password login works', async transport => {
     const old = await login(); expect((await reset()).status).toBe(200);
     expect((await credential(request(app).get('/protected'), old, transport)).status).toBe(401);
     expect((await credential(request(app).get('/optional'), old, transport)).body.user).toBeNull();
-    const fresh = await login('new-password');
+    const fresh = await login('new-password-long');
     expect((await credential(request(app).get('/protected'), fresh, transport)).status).toBe(200);
 });
 test('issued session has versioned opaque binding and authenticated response strips hash', async () => {
@@ -66,7 +66,7 @@ test.each(['cookie', 'bearer'])('legacy %s session is refused under approved rol
 test('password profile change refreshes current cookie and revokes other copies', async () => {
     const old = await login();
     const response = await request(app).put('/profile').set('Cookie', `token=${old}`)
-        .send({ currentPassword: 'old-password', password: 'new-password' });
+        .send({ currentPassword: 'old-password', password: 'new-password-long' });
     expect(response.status).toBe(200); const fresh = cookieToken(response);
     expect(fresh).not.toBe(old); expect(response.body.token).toBeUndefined();
     expect((await request(app).get('/protected').set('Cookie', `token=${old}`)).status).toBe(401);
@@ -75,7 +75,7 @@ test('password profile change refreshes current cookie and revokes other copies'
 test('explicit Bearer password change returns a replacement credential', async () => {
     const old = await login();
     const response = await request(app).put('/profile').set('Authorization', `Bearer ${old}`)
-        .send({ currentPassword: 'old-password', password: 'new-password' });
+        .send({ currentPassword: 'old-password', password: 'new-password-long' });
     expect(response.status).toBe(200); expect(response.body.token).toBe(cookieToken(response));
     expect((await request(app).get('/protected').set('Authorization', `Bearer ${response.body.token}`)).status).toBe(200);
     expect((await request(app).get('/protected').set('Authorization', `Bearer ${old}`)).status).toBe(401);
@@ -89,7 +89,7 @@ test('ordinary profile edit does not rotate or invalidate session', async () => 
 test('failed password write cannot rotate or invalidate existing session', async () => {
     const token = await login(); repo.updateProfile.mockResolvedValue({ data: null, error: new Error('Synthetic write failure') });
     const response = await request(app).put('/profile').set('Cookie', `token=${token}`)
-        .send({ currentPassword: 'old-password', password: 'new-password' });
+        .send({ currentPassword: 'old-password', password: 'new-password-long' });
     expect(response.status).toBe(500); expect(response.headers['set-cookie']).toBeUndefined();
     expect((await request(app).get('/protected').set('Cookie', `token=${token}`)).status).toBe(200);
 });

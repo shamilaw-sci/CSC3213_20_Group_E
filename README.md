@@ -106,7 +106,14 @@ Default local URLs:
 
 - Frontend: `http://localhost:5173`
 - Backend API: `http://localhost:5000`
-- Go map service: `http://localhost:8080`
+- Go map service: `http://localhost:9090`
+
+The frontend map URL defaults to `http://localhost:9090/api/map/search`.
+If you override the Go `PORT`, set `VITE_MAP_API_URL` in `frontend-react/.env`
+to match and restart Vite. In local development, saved Vite env files determine
+the map URL instead of inherited shell variables, preventing stale port overrides.
+Mode/local env files take precedence over `.env`. Production builds retain normal
+Vite environment precedence.
 
 ## Verification
 

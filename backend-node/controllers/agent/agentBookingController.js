@@ -47,7 +47,12 @@ const bookViewing = async (req, res, next) => {
             preferred_date,
             preferred_time,
             notes
-        }, req.user?.id || null);
+        }, req.user?.id || null).catch(error => {
+            const knownCodes = ['23502', '23503', '23505', '23514', '22P02', '42501', '42703', '42P01', 'PGRST200', 'PGRST204', 'PGRST205'];
+            const databaseCode = knownCodes.includes(error?.code) ? error.code : 'UNCLASSIFIED';
+            logger.error('Booking lead creation failed.', { event: 'booking_lead_failure', databaseCode });
+            throw error;
+        });
         if (!lead) throw new Error('Viewing request could not be confirmed.');
 
         // Only a verified session may create a conversation in an account's name.
@@ -58,12 +63,15 @@ const bookViewing = async (req, res, next) => {
 
             if (buyerId && buyerId !== id) {
                 // Find or create conversation
-                const { data: existingConv, error: lookupError } = await supabase
+                let conversationQuery = supabase
                     .from('conversations')
                     .select('id')
                     .eq('buyer_id', buyerId)
                     .eq('seller_id', id)
-                    .maybeSingle();
+                    .eq('type', 'agent');
+                conversationQuery = property_id ? conversationQuery.eq('property_id', property_id)
+                    : conversationQuery.is('property_id', null);
+                const { data: existingConv, error: lookupError } = await conversationQuery.maybeSingle();
                 if (lookupError) throw lookupError;
 
                 let convId = existingConv?.id;
@@ -76,7 +84,7 @@ const bookViewing = async (req, res, next) => {
                             seller_id: id,
                             type: 'agent',
                             property_id: property_id || null,
-                            lead_status: 'Showing'
+                            lead_status: 'New'
                         }])
                         .select()
                         .single();

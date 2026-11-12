@@ -41,6 +41,9 @@ const protect = async (req, res, next) => {
         if (!matchesSessionCredential(decoded, user)) {
             return res.status(401).json({ message: 'Session expired. Please sign in again.' });
         }
+        if (user.role === 'ADMIN' && process.env.ADMIN_MFA_ENABLED === 'true' && decoded.admin_mfa !== true) {
+            return res.status(401).json({ message: 'Sign in through Admin with multi-factor authentication.' });
+        }
         const { password_hash, ...publicUser } = user;
         req.user = publicUser;
         next(); // Allow request to proceed
@@ -70,7 +73,8 @@ const optionalAuth = async (req, res, next) => {
             .eq('id', decoded.id)
             .single();
 
-        if (!error && user && user.role !== 'BANNED' && matchesSessionCredential(decoded, user)) {
+        if (!error && user && user.role !== 'BANNED' && matchesSessionCredential(decoded, user)
+            && !(user.role === 'ADMIN' && process.env.ADMIN_MFA_ENABLED === 'true' && decoded.admin_mfa !== true)) {
             const { password_hash, ...publicUser } = user;
             req.user = publicUser;
         }

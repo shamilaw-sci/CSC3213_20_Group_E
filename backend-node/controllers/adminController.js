@@ -1,5 +1,6 @@
 const { issueSessionToken } = require('../utils/sessionToken');
 const bcrypt = require('bcryptjs');
+const adminMfa = require('../utils/adminMfa');
 const adminRepository = require('../repositories/adminRepository');
 const { sendListingStatusEmail } = require('../utils/emailService');
 const { checkSavedSearchMatches } = require('./savedSearchController');
@@ -7,6 +8,9 @@ const { checkSavedSearchMatches } = require('./savedSearchController');
 const login = async(req, res, next) => {
     try {
         const { email, password } = req.body;
+        if (typeof email !== 'string' || typeof password !== 'string' || password.length > 1024) {
+            return res.status(401).json({ message: 'Invalid admin credentials' });
+        }
         const { data: adminUser, error } = await adminRepository.getAdminUserByEmail(email);
 
         if (error || !adminUser) {
@@ -18,7 +22,13 @@ const login = async(req, res, next) => {
             return res.status(401).json({ message: "Invalid admin credentials" });
         }
 
-        const token = issueSessionToken({ ...adminUser, role: 'ADMIN' }, { extraClaims: { email } });
+        let mfa = {};
+        if (adminMfa.enabled()) {
+            mfa = await adminMfa.authenticate(adminUser, req.body);
+            if (mfa.rejected) return res.status(401).json({ message: 'Invalid or already used verification code' });
+            if (!mfa.verified) return res.status(200).json({ ...mfa, mfaRequired: true });
+        }
+        const token = issueSessionToken({ ...adminUser, role: 'ADMIN' }, { extraClaims: { email, admin_mfa: adminMfa.enabled() } });
 
         res.cookie('token', token, {
             httpOnly: true,
@@ -30,6 +40,7 @@ const login = async(req, res, next) => {
         return res.status(200).json({
             message: "Login successful",
             token,
+            recoveryCodes: mfa.recoveryCodes,
             admin: { id: adminUser.id, email, name: adminUser.name }
         });
     } catch (error) {

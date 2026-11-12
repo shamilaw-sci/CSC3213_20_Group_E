@@ -1,3 +1,4 @@
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from '../../context/UserAuthContext';
 import { useTheme } from '../../context/ThemeProvider';
@@ -11,6 +12,8 @@ import "./Navbar.css";
  */
 const Navbar = ({ transparent = false }) => {
   const navigate = useNavigate();
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const notificationsButtonRef = useRef(null);
   const { user, logout } = useAuth();
   const { isDark, changeTheme } = useTheme();
 
@@ -30,6 +33,8 @@ const Navbar = ({ transparent = false }) => {
 
   const isSeller = user?.role === "SELLER";
   const isAgent = user?.role === "AGENT";
+  const { data: bookingData } = usePoll("/agents/leads", 15000, { enabled: isAgent });
+  const pendingBookings = isAgent ? (bookingData?.leads || []).filter(lead => lead.is_direct_booking && (!lead.lead_status || lead.lead_status === 'New')) : [];
 
   return (
     <nav className={`transition-all duration-300 ${
@@ -319,32 +324,47 @@ const Navbar = ({ transparent = false }) => {
                 </button>
 
                 {/* Notifications Bell Dropdown */}
-                <div className="group h-full flex items-center relative cursor-pointer">
-                  <div className={`relative p-2 rounded-xl transition ${
+                <div className="h-full flex items-center relative"
+                  onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setNotificationsOpen(false); }}
+                  onKeyDown={event => { if (event.key === 'Escape') { setNotificationsOpen(false); notificationsButtonRef.current?.focus(); } }}>
+                  <button type="button" aria-label="Notifications" aria-expanded={notificationsOpen} aria-controls="navbar-notifications"
+                    ref={notificationsButtonRef} onClick={() => setNotificationsOpen(open => !open)}
+                    className={`relative p-2 rounded-xl transition ${
                     transparent 
                       ? 'text-white hover:bg-white/15' 
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
                   }`}>
                     <Bell className="w-5 h-5" />
-                    {unreadCount > 0 && (
+                    {(unreadCount > 0 || pendingBookings.length > 0) && (
                       <span className="absolute top-1.5 right-1.5 flex h-2 w-2 rounded-full bg-red-500"></span>
                     )}
-                  </div>
+                  </button>
 
                   {/* Dropdown Menu for Notifications */}
-                  <div className="absolute top-16 right-0 w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 rounded-2xl py-2 overflow-hidden">
+                  <div id="navbar-notifications" hidden={!notificationsOpen} className="absolute top-16 right-0 w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-xl z-50 rounded-2xl py-2 overflow-hidden">
                     <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
                       <h3 className="font-semibold text-gray-800 dark:text-gray-200 text-xs">
-                        Recent Inquiries
+                        Recent Inquiries & Appointments
                       </h3>
-                      {unreadCount > 0 && (
+                      {(unreadCount > 0 || pendingBookings.length > 0) && (
                         <span className="text-[10px] bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-full font-bold">
-                          {unreadCount} New
+                          {unreadCount > 0 ? `${unreadCount} unread` : `${pendingBookings.length} awaiting response`}
                         </span>
                       )}
                     </div>
                     <div className="max-h-64 overflow-y-auto">
-                      {recentMessages.length === 0 ? (
+                      {pendingBookings.slice(0, 5).map(booking => (
+                        <button
+                          type="button"
+                          key={`booking-${booking.id}`}
+                          onClick={() => { setNotificationsOpen(false); navigate(`/agent-dashboard?appointment=${encodeURIComponent(booking.id)}`); }}
+                          className="w-full text-left px-4 py-2.5 border-b border-gray-50 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        >
+                          <span className="block text-xs font-semibold text-gray-900 dark:text-gray-100">{booking.buyer?.name || 'Appointment request'} - {booking.properties?.title || 'General Consultation'}</span>
+                          <span className="block text-[11px] text-gray-500 dark:text-gray-400">{booking.lead_source || 'Appointment awaiting response'}</span>
+                        </button>
+                      ))}
+                      {recentMessages.length === 0 && pendingBookings.length === 0 ? (
                         <div className="px-4 py-6 text-center text-gray-500 dark:text-gray-400 text-xs">
                           No new messages
                         </div>

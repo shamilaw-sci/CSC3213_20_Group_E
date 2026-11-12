@@ -13,7 +13,7 @@ beforeEach(() => {
     jest.resetAllMocks();
     results = []; queries = [];
     db.from.mockImplementation(table => {
-        const q = { table, select: jest.fn().mockReturnThis(), eq: jest.fn().mockReturnThis(),
+        const q = { table, select: jest.fn().mockReturnThis(), eq: jest.fn().mockReturnThis(), is: jest.fn().mockReturnThis(),
             update: jest.fn().mockReturnThis(), insert: jest.fn().mockReturnThis(),
             maybeSingle: jest.fn().mockReturnThis(), single: jest.fn().mockReturnThis(),
             then(resolve, reject) { return Promise.resolve(results.shift()).then(resolve, reject); } };
@@ -62,6 +62,21 @@ test('required booking failure does not start optional work', async () => {
     expect(next).toHaveBeenCalledWith(error);
     expect(db.from).not.toHaveBeenCalled();
     expect(res.json).not.toHaveBeenCalled();
+    expect(logger.error).toHaveBeenCalledWith('Booking lead creation failed.', {
+        event: 'booking_lead_failure', databaseCode: 'UNCLASSIFIED'
+    });
+});
+
+test('booking diagnostics retain a known database code without private details', async () => {
+    const error = { code: '23503', message: 'private database detail', details: 'private contact' };
+    repo.createViewingLead.mockRejectedValue(error);
+    const next = jest.fn();
+    await bookViewing(request({ notes: 'private booking note' }), response(), next);
+    expect(next).toHaveBeenCalledWith(error);
+    expect(logger.error).toHaveBeenCalledWith('Booking lead creation failed.', {
+        event: 'booking_lead_failure', databaseCode: '23503'
+    });
+    expect(JSON.stringify(logger.error.mock.calls)).not.toMatch(/private/);
 });
 test('missing required booking outcome cannot report success', async () => {
     repo.createViewingLead.mockResolvedValue(null);

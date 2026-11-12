@@ -71,7 +71,7 @@ describe('Authentication & Security API', () => {
                 .send({
                     name: 'Hacker',
                     email: 'hacker@example.com',
-                    password: 'password123',
+                    password: 'password123-long',
                     role: 'ADMIN' // Malicious attempt
                 });
 
@@ -93,7 +93,7 @@ describe('Authentication & Security API', () => {
                 .send({
                     name: 'Test',
                     email: 'test@example.com',
-                    password: 'password123'
+                    password: 'password123-long'
                 });
 
             expect(res.statusCode).toEqual(400);
@@ -103,7 +103,7 @@ describe('Authentication & Security API', () => {
 
     describe('POST /api/auth/login', () => {
         it('should return HttpOnly cookie on successful login', async() => {
-            const hashedPassword = await bcrypt.hash('password123', 10);
+            const hashedPassword = await bcrypt.hash('password123-long', 10);
             mockSupabase.single.mockResolvedValueOnce({
                 data: { id: 1, email: 'test@example.com', password_hash: hashedPassword, role: 'BUYER' },
                 error: null
@@ -113,7 +113,7 @@ describe('Authentication & Security API', () => {
                 .post('/api/auth/login')
                 .send({
                     email: 'test@example.com',
-                    password: 'password123'
+                    password: 'password123-long'
                 });
 
             expect(res.statusCode).toEqual(200);
@@ -122,7 +122,7 @@ describe('Authentication & Security API', () => {
         });
 
         it('should return 400 for invalid credentials', async() => {
-            const hashedPassword = await bcrypt.hash('password123', 10);
+            const hashedPassword = await bcrypt.hash('password123-long', 10);
             mockSupabase.single.mockResolvedValueOnce({
                 data: { id: 1, email: 'test@example.com', password_hash: hashedPassword, role: 'BUYER' },
                 error: null

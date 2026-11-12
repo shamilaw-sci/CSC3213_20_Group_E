@@ -28,9 +28,9 @@ async function issueToken() {
 test('a reset link succeeds once and cannot be reused after the password changes', async () => {
     const token = await issueToken();
     const first = response();
-    await resetPassword({ body: { token, newPassword: 'new-password' } }, first, jest.fn());
+    await resetPassword({ body: { token, newPassword: 'new-password-long' } }, first, jest.fn());
     expect(first.status).toHaveBeenCalledWith(200);
-    expect(await bcrypt.compare('new-password', user.password_hash)).toBe(true);
+    expect(await bcrypt.compare('new-password-long', user.password_hash)).toBe(true);
     const second = response();
     await resetPassword({ body: { token, newPassword: 'another-password' } }, second, jest.fn());
     expect(second.status).toHaveBeenCalledWith(400);
@@ -41,14 +41,14 @@ test('database failure is reported rather than successful reset', async () => {
     const error = new Error('database unavailable');
     repo.resetPasswordOnce.mockRejectedValueOnce(error);
     const res = response(), next = jest.fn();
-    await resetPassword({ body: { token, newPassword: 'new-password' } }, res, next);
+    await resetPassword({ body: { token, newPassword: 'new-password-long' } }, res, next);
     expect(next).toHaveBeenCalledWith(error);
     expect(res.status).not.toHaveBeenCalledWith(200);
 });
 test('old links without password binding require a fresh reset request', async () => {
     const token = jwt.sign({ id: user.id, type: 'password_reset' }, process.env.JWT_SECRET);
     const res = response();
-    await resetPassword({ body: { token, newPassword: 'new-password' } }, res, jest.fn());
+    await resetPassword({ body: { token, newPassword: 'new-password-long' } }, res, jest.fn());
     expect(res.status).toHaveBeenCalledWith(400);
     expect(repo.resetPasswordOnce).not.toHaveBeenCalled();
 });
@@ -56,6 +56,6 @@ test('a concurrent password change prevents the stale reset from succeeding', as
     const token = await issueToken();
     repo.resetPasswordOnce.mockResolvedValueOnce(null);
     const res = response();
-    await resetPassword({ body: { token, newPassword: 'new-password' } }, res, jest.fn());
+    await resetPassword({ body: { token, newPassword: 'new-password-long' } }, res, jest.fn());
     expect(res.status).toHaveBeenCalledWith(400);
 });

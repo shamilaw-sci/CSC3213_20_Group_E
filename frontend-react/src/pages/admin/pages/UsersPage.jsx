@@ -1,5 +1,6 @@
 import { logClientError } from '../../../utils/clientLog';
 import React, { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from 'react-router-dom';
 import toast from "react-hot-toast";
 import { fetchUsers, banUser, unbanUser, updateUserRole, fetchRoleRequests, approveRoleRequest, rejectRoleRequest } from "../api/adminApi";
 import "../styles/admin-global.css";
@@ -53,12 +54,16 @@ const BanModal = ({ user, onConfirm, onCancel }) => {
 };
 
 const UsersPage = () => {
+  const [searchParams] = useSearchParams();
   const [users, setUsers] = useState([]);
   const [roleFilter, setRoleFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [banTarget, setBanTarget] = useState(null);
   const [toastMsg, setToastMsg] = useState(null);
-  const [activeSection, setActiveSection] = useState("users");
+  const [activeSection, setActiveSection] = useState(() => searchParams.get('section') === 'requests' ? 'requests' : 'users');
+  useEffect(() => {
+    if (searchParams.get('section') === 'requests') setActiveSection('requests');
+  }, [searchParams]);
   const [roleRequests, setRoleRequests] = useState([]);
   const [requestsLoading, setRequestsLoading] = useState(false);
   const [roleChangeSelections, setRoleChangeSelections] = useState({});

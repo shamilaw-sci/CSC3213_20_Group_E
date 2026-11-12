@@ -14,7 +14,7 @@ beforeEach(() => {
     ];
     filters = []; inserted = null;
     let deletion = false;
-    query = { select: jest.fn().mockReturnThis(), order: jest.fn().mockReturnThis(),
+    query = { select: jest.fn().mockReturnThis(), order: jest.fn().mockReturnThis(), limit: jest.fn().mockReturnThis(),
         eq: jest.fn((key, value) => { filters.push([key, value]); return query; }),
         delete: jest.fn(() => { deletion = true; return query; }),
         insert: jest.fn(data => { inserted = data; return query; }),
@@ -53,7 +53,8 @@ test.each([undefined, null, '', ' ', 1, {}])('missing/invalid identity %# fails 
 });
 test('signed-in lead owner comes from separate trusted argument, not contact/body owner', async () => {
     await repo.createViewingLead('agent', { client_name: 'Contact', client_email: 'shared@example.invalid',
-        client_phone: '12345678', buyer_id: 'spoofed' }, 'owner');
+        client_phone: '12345678', buyer_id: 'spoofed', preferred_date: '2026-11-14',
+        preferred_time: 'Morning (9:00 AM - 12:00 PM)', property_id: 'property' }, 'owner');
     expect(inserted[0]).toMatchObject({ buyer_id: 'owner', client_email: 'shared@example.invalid' });
 });
 test('guest lead stays unbound even with body owner ID', async () => {

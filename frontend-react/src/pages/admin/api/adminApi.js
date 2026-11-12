@@ -34,8 +34,8 @@ adminApi.interceptors.request.use((config) => {
 const unwrap = (promise) => promise.then((res) => res.data);
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
-export const adminLogin = (email, password) =>
-  unwrap(adminApi.post('/admin/login', { email, password }));
+export const adminLogin = (email, password, mfa = {}) =>
+  unwrap(adminApi.post('/admin/login', { email, password, ...mfa }));
 
 export const verifyAdminSession = () =>
   unwrap(adminApi.get('/admin/verify'));

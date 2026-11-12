@@ -19,6 +19,7 @@ vi.mock('framer-motion', () => ({
 }));
 
 beforeEach(() => {
+    localStorage.clear();
     vi.resetAllMocks();
     api.get.mockResolvedValue({ data: {} });
 });
@@ -135,13 +136,13 @@ test('parent selections and query tab survive leaving and returning without read
     expectNoMutation();
 });
 
-test('fresh mount resets local checklist selections to the original defaults', async () => {
+test('fresh mount restores saved checklist selections', async () => {
     const first = await mount();
     fireEvent.click(card(0));
     fireEvent.click(card(4));
     first.unmount();
     await mount();
-    originalItems.forEach((_, index) => expectChecked(index, index === 0 || index === 2));
+    originalItems.forEach((_, index) => expectChecked(index, index === 2 || index === 4));
     expect(api.get).toHaveBeenCalledTimes(8);
     expectNoMutation();
 });

@@ -37,6 +37,7 @@ const AddProperty = lazy(() => import('./pages/AddProperty'));
 const Register = lazy(() => import('./pages/Register'));
 const Login = lazy(() => import('./pages/Login'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
 const MyProperties = lazy(() => import('./pages/MyProperties'));
 const Messages = lazy(() => import('./pages/Messages'));
 const ProfileSettings = lazy(() => import('./pages/ProfileSettings'));
@@ -107,6 +108,7 @@ function App() {
             } />
             <Route path="/login" element={<Login />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/buy" element={<BuyPage />} />
             <Route path="/map" element={<MapSearch />} />
             <Route path="/feasibility" element={<Navigate to="/map?feasibility=1" replace />} />

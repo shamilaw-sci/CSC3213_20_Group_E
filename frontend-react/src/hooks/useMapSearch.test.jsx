@@ -11,7 +11,21 @@ describe('Map search navigation', () => {
         Object.assign(route, { pathname: '/map', search: '?search=Kandy', state: null });
         vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ properties: [] }) }));
     });
-    afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
+    afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); vi.restoreAllMocks(); });
+
+    test('uses the Go service default port when no map URL is configured', async () => {
+        vi.stubEnv('VITE_MAP_API_URL', '');
+        renderHook(() => useMapSearch());
+        await waitFor(() => expect(fetch).toHaveBeenCalled());
+        expect(fetch.mock.calls[0][0]).toBe('http://localhost:9090/api/map/search');
+    });
+
+    test('respects an explicitly configured map service URL', async () => {
+        vi.stubEnv('VITE_MAP_API_URL', 'https://maps.example.test/api/map/search');
+        renderHook(() => useMapSearch());
+        await waitFor(() => expect(fetch).toHaveBeenCalled());
+        expect(fetch.mock.calls[0][0]).toBe('https://maps.example.test/api/map/search');
+    });
 
     test('applies the home search query on initial navigation', () => {
         const { result } = renderHook(() => useMapSearch());
@@ -64,4 +78,23 @@ describe('Map search navigation', () => {
         expect(result.current.properties).toEqual([]);
         expect(result.current.loading).toBe(false);
     });
+});
+
+test('a new place query searches beyond the previous viewport and discards its results', async () => {
+    Object.assign(route, { pathname: '/map', search: '?search=Kandy', state: null });
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ok:true,json:async()=>({properties:[{id:'old',title:'Kandy'}]})}));
+    const {result,rerender}=renderHook(()=>useMapSearch());
+    await waitFor(()=>expect(result.current.properties).toHaveLength(1));
+    act(()=>result.current.handleBoundsChange({}));
+    route.search='?search=Galle';
+    rerender();
+    await waitFor(()=>expect(result.current.currentPolygon).toContain('79.2 10.1'));
+    expect(result.current.properties).toEqual([]);
+});
+
+test('initial place search is not narrowed by the mount viewport before results arrive', () => {
+    Object.assign(route,{pathname:'/map',search:'?search=Galle',state:null});
+    const {result}=renderHook(()=>useMapSearch());
+    act(()=>result.current.handleBoundsChange({}));
+    expect(result.current.currentPolygon).toContain('79.2 10.1');
 });

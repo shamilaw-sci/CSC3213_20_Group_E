@@ -25,3 +25,10 @@ test('presents statistical insight as an asking-price comparison with sample siz
     expect(screen.getByText(/8 comparable listings/)).toBeInTheDocument();
     expect(screen.getByText(/asking prices/)).toBeInTheDocument();
 });
+test('shows both exact comparison values without requiring hover over a tiny bar', async () => {
+    render(<PriceAnalyticsDashboard propertyId="p1" insight={{ label:'Fair Price',level:'fair_price',sampleSize:3,percentVsAverage:0,pricePerSqft:10000,averagePricePerSqft:10000 }} />);
+    expect(await screen.findByText('This property / sqft')).toBeInTheDocument();
+    const values = screen.getAllByRole('definition');
+    expect(values).toHaveLength(2);
+    values.forEach(value => expect(value).toHaveTextContent('LKR 10,000'));
+});

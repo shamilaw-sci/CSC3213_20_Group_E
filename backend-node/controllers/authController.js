@@ -1,4 +1,5 @@
 const bcrypt = require('bcryptjs');
+const { validNewPassword, newPasswordMessage } = require('../validators/newPassword');
 const { randomUUID } = require('node:crypto');
 const { parseProfileInput } = require('../validators/profileInput');
 const jwt = require('jsonwebtoken');
@@ -6,6 +7,7 @@ const { createHmac } = require('node:crypto');
 const { sendWelcomeEmail, sendPasswordResetEmail } = require('../utils/emailService');
 const userRepository = require('../repositories/userRepository');
 const { issueSessionToken } = require('../utils/sessionToken');
+const emailVerification = require('../utils/emailVerification');
 const passwordResetVersion = (passwordHash) => createHmac('sha256', process.env.JWT_SECRET)
     .update(passwordHash || '').digest('hex');
 
@@ -48,7 +50,11 @@ const registerUser = async(req, res, next) => {
         if (role === 'AGENT') safeRole = 'PENDING_AGENT';
 
         // Insert new user into database
-        const newUser = await userRepository.createUser({ name, email, password_hash, role: safeRole });
+        const requiresVerification = emailVerification.enabled();
+        const newUser = await userRepository.createUser({
+            name, email, password_hash, role: safeRole,
+            ...(requiresVerification ? { email_verification_required: true } : {})
+        });
 
         // If registering as an agent, create an initial agent_profiles record
         if (safeRole === 'PENDING_AGENT' && newUser && newUser[0]) {
@@ -62,14 +68,21 @@ const registerUser = async(req, res, next) => {
         }
 
         const registeredUser = newUser[0];
+        sendWelcomeEmail(email, name).catch(() => {
+            console.error('welcome_email_failed');
+        });
+        if (requiresVerification) {
+            await emailVerification.sendChallenge(registeredUser, 'signup').catch(() => {
+                console.error('verification_email_failed');
+            });
+            return res.status(201).json({
+                verificationRequired: true,
+                message: 'Check your inbox to verify your email before signing in.'
+            });
+        }
         const token = issueSessionToken({ ...registeredUser, password_hash });
 
         setTokenCookie(res, token);
-
-        // Send welcome email asynchronously (non-blocking)
-        sendWelcomeEmail(email, name).catch((e) => {
-            console.error('welcome_email_failed');
-        });
 
         res.status(201).json({
             message: "User registered successfully.",
@@ -116,6 +129,10 @@ const loginUser = async(req, res, next) => {
                 is_admin: true,
                 admin_login_url: "/admin/login"
             });
+        }
+
+        if (user.email_verification_required && !user.email_verified_at) {
+            return res.status(403).json({ message: 'Verify your email before signing in.' });
         }
 
         // Generate JWT token
@@ -200,8 +217,8 @@ const resetPassword = async(req, res, next) => {
             return res.status(400).json({ message: "Reset token and new password are required." });
         }
 
-        if (newPassword.length < 6) {
-            return res.status(400).json({ message: "Password must be at least 6 characters." });
+        if (!validNewPassword(newPassword)) {
+            return res.status(400).json({ message: newPasswordMessage });
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -283,6 +300,24 @@ const updateProfile = async(req, res, next) => {
             if (existingUser && existingUser.id !== user.id) {
                 return res.status(409).json({ message: "This email address is already in use by another account." });
             }
+            if (emailVerification.enabled()) {
+                if (user.role === 'ADMIN' || !user.password_hash) {
+                    return res.status(403).json({ message: 'This account requires a separate email change process.' });
+                }
+                if (!currentPassword) {
+                    return res.status(400).json({ message: 'Enter your current password to change your email.' });
+                }
+                if (!await bcrypt.compare(currentPassword, user.password_hash)) {
+                    return res.status(400).json({ message: 'Incorrect current password.' });
+                }
+                if (!await emailVerification.sendChallenge(user, 'email_change', cleanEmail)) {
+                    return res.status(429).json({ message: 'Wait one minute before requesting another link.' });
+                }
+                return res.json({
+                    emailChangePending: true,
+                    message: 'Check your new inbox. Your sign-in email stays the same until you confirm the link.'
+                });
+            }
             updates.email = cleanEmail;
         }
 
@@ -303,8 +338,8 @@ const updateProfile = async(req, res, next) => {
                 }
             }
 
-            if (password.length < 6) {
-                return res.status(400).json({ message: "New password must be at least 6 characters long." });
+            if (!validNewPassword(password)) {
+                return res.status(400).json({ message: newPasswordMessage });
             }
 
             const salt = await bcrypt.genSalt(10);

@@ -2,6 +2,15 @@ import React from 'react';
 import { Phone, Send, MessageSquare } from 'lucide-react';
 
 const AgentMessagesPanel = ({ leads, selectedLead, setSelectedLead, chatMessages, user, messagesEndRef, handleSendMessage, messageInput, setMessageInput, sendingMsg }) => {
+    const seenThreads = new Set();
+    const inboxLeads = leads.filter(lead => {
+        const threadId = lead.is_direct_booking ? lead.conversation_id : lead.conversation_id || lead.id;
+        if (!threadId) return true;
+        if (seenThreads.has(threadId)) return false;
+        seenThreads.add(threadId);
+        return true;
+    });
+    const chatAvailable = selectedLead && (!selectedLead.is_direct_booking || !!selectedLead.conversation_id);
     return (
                     <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden h-[600px] flex flex-col md:flex-row animate-in fade-in duration-150">
                         
@@ -9,17 +18,17 @@ const AgentMessagesPanel = ({ leads, selectedLead, setSelectedLead, chatMessages
                         <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800 flex flex-col bg-slate-50/50 dark:bg-slate-950/40 shrink-0">
                             <div className="p-4 border-b border-slate-200 dark:border-slate-800">
                                 <h4 className="text-xs font-black uppercase tracking-wider text-slate-500">
-                                    Buyer Inquiries ({leads.length})
+                                    Buyer Inquiries ({inboxLeads.length})
                                 </h4>
                             </div>
 
                             <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
-                                {leads.length === 0 ? (
+                                {inboxLeads.length === 0 ? (
                                     <div className="py-12 text-center text-xs text-slate-400">
                                         No active conversations yet
                                     </div>
                                 ) : (
-                                    leads.map((lead) => (
+                                    inboxLeads.map((lead) => (
                                         <button
                                             key={lead.id}
                                             type="button"
@@ -48,7 +57,7 @@ const AgentMessagesPanel = ({ leads, selectedLead, setSelectedLead, chatMessages
                         </div>
 
                         {/* Live Chat Panel (Right Side) */}
-                        <div className="flex-1 flex flex-col bg-white dark:bg-slate-900 justify-between">
+                        <div className="min-h-0 min-w-0 flex-1 flex flex-col bg-white dark:bg-slate-900 justify-between">
                             {selectedLead ? (
                                 <>
                                     {/* Chat Header */}
@@ -78,8 +87,10 @@ const AgentMessagesPanel = ({ leads, selectedLead, setSelectedLead, chatMessages
                                     </div>
 
                                     {/* Messages Stream */}
-                                    <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3 custom-scrollbar">
-                                        {chatMessages.length === 0 ? (
+                                    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-3 custom-scrollbar">
+                                        {!chatAvailable ? (
+                                            <p className="py-12 text-center text-sm text-slate-500">Chat is unavailable for this booking. Contact the buyer using their phone or email, or ask them to start a chat.</p>
+                                        ) : chatMessages.length === 0 ? (
                                             <div className="py-20 text-center text-xs text-slate-400">
                                                 Start the conversation with this buyer
                                             </div>
@@ -103,7 +114,7 @@ const AgentMessagesPanel = ({ leads, selectedLead, setSelectedLead, chatMessages
                                     </div>
 
                                     {/* Message Input Box */}
-                                    <form onSubmit={handleSendMessage} className="p-3 border-t border-slate-200 dark:border-slate-800 flex gap-2">
+                                    {chatAvailable && <form onSubmit={handleSendMessage} className="p-3 border-t border-slate-200 dark:border-slate-800 flex gap-2">
                                         <input
                                             type="text"
                                             placeholder="Type your reply to buyer..."
@@ -119,7 +130,7 @@ const AgentMessagesPanel = ({ leads, selectedLead, setSelectedLead, chatMessages
                                             <Send className="w-3.5 h-3.5" />
                                             <span>Send</span>
                                         </button>
-                                    </form>
+                                    </form>}
                                 </>
                             ) : (
                                 <div className="flex-1 flex flex-col items-center justify-center text-center p-6">

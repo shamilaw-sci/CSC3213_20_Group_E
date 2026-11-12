@@ -1,4 +1,6 @@
 const supabase = require('../config/supabase');
+const { getBookingSlot, isBookingSlotConflict } = require('../utils/appointmentSlot');
+const { publicError } = require('../utils/publicError');
 const logger = require('../utils/logger');
 
 const agentRepository = {
@@ -54,6 +56,19 @@ const agentRepository = {
             throw new Error('Valid appointment owner required.');
         }
         const { client_name, client_email, client_phone, property_id, viewing_type, preferred_date, preferred_time, notes } = bookingData;
+        const slot = getBookingSlot(bookingData, buyerId !== null);
+        const duplicateError = () => publicError(property_id ? 'BOOKING_DUPLICATE' : 'CONSULTATION_DUPLICATE');
+        if (buyerId !== null) {
+            let query = supabase.from('leads').select('lead_id')
+                .eq('buyer_id', buyerId)
+                .eq('booking_date', slot.booking_date)
+                .eq('booking_time_window', slot.booking_time_window);
+            query = property_id ? query.eq('property_id', property_id)
+                : query.is('property_id', null).eq('assigned_agent_id', agentId);
+            const { data: existing, error: lookupError } = await query.limit(1);
+            if (lookupError) throw lookupError;
+            if (existing?.length) throw duplicateError();
+        }
         
         let leadSource = viewing_type ? `Booking (${viewing_type}): ${preferred_date || 'Flexible'} ${preferred_time || ''}` : 'Direct Profile Booking';
         if (notes && notes.trim()) {
@@ -65,6 +80,7 @@ const agentRepository = {
             .insert([{
                 assigned_agent_id: agentId,
                 buyer_id: buyerId,
+                ...slot,
                 property_id: property_id || null,
                 client_name,
                 client_email,
@@ -75,7 +91,10 @@ const agentRepository = {
             }])
             .select();
         
-        if (error) throw error;
+        if (error) {
+            if (buyerId !== null && isBookingSlotConflict(error)) throw duplicateError();
+            throw error;
+        }
         return data ? data[0] : null;
     },
 
@@ -119,6 +138,7 @@ const agentRepository = {
 
         const convWithMessages = (convData || []).map(conv => ({
             ...conv,
+            conversation_id: conv.id,
             notes: messagesMap[conv.id] || null,
             last_message: messagesMap[conv.id] || 'Inquiry conversation opened'
         }));
@@ -127,14 +147,14 @@ const agentRepository = {
         const { data: directData, error: directError } = await supabase
             .from('leads')
             .select(`
-                lead_id, assigned_agent_id, property_id, client_name, client_email, client_phone,
+                lead_id, assigned_agent_id, buyer_id, property_id, client_name, client_email, client_phone,
                 lead_source, pre_approval_status, timeframe_to_move, lifecycle_status, created_at, updated_at,
                 properties (id, title, images, price)
             `)
             .eq('assigned_agent_id', agentId)
             .order('created_at', { ascending: false });
 
-        if (directError) console.error('direct_leads_fetch_failed');
+        if (directError) throw directError;
 
         const normalizedDirectLeads = (directData || []).map(l => {
             // Map lead_lifecycle to CRM stages: 'New', 'Contacted', 'Showing', 'Offer', 'Closed'
@@ -147,8 +167,14 @@ const agentRepository = {
             const noteMatch = l.lead_source?.match(/Note:\s*["']?([^"']+)["']?/i);
             const extractedNotes = noteMatch ? noteMatch[1].trim() : null;
 
+            const conversation = l.buyer_id ? convWithMessages.find(c =>
+                c.type === 'agent' && c.buyer_id === l.buyer_id && (c.property_id || null) === (l.property_id || null)
+            ) : null;
             return {
                 id: l.lead_id,
+                buyer_id: l.buyer_id,
+                conversation_id: conversation?.id || null,
+                last_message: conversation?.last_message || null,
                 is_direct_booking: true,
                 type: 'booking',
                 property_id: l.property_id,
@@ -170,7 +196,8 @@ const agentRepository = {
         });
 
         // Combine both
-        const combined = [...convWithMessages, ...normalizedDirectLeads];
+        const linkedConversationIds = new Set(normalizedDirectLeads.map(l => l.conversation_id).filter(Boolean));
+        const combined = [...convWithMessages.filter(c => !linkedConversationIds.has(c.id)), ...normalizedDirectLeads];
         combined.sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at));
         return combined;
     },

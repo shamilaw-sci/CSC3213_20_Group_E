@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { fetchDashboardStats } from "../api/adminApi";
+import { fetchDashboardStats, fetchRoleRequests } from "../api/adminApi";
 import { useTheme } from "../../../context/ThemeProvider";
 import { Bell, Search, CheckCircle2, Clock, MessageSquare, ArrowRight, ShieldCheck, X, Sun, Moon } from "lucide-react";
 
@@ -21,6 +21,8 @@ const Topbar = () => {
   const navigate = useNavigate();
   const { isDark, changeTheme } = useTheme();
   const [pendingCount, setPendingCount] = useState(0);
+  const [roleCount, setRoleCount] = useState(0);
+  const actionCount = pendingCount + roleCount;
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const notifRef = useRef(null);
@@ -38,6 +40,9 @@ const Topbar = () => {
     fetchDashboardStats()
       .then((data) => setPendingCount(data.pendingApproval || 0))
       .catch(() => setPendingCount(0));
+    fetchRoleRequests('pending')
+      .then(data => setRoleCount(data.requests?.length || 0))
+      .catch(() => {});
   };
 
   useEffect(() => {
@@ -120,7 +125,7 @@ const Topbar = () => {
         <div className="relative" ref={notifRef}>
             <button
                 type="button"
-                onClick={() => setIsNotifOpen(!isNotifOpen)}
+                onClick={() => { loadStats(); setIsNotifOpen(!isNotifOpen); }}
                 className={`p-2.5 rounded-2xl transition-all duration-200 cursor-pointer relative border ${
                     isNotifOpen 
                         ? 'bg-blue-600/20 text-blue-600 dark:text-blue-400 border-blue-500/50 ring-2 ring-blue-500/30' 
@@ -129,9 +134,9 @@ const Topbar = () => {
                 title="Notifications"
             >
                 <Bell className="w-5 h-5" />
-                {pendingCount > 0 && (
+                {actionCount > 0 && (
                     <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 bg-amber-500 text-slate-950 text-[10px] font-black flex items-center justify-center rounded-full shadow-md border-2 border-white dark:border-slate-900 animate-pulse">
-                        {pendingCount}
+                        {actionCount}
                     </span>
                 )}
             </button>
@@ -144,9 +149,9 @@ const Topbar = () => {
                     <div className="p-4 px-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950/60">
                         <div className="flex items-center gap-2">
                             <h4 className="font-bold text-sm text-slate-900 dark:text-white">Admin Queue & Alerts</h4>
-                            {pendingCount > 0 && (
+                            {actionCount > 0 && (
                                 <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30">
-                                    {pendingCount} Action{pendingCount > 1 ? 's' : ''}
+                                    {actionCount} Action{actionCount > 1 ? 's' : ''}
                                 </span>
                             )}
                         </div>
@@ -161,6 +166,12 @@ const Topbar = () => {
 
                     {/* Notification Items List */}
                     <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/80 p-2">
+                        {roleCount > 0 && (
+                            <button type="button" className="w-full p-3.5 text-left rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/70 text-sm font-bold text-amber-600 dark:text-amber-400"
+                                onClick={() => { setIsNotifOpen(false); navigate('/admin/users?section=requests'); }}>
+                                {roleCount} seller upgrade request{roleCount === 1 ? '' : 's'} awaiting review
+                            </button>
+                        )}
                         
                         {/* 1. Pending Property Approvals */}
                         {pendingCount > 0 ? (

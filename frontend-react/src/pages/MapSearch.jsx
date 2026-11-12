@@ -3,10 +3,10 @@
  * @description Map-based property search component allowing users to filter properties by drawing freehand polygons or selecting districts.
  */
 
-import React, { useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import React, { useEffect, useRef, useState } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, Polygon, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useMapSearch } from '../hooks/useMapSearch';
 import FeasibilityCalculator from '../components/map/FeasibilityCalculator';
 import MarkerClusterGroup from 'react-leaflet-cluster';
@@ -43,15 +43,50 @@ const getSafeImageUrl = (prop) => {
     return null;
 };
 
+export function SearchResultViewport({ properties }) {
+    const map = useMap();
+    const focused = useRef(false);
+
+    useEffect(() => {
+        if (focused.current) return;
+        const coordinates = properties
+            .filter(({ latitude, longitude }) => latitude != null && longitude != null && String(latitude).trim() !== '' && String(longitude).trim() !== '')
+            .map(({ latitude, longitude }) => [Number(latitude), Number(longitude)])
+            .filter(([latitude, longitude]) => Number.isFinite(latitude) && Number.isFinite(longitude)
+                && Math.abs(latitude) <= 90 && Math.abs(longitude) <= 180);
+        if (!coordinates.length) return;
+
+        focused.current = true;
+        map.fitBounds(coordinates, { padding: [36, 36], maxZoom: 14 });
+    }, [map, properties]);
+
+    return null;
+}
+
+export function SavedSearchBoundary({ polygon }) {
+    const map = useMap();
+    const match = typeof polygon === 'string' && polygon.match(/^POLYGON\s*\(\(\s*(.*?)\s*\)\)$/i);
+    const positions = match ? match[1].split(',').map(pair => pair.trim().split(/\s+/).map(Number)).map(([lng, lat]) => [lat, lng]) : [];
+    const valid = positions.length >= 4 && positions.every(([lat, lng]) => Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180);
+    useEffect(() => {
+        if (valid) map.fitBounds(positions, { padding: [36, 36], maxZoom: 14 });
+        // The saved polygon string is the stable boundary identity.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [map, polygon]);
+    return valid ? <Polygon positions={positions} pathOptions={{ color: '#2563eb', weight: 3, fillOpacity: 0.08 }} /> : null;
+}
+
 /**
  * Main MapSearch Component.
  */
 const MapSearch = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [mapStyle, setMapStyle] = useState('streets'); // 'streets' | 'satellite' | 'dark'
 
     const {
         loading,
+        resultSearchTerm,
         error,
         activeMarkerId,
         setActiveMarkerId,
@@ -175,6 +210,8 @@ const MapSearch = () => {
                     </div>
                     
                     <MapContainer center={[7.8731, 80.7718]} zoom={8} style={{ height: '100%', width: '100%' }}>
+                        {searchMode === 'polygon' && currentPolygon === location.state?.savedSearch?.polygon && <SavedSearchBoundary polygon={currentPolygon} />}
+                        {filters.searchTerm && resultSearchTerm === filters.searchTerm && searchMode !== 'polygon' && <SearchResultViewport key={filters.searchTerm} properties={filteredProperties} />}
                         <MapEvents onBoundsChange={handleBoundsChange} onMapClick={handleMapClick} searchMode={searchMode} />
                         
                         <TileLayer 

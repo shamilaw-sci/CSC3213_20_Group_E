@@ -58,7 +58,7 @@ const SecuritySettings = ({ user, formData, handleChange, handleSubmit, loading,
                         <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Phone Number</label>
                         <div className="relative">
                             <Phone className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
-                            <input type="text" name="phone" value={formData.phone} onChange={handleChange} placeholder="+94 77 123 4567" className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white transition-all outline-none font-medium text-sm" />
+                            <input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="+94 77 123 4567" className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white transition-all outline-none font-medium text-sm" />
                         </div>
                     </div>
 
@@ -67,7 +67,7 @@ const SecuritySettings = ({ user, formData, handleChange, handleSubmit, loading,
                         
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Current Password (Required for changes)</label>
+                                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Current Password (Required for email or password changes)</label>
                                 <div className="relative">
                                     <Lock className="absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
                                     <input type="password" name="currentPassword" value={formData.currentPassword} onChange={handleChange} placeholder="••••••••" className="w-full pl-11 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white outline-none font-medium" />

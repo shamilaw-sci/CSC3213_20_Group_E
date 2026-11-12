@@ -1,5 +1,6 @@
 jest.mock('../repositories/userRepository',()=>({findFullUserById:jest.fn(),findByEmail:jest.fn(),uploadAvatar:jest.fn(),updateProfile:jest.fn()}));
 jest.mock('../utils/emailService',()=>({}));
+jest.mock('../utils/emailVerification',()=>({enabled:()=>false}));
 jest.mock('bcryptjs',()=>({compare:jest.fn(),genSalt:jest.fn(),hash:jest.fn()}));
 const repo=require('../repositories/userRepository'),bcrypt=require('bcryptjs');
 const {updateProfile}=require('../controllers/authController');

@@ -1,3 +1,4 @@
+import useDueDiligence from '../hooks/useDueDiligence';
 import { logClientError } from '../utils/clientLog';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/UserAuthContext';
@@ -19,6 +20,7 @@ import DueDiligencePanel from '../components/profile/DueDiligencePanel';
 import ProfileHeader from '../components/profile/ProfileHeader';
 import ProfileSummaryCards from '../components/profile/ProfileSummaryCards';
 import ProfileTabs from '../components/profile/ProfileTabs';
+import SellerRequestNotice from '../components/profile/SellerRequestNotice';
 const ProfileSettings = () => {
     const { user, login } = useAuth();
     const { theme, changeTheme } = useTheme();
@@ -132,18 +134,7 @@ const ProfileSettings = () => {
     }, [calcPrice, calcDownpaymentPercent, calcTenureYears, calcInterestRate]);
 
     // ── Due Diligence Checklist State ────────────────────────────────────────
-    const [checkedItems, setCheckedItems] = useState({
-        extractSearch: true,
-        titleRegistration: false,
-        surveyPlan: true,
-        streetLine: false,
-        nonVesting: false,
-        encumbranceFree: false
-    });
-
-    const toggleCheckItem = (key) => {
-        setCheckedItems(prev => ({ ...prev, [key]: !prev[key] }));
-    };
+    const { checkedItems, toggleCheckItem } = useDueDiligence(user?.id);
 
     // ── Fetch Initial Data ───────────────────────────────────────────────────
     useEffect(() => {
@@ -222,6 +213,18 @@ const ProfileSettings = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         
+        const phone = formData.phone;
+        const compactPhone = phone.replace(/[\s().-]/g, '');
+        const validPhone = !phone || (/^[+\d\s().-]+$/.test(phone) && (
+            /^0[1-9]\d{8}$/.test(compactPhone) ||
+            /^(?:\+|00)(?!94)[1-9]\d{7,14}$/.test(compactPhone) ||
+            /^(?:\+|00)94[1-9]\d{8}$/.test(compactPhone)
+        ));
+        if (!validPhone || phone.length > 20) {
+            setError('Enter a valid phone number, such as 077 123 4567 or +94 77 123 4567, or leave it blank.');
+            return;
+        }
+
         if (formData.password && formData.password !== formData.confirmPassword) {
             setError("Passwords do not match");
             return;
@@ -246,11 +249,16 @@ const ProfileSettings = () => {
             };
 
             if (formData.password) {
-                updatePayload.currentPassword = formData.currentPassword;
                 updatePayload.password = formData.password;
             }
+            if (formData.currentPassword) updatePayload.currentPassword = formData.currentPassword;
 
             const res = await api.put('/auth/profile', updatePayload);
+            if (res.data.emailChangePending) {
+                setMessage(res.data.message);
+                setFormData(prev => ({ ...prev, currentPassword: '' }));
+                return;
+            }
             if (updatePayload.password && res.data.user?.role === 'ADMIN' && typeof res.data.token === 'string') {
                 try {
                     localStorage.setItem('admin_token', res.data.token);
@@ -360,6 +368,7 @@ const ProfileSettings = () => {
 
             {/* ── Navigation Tabs ────────────────────────────────────────────── */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full mt-8 flex-1">
+                {user?.role === 'BUYER' && <SellerRequestNotice userId={user.id} />}
                 <ProfileTabs
                     userRole={user?.role}
                     activeTab={activeTab}

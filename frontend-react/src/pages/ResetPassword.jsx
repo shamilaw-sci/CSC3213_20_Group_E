@@ -5,6 +5,7 @@ import api from '../context/api';
 import { useAuth } from '../context/UserAuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function ResetPassword() {
     const auth = useAuth();
@@ -12,6 +13,8 @@ export default function ResetPassword() {
     const token = params.get('token');
     const [password, setPassword] = useState('');
     const [confirm, setConfirm] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -20,7 +23,7 @@ export default function ResetPassword() {
         event.preventDefault();
         if (!token || loading || success) return;
         setError('');
-        if (password.length < 6) return setError('Password must be at least 6 characters.');
+        if ([...password].length < 15 || new TextEncoder().encode(password).length > 72) return setError('Password must be at least 15 characters and at most 72 UTF-8 bytes.');
         if (password !== confirm) return setError('Passwords do not match.');
         setLoading(true);
         try {
@@ -54,9 +57,19 @@ export default function ResetPassword() {
                 {success ? <p role="status" className="text-emerald-600 mb-6">{success}</p> : (
                     <form onSubmit={submit} className="space-y-5">
                         <div><label htmlFor="new-password" className="block text-sm font-medium mb-2">New password</label>
-                            <Input id="new-password" type="password" autoComplete="new-password" required minLength={6} value={password} onChange={e => setPassword(e.target.value)} /></div>
+                            <div className="relative">
+                                <Input id="new-password" type={showPassword ? 'text' : 'password'} className="pr-12" autoComplete="new-password" required minLength={15} value={password} onChange={e => setPassword(e.target.value)} />
+                                <button type="button" aria-label={showPassword ? 'Hide new password' : 'Show new password'} aria-pressed={showPassword} onClick={() => setShowPassword(value => !value)} className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-md text-slate-500 hover:text-slate-900 dark:hover:text-white focus-visible:outline-2 focus-visible:outline-emerald-600">
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div></div>
                         <div><label htmlFor="confirm-password" className="block text-sm font-medium mb-2">Confirm password</label>
-                            <Input id="confirm-password" type="password" autoComplete="new-password" required minLength={6} value={confirm} onChange={e => setConfirm(e.target.value)} /></div>
+                            <div className="relative">
+                                <Input id="confirm-password" type={showConfirm ? 'text' : 'password'} className="pr-12" autoComplete="new-password" required minLength={15} value={confirm} onChange={e => setConfirm(e.target.value)} />
+                                <button type="button" aria-label={showConfirm ? 'Hide confirm password' : 'Show confirm password'} aria-pressed={showConfirm} onClick={() => setShowConfirm(value => !value)} className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-md text-slate-500 hover:text-slate-900 dark:hover:text-white focus-visible:outline-2 focus-visible:outline-emerald-600">
+                                    {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div></div>
                         <Button type="submit" disabled={!token || loading} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white">{loading ? 'Resetting…' : 'Reset password'}</Button>
                     </form>
                 )}

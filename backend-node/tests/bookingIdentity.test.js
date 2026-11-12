@@ -7,7 +7,7 @@ const { issueSessionToken } = require('../utils/sessionToken');
 jest.mock('../config/supabase', () => {
     const db = {
         from: jest.fn().mockReturnThis(), select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(), insert: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(), is: jest.fn().mockReturnThis(), insert: jest.fn().mockReturnThis(),
         single: jest.fn(), maybeSingle: jest.fn(),
         then(resolve) { resolve({ data: [], error: null }); },
     };
@@ -20,13 +20,14 @@ const agentRepository = require('../repositories/agentRepository');
 const app = express();
 app.use(express.json(), cookieParser());
 app.use('/agents', require('../routes/agentRoutes'));
+app.use(require('../middleware/errorHandler'));
 
 const agentId = '22222222-2222-4222-8222-222222222222';
 const buyerId = '11111111-1111-4111-8111-111111111111';
 const booking = {
     client_name: 'Test Visitor', client_email: 'existing@example.test',
     client_phone: '0000000000', viewing_type: 'In-Person Property Tour',
-    preferred_date: '2026-10-26', preferred_time: 'Morning', notes: 'Test booking',
+    preferred_date: '2026-10-26', preferred_time: 'Morning (9:00 AM - 12:00 PM)', notes: 'Test booking',
 };
 
 describe('Booking identity at the API boundary', () => {
@@ -35,6 +36,23 @@ describe('Booking identity at the API boundary', () => {
         agentRepository.createViewingLead.mockResolvedValue({ lead_id: 'test-lead' });
         db.single.mockResolvedValue({ data: { id: buyerId, role: 'BUYER', email: 'buyer@example.test', password_hash: null }, error: null });
         db.maybeSingle.mockResolvedValue({ data: { id: 'existing-conversation' }, error: null });
+    });
+
+    test('returns a clear duplicate response and does not send another conversation message', async () => {
+        const { publicError } = require('../utils/publicError');
+        agentRepository.createViewingLead.mockRejectedValue(publicError('BOOKING_DUPLICATE'));
+        const token = issueSessionToken({ id: buyerId, role: 'BUYER', password_hash: null });
+        const response = await request(app).post(`/agents/${agentId}/book-viewing`)
+            .set('Cookie', `token=${token}`).send(booking);
+        expect(response.status).toBe(409);
+        expect(response.body.message).toBe('You already have an appointment for this property and time slot.');
+        expect(db.insert).not.toHaveBeenCalled();
+    });
+
+    test.each([{ preferred_date: '2026-02-30' }, { preferred_time: 'Morning' }])('rejects invalid slot at the route boundary %#', async change => {
+        const response = await request(app).post(`/agents/${agentId}/book-viewing`).send({ ...booking, ...change });
+        expect(response.status).toBe(400);
+        expect(agentRepository.createViewingLead).not.toHaveBeenCalled();
     });
 
     test('preserves guest bookings without looking up or impersonating registered accounts', async () => {
@@ -78,4 +96,16 @@ describe('Booking identity at the API boundary', () => {
         expect(db.from).not.toHaveBeenCalled();
         expect(db.insert).not.toHaveBeenCalled();
     });
+});
+
+test('booking conversation starts as New and lookup is scoped to its property', async()=>{
+ const token=issueSessionToken({id:buyerId,role:'BUYER',password_hash:null});
+ db.maybeSingle.mockResolvedValue({data:null,error:null});
+ db.single.mockResolvedValueOnce({data:{id:buyerId,role:'BUYER',password_hash:null},error:null}).mockResolvedValueOnce({data:{id:'new-thread'},error:null});
+ agentRepository.createViewingLead.mockResolvedValue({lead_id:'new-booking'});
+ const response=await request(app).post(`/agents/${agentId}/book-viewing`).set('Cookie',`token=${token}`).send({...booking,property_id:'33333333-3333-4333-8333-333333333333'});
+ expect(response.status).toBe(201);
+ expect(db.eq).toHaveBeenCalledWith('type','agent');
+ expect(db.eq).toHaveBeenCalledWith('property_id','33333333-3333-4333-8333-333333333333');
+ expect(db.insert).toHaveBeenCalledWith([expect.objectContaining({type:'agent',lead_status:'New'})]);
 });

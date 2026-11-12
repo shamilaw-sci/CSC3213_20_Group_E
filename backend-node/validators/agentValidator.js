@@ -1,4 +1,5 @@
 const { z } = require('zod');
+const { TIME_WINDOWS } = require('../utils/appointmentSlot');
 
 const reviewSchema = z.object({
   body: z.object({
@@ -46,8 +47,8 @@ const bookViewingSchema = z.object({
     client_phone: z.string().min(6, "Valid phone number is required"),
     property_id: z.string().uuid().optional().nullable().or(z.literal('')),
     viewing_type: z.string().max(100).default('In-Person Property Tour'),
-    preferred_date: z.string().max(50).optional().nullable(),
-    preferred_time: z.string().max(50).optional().nullable(),
+    preferred_date: z.iso.date().optional().nullable(),
+    preferred_time: z.enum(TIME_WINDOWS).optional().nullable(),
     notes: z.string().max(2000).optional().nullable()
   }),
   params: z.object({

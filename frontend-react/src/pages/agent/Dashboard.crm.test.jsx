@@ -54,3 +54,11 @@ test('confirmation, modal stage, delete cancellation and direct chat use parent 
   fireEvent.click(within(dossier()).getByRole('button', { name: 'Delete Lead' })); expect(window.confirm).toHaveBeenCalled(); expect(mocks.api.delete).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Direct Chat' })); expect(screen.queryByText('Appointment & Lead Details')).not.toBeInTheDocument(); expect(screen.getByText('Buyer Inquiries (2)')).toBeInTheDocument();
 });
+
+test('appointment notification deep link opens the exact booking dossier',async()=>{
+ rows=[{id:'first',is_direct_booking:true,buyer:{name:'First booking'}},{id:'requested',is_direct_booking:true,buyer:{name:'Requested booking'}}];
+ render(<MemoryRouter initialEntries={['/?appointment=requested']}><Dashboard/></MemoryRouter>);
+ await screen.findByText('Appointment & Lead Details');
+ expect(within(dossier()).getByText('Requested booking')).toBeInTheDocument();
+ expect(within(dossier()).queryByText('First booking')).not.toBeInTheDocument();
+});

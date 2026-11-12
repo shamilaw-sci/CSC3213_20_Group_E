@@ -1,5 +1,6 @@
+const { validNewPassword } = require('./newPassword');
 const MAX_AVATAR_BYTES=3*1024*1024;
-const invalid=()=>{const error=new Error('Invalid profile input.');error.statusCode=400;throw error;};
+const invalid=(message='Invalid profile input.')=>{const error=new Error(message);error.statusCode=400;throw error;};
 function parseProfileInput(body){
     if(!body || typeof body!=='object' || Array.isArray(body)
         || ![Object.prototype,null].includes(Object.getPrototypeOf(body)))invalid();
@@ -11,8 +12,14 @@ function parseProfileInput(body){
         fields[key]=['name','email'].includes(key)?body[key].trim():body[key];
         if(['name','email'].includes(key)&&!fields[key])invalid();
     }
+    if(fields.phone){
+        const compact=fields.phone.replace(/[\s().-]/g,'');
+        const valid=/^[+\d\s().-]+$/.test(fields.phone) && (/^0[1-9]\d{8}$/.test(compact) || /^(?:\+|00)(?!94)[1-9]\d{7,14}$/.test(compact) || /^(?:\+|00)94[1-9]\d{8}$/.test(compact));
+        if(!valid)invalid('Enter a valid phone number, such as 077 123 4567 or +94 77 123 4567, or leave it blank.');
+    }
     if(fields.email!==undefined){fields.email=fields.email.toLowerCase();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email))invalid();}
-    if(fields.password && (fields.password.length<6 || !fields.currentPassword))invalid();
+    if(fields.password && !fields.currentPassword)invalid('Current password is required to change your password.');
+    if(fields.password && !validNewPassword(fields.password))invalid();
     if(body.theme_preference!==undefined){if(!['light','dark','system'].includes(body.theme_preference))invalid();fields.theme_preference=body.theme_preference;}
     if(body.email_notifications!==undefined){if(typeof body.email_notifications!=='boolean')invalid();fields.email_notifications=body.email_notifications;}
     let avatar;

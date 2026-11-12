@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import api from '../../../context/api';
 import { useAuth } from '../../../context/UserAuthContext';
 import { 
@@ -60,13 +60,16 @@ const BookViewingModal = ({ agent, listings, onClose, onSuccess }) => {
     notes: ''
   }));
   const [loading, setLoading] = useState(false);
+  const submitting = useRef(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitting.current) return;
     if (!formData.client_name || !formData.client_email || !formData.client_phone) {
       toast.error("Please fill in your contact details.");
       return;
     }
+    submitting.current = true;
     setLoading(true);
     try {
       await api.post(`/agents/${agent.id}/book-viewing`, formData);
@@ -76,6 +79,7 @@ const BookViewingModal = ({ agent, listings, onClose, onSuccess }) => {
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to submit viewing request.");
     } finally {
+      submitting.current = false;
       setLoading(false);
     }
   };

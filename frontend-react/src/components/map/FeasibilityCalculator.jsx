@@ -1,11 +1,12 @@
 import { logClientError } from '../../utils/clientLog';
-import React, { useState, useEffect, useCallback } from 'react';
-import { Calculator, X, DollarSign, Wallet, Percent, Calendar, Save, History, Trash2 } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Calculator, X, Calendar, Save, History, Trash2 } from 'lucide-react';
 import { AnimatePresence, m } from "framer-motion";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import api from '../../context/api';
 import { useAuth } from '../../context/UserAuthContext';
 import toast from 'react-hot-toast';
+import { amountInWords, formatMoneyInput } from '../../utils/feasibilityMoney';
 
 const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
     const { user } = useAuth();
@@ -17,6 +18,7 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
     });
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState(null);
+    const requestVersion = useRef(0);
     const [error, setError] = useState(null);
 
     // --- Calculation history (only relevant for logged-in users) ---
@@ -45,11 +47,16 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
     }, [isOpen, user, fetchHistory]);
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        requestVersion.current += 1;
+        setResult(null);
+        setError(null);
+        setSaveStatus(null);
+        setLoading(false);
+        setFormData({ ...formData, [e.target.name]: e.target.name === 'tenureYears' ? e.target.value : e.target.value.replaceAll(',', '') });
     };
 
-    const handleCalculate = async (e) => {
-        e.preventDefault();
+    const calculate = async (values) => {
+        const version = ++requestVersion.current;
         setLoading(true);
         setError(null);
         setResult(null);
@@ -57,17 +64,28 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
 
         try {
             const res = await api.post('/feasibility/calculate', {
-                salary: Number(formData.salary),
-                savings: Number(formData.savings),
-                loanDeductions: Number(formData.loanDeductions),
-                tenureYears: Number(formData.tenureYears)
+                salary: Number(values.salary),
+                savings: Number(values.savings),
+                loanDeductions: Number(values.loanDeductions),
+                tenureYears: Number(values.tenureYears)
             });
-            setResult(res.data);
+            if (version === requestVersion.current) setResult(res.data);
         } catch (err) {
-            setError(err.response?.data?.message || "Failed to calculate feasibility.");
+            if (version === requestVersion.current) setError(err.response?.data?.errors?.map(issue => issue.message).filter(Boolean).join(". ") || err.response?.data?.message || "Failed to calculate feasibility.");
         } finally {
-            setLoading(false);
+            if (version === requestVersion.current) setLoading(false);
         }
+    };
+
+    const handleCalculate = (e) => {
+        e.preventDefault();
+        return calculate(formData);
+    };
+
+    const restoreCalculation = (entry) => {
+        const values = { salary: String(entry.salary), savings: String(entry.savings), loanDeductions: String(entry.loan_deductions), tenureYears: String(entry.tenure_years) };
+        setFormData(values);
+        calculate(values);
     };
 
     const handleApplyFilter = () => {
@@ -79,6 +97,7 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
 
     const handleSaveCalculation = async () => {
         if (!result || !user) return;
+        const version = requestVersion.current;
         setSaveStatus('saving');
         try {
             await api.post('/feasibility/save', {
@@ -90,10 +109,10 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
                 loanCapacity: result.loanCapacity || 0,
                 monthlyInstallment: result.monthlyInstallment || 0,
             });
-            setSaveStatus('saved');
+            if (version === requestVersion.current) setSaveStatus('saved');
             fetchHistory();
         } catch (err) {
-            setSaveStatus('error');
+            if (version === requestVersion.current) setSaveStatus('error');
         }
     };
 
@@ -143,70 +162,70 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
 
                             <form onSubmit={handleCalculate} className="space-y-4">
                                 <div>
-                                    <label htmlFor="a11y" className="block text-sm font-semibold text-gray-700 mb-1">Monthly Salary (LKR)</label>
+                                    <label htmlFor="salary" className="block text-sm font-semibold text-gray-700 mb-1">Monthly Salary (LKR)</label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <DollarSign className="h-4 w-4 text-gray-400" />
+                                            <span className="text-xs text-gray-500">LKR</span>
                                         </div>
-                                        <input aria-label="Accessible interactive control"
-                                            type="number"
-                                            name="salary"
-                                            value={formData.salary}
+                                        <input
+                                            type="text" inputMode="decimal" pattern="[0-9,]+([.][0-9]{1,2})?"
+                                            id="salary" aria-label="Monthly Salary (LKR)" name="salary"
+                                            value={formatMoneyInput(formData.salary)}
                                             onChange={handleChange}
                                             min="0"
                                             required
-                                            className="pl-9 w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
+                                            className="pl-12 w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
                                         />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label htmlFor="sz753m" className="block text-sm font-semibold text-gray-700 mb-1">Current Savings / Downpayment</label>
+                                    <label htmlFor="savings" className="block text-sm font-semibold text-gray-700 mb-1">Current Savings / Downpayment</label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <Wallet className="h-4 w-4 text-gray-400" />
+                                            <span className="text-xs text-gray-500">LKR</span>
                                         </div>
-                                        <input aria-label="Accessible interactive control"
-                                            type="number"
-                                            name="savings"
-                                            value={formData.savings}
+                                        <input
+                                            type="text" inputMode="decimal" pattern="[0-9,]+([.][0-9]{1,2})?"
+                                            id="savings" aria-label="Current Savings / Downpayment" name="savings"
+                                            value={formatMoneyInput(formData.savings)}
                                             onChange={handleChange}
                                             min="0"
                                             required
-                                            className="pl-9 w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
+                                            className="pl-12 w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
                                         />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label htmlFor="3k8nyy" className="block text-sm font-semibold text-gray-700 mb-1">Existing Monthly Loan Deductions</label>
+                                    <label htmlFor="loanDeductions" className="block text-sm font-semibold text-gray-700 mb-1">Existing Monthly Loan Deductions</label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <Percent className="h-4 w-4 text-gray-400" />
+                                            <span className="text-xs text-gray-500">LKR</span>
                                         </div>
-                                        <input aria-label="Accessible interactive control"
-                                            type="number"
-                                            name="loanDeductions"
-                                            value={formData.loanDeductions}
+                                        <input
+                                            type="text" inputMode="decimal" pattern="[0-9,]+([.][0-9]{1,2})?"
+                                            id="loanDeductions" aria-label="Existing Monthly Loan Deductions" name="loanDeductions"
+                                            value={formatMoneyInput(formData.loanDeductions)}
                                             onChange={handleChange}
                                             min="0"
                                             required
-                                            className="pl-9 w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
+                                            className="pl-12 w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
                                         />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label htmlFor="yfezqh" className="block text-sm font-semibold text-gray-700 mb-1">Desired Repayment Tenure (Years)</label>
+                                    <label htmlFor="tenureYears" className="block text-sm font-semibold text-gray-700 mb-1">Desired Repayment Tenure (Years)</label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <Calendar className="h-4 w-4 text-gray-400" />
                                         </div>
-                                        <select aria-label="Accessible interactive control"
-                                            name="tenureYears"
+                                        <select
+                                            id="tenureYears" aria-label="Desired Repayment Tenure (Years)" name="tenureYears"
                                             value={formData.tenureYears}
                                             onChange={handleChange}
-                                            className="pl-9 w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
+                                            className="pl-12 w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
                                         >
                                             <option value="5">5 Years</option>
                                             <option value="10">10 Years</option>
@@ -216,7 +235,7 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
                                     </div>
                                 </div>
 
-                                <button aria-label="Accessible interactive control"
+                                <button
                                     type="submit"
                                     disabled={loading}
                                     className="w-full mt-4 bg-gray-900 text-white font-bold py-3 rounded-lg shadow hover:bg-gray-800 transition disabled:opacity-50"
@@ -225,7 +244,7 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
                                 </button>
                             </form>
 
-                            {error && <p className="mt-4 text-sm text-red-500 bg-red-50 p-3 rounded-lg">{error}</p>}
+                            {error && <p role="alert" className="mt-4 text-sm text-red-500 bg-red-50 p-3 rounded-lg">{error}</p>}
 
                             {result && (
                                 <m.div 
@@ -235,18 +254,19 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
                                 >
                                     <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl text-center">
                                         <p className="text-blue-600 text-xs font-bold uppercase tracking-wider mb-1">Max Buying Power</p>
-                                        <h3 className="text-3xl font-extrabold text-blue-700">Rs. {result.maxBuyingPower.toLocaleString()}</h3>
+                                        <h3 className="text-3xl font-extrabold text-blue-700">LKR {result.maxBuyingPower.toLocaleString()}</h3>
+                                        <p className="text-xs text-blue-700 mt-2">{amountInWords(result.maxBuyingPower)}</p>
                                     </div>
                                     
                                     {result.loanCapacity > 0 && (
                                         <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                                             <div className="bg-gray-50 p-3 rounded-lg border">
                                                 <p className="text-gray-500 mb-1">Bank Loan Capacity</p>
-                                                <p className="font-bold">Rs. {result.loanCapacity.toLocaleString()}</p>
+                                                <p className="font-bold">LKR {result.loanCapacity.toLocaleString()}</p>
                                             </div>
                                             <div className="bg-gray-50 p-3 rounded-lg border">
                                                 <p className="text-gray-500 mb-1">Est. Monthly Installment</p>
-                                                <p className="font-bold">Rs. {result.monthlyInstallment.toLocaleString()}</p>
+                                                <p className="font-bold">LKR {result.monthlyInstallment.toLocaleString()}</p>
                                             </div>
                                         </div>
                                     )}
@@ -255,14 +275,14 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
 
                                     {Array.isArray(result.amortizationSchedule) && result.amortizationSchedule.length > 0 && (
                                         <div className="mt-5">
-                                            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Loan Balance Over Time</p>
+                                            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Loan Balance Over Time (LKR)</p>
                                             <div className="h-40 bg-gray-50 border rounded-lg p-2">
                                                 <ResponsiveContainer width="100%" height="100%">
                                                     <LineChart data={result.amortizationSchedule}>
                                                         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                                                         <XAxis dataKey="year" tick={{ fontSize: 11 }} label={{ value: 'Year', position: 'insideBottom', offset: -2, fontSize: 10 }} />
                                                         <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} width={40} />
-                                                        <Tooltip formatter={(value) => [`Rs. ${Number(value).toLocaleString()}`, 'Remaining Balance']} labelFormatter={(y) => `Year ${y}`} />
+                                                        <Tooltip formatter={(value) => [`LKR ${Number(value).toLocaleString()}`, 'Remaining Balance']} labelFormatter={(y) => `Year ${y}`} />
                                                         <Line type="monotone" dataKey="remainingBalance" stroke="#2563eb" strokeWidth={2} dot={false} />
                                                     </LineChart>
                                                 </ResponsiveContainer>
@@ -315,9 +335,10 @@ const FeasibilityCalculator = ({ onFilterApply, isOpen, onClose }) => {
                                             {history.map((entry) => (
                                                 <div key={entry.id} className="flex items-center justify-between bg-gray-50 border rounded-lg p-3 text-sm">
                                                     <div>
-                                                        <p className="font-bold text-gray-800">Rs. {Number(entry.max_buying_power).toLocaleString()}</p>
+                                                        <button type="button" onClick={() => restoreCalculation(entry)} className="text-blue-700 underline text-xs" aria-label={`Restore calculation LKR ${Number(entry.max_buying_power).toLocaleString()}`}>Restore calculation</button>
+                                                        <p className="font-bold text-gray-800">LKR {Number(entry.max_buying_power).toLocaleString()}</p>
                                                         <p className="text-xs text-gray-500">
-                                                            Salary Rs. {Number(entry.salary).toLocaleString()} &middot; {entry.tenure_years} yrs
+                                                            Salary LKR {Number(entry.salary).toLocaleString()} &middot; {entry.tenure_years} yrs
                                                         </p>
                                                     </div>
                                                     <button aria-label="Delete this saved calculation" type="button"
