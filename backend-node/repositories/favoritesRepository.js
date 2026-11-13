@@ -31,7 +31,7 @@ const getUserFavorites = async (userId) => {
         .from('favorites')
         .select('property_id, properties!inner(*)')
         .eq('user_id', userId)
-        .eq('properties.status', 'approved');
+        .eq('properties.status', 'approved').is('properties.deleted_at', null);
     return { data, error };
 };
 

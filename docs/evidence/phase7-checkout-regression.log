@@ -1,0 +1,375 @@
+Running real Checkout integration against verified stack-c; external delivery disabled.
+  console.warn
+    [HTTP] POST /api/payment/generate-hash -> 401 (1ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.warn
+    [HTTP] POST /api/payment/generate-hash -> 403 (34ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.warn
+    [HTTP] POST /api/payment/generate-hash -> 403 (21ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.warn
+    [HTTP] POST /api/payment/generate-hash -> 403 (12ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.log
+    [HTTP] POST /api/payment/generate-hash -> 200 (73ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/payment/generate-hash -> 200 (54ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/payment/confirm-client-success -> 200 (31ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.warn
+    [HTTP] POST /api/payment/confirm-client-success -> 403 (19ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.warn
+    [HTTP] POST /api/payment/confirm-client-success -> 404 (30ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.log
+    [HTTP] POST /api/payment/generate-hash -> 200 (40ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/payment/generate-hash -> 200 (56ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/payment/generate-hash -> 200 (60ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/payment/generate-hash -> 200 (42ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/payment/generate-hash -> 200 (39ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.warn
+    [HTTP] POST /api/payment/notify -> 400 (1ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.warn
+    [HTTP] POST /api/payment/notify -> 400 (8ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.warn
+    [HTTP] POST /api/payment/notify -> 400 (1ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.warn
+    [HTTP] POST /api/payment/notify -> 400 (1ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.warn
+    [HTTP] POST /api/payment/notify -> 400 (1ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.warn
+    [HTTP] POST /api/payment/notify -> 400 (0ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.warn
+    [HTTP] POST /api/payment/notify -> 400 (0ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.warn
+    [HTTP] POST /api/payment/notify -> 400 (0ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.warn
+    [HTTP] POST /api/payment/notify -> 400 (1ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.warn
+    [HTTP] POST /api/payment/notify -> 400 (10ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.log
+    [HTTP] POST /api/payment/notify -> 200 (0ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/payment/notify -> 200 (0ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/payment/notify -> 200 (0ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/payment/notify -> 200 (1ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/payment/generate-hash -> 200 (37ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/payment/notify -> 200 (24ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/payment/notify -> 200 (28ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/payment/notify -> 200 (29ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/payment/notify -> 200 (17ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.warn
+    [HTTP] POST /api/payment/generate-hash -> 409 (19ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.log
+    [HTTP] POST /api/payment/generate-hash -> 200 (43ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.error
+    {"level":"error","time":"2026-11-03T05:09:20.156Z","message":"Payment settlement failed; gateway may retry","meta":{"order_id":"0fb20c99-1752-47d4-a238-02e1848564b9","error":"duplicate key value violates unique constraint \"payment_orders_provider_payment_id_key\""}}
+
+    [0m [90m 26 |[39m     [36mconst[39m line [33m=[39m [33mJSON[39m[33m.[39mstringify(payload)[33m;[39m
+     [90m 27 |[39m     [36mif[39m (level [33m===[39m [32m'error'[39m) {
+    [31m[1m>[22m[39m[90m 28 |[39m         console[33m.[39merror(line)[33m;[39m
+     [90m    |[39m                 [31m[1m^[22m[39m
+     [90m 29 |[39m         [36mreturn[39m[33m;[39m
+     [90m 30 |[39m     }
+     [90m 31 |[39m     [36mif[39m (level [33m===[39m [32m'warn'[39m) {[0m
+
+      at error (utils/logger.js:28:17)
+      at Object.write (utils/logger.js:42:31)
+      at error (controllers/paymentController.js:65:16)
+
+  console.warn
+    [HTTP] POST /api/payment/notify -> 409 (24ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.log
+    [HTTP] POST /api/payment/confirm-client-success -> 200 (24ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+PASS integration/checkout.integration.cjs
+  √ real auth, ownership and locked server terms; reuse and advisory completion preserve unpaid state (404 ms)
+  √ concurrent initialization reuses one real pending order; agent owns its checkout (118 ms)
+  √ form notifications reject tampering and signed mismatches and ignore non-success without any state changes (192 ms)
+  √ signed success, replay and concurrent callbacks settle atomically once; provider reuse rolls back other order (270 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       4 passed, 4 total
+Snapshots:   0 total
+Time:        5.152 s
+Ran all test suites.
+PASS: 11 full table snapshot(s) and canonical ledger preserved after cleanup.

@@ -1,0 +1,258 @@
+{"level":"error","time":"2026-11-12T13:50:18.022Z","message":"Payment receipt queue unavailable"}
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 713 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 409 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 370 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 906 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 650 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 217 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 148 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 327 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 557 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 394 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 314 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 347 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 333 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 340 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 868 }
+{"level":"error","time":"2026-11-12T14:43:18.468Z","message":"Payment receipt queue unavailable"}
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 498 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 1411 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 294 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 351 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 942 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 356 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 555 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 614 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 369 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 459 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 339 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 495 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 272 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 340 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 346 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 671 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 432 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 377 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 335 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 550 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 659 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 801 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 743 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 896 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 418 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 311 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 440 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 637 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 368 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 302 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 410 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 547 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 406 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 710 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 328 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 367 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 410 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 302 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 566 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 487 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 437 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 552 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 342 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 650 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 413 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 335 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 344 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 337 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 349 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 603 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 408 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 401 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 357 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 324 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 335 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 735 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 379 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 750 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 346 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 430 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 523 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 348 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 379 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 481 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 367 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 647 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 333 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 295 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 110 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 372 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 3424 }
+{"level":"error","time":"2026-11-12T15:51:18.530Z","message":"Payment receipt queue unavailable"}
+http_request { method: 'GET', route: '/leads', status: 401, durationMs: 48041 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 212 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 292 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 3183 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 9893 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 129 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 112 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 108 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 113 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 8068 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 279 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 109 }
+{"level":"error","time":"2026-11-12T15:54:18.886Z","message":"Payment receipt queue unavailable"}
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 33681 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 161 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 97 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 133 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 440 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 132 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 308 }
+request_error {
+  method: 'PATCH',
+  route: '/role-requests/:id/approve',
+  status: 500,
+  code: 'INTERNAL_ERROR'
+}
+http_request {
+  method: 'PATCH',
+  route: '/role-requests/:id/approve',
+  status: 500,
+  durationMs: 247
+}
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 120 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 104 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 127 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 117 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 104 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 12920 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 121 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 114 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 141 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 13930 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 654 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 117 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 123 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 126 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 130 }
+{"level":"error","time":"2026-11-12T16:00:18.644Z","message":"Payment receipt queue unavailable"}
+http_request { method: 'GET', route: '/me', status: 401, durationMs: 48264 }
+{"level":"error","time":"2026-11-12T16:01:18.764Z","message":"Payment receipt queue unavailable"}
+http_request { method: 'GET', route: '/me', status: 401, durationMs: 47866 }
+http_request { method: 'GET', route: '/me', status: 401, durationMs: 48044 }
+http_request { method: 'GET', route: '/me', status: 401, durationMs: 47705 }
+http_request { method: 'GET', route: '/me', status: 401, durationMs: 47723 }
+http_request { method: 'GET', route: '/me', status: 401, durationMs: 48168 }
+{"level":"error","time":"2026-11-12T16:02:08.440Z","message":"Payment receipt queue unavailable"}
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 23471 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 17668 }
+{"level":"error","time":"2026-11-12T16:03:19.228Z","message":"Payment receipt queue unavailable"}
+{"level":"error","time":"2026-11-12T16:04:19.058Z","message":"Payment receipt queue unavailable"}
+{"level":"error","time":"2026-11-12T16:05:19.079Z","message":"Payment receipt queue unavailable"}
+http_request { method: 'PUT', route: '/profile', status: 400, durationMs: 658 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 262 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 274 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 269 }
+{"level":"error","time":"2026-11-12T16:16:18.888Z","message":"Payment receipt queue unavailable"}
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48299 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48304 }
+http_request { method: 'GET', route: '/leads', status: 401, durationMs: 48303 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 47909 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 47909 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48037 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 2916 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 1503 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 30216 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 332 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 451 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 424 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 309 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 265 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 110 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 2575 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 5460 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 225 }
+http_request {
+  method: 'POST',
+  route: '/request-role-upgrade',
+  status: 400,
+  durationMs: 445
+}
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 254 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 254 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 2515 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 128 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 285 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 337 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 124 }
+http_request {
+  method: 'PATCH',
+  route: '/role-requests/:id/reject',
+  status: 409,
+  durationMs: 319
+}
+http_request {
+  method: 'PATCH',
+  route: '/role-requests/:id/reject',
+  status: 409,
+  durationMs: 230
+}
+http_request {
+  method: 'PATCH',
+  route: '/role-requests/:id/reject',
+  status: 409,
+  durationMs: 217
+}
+http_request {
+  method: 'PATCH',
+  route: '/role-requests/:id/reject',
+  status: 409,
+  durationMs: 237
+}
+http_request {
+  method: 'PATCH',
+  route: '/role-requests/:id/reject',
+  status: 409,
+  durationMs: 205
+}
+http_request {
+  method: 'PATCH',
+  route: '/role-requests/:id/reject',
+  status: 409,
+  durationMs: 240
+}
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 269 }
+http_request {
+  method: 'PATCH',
+  route: '/role-requests/:id/reject',
+  status: 409,
+  durationMs: 234
+}
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 5801 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 220 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 278 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 644 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 259 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 273 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 255 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 563 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 268 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 313 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 242 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 110 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 242 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 238 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 298 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 303 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 368 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 144 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 5815 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 238 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 223 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 148 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 236 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 121 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 241 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 288 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 127 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 124 }
+http_request { method: 'GET', route: '/leads', status: 403, durationMs: 244 }

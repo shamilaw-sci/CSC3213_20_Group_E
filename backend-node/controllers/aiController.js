@@ -4,7 +4,7 @@ const supabase = require('../config/supabase');
 const { toolArgumentSchemas } = require('../validators/aiValidator');
 
 const searchPropertiesFromDB = async (args) => {
-    let query = supabase.from('properties').select('id, title, price, type, city, district, bedrooms, bathrooms, land_size').eq('status', 'approved').limit(5);
+    let query = supabase.from('properties').select('id, title, price, type, city, district, bedrooms, bathrooms, land_size').is('deleted_at', null).eq('status', 'approved').limit(5);
     
     if (args.location) {
         query = query.or(`city.ilike.%${args.location}%,district.ilike.%${args.location}%`);

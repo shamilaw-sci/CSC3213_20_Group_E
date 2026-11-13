@@ -31,7 +31,7 @@ const agentRepository = {
             .select(`
                 id, name, avatar_url, role, phone, email,
                 agent_profiles (agency_name, specialization, bio, service_areas, license_number, total_sales, total_rentals, youtube_video_url, cover_image_url),
-                properties (id, title, price, bedrooms, bathrooms, district, city, images, status, type, listing_type),
+                properties (id, title, price, bedrooms, bathrooms, district, city, images, status, deleted_at, type, listing_type),
                 agent_reviews:agent_reviews!agent_reviews_agent_id_fkey (id, rating, comment, created_at, reviewer:users!agent_reviews_reviewer_id_fkey(name, avatar_url))
             `)
             .eq('id', agentId)
@@ -375,7 +375,7 @@ const agentRepository = {
             .from('properties')
             .select('*', { count: 'exact', head: true })
             .eq('seller_id', agentId)
-            .eq('status', 'approved');
+            .eq('status', 'approved').is('deleted_at', null);
         if (error) throw error;
         return count;
     },

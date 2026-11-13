@@ -1,0 +1,147 @@
+{
+  "theme": "dark",
+  "observations": 12,
+  "identical": true,
+  "mapLifecycle": [
+    {
+      "label": "initial",
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    },
+    {
+      "label": "raw-fields",
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    },
+    {
+      "label": "native-point-click",
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    },
+    {
+      "label": "synthetic-gps",
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    },
+    {
+      "label": "boundary-mode",
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    },
+    {
+      "label": "native-boundary-5",
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    },
+    {
+      "label": "native-boundary-6",
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    },
+    {
+      "label": "native-boundary-7",
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    },
+    {
+      "label": "exit-removes-map",
+      "alive": false,
+      "created": 1,
+      "id": 1,
+      "removed": 1
+    },
+    {
+      "label": "return-new-map-retained-state",
+      "alive": true,
+      "center": [
+        6.9,
+        79.8
+      ],
+      "created": 2,
+      "id": 2,
+      "removed": 1,
+      "zoom": 14
+    },
+    {
+      "label": "clear-with-same-map",
+      "alive": true,
+      "center": [
+        6.9,
+        79.8
+      ],
+      "created": 2,
+      "id": 2,
+      "removed": 1,
+      "zoom": 14
+    },
+    {
+      "label": "point-with-same-map",
+      "alive": true,
+      "center": [
+        6.9,
+        79.8
+      ],
+      "created": 2,
+      "id": 2,
+      "removed": 1,
+      "zoom": 14
+    }
+  ],
+  "nativeBoundaryCount": 3
+}

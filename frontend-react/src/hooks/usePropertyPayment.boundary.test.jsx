@@ -17,7 +17,7 @@ beforeEach(() => {
 afterEach(() => { cleanup(); delete window.payhere; vi.restoreAllMocks(); vi.unstubAllEnvs(); });
 test('actual form and payment hook retain the draft through quoted-fee review and only launch on second click', async () => {
   const view = renderHook(() => usePropertyForm()); await waitFor(() => expect(view.result.current.paymentConfig.status).toBe('ready'));
-  act(() => view.result.current.setImages([new File(['synthetic'], 'test.jpg', { type: 'image/jpeg' })]));
+  act(() => view.result.current.setFormData(p => ({...p, contactNumber: '0771234567'}))); act(() => view.result.current.setImages([new File(['synthetic'], 'test.jpg', { type: 'image/jpeg' })]));
   await act(async () => view.result.current.handleSubmit({ preventDefault() {} }));
   expect(api.post.mock.calls.filter(([url]) => url === '/properties')).toHaveLength(1); expect(window.payhere.startPayment).not.toHaveBeenCalled();
   expect(view.result.current.paymentAmount).toBe('800.00'); expect(view.result.current.loading).toBe(false); expect(view.result.current.message.text).toContain('Review the updated amount');
@@ -28,6 +28,6 @@ test('actual form and payment hook retain the draft through quoted-fee review an
 });
 test('actual config failure prevents the form from creating a draft', async () => {
   api.get.mockRejectedValueOnce(new Error('synthetic unavailable')); const view = renderHook(() => usePropertyForm());
-  await waitFor(() => expect(view.result.current.paymentConfig.status).toBe('error')); act(() => view.result.current.setImages([new File(['synthetic'], 'test.jpg', { type: 'image/jpeg' })]));
+  await waitFor(() => expect(view.result.current.paymentConfig.status).toBe('error')); act(() => view.result.current.setFormData(p => ({...p, contactNumber: '0771234567'}))); act(() => view.result.current.setImages([new File(['synthetic'], 'test.jpg', { type: 'image/jpeg' })]));
   await act(async () => view.result.current.handleSubmit({ preventDefault() {} })); expect(api.post).not.toHaveBeenCalled(); expect(window.payhere.startPayment).not.toHaveBeenCalled();
 });

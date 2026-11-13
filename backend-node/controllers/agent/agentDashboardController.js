@@ -13,7 +13,7 @@ const getDashboardStats = async (req, res, next) => {
         // 1. Get all agent properties
         const { data: properties, error: propsError } = await supabase
             .from('properties')
-            .select('id, title, price, status, views_count, images, city, district, created_at, type, listing_type, bedrooms, bathrooms')
+            .select('id, title, price, status, views_count, images, city, district, created_at, type, listing_type, bedrooms, bathrooms').is('deleted_at', null)
             .eq('seller_id', agentId)
             .order('created_at', { ascending: false });
 

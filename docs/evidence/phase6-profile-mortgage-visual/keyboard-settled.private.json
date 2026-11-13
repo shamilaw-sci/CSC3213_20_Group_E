@@ -1,0 +1,82 @@
+[
+  {
+    "theme": "light",
+    "equal": true,
+    "focusObserved": true,
+    "behaviorEqual": true,
+    "cssDifferences": [
+      {
+        "step": 0,
+        "properties": []
+      },
+      {
+        "step": 1,
+        "properties": []
+      },
+      {
+        "step": 2,
+        "properties": []
+      },
+      {
+        "step": 3,
+        "properties": []
+      },
+      {
+        "step": 4,
+        "properties": []
+      },
+      {
+        "step": 5,
+        "properties": []
+      },
+      {
+        "step": 6,
+        "properties": []
+      },
+      {
+        "step": 7,
+        "properties": []
+      }
+    ]
+  },
+  {
+    "theme": "dark",
+    "equal": true,
+    "focusObserved": true,
+    "behaviorEqual": true,
+    "cssDifferences": [
+      {
+        "step": 0,
+        "properties": []
+      },
+      {
+        "step": 1,
+        "properties": []
+      },
+      {
+        "step": 2,
+        "properties": []
+      },
+      {
+        "step": 3,
+        "properties": []
+      },
+      {
+        "step": 4,
+        "properties": []
+      },
+      {
+        "step": 5,
+        "properties": []
+      },
+      {
+        "step": 6,
+        "properties": []
+      },
+      {
+        "step": 7,
+        "properties": []
+      }
+    ]
+  }
+]

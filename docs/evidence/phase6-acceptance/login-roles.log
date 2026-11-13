@@ -1,0 +1,47 @@
+Running real Login/roles integration against verified stack-c; external delivery disabled.
+  console.log
+    Fixture cleanup verified: seven run-specific users absent; no bulk cleanup.
+
+      at console.<computed> [as log] (integration/setup.cjs:49:9)
+
+PASS integration/login-roles.integration.cjs (6.076 s)
+  Real local database Login/roles chain
+    √ BUYER password -> cookie -> current identity (257 ms)
+    √ SELLER password -> cookie -> current identity (200 ms)
+    √ AGENT password -> cookie -> current identity (132 ms)
+    √ ADMIN dedicated login validates both cookie and bearer sessions (148 ms)
+    √ wrong password cannot create a public session (104 ms)
+    √ unknown email cannot create a public session (21 ms)
+    √ malformed input cannot create a public session (15 ms)
+    √ banned account cannot create a public session (18 ms)
+    √ ADMIN in consumer portal cannot create a public session (102 ms)
+    √ BUYER cannot use admin login or its own consumer session at admin verify (128 ms)
+    √ SELLER cannot use admin login or its own consumer session at admin verify (123 ms)
+    √ AGENT cannot use admin login or its own consumer session at admin verify (117 ms)
+    √ PENDING_AGENT cannot use admin login or its own consumer session at admin verify (115 ms)
+    √ REJECTED_AGENT cannot use admin login or its own consumer session at admin verify (122 ms)
+    √ bad admin password cannot create a session (98 ms)
+    √ anonymous /api/auth/me is unauthorized (2 ms)
+    √ anonymous /api/admin/verify is unauthorized (3 ms)
+    √ cookie expired credential rejected by /api/auth/me (4 ms)
+    √ cookie expired credential rejected by /api/admin/verify (4 ms)
+    √ cookie tampered credential rejected by /api/auth/me (3 ms)
+    √ cookie tampered credential rejected by /api/admin/verify (3 ms)
+    √ cookie password_reset credential rejected by /api/auth/me (2 ms)
+    √ cookie password_reset credential rejected by /api/admin/verify (3 ms)
+    √ bearer expired credential rejected by /api/auth/me (2 ms)
+    √ bearer expired credential rejected by /api/admin/verify (3 ms)
+    √ bearer tampered credential rejected by /api/auth/me (2 ms)
+    √ bearer tampered credential rejected by /api/admin/verify (3 ms)
+    √ bearer password_reset credential rejected by /api/auth/me (2 ms)
+    √ bearer password_reset credential rejected by /api/admin/verify (2 ms)
+    √ current DB demotion overrides an already-issued ADMIN token (134 ms)
+    √ current DB ban blocks an already-issued consumer cookie (127 ms)
+    √ logout clears the cookie jar and subsequent protected access fails (127 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       32 passed, 32 total
+Snapshots:   0 total
+Time:        6.723 s
+Ran all test suites.
+PASS: 1 full table snapshot(s) and canonical ledger preserved after cleanup.

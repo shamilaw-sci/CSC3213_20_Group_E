@@ -2,6 +2,7 @@ import { logClientError } from '../utils/clientLog';
 import SellerConversationsPanel from '../components/dashboard/SellerConversationsPanel';
 import SellerListingsPanel from '../components/dashboard/SellerListingsPanel';
 import SellerKpiCards from '../components/dashboard/SellerKpiCards';
+import SellerWeeklyActivity from '../components/dashboard/SellerWeeklyActivity';
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/UserAuthContext';
@@ -194,69 +195,7 @@ const SellerDashboard = () => {
                     {/* Left 8-Cols: Performance Curve & Recent Listings Snapshot */}
                     <div className="lg:col-span-8 space-y-6">
                         
-                        {/* Interactive Engagement & Market Demand Card */}
-                        <div className="bg-white dark:bg-gray-900 p-5 sm:p-6 rounded-2xl border border-gray-200/70 dark:border-gray-800 shadow-xs">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
-                                <div>
-                                    <h2 className="text-base font-bold text-gray-900 dark:text-white">Weekly Buyer Engagement</h2>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">Total views and inquiry velocity across all properties.</p>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2.5 py-1 rounded-lg">
-                                        <TrendingUp className="w-3.5 h-3.5" /> +18.4% vs last week
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Activity Bar Chart */}
-                            <div className="h-32 sm:h-36 flex items-end justify-between gap-3 sm:gap-4 px-2 pt-4 border-b border-gray-100 dark:border-gray-800">
-                                {[
-                                    { day: 'Mon', views: 35, inquiries: 2 },
-                                    { day: 'Tue', views: 55, inquiries: 5 },
-                                    { day: 'Wed', views: 40, inquiries: 3 },
-                                    { day: 'Thu', views: 70, inquiries: 8 },
-                                    { day: 'Fri', views: 65, inquiries: 6 },
-                                    { day: 'Sat', views: 90, inquiries: 12 },
-                                    { day: 'Sun', views: 80, inquiries: 10 }
-                                ].map((item, i) => (
-                                    <div key={item.day} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group">
-                                        <div className="text-[10px] font-bold text-gray-400 dark:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            {item.views}
-                                        </div>
-                                        <m.div 
-                                            initial={{ height: 0 }}
-                                            animate={{ height: `${(item.views / 95) * 100}%` }}
-                                            transition={{ delay: 0.1 + (i * 0.05), duration: 0.4 }}
-                                            className={`w-full max-w-[28px] rounded-t-lg transition-all ${
-                                                i === 5 
-                                                    ? 'bg-gradient-to-t from-blue-600 to-cyan-400 shadow-xs' 
-                                                    : 'bg-blue-500/80 hover:bg-blue-600 dark:bg-blue-600/70 dark:hover:bg-blue-500'
-                                            }`}
-                                        ></m.div>
-                                        <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mt-1">{item.day}</span>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="grid grid-cols-3 gap-2 mt-4 pt-2 text-center text-xs">
-                                <div className="p-2 rounded-xl bg-gray-50 dark:bg-gray-800/50">
-                                    <span className="block text-gray-400 text-[10px] font-bold uppercase">Avg. Views / Property</span>
-                                    <span className="text-sm font-black text-gray-900 dark:text-white mt-0.5">
-                                        {stats.total > 0 ? Math.round(stats.views / stats.total) : 0}
-                                    </span>
-                                </div>
-                                <div className="p-2 rounded-xl bg-gray-50 dark:bg-gray-800/50">
-                                    <span className="block text-gray-400 text-[10px] font-bold uppercase">Save Rate</span>
-                                    <span className="text-sm font-black text-gray-900 dark:text-white mt-0.5">
-                                        {stats.views > 0 ? ((stats.saves / stats.views) * 100).toFixed(1) : 0}%
-                                    </span>
-                                </div>
-                                <div className="p-2 rounded-xl bg-gray-50 dark:bg-gray-800/50">
-                                    <span className="block text-gray-400 text-[10px] font-bold uppercase">Lead Velocity</span>
-                                    <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 mt-0.5">High Demand</span>
-                                </div>
-                            </div>
-                        </div>
+                        <SellerWeeklyActivity sellerId={user.id} listingCount={stats.total} totalViews={stats.views} totalSaves={stats.saves} />
 
                         {/* Recent Listings Snapshot */}
                         <SellerListingsPanel stats={stats} navigate={navigate} loading={loading} recentListings={recentListings} formatLKR={formatLKR} />
@@ -289,22 +228,9 @@ const SellerDashboard = () => {
                         {/* Buyer Inquiries Snapshot */}
                         <SellerConversationsPanel loading={loading} recentConversations={recentConversations} navigate={navigate} />
 
-                        {/* Smart AI Sales Advisor */}
-                        <div className="bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent dark:from-amber-950/30 dark:via-orange-950/20 p-5 rounded-2xl border border-amber-300/40 dark:border-amber-800/40 shadow-xs">
-                            <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 mb-2">
-                                <Zap className="w-4 h-4" />
-                                <h3 className="text-xs font-extrabold uppercase tracking-wider">AI Sales Advisor</h3>
-                            </div>
-                            <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-1.5">
-                                Want 40% more buyer inquiries?
-                            </h4>
-                            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
-                                Listings with at least <b>5 high-resolution photos</b> and a transparent <b>price breakdown</b> close 2.3x faster in Colombo and Kandy.
-                            </p>
-                            <div className="mt-3 pt-3 border-t border-amber-200/60 dark:border-amber-800/60 flex items-center justify-between text-[11px]">
-                                <span className="font-semibold text-amber-800 dark:text-amber-300">Market Demand Index</span>
-                                <span className="font-bold text-emerald-600 dark:text-emerald-400">🔥 Very High (8.9/10)</span>
-                            </div>
+                        <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-gray-200/70 dark:border-gray-800">
+                            <h3 className="text-sm font-bold text-gray-900 dark:text-white">Listing checklist</h3>
+                            <p className="text-xs text-gray-600 dark:text-gray-300 mt-2">Keep property details, photos, asking price and contact information up to date.</p>
                         </div>
 
                         {/* Trust & Safety Guard */}
@@ -313,9 +239,9 @@ const SellerDashboard = () => {
                                 <ShieldCheck className="w-5 h-5" />
                             </div>
                             <div>
-                                <h4 className="text-xs font-bold text-gray-900 dark:text-white">Fast Moderation Guarantee</h4>
+                                <h4 className="text-xs font-bold text-gray-900 dark:text-white">Listing review</h4>
                                 <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
-                                    All new property submissions are reviewed and verified within 24 hours.
+                                    Paid submissions are sent to Admin review before appearing in public search.
                                 </p>
                             </div>
                         </div>

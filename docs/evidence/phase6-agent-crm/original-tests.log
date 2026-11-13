@@ -1,0 +1,9 @@
+
+ RUN  v4.1.12 D:/CSC3213_20_Group_E/frontend-react
+
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  18:11:36
+   Duration  4.33s (transform 180ms, setup 235ms, import 533ms, tests 1.53s, environment 1.75s)
+

@@ -9,6 +9,8 @@ import Footer from '../components/layout/Footer';
 import { Edit2, Eye, Heart, CheckCircle, Clock, XCircle, Trash2, MapPin, Search, ArrowLeft, Plus, AlertCircle, CreditCard } from 'lucide-react';
 import { m } from "framer-motion";
 import toast from 'react-hot-toast';
+import DeleteListingDialog from '../components/property/DeleteListingDialog';
+import ListingCorrectionDialog from '../components/property/ListingCorrectionDialog';
 
 const STATUS_MAP = {
     all: { label: 'All Listings', icon: null },
@@ -24,36 +26,35 @@ const MyProperties = () => {
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('all');
+    const [deletingProperty, setDeletingProperty] = useState(null);
+    const [editingProperty, setEditingProperty] = useState(null);
     const [payMessage, setPayMessage] = useState({ type: '', text: '' });
     const { triggerPayment, paymentConfig, checkoutQuote, checkoutBusy, retryPaymentConfig } = usePayhere(setPayMessage);
     const paymentAmount = id => checkoutQuote?.propertyId === id ? checkoutQuote.amount : paymentConfig.listingFee;
 
-    const fetchProperties = async () => {
-        try {
-            const res = await api.get('/properties/my-listings');
-            setProperties(res.data.properties || []);
-        } catch (err) {
-            toast.error("Failed to load properties");
-            logClientError('owned_properties_load_failed');
-        } finally {
-            setLoading(false);
-        }
-    };
-
     useEffect(() => {
+        let active = true;
+        setProperties([]);
+        setEditingProperty(null);
+        setDeletingProperty(null);
+        setLoading(true);
+        if (!user?.id) return () => { active = false; };
+        const fetchProperties = async () => {
+            try {
+                const res = await api.get('/properties/my-listings');
+                if (active) setProperties(res.data.properties || []);
+            } catch {
+                if (active) {
+                    toast.error('Failed to load properties');
+                    logClientError('owned_properties_load_failed');
+                }
+            } finally {
+                if (active) setLoading(false);
+            }
+        };
         fetchProperties();
-    }, []);
-
-    const handleDelete = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this listing?')) return;
-        try {
-            await api.delete(`/properties/my-listings/${id}`);
-            setProperties(prev => prev.filter(p => p.id !== id));
-            toast.success("Listing deleted successfully");
-        } catch (err) {
-            toast.error('Failed to delete property.');
-        }
-    };
+        return () => { active = false; };
+    }, [user?.id]);
 
     const handlePayDraft = async (propertyId) => {
         await triggerPayment(propertyId, paymentAmount(propertyId));
@@ -74,6 +75,31 @@ const MyProperties = () => {
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col font-sans">
             <Navbar />
+            {deletingProperty && deletingProperty.seller_id === user.id && (
+                <DeleteListingDialog
+                    key={`${user.id}:${deletingProperty.id}`}
+                    property={deletingProperty}
+                    onClose={() => setDeletingProperty(null)}
+                    onRemoved={() => {
+                        setProperties(previous => previous.filter(item => item.id !== deletingProperty.id));
+                        setDeletingProperty(null);
+                        toast.success('Listing removed successfully');
+                    }}
+                />
+            )}
+            {editingProperty && editingProperty.seller_id === user.id && (
+                <ListingCorrectionDialog
+                    key={`${user.id}:${editingProperty.id}`}
+                    property={editingProperty}
+                    onClose={() => setEditingProperty(null)}
+                    onSaved={updated => {
+                        setProperties(previous => previous.map(item => item.id === updated.id ? { ...item, ...updated } : item));
+                        setEditingProperty(null);
+                        setActiveTab('pending');
+                        toast.success('Listing resubmitted for Admin review.');
+                    }}
+                />
+            )}
             {payMessage.text && <p role={payMessage.type === 'error' ? 'alert' : 'status'} className="mx-auto w-full max-w-7xl px-6 py-4 text-sm bg-blue-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100">{payMessage.text}</p>}
             {properties.some(p => getEffectiveStatus(p) === 'draft') && <div className="mx-auto w-full max-w-7xl px-6 py-2">
                 {paymentConfig.status === 'ready' ? <p>{paymentConfig.sandbox ? 'Test checkout' : 'Live checkout'}</p>
@@ -213,6 +239,13 @@ const MyProperties = () => {
                                                 Rs. {Number(prop.price || 0).toLocaleString()}
                                             </div>
 
+                                            {prop.status === 'rejected' && prop.rejection_reason && (
+                                                <div className="p-3 mb-4 rounded-xl border border-red-200 bg-red-50 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+                                                    <p className="font-semibold">Reason for rejection</p>
+                                                    <p className="mt-1 whitespace-pre-wrap break-words">{prop.rejection_reason}</p>
+                                                </div>
+                                            )}
+
                                             {isDraft && (
                                                 <div className="p-3 mb-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300 font-semibold flex items-center justify-between">
                                                     <span>Payment Required to Submit</span>
@@ -240,6 +273,11 @@ const MyProperties = () => {
                                             </div>
 
                                             <div className="flex items-center gap-2">
+                                                {!isDraft && prop.status === 'rejected' && (
+                                                    <button type="button" onClick={() => setEditingProperty(prop)} className="px-3 py-1 rounded-lg text-xs font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/40 cursor-pointer">
+                                                        Edit &amp; Resubmit
+                                                    </button>
+                                                )}
                                                 <button
                                                     type="button"
                                                     onClick={() => navigate(`/property/${prop.id}`)}
@@ -249,7 +287,8 @@ const MyProperties = () => {
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    onClick={() => handleDelete(prop.id)}
+                                                    onClick={() => { if (prop.seller_id === user.id) setDeletingProperty(prop); }}
+                                                    disabled={prop.seller_id !== user.id}
                                                     className="p-1 text-gray-400 hover:text-red-600 transition cursor-pointer"
                                                     title="Delete Listing"
                                                 >

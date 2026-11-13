@@ -1,0 +1,30 @@
+[
+  {
+    "theme": "light",
+    "steps": 6,
+    "identical": true,
+    "hoverObserved": true,
+    "finalChecks": [
+      false,
+      true,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  {
+    "theme": "dark",
+    "steps": 6,
+    "identical": true,
+    "hoverObserved": true,
+    "finalChecks": [
+      false,
+      true,
+      false,
+      true,
+      true,
+      true
+    ]
+  }
+]

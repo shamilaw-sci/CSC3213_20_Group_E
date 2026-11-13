@@ -1,0 +1,143 @@
+Running real Listings Storage integration against verified stack-c; external delivery disabled.
+  console.error
+    [HTTP] POST /api/properties -> 500 (550ms)
+
+    [0m [90m 17 |[39m         [36mif[39m (method [33m===[39m [32m'error'[39m [33m&&[39m args[[35m0[39m] [33m===[39m [32m'🔥 Global Error Handler:'[39m [33m&&[39m [36mtypeof[39m args[[35m1[39m] [33m===[39m [32m'string'[39m
+     [90m 18 |[39m             [33m&&[39m [35m/^(Invalid file type \(application\/pdf\)|File too large$|Unexpected file field$|Too many files$|invalid input syntax for type numeric: "invalid-numeric-fixture"$|Injected upload failure$)/[39m[33m.[39mtest(args[[35m1[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 19 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 20 |[39m     }[33m;[39m
+     [90m 21 |[39m }
+     [90m 22 |[39m[0m
+
+      at console.<computed> (integration/storage.setup.cjs:19:9)
+      at ServerResponse.logMethod (server.js:40:9)
+
+  console.error
+    [HTTP] POST /api/properties -> 500 (417ms)
+
+    [0m [90m 17 |[39m         [36mif[39m (method [33m===[39m [32m'error'[39m [33m&&[39m args[[35m0[39m] [33m===[39m [32m'🔥 Global Error Handler:'[39m [33m&&[39m [36mtypeof[39m args[[35m1[39m] [33m===[39m [32m'string'[39m
+     [90m 18 |[39m             [33m&&[39m [35m/^(Invalid file type \(application\/pdf\)|File too large$|Unexpected file field$|Too many files$|invalid input syntax for type numeric: "invalid-numeric-fixture"$|Injected upload failure$)/[39m[33m.[39mtest(args[[35m1[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 19 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 20 |[39m     }[33m;[39m
+     [90m 21 |[39m }
+     [90m 22 |[39m[0m
+
+      at console.<computed> (integration/storage.setup.cjs:19:9)
+      at ServerResponse.logMethod (server.js:40:9)
+
+  console.log
+    Observed SELLER delete: remaining target objects=0, files=0, public GET=400,400,400.
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    Observed ADMIN delete: remaining target objects=0, files=0, public GET=400,400,400.
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.error
+    🔥 Global Error Handler: update or delete on table "properties" violates foreign key constraint "payment_orders_property_id_fkey" on table "payment_orders"
+
+    [0m [90m 17 |[39m         [36mif[39m (method [33m===[39m [32m'error'[39m [33m&&[39m args[[35m0[39m] [33m===[39m [32m'🔥 Global Error Handler:'[39m [33m&&[39m [36mtypeof[39m args[[35m1[39m] [33m===[39m [32m'string'[39m
+     [90m 18 |[39m             [33m&&[39m [35m/^(Invalid file type \(application\/pdf\)|File too large$|Unexpected file field$|Too many files$|invalid input syntax for type numeric: "invalid-numeric-fixture"$|Injected upload failure$)/[39m[33m.[39mtest(args[[35m1[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 19 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 20 |[39m     }[33m;[39m
+     [90m 21 |[39m }
+     [90m 22 |[39m[0m
+
+      at console.<computed> (integration/storage.setup.cjs:19:9)
+      at error (middleware/errorHandler.js:2:13)
+      at Layer.handleError (node_modules/router/lib/layer.js:116:17)
+      at trimPrefix (node_modules/router/index.js:340:13)
+      at node_modules/router/index.js:297:9
+      at processParams (node_modules/router/index.js:582:12)
+      at next (node_modules/router/index.js:291:5)
+      at node_modules/router/index.js:688:15
+      at next (node_modules/router/index.js:276:14)
+      at next (node_modules/router/lib/route.js:132:14)
+      at next (controllers/property/propertyWriteController.js:198:9)
+
+  console.error
+    [HTTP] DELETE /api/properties/my-listings/dcb7d188-eb0a-48a7-97a5-bb98f33b27d1 -> 500 (47ms)
+
+    [0m [90m 17 |[39m         [36mif[39m (method [33m===[39m [32m'error'[39m [33m&&[39m args[[35m0[39m] [33m===[39m [32m'🔥 Global Error Handler:'[39m [33m&&[39m [36mtypeof[39m args[[35m1[39m] [33m===[39m [32m'string'[39m
+     [90m 18 |[39m             [33m&&[39m [35m/^(Invalid file type \(application\/pdf\)|File too large$|Unexpected file field$|Too many files$|invalid input syntax for type numeric: "invalid-numeric-fixture"$|Injected upload failure$)/[39m[33m.[39mtest(args[[35m1[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 19 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 20 |[39m     }[33m;[39m
+     [90m 21 |[39m }
+     [90m 22 |[39m[0m
+
+      at console.<computed> (integration/storage.setup.cjs:19:9)
+      at ServerResponse.logMethod (server.js:40:9)
+
+  console.error
+    🔥 Global Error Handler: update or delete on table "properties" violates foreign key constraint "payment_orders_property_id_fkey" on table "payment_orders"
+
+    [0m [90m 17 |[39m         [36mif[39m (method [33m===[39m [32m'error'[39m [33m&&[39m args[[35m0[39m] [33m===[39m [32m'🔥 Global Error Handler:'[39m [33m&&[39m [36mtypeof[39m args[[35m1[39m] [33m===[39m [32m'string'[39m
+     [90m 18 |[39m             [33m&&[39m [35m/^(Invalid file type \(application\/pdf\)|File too large$|Unexpected file field$|Too many files$|invalid input syntax for type numeric: "invalid-numeric-fixture"$|Injected upload failure$)/[39m[33m.[39mtest(args[[35m1[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 19 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 20 |[39m     }[33m;[39m
+     [90m 21 |[39m }
+     [90m 22 |[39m[0m
+
+      at console.<computed> (integration/storage.setup.cjs:19:9)
+      at error (middleware/errorHandler.js:2:13)
+      at Layer.handleError (node_modules/router/lib/layer.js:116:17)
+      at trimPrefix (node_modules/router/index.js:340:13)
+      at node_modules/router/index.js:297:9
+      at processParams (node_modules/router/index.js:582:12)
+      at next (node_modules/router/index.js:291:5)
+      at node_modules/router/index.js:688:15
+      at next (node_modules/router/index.js:276:14)
+      at next (node_modules/router/lib/route.js:132:14)
+      at next (controllers/admin/adminListingController.js:71:9)
+
+  console.error
+    [HTTP] DELETE /api/admin/listings/006fd08c-90d2-4708-ad73-84c85b788158 -> 500 (27ms)
+
+    [0m [90m 17 |[39m         [36mif[39m (method [33m===[39m [32m'error'[39m [33m&&[39m args[[35m0[39m] [33m===[39m [32m'🔥 Global Error Handler:'[39m [33m&&[39m [36mtypeof[39m args[[35m1[39m] [33m===[39m [32m'string'[39m
+     [90m 18 |[39m             [33m&&[39m [35m/^(Invalid file type \(application\/pdf\)|File too large$|Unexpected file field$|Too many files$|invalid input syntax for type numeric: "invalid-numeric-fixture"$|Injected upload failure$)/[39m[33m.[39mtest(args[[35m1[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 19 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 20 |[39m     }[33m;[39m
+     [90m 21 |[39m }
+     [90m 22 |[39m[0m
+
+      at console.<computed> (integration/storage.setup.cjs:19:9)
+      at ServerResponse.logMethod (server.js:40:9)
+
+  console.log
+    Storage fixture cleanup verified: actual Storage API removed exact owned objects/files before own properties/users.
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+PASS integration/storage.integration.cjs (22.858 s)
+  Real local image/Storage integration
+    √ SELLER image creation persists URL, metadata and exact public bytes (2660 ms)
+    √ AGENT image creation persists URL, metadata and exact public bytes (772 ms)
+    √ multiple real photos and tour preserve URL/room associations (1827 ms)
+    √ MIME rejection leaves no new listing/object/file (767 ms)
+    √ size rejection leaves no new listing/object/file (905 ms)
+    √ field rejection leaves no new listing/object/file (967 ms)
+    √ count rejection leaves no new listing/object/file (970 ms)
+    √ actual DB failure after upload rolls back stored objects and persisted bytes (1472 ms)
+    √ controlled second transfer failure rolls back the completed first real transfer (1324 ms)
+    √ anonymous/wrong-role uploads and foreign-owner delete preserve other objects (781 ms)
+    √ SELLER listing deletion also removes its image objects and bytes (848 ms)
+    √ ADMIN listing deletion also removes its image objects and bytes (875 ms)
+    √ shared managed files remain until the last same-owner listing reference is deleted (1317 ms)
+    √ SELLER DB foreign-key delete failure preserves the listing and its real images (879 ms)
+    √ ADMIN DB foreign-key delete failure preserves the listing and its real images (798 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       15 passed, 15 total
+Snapshots:   0 total
+Time:        23.346 s
+Ran all test suites.
+PASS: full native Storage schema/metadata and persisted file manifest preserved.
+PASS: 5 full table snapshot(s) and canonical ledger preserved after cleanup.

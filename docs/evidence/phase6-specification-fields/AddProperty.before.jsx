@@ -1,0 +1,1014 @@
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { m } from "framer-motion";
+import { 
+  MapPin, 
+  Image as ImageIcon, 
+  CheckCircle2, 
+  ArrowRight, 
+  ArrowLeft, 
+  Compass, 
+  ShieldCheck, 
+  Home, 
+  Bed, 
+  Bath, 
+  Maximize2, 
+  Crosshair, 
+  Trash2, 
+  Upload,
+  AlertCircle,
+  Lock,
+  Edit3,
+  CreditCard,
+  Check, Maximize } from "lucide-react";
+
+import { MapContainer, TileLayer, Marker, Polygon, CircleMarker, useMapEvents } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import imageCompression from "browser-image-compression";
+
+import { useAuth } from "../context/UserAuthContext";
+import Navbar from "../components/layout/Navbar";
+import usePropertyForm from "../hooks/usePropertyForm";
+import CategoryPriceStep from "../components/property/create/CategoryPriceStep";
+import LocationStep from "../components/property/create/LocationStep";
+
+const MapClickEvents = ({ locationMode, setFormData, setGpsActive, setBoundaryCoordinates }) => {
+  useMapEvents({
+    click(e) {
+      if (locationMode === "point") {
+        setFormData((prev) => ({
+          ...prev,
+          latitude: e.latlng.lat,
+          longitude: e.latlng.lng,
+        }));
+        setGpsActive(false);
+      } else if (locationMode === "boundary") {
+        setBoundaryCoordinates((prev) => [...prev, [e.latlng.lat, e.latlng.lng]]);
+      }
+    },
+  });
+  return null;
+};
+
+
+
+// Custom Leaflet marker icon
+const customIcon = new L.Icon({
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+});
+
+// Sri Lankan Districts
+const sriLankaDistricts = [
+  "Colombo", "Gampaha", "Kalutara", "Kandy", "Matale", "Nuwara Eliya",
+  "Galle", "Matara", "Hambantota", "Jaffna", "Kilinochchi", "Mannar",
+  "Vavuniya", "Mullaitivu", "Batticaloa", "Ampara", "Trincomalee",
+  "Kurunegala", "Puttalam", "Anuradhapura", "Polonnaruwa", "Badulla",
+  "Monaragala", "Ratnapura", "Kegalle"
+];
+
+// District Lat/Lng Coordinates
+const districtLocations = {
+  Colombo: [6.9271, 79.8612],
+  Gampaha: [7.0917, 79.9992],
+  Kalutara: [6.5854, 79.9607],
+  Kandy: [7.2906, 80.6337],
+  Galle: [6.0535, 80.221],
+  Matara: [5.9549, 80.555],
+  Hambantota: [6.1246, 81.1185],
+  Jaffna: [9.6615, 80.0255],
+  Kurunegala: [7.4818, 80.3609],
+  Ratnapura: [6.7056, 80.3847],
+  Anuradhapura: [8.3114, 80.4037],
+  Polonnaruwa: [7.9403, 81.0188],
+  Matale: [7.4675, 80.6234],
+  "Nuwara Eliya": [6.9497, 80.7891],
+  Badulla: [6.9895, 81.0557],
+  Trincomalee: [8.5874, 81.2152],
+  Batticaloa: [7.7310, 81.6747],
+  Ampara: [7.2975, 81.6747],
+  Puttalam: [8.0408, 79.8394],
+  Kegalle: [7.2513, 80.3464],
+  Monaragala: [6.8728, 81.3507],
+  Mannar: [8.9810, 79.9042],
+  Vavuniya: [8.7542, 80.4982],
+  Kilinochchi: [9.3803, 80.3770],
+  Mullaitivu: [9.2671, 80.8142]
+};
+
+const STEPS = [
+  { id: 1, title: "Category & Price", icon: Home, subtitle: "Type & pricing" },
+  { id: 2, title: "Spatial Location", icon: MapPin, subtitle: "District & map pin" },
+  { id: 3, title: "Specs & Photos", icon: ImageIcon, subtitle: "Details & HD images" },
+  { id: 4, title: "Review & Publish", icon: CheckCircle2, subtitle: "Verify & payment" },
+];
+
+const formatLKRPreview = (num, period) => {
+  if (!num || isNaN(num)) return null;
+  const n = Number(num);
+  let base = "";
+  if (n >= 1000000000) base = `Rs. ${(n / 1000000000).toFixed(2)} Billion`;
+  else if (n >= 1000000) base = `Rs. ${(n / 1000000).toFixed(2)} Million`;
+  else if (n >= 1000) base = `Rs. ${(n / 1000).toLocaleString()} Thousand`;
+  else base = `Rs. ${n.toLocaleString()}`;
+
+  return period ? `${base} / ${period}` : base;
+};
+
+const AddProperty = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [gpsActive, setGpsActive] = useState(false);
+  const [, setCompressing] = useState(false);
+
+  const {
+    formData,
+    setFormData,
+    handleChange,
+    locationMode,
+    setLocationMode,
+    boundaryCoordinates,
+    setBoundaryCoordinates,
+    images,
+    setImages,
+    previewUrls,
+    setPreviewUrls,
+    virtualTourFiles,
+    setVirtualTourFiles,
+    virtualTourMetadata,
+    setVirtualTourMetadata,
+    loading,
+    message,
+    setMessage,
+    handleSubmit,
+    paymentConfig,
+  } = usePropertyForm();
+
+  const MAX_HD_MB = 50; 
+  const currentHDSizeMB = images.reduce((acc, f) => acc + f.size, 0) / (1024 * 1024);
+  const hdProgress = Math.min((currentHDSizeMB / MAX_HD_MB) * 100, 100);
+
+  const MAX_360_MB = 25; 
+  const current360SizeMB = virtualTourFiles.reduce((acc, f) => acc + f.size, 0) / (1024 * 1024);
+  const v360Progress = Math.min((current360SizeMB / MAX_360_MB) * 100, 100);
+
+
+  // Handle Type Change with exact conditional rules
+  const handleTypeSelect = (type) => {
+    setFormData((prev) => ({
+      ...prev,
+      type,
+      listingType: (type === "Rent House" || type === "Rent Villa") ? "Rent" : "Sale",
+      bedrooms: type === "Land" ? "" : prev.bedrooms,
+      bathrooms: type === "Land" ? "" : prev.bathrooms,
+      houseSize: (type === "Land") ? "" : prev.houseSize,
+      landSize: (type === "Rent House" || type === "Rent Villa") ? "" : prev.landSize,
+      pricePeriod: (type === "Rent House" || type === "Rent Villa") ? (prev.pricePeriod || "Month") : "",
+    }));
+  };
+
+  const handleDistrictChange = (e) => {
+    const district = e.target.value;
+    const coords = districtLocations[district] || [7.8731, 80.7718];
+    setFormData((prev) => ({
+      ...prev,
+      district,
+      latitude: coords[0],
+      longitude: coords[1],
+    }));
+  };
+
+  const handleGetGPS = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setFormData((prev) => ({
+          ...prev,
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+        }));
+        setGpsActive(true);
+        setLocationMode("point");
+        setBoundaryCoordinates([]);
+      },
+      () => {
+        alert("Unable to retrieve GPS coordinates. Please select on map.");
+        setGpsActive(false);
+      }
+    );
+  };
+
+  const handleVirtualTourUpload = (e) => {
+    const files = Array.from(e.target.files);
+
+      // Prevent individual files from exceeding the 5MB backend limit
+      const oversized = files.filter(f => f.size > 5 * 1024 * 1024);
+      if (oversized.length > 0) {
+        setMessage({ type: "error", text: "Upload failed: One or more 360 panorama files exceed the 5MB limit." });
+        return;
+      }
+
+    if (files.length + virtualTourFiles.length > 5) {
+      alert('You can only upload up to 5 virtual tours.');
+      return;
+    }
+    setVirtualTourFiles((prev) => [...prev, ...files]);
+    const newMetadata = files.map(() => ({ room: 'Room' }));
+    setVirtualTourMetadata((prev) => [...prev, ...newMetadata]);
+  };
+
+  const handleVirtualTourLabel = (index, value) => {
+    setVirtualTourMetadata((prev) => {
+      const newMeta = [...prev];
+      newMeta[index] = { ...newMeta[index], room: value };
+      return newMeta;
+    });
+  };
+
+  const removeVirtualTour = (index) => {
+    setVirtualTourFiles((prev) => prev.filter((_, i) => i !== index));
+    setVirtualTourMetadata((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleImageUpload = async (e) => {
+    const files = Array.from(e.target.files);
+
+      // Prevent individual files from exceeding the 5MB backend limit
+      const oversized = files.filter(f => f.size > 5 * 1024 * 1024);
+      if (oversized.length > 0) {
+        setMessage({ type: "error", text: "Upload failed: One or more files exceed the 5MB maximum size limit." });
+        return;
+      }
+
+    if (images.length + files.length > 8) {
+      setMessage({ type: "error", text: "You can upload up to 8 high-definition photos." });
+      return;
+    }
+    setCompressing(true);
+    const options = { maxSizeMB: 1.2, maxWidthOrHeight: 1920, useWebWorker: true };
+    try {
+      const compressed = await Promise.all(
+        files.map(async (file) => {
+          const comp = await imageCompression(file, options);
+          return { file: comp, url: URL.createObjectURL(comp) };
+        })
+      );
+      setImages((prev) => [...prev, ...compressed.map((c) => c.file)]);
+      setPreviewUrls((prev) => [...prev, ...compressed.map((c) => c.url)]);
+    } catch {
+      setMessage({ type: "error", text: "Failed to process some images." });
+    } finally {
+      setCompressing(false);
+    }
+  };
+
+  const removeImage = (idx) => {
+    URL.revokeObjectURL(previewUrls[idx]);
+    setImages((prev) => prev.filter((_, i) => i !== idx));
+    setPreviewUrls((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const previewUrlsRef = React.useRef(previewUrls);
+  React.useEffect(() => {
+    previewUrlsRef.current = previewUrls;
+  }, [previewUrls]);
+
+  React.useEffect(() => {
+    return () => {
+      // Cleanup object URLs on unmount only
+      previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, []);
+
+  const validateStep = (step) => {
+    if (step === 1) {
+      if (!formData.title.trim()) {
+        setMessage({ type: "error", text: "Please enter a descriptive property title." });
+        return false;
+      }
+      if (!formData.price || Number(formData.price) <= 0) {
+        setMessage({ type: "error", text: "Please provide a valid asking price." });
+        return false;
+      }
+      if (!formData.district) {
+        setMessage({ type: "error", text: "Please select the property district." });
+        return false;
+      }
+    } else if (step === 2) {
+      if (!formData.city?.trim() && !formData.address?.trim()) {
+        setMessage({ type: "error", text: "Please specify the town or street address." });
+        return false;
+      }
+      if (locationMode === "boundary") {
+        let distinctPoints = boundaryCoordinates.length;
+        if (distinctPoints > 0) {
+          const first = boundaryCoordinates[0];
+          const last = boundaryCoordinates[boundaryCoordinates.length - 1];
+          if (first[0] === last[0] && first[1] === last[1]) {
+            distinctPoints -= 1;
+          }
+        }
+        if (distinctPoints < 3) {
+          setMessage({ type: "error", text: "Please click at least 3 distinct points on the map to define the boundary." });
+          return false;
+        }
+      }
+    } else if (step === 3) {
+      if (images.length === 0) {
+        setMessage({ type: "error", text: "Please upload at least 1 photograph of your property." });
+        return false;
+      }
+    }
+    setMessage({ type: "", text: "" });
+    return true;
+  };
+
+  const nextStep = (e) => {
+    if (e) e.preventDefault();
+    if (validateStep(currentStep)) {
+      setCurrentStep((prev) => Math.min(prev + 1, 4));
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const prevStep = (e) => {
+    if (e) e.preventDefault();
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const goToStep = (stepNumber) => {
+    setCurrentStep(stepNumber);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const isRentType = formData.type === "Rent House" || formData.type === "Rent Villa";
+  const isLandType = formData.type === "Land";
+  const isHouseType = formData.type === "House";
+
+  const getTitlePlaceholder = () => {
+    if (isHouseType) return "e.g. Beautiful 2-Story House in Colombo 07";
+    if (isLandType) return "e.g. 15 Perch Prime Land in Malabe";
+    if (formData.type === "Rent House") return "e.g. Fully Furnished 3 Bedroom House for Rent in Kandy";
+    if (formData.type === "Rent Villa") return "e.g. Luxury Private Pool Villa in Galle Fort for Rent";
+    return "Enter Property Title";
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans pb-16 selection:bg-blue-600 selection:text-white">
+      <Navbar />
+
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        
+        {/* Top Header & Back Link */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+          <div>
+            <button
+              type="button"
+              onClick={() => navigate(user?.role === "SELLER" ? "/seller-dashboard" : "/")}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer mb-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back to Dashboard</span>
+            </button>
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+              Create New Property Listing
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+              Guided 4-step spatial listing publisher with official deed moderation
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-2 rounded-2xl self-start sm:self-auto">
+            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Official Seller Studio</span>
+          </div>
+        </div>
+
+        {/* Stepper Progress Bar */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 sm:p-6 mb-8 shadow-xl">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {STEPS.map((s) => {
+              const isActive = currentStep === s.id;
+              const isPast = currentStep > s.id;
+
+              return (
+                <div
+                  key={s.id}
+                  onClick={() => {
+                    if (s.id < currentStep || validateStep(currentStep)) {
+                      goToStep(s.id);
+                    }
+                  }}
+                  className={`flex items-center gap-3 p-3 rounded-2xl transition cursor-pointer ${
+                    isActive
+                      ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30"
+                      : isPast
+                      ? "bg-slate-100/80 dark:bg-slate-800/80 text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      : "bg-slate-50/40 dark:bg-slate-950/40 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                  }`}
+                >
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs shrink-0 ${
+                    isActive ? "bg-white text-blue-900" : isPast ? "bg-emerald-500/20 text-emerald-400" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
+                  }`}>
+                    {isPast ? "✓" : s.id}
+                  </div>
+                  <div className="min-w-0">
+                    <span className={`block text-xs font-bold truncate ${isActive ? "text-white" : "text-slate-700 dark:text-slate-300"}`}>
+                      {s.title}
+                    </span>
+                    <span className="block text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate">
+                      {s.subtitle}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-4 overflow-hidden">
+            <div
+              className="bg-gradient-to-r from-blue-600 via-indigo-500 to-emerald-400 h-full transition-all duration-500"
+              style={{ width: `${(currentStep / 4) * 100}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Global Feedback Message */}
+        {message.text && (
+          <div
+            className={`mb-6 p-4 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-3 shadow-lg ${
+              message.type === "success"
+                ? "bg-emerald-950/60 text-emerald-300 border border-emerald-500/40"
+                : message.type === "info" ? "bg-blue-950/60 text-blue-300 border border-blue-500/40"
+                : "bg-red-950/60 text-red-300 border border-red-500/40"
+            }`}
+          >
+            <AlertCircle className="w-5 h-5 shrink-0" />
+            <span>{message.text}</span>
+          </div>
+        )}
+
+        {/* Step Content Container */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl">
+          
+          {/* ════════════════════════════════════════════════════════════
+              STEP 1: CATEGORY & BASIC INFO
+          ════════════════════════════════════════════════════════════ */}
+          {currentStep === 1 && (
+            <m.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+              <CategoryPriceStep
+                formData={formData}
+                isRentType={isRentType}
+                titlePlaceholder={getTitlePlaceholder()}
+                pricePreview={formData.price && formatLKRPreview(formData.price, isRentType ? formData.pricePeriod : null)}
+                districts={sriLankaDistricts}
+                onChange={handleChange}
+                onTypeSelect={handleTypeSelect}
+                onDistrictChange={handleDistrictChange}
+                onContinue={nextStep}
+              />
+            </m.div>
+          )}
+
+          {/* ════════════════════════════════════════════════════════════
+              STEP 2: SPATIAL LOCATION & POSTGIS MAP
+          ════════════════════════════════════════════════════════════ */}
+          {currentStep === 2 && (
+            <m.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+              
+              <LocationStep
+                formData={formData}
+                onChange={handleChange}
+                locationMode={locationMode}
+                onModeChange={setLocationMode}
+                onBoundaryChange={setBoundaryCoordinates}
+                boundaryCount={boundaryCoordinates.length}
+                gpsActive={gpsActive}
+                onGetGPS={handleGetGPS}
+                onPrevious={prevStep}
+                onContinue={nextStep}
+              >
+                  <MapContainer
+                    center={[formData.latitude || 6.9271, formData.longitude || 79.8612]}
+                    zoom={14}
+                    style={{ height: "100%", width: "100%" }}
+                  >
+                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                    <MapClickEvents locationMode={locationMode} setFormData={setFormData} setGpsActive={setGpsActive} setBoundaryCoordinates={setBoundaryCoordinates} />
+
+                    {locationMode === "point" && formData.latitude && formData.longitude && (
+                      <Marker position={[formData.latitude, formData.longitude]} icon={customIcon} />
+                    )}
+
+                    {locationMode === "boundary" && (
+                      <>
+                        {boundaryCoordinates.map((c, i) => (
+                          <CircleMarker key={i} center={c} radius={6} color="#3b82f6" fillColor="#60a5fa" fillOpacity={0.8} />
+                        ))}
+                        {boundaryCoordinates.length >= 3 && (
+                          <Polygon positions={boundaryCoordinates} color="#2563eb" fillColor="#3b82f6" fillOpacity={0.4} />
+                        )}
+                      </>
+                    )}
+                  </MapContainer>
+              </LocationStep>
+            </m.div>
+          )}
+
+          {/* ════════════════════════════════════════════════════════════
+              STEP 3: SPECIFICATIONS & HD PHOTOGRAPHY
+          ════════════════════════════════════════════════════════════ */}
+          {currentStep === 3 && (
+            <m.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+              
+              {!isLandType && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                      Bedrooms
+                    </label>
+                    <div className="relative">
+                      <Bed className="w-4 h-4 text-slate-500 absolute left-4 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="number"
+                        name="bedrooms"
+                        value={formData.bedrooms}
+                        onChange={handleChange}
+                        placeholder="e.g. 3"
+                        className="w-full bg-white/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl pl-10 pr-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                      Bathrooms
+                    </label>
+                    <div className="relative">
+                      <Bath className="w-4 h-4 text-slate-500 absolute left-4 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="number"
+                        name="bathrooms"
+                        value={formData.bathrooms}
+                        onChange={handleChange}
+                        placeholder="e.g. 2"
+                        className="w-full bg-white/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl pl-10 pr-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {!isLandType && (
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                    House Size (sqft)
+                  </label>
+                  <div className="relative">
+                    <Maximize2 className="w-4 h-4 text-slate-500 absolute left-4 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="number"
+                      name="houseSize"
+                      value={formData.houseSize}
+                      onChange={handleChange}
+                      placeholder="e.g. 1800"
+                      className="w-full bg-white/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl pl-10 pr-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {(isLandType || isHouseType) && (
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                    Land Size (Perches)
+                  </label>
+                  <input
+                    type="number"
+                    name="landSize"
+                    value={formData.landSize}
+                    onChange={handleChange}
+                    placeholder="e.g. 15"
+                    className="w-full bg-white/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                  Description
+                </label>
+                <textarea
+                  rows={4}
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  placeholder="Describe the key features of your property..."
+                  className="w-full bg-white/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 placeholder:text-slate-400 dark:placeholder:text-slate-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                  High-Definition Photographs ({images.length}/8) <span className="text-blue-400">*</span>
+                </label>
+                
+                <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 rounded-3xl p-8 text-center bg-slate-50/40 dark:bg-slate-950/40 transition">
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    id="property-photos-input"
+                    className="hidden"
+                  />
+                  <label htmlFor="property-photos-input" className="flex flex-col items-center cursor-pointer">
+                    <div className="w-14 h-14 rounded-2xl bg-blue-600/20 text-blue-400 flex items-center justify-center mb-3">
+                      <Upload className="w-6 h-6" />
+                    </div>
+                    <span className="text-sm font-bold text-slate-900 dark:text-white">Click to Upload HD Photographs</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 mt-1">Automatic browser compression up to 1920px (Max 8 photos)</span>
+                  </label>
+                </div>
+
+                {previewUrls.length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
+                    {previewUrls.map((url, i) => (
+                      <div key={i} className="relative aspect-video rounded-xl overflow-hidden border border-slate-300 dark:border-slate-700 group">
+                        <img src={url} alt="" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(i)}
+                          className="absolute top-2 right-2 p-1.5 rounded-lg bg-red-600 text-white opacity-0 group-hover:opacity-100 transition cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                        {i === 0 && (
+                          <span className="absolute bottom-2 left-2 bg-blue-600 text-white text-[10px] font-black px-2 py-0.5 rounded-md">
+                            PRIMARY
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+                  {/* Memory Storage UI - HD Photos */}
+                  <div className="mt-6 bg-white/50 dark:bg-slate-900/50 rounded-xl p-4 border border-slate-200 dark:border-slate-800">
+                    <div className="flex justify-between items-end mb-2">
+                      <span className="text-[10px] font-black tracking-widest uppercase text-slate-500">HD Storage Used</span>
+                      <span className="text-sm font-bold text-blue-400">{currentHDSizeMB.toFixed(2)} MB <span className="text-slate-500 text-xs">/ {MAX_HD_MB} MB</span></span>
+                    </div>
+                    <div className="w-full h-1.5 bg-slate-50 dark:bg-slate-950 rounded-full overflow-hidden border border-slate-200/50 dark:border-slate-800/50">
+                      <div 
+                        className={`h-full rounded-full transition-all duration-500 ${currentHDSizeMB >= MAX_HD_MB ? 'bg-red-500' : 'bg-blue-500'}`} 
+                        style={{ width: `${hdProgress}%` }}
+                      />
+                    </div>
+                  </div>
+
+
+                {/* 360 Virtual Tours Section */}
+                <div className="pt-8 mt-8 border-t border-slate-200 dark:border-slate-800">
+                  <label className="block text-xs font-black uppercase tracking-wider text-emerald-400 mb-2">
+                    <span>360 Virtual Tours (Optional)</span>
+                    <span className="ml-2 bg-emerald-900/50 text-emerald-400 px-2 py-0.5 rounded-full text-[10px]">PREMIUM</span>
+                  </label>
+                  <p className="text-slate-500 text-sm mb-4">Upload equirectangular panoramic images (.jpg or .png) to create an immersive 3D viewing experience.</p>
+                  
+                  <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-emerald-500 rounded-3xl p-8 text-center bg-slate-50/40 dark:bg-slate-950/40 transition mb-6">
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/jpeg, image/png"
+                      onChange={handleVirtualTourUpload}
+                      id="property-virtual-tours-input"
+                      className="hidden"
+                    />
+                    <label htmlFor="property-virtual-tours-input" className="flex flex-col items-center cursor-pointer">
+                      <div className="w-16 h-16 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center mb-4">
+                        <Maximize className="w-6 h-6 text-emerald-400" />
+                      </div>
+                      <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Click to upload 360 photos</span>
+                      <span className="text-xs text-slate-500 mt-2">Max 5 panoramas (2:1 aspect ratio recommended)</span>
+                    </label>
+                  </div>
+
+                  {virtualTourFiles.length > 0 && (
+                    <div className="space-y-4">
+                      {virtualTourFiles.map((file, index) => (
+                        <div key={index} className="flex flex-col sm:flex-row gap-4 items-center bg-white/50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+                          <div className="w-full sm:w-24 h-16 bg-slate-100 dark:bg-slate-800 rounded-xl overflow-hidden shrink-0">
+                            <img src={URL.createObjectURL(file)} alt="360 preview" className="w-full h-full object-cover opacity-70" />
+                          </div>
+                          <div className="flex-grow w-full">
+                            <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Room / Area Label</label>
+                            <input
+                              type="text"
+                              value={virtualTourMetadata[index]?.room || ''}
+                              onChange={(e) => handleVirtualTourLabel(index, e.target.value)}
+                              placeholder="e.g. Living Room, Master Bedroom"
+                              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeVirtualTour(index)}
+                            className="p-3 text-red-400 hover:bg-red-400/10 rounded-xl transition"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {/* Memory Storage UI - 360 Tours */}
+                  <div className="mt-6 bg-white/50 dark:bg-slate-900/50 rounded-xl p-4 border border-slate-200 dark:border-slate-800">
+                    <div className="flex justify-between items-end mb-2">
+                      <span className="text-[10px] font-black tracking-widest uppercase text-slate-500">360 Storage Used</span>
+                      <span className="text-sm font-bold text-emerald-400">{current360SizeMB.toFixed(2)} MB <span className="text-slate-500 text-xs">/ {MAX_360_MB} MB</span></span>
+                    </div>
+                    <div className="w-full h-1.5 bg-slate-50 dark:bg-slate-950 rounded-full overflow-hidden border border-slate-200/50 dark:border-slate-800/50">
+                      <div 
+                        className={`h-full rounded-full transition-all duration-500 ${current360SizeMB >= MAX_360_MB ? 'bg-red-500' : 'bg-emerald-500'}`} 
+                        style={{ width: `${v360Progress}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+
+              {/* Navigation Controls */}
+              <div className="flex items-center justify-between border-t border-slate-200 dark:border-slate-800 pt-6 mt-8">
+                <button
+                  type="button"
+                  onClick={prevStep}
+                  className="px-5 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-bold text-xs sm:text-sm transition flex items-center gap-2 cursor-pointer"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Previous Step</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={nextStep}
+                  className="px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm transition flex items-center gap-2 shadow-lg shadow-blue-600/30 cursor-pointer"
+                >
+                  <span>Review Property Details</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+
+            </m.div>
+          )}
+
+          {/* ════════════════════════════════════════════════════════════
+              STEP 4: COMPLETE EXECUTIVE REVIEW & VERIFICATION HUB
+          ════════════════════════════════════════════════════════════ */}
+          {currentStep === 4 && (
+            <m.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+              
+              <div className="border-b border-slate-200 dark:border-slate-800 pb-4">
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 rounded-xl bg-blue-500/20 text-blue-300 border border-blue-500/30 text-xs font-black uppercase">
+                    Final Step 4 of 4
+                  </span>
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white">Review & Confirm Your Listing</h3>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  Please verify all details carefully. You can edit any section before proceeding to payment.
+                </p>
+              </div>
+
+              {/* Summary Cards Grid with Direct Edit Buttons */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                
+                {/* 1. Category & Price Summary */}
+                <div className="p-5 rounded-3xl bg-slate-50/70 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">1. Category & Price</span>
+                      <button
+                        type="button"
+                        onClick={() => goToStep(1)}
+                        className="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1 cursor-pointer"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        <span>Edit</span>
+                      </button>
+                    </div>
+
+                    <div className="space-y-2 text-xs">
+                      <div>
+                        <span className="text-slate-500 dark:text-slate-400 block">Type:</span>
+                        <strong className="text-slate-900 dark:text-white text-sm">{formData.type} ({formData.listingType})</strong>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 dark:text-slate-400 block">Price:</span>
+                        <strong className="text-emerald-400 text-sm">{formatLKRPreview(formData.price, isRentType ? formData.pricePeriod : null)}</strong>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 dark:text-slate-400 block">Contact Phone:</span>
+                        <span className="text-slate-800 dark:text-slate-200">{formData.contactNumber || "-"}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Spatial Location Summary */}
+                <div className="p-5 rounded-3xl bg-slate-50/70 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">2. Spatial Location</span>
+                      <button
+                        type="button"
+                        onClick={() => goToStep(2)}
+                        className="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1 cursor-pointer"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        <span>Edit</span>
+                      </button>
+                    </div>
+
+                    <div className="space-y-2 text-xs">
+                      <div>
+                        <span className="text-slate-500 dark:text-slate-400 block">District:</span>
+                        <strong className="text-slate-900 dark:text-white">{formData.district}</strong>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 dark:text-slate-400 block">Town / Address:</span>
+                        <span className="text-slate-800 dark:text-slate-200">{formData.city || formData.address || "-"}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 dark:text-slate-400 block">Mapping Coordinates:</span>
+                        <span className="text-blue-400 font-mono text-[11px]">
+                          {locationMode === "boundary" ? `Polygon (${boundaryCoordinates.length} vertices)` : `${Number(formData.latitude).toFixed(4)}, ${Number(formData.longitude).toFixed(4)}`}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. Specs & Media Summary */}
+                <div className="p-5 rounded-3xl bg-slate-50/70 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">3. Specs & Photos</span>
+                      <button
+                        type="button"
+                        onClick={() => goToStep(3)}
+                        className="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1 cursor-pointer"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        <span>Edit</span>
+                      </button>
+                    </div>
+
+                    <div className="space-y-2 text-xs">
+                      {!isLandType && (
+                        <div>
+                          <span className="text-slate-500 dark:text-slate-400 block">Bedrooms / Baths:</span>
+                          <span className="text-slate-800 dark:text-slate-200">{formData.bedrooms || 0} Beds · {formData.bathrooms || 0} Baths</span>
+                        </div>
+                      )}
+                      <div>
+                        <span className="text-slate-500 dark:text-slate-400 block">Size:</span>
+                        <span className="text-slate-800 dark:text-slate-200">{formData.landSize ? `${formData.landSize} Perches` : ""}{formData.houseSize ? ` · ${formData.houseSize} sqft` : ""}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 dark:text-slate-400 block">Photographs:</span>
+                        <span className="text-emerald-400 font-bold">{images.length} Photos Attached</span>
+                        </div>
+                        {virtualTourFiles.length > 0 && (
+                          <div>
+                            <span className="text-slate-500 dark:text-slate-400 block">360° Tours:</span>
+                            <span className="text-emerald-400 font-bold">{virtualTourFiles.length} Panorama{virtualTourFiles.length > 1 ? 's' : ''} Attached</span>
+                          </div>
+                        )}
+                        {virtualTourFiles.length > 0 && (
+                          <div className="col-span-2 mt-2">
+                            <div className="flex flex-wrap gap-2">
+                              {virtualTourMetadata.map((meta, i) => (
+                                <span key={i} className="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-1 rounded-lg border border-emerald-500/30 flex items-center gap-1">
+                                  <Compass className="w-3 h-3" /> {meta.room}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Live Buyer Card Preview */}
+              <div>
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">
+                  Live Showcase Card (As Viewed by Buyers on Live Map)
+                </h4>
+                <div className="bg-slate-50 dark:bg-slate-950 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden max-w-md mx-auto shadow-2xl">
+                  <div className="aspect-video w-full bg-slate-100 dark:bg-slate-800 relative">
+                    {previewUrls[0] ? (
+                      <img src={previewUrls[0]} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-slate-500 text-xs font-bold">
+                        No Photo Uploaded
+                      </div>
+                    )}
+                    <div className="absolute top-3 left-3 bg-blue-600 text-white font-bold text-xs px-3 py-1 rounded-full uppercase">
+                      {formData.type}
+                    </div>
+                    <div className="absolute bottom-3 left-3">
+                      <span className="text-xl font-black text-slate-900 dark:text-white drop-shadow-md">
+                        {formatLKRPreview(formData.price, isRentType ? formData.pricePeriod : null) || `Rs. ${formData.price}`}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-5">
+                    <h4 className="font-bold text-slate-900 dark:text-white text-base line-clamp-1">{formData.title || "Property Title"}</h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1">
+                      <MapPin className="w-3.5 h-3.5 text-blue-400" />
+                      <span>{formData.city ? `${formData.city}, ${formData.district}` : formData.district}</span>
+                    </p>
+
+                    <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 font-semibold">
+                      {formData.bedrooms && <span>🛏️ {formData.bedrooms} Beds</span>}
+                      {formData.bathrooms && <span>🚿 {formData.bathrooms} Baths</span>}
+                      {formData.houseSize && <span>🏠 {formData.houseSize} sqft</span>}
+                      {formData.landSize && <span>📐 {formData.landSize} Perch</span>}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Summary Box */}
+              <div className="p-6 rounded-3xl bg-emerald-950/30 border-2 border-emerald-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold shrink-0">
+                    <CreditCard className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-black text-emerald-400 uppercase tracking-wider">One-Time Activation Fee</span>
+                    <h4 className="text-xl font-black text-slate-900 dark:text-white">
+                      Rs. {parseFloat(paymentConfig.listingFee || 500).toLocaleString()} <span className="text-xs font-normal text-slate-500 dark:text-slate-400">LKR</span>
+                    </h4>
+                    <p className="text-xs text-slate-700 dark:text-slate-300 mt-0.5">
+                      Secured via Central Bank of Sri Lanka approved PayHere Payment Gateway
+                    </p>
+                  </div>
+                </div>
+
+                <div className="text-xs text-slate-500 dark:text-slate-400 sm:text-right">
+                  <span className="block font-bold text-slate-900 dark:text-white">✓ Deed Verification</span>
+                  <span className="block">✓ PostGIS Map Broadcast</span>
+                  <span className="block">✓ Unlimited Buyer Leads</span>
+                </div>
+              </div>
+
+              {/* Final Step Controls */}
+              <div className="flex items-center justify-between border-t border-slate-200 dark:border-slate-800 pt-6 mt-8">
+                <button
+                  type="button"
+                  onClick={() => goToStep(3)}
+                  className="px-5 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-bold text-xs sm:text-sm transition flex items-center gap-2 cursor-pointer"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Back to Specs & Photos</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={loading}
+                  className="px-8 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-black text-sm transition flex items-center gap-2 shadow-xl shadow-emerald-600/30 cursor-pointer"
+                >
+                  <Lock className="w-4 h-4" />
+                  <span>
+                    {loading
+                      ? "Processing Payment..."
+                      : `Proceed to Payment (Rs. ${parseFloat(paymentConfig.listingFee || 500).toLocaleString()}) →`}
+                  </span>
+                </button>
+              </div>
+
+            </m.div>
+          )}
+
+        </div>
+
+      </div>
+    </div>
+  );
+};
+
+export default AddProperty;

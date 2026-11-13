@@ -16,3 +16,12 @@ test('review displays the property-specific quoted amount and actual mode', () =
   fireEvent.click(screen.getByRole('button', { name: 'Proceed to Payment (Rs. 900) →' })); expect(values.handleSubmit).toHaveBeenCalledTimes(1);
   expect(screen.getByText('Test checkout')).toBeTruthy(); expect(screen.queryByText(/Central Bank/)).toBeNull();
 });
+
+test('photo price overlay keeps white text on a dark backing in either theme', () => {
+  const values = props(); values.formatLKRPreview = () => 'Rs. 123,000'; values.previewUrls = ['bright-photo.jpg'];
+  render(<ReviewPublishStep {...values} />);
+  const overlay = screen.getAllByText('Rs. 123,000').find(node => node.tagName === 'SPAN');
+  expect(overlay).toHaveClass('text-white');
+  expect(overlay.parentElement).toHaveClass('bg-black/80');
+  expect(overlay.className).not.toContain('text-slate-900');
+});

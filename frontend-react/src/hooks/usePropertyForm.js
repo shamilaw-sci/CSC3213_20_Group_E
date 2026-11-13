@@ -1,3 +1,4 @@
+import { contactError, specificationError } from '../utils/propertyValidation';
 import { logClientError } from '../utils/clientLog';
 import { useState, useRef, useEffect } from "react";
 import api from "../context/api";
@@ -59,6 +60,8 @@ export default function usePropertyForm() {
       return;
     }
 
+    const validationError = contactError(formData.contactNumber) || specificationError(formData);
+    if (validationError) { setMessage({ type: 'error', text: validationError }); return; }
     if (submitting.current || checkoutBusy) return;
     if (paymentConfig.status !== 'ready') {
       setMessage({ type: 'error', text: 'Payment configuration is unavailable. Retry loading it before paying.' }); return;

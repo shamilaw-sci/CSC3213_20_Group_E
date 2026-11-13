@@ -155,7 +155,7 @@ const sendPaymentReceipt = (email, propertyTitle, amount) => {
 };
 
 const sendListingStatusEmail = (email, propertyTitle, status, reason = '') => {
-    const isApproved = status === 'Active';
+    const isApproved = ['active', 'approved'].includes(String(status).toLowerCase());
     const subject = `Your Property is ${isApproved ? 'Approved!' : 'Requires Attention'}`;
     const badgeColor = isApproved ? '#059669' : '#dc2626';
     const badgeBg = isApproved ? '#d1fae5' : '#fee2e2';

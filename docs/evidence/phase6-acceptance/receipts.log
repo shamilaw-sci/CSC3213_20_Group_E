@@ -1,0 +1,134 @@
+Running real Payment receipts integration against verified stack-c; external delivery disabled.
+  console.log
+    {"level":"info","time":"2026-11-02T08:19:38.372Z","message":"Email sent","meta":{"to":"7ecf6f52-7712-4d15-9f77-f6fabeda628c@example.test","subject":"Payment Receipt - Thirasara Property 🧾","response":"captured without delivery"}}
+
+      at console.<computed> [as log] (integration/setup.cjs:49:9)
+
+  console.log
+    {"level":"info","time":"2026-11-02T08:19:38.436Z","message":"Email sent","meta":{"to":"7ecf6f52-7712-4d15-9f77-f6fabeda628c@example.test","subject":"Payment Receipt - Thirasara Property 🧾","response":"captured without delivery"}}
+
+      at console.<computed> [as log] (integration/setup.cjs:49:9)
+          at async Promise.all (index 1)
+
+  console.error
+    {"level":"error","time":"2026-11-02T08:19:38.476Z","message":"Failed to send email","meta":{"message":"Synthetic SMTP rejection; no connection","stack":"Error: Synthetic SMTP rejection; no connection\n    at Object.<anonymous> (D:\\CSC3213_20_Group_E\\backend-node\\integration\\receipts.integration.cjs:86:59)\n    at Promise.finally.completed (D:\\CSC3213_20_Group_E\\backend-node\\node_modules\\jest-circus\\build\\jestAdapterInit.js:1834:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (D:\\CSC3213_20_Group_E\\backend-node\\node_modules\\jest-circus\\build\\jestAdapterInit.js:1774:10)\n    at _callCircusTest (D:\\CSC3213_20_Group_E\\backend-node\\node_modules\\jest-circus\\build\\jestAdapterInit.js:1167:40)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at _runTestInContext (D:\\CSC3213_20_Group_E\\backend-node\\node_modules\\jest-circus\\build\\jestAdapterInit.js:1103:3)\n    at runTestWithContext (D:\\CSC3213_20_Group_E\\backend-node\\node_modules\\jest-circus\\build\\jestAdapterInit.js:996:5)\n    at _runTestsForDescribeBlockOnce (D:\\CSC3213_20_Group_E\\backend-node\\node_modules\\jest-circus\\build\\jestAdapterInit.js:1008:11)\n    at _runTestsForDescribeBlock (D:\\CSC3213_20_Group_E\\backend-node\\node_modules\\jest-circus\\build\\jestAdapterInit.js:824:5)\n    at run (D:\\CSC3213_20_Group_E\\backend-node\\node_modules\\jest-circus\\build\\jestAdapterInit.js:789:3)\n    at runAndTransformResultsToJestFormat (D:\\CSC3213_20_Group_E\\backend-node\\node_modules\\jest-circus\\build\\jestAdapterInit.js:2300:21)\n    at jestAdapter (D:\\CSC3213_20_Group_E\\backend-node\\node_modules\\jest-circus\\build\\runner.js:111:19)\n    at runTestInternal (D:\\CSC3213_20_Group_E\\backend-node\\node_modules\\jest-runner\\build\\index.js:247:16)\n    at runTest (D:\\CSC3213_20_Group_E\\backend-node\\node_modules\\jest-runner\\build\\index.js:315:7)"}}
+
+    [0m [90m 26 |[39m     [36mconst[39m line [33m=[39m [33mJSON[39m[33m.[39mstringify(payload)[33m;[39m
+     [90m 27 |[39m     [36mif[39m (level [33m===[39m [32m'error'[39m) {
+    [31m[1m>[22m[39m[90m 28 |[39m         console[33m.[39merror(line)[33m;[39m
+     [90m    |[39m                 [31m[1m^[22m[39m
+     [90m 29 |[39m         [36mreturn[39m[33m;[39m
+     [90m 30 |[39m     }
+     [90m 31 |[39m     [36mif[39m (level [33m===[39m [32m'warn'[39m) {[0m
+
+      at error (utils/logger.js:28:17)
+      at Object.write (utils/logger.js:42:31)
+      at error (utils/emailService.js:55:16)
+      at Object.drain (utils/paymentReceiptQueue.js:10:13)
+      at Object.<anonymous> (integration/receipts.integration.cjs:87:5)
+
+  console.error
+    {"level":"error","time":"2026-11-02T08:19:38.486Z","message":"Payment receipt delivery pending retry","meta":{"order_id":"ed94081d-d1f1-4151-a139-2daa03c69748","error":"Synthetic SMTP rejection; no connection"}}
+
+    [0m [90m 26 |[39m     [36mconst[39m line [33m=[39m [33mJSON[39m[33m.[39mstringify(payload)[33m;[39m
+     [90m 27 |[39m     [36mif[39m (level [33m===[39m [32m'error'[39m) {
+    [31m[1m>[22m[39m[90m 28 |[39m         console[33m.[39merror(line)[33m;[39m
+     [90m    |[39m                 [31m[1m^[22m[39m
+     [90m 29 |[39m         [36mreturn[39m[33m;[39m
+     [90m 30 |[39m     }
+     [90m 31 |[39m     [36mif[39m (level [33m===[39m [32m'warn'[39m) {[0m
+
+      at error (utils/logger.js:28:17)
+      at Object.write (utils/logger.js:42:31)
+      at Object.error (utils/paymentReceiptQueue.js:17:20)
+      at Object.<anonymous> (integration/receipts.integration.cjs:87:5)
+
+  console.log
+    {"level":"info","time":"2026-11-02T08:19:38.543Z","message":"Email sent","meta":{"to":"7ecf6f52-7712-4d15-9f77-f6fabeda628c@example.test","subject":"Payment Receipt - Thirasara Property 🧾","response":"captured without delivery"}}
+
+      at console.<computed> [as log] (integration/setup.cjs:49:9)
+
+  console.warn
+    {"level":"warn","time":"2026-11-02T08:19:38.583Z","message":"Email not sent because EMAIL_USER or EMAIL_PASS is missing"}
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> [as warn] (integration/setup.cjs:49:9)
+      at warn (utils/logger.js:32:17)
+      at Object.write [as warn] (utils/logger.js:41:30)
+      at warn (utils/emailService.js:21:20)
+      at Object.sendEmail [as sendPaymentReceipt] (utils/emailService.js:154:12)
+      at integration/receipts.setup.cjs:21:72
+      at Object.sendPaymentReceipt [as drain] (utils/paymentReceiptQueue.js:10:19)
+      at Object.<anonymous> (integration/receipts.integration.cjs:99:42)
+
+  console.error
+    {"level":"error","time":"2026-11-02T08:19:38.588Z","message":"Failed to send email","meta":{"message":"Email credentials unavailable","stack":"Error: Email credentials unavailable\n    at sendEmail (D:\\CSC3213_20_Group_E\\backend-node\\utils\\emailService.js:22:31)\n    at Object.sendEmail [as sendPaymentReceipt] (D:\\CSC3213_20_Group_E\\backend-node\\utils\\emailService.js:154:12)\n    at D:\\CSC3213_20_Group_E\\backend-node\\integration\\receipts.setup.cjs:21:72\n    at Object.sendPaymentReceipt [as drain] (D:\\CSC3213_20_Group_E\\backend-node\\utils\\paymentReceiptQueue.js:10:19)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at Object.<anonymous> (D:\\CSC3213_20_Group_E\\backend-node\\integration\\receipts.integration.cjs:99:42)"}}
+
+    [0m [90m 26 |[39m     [36mconst[39m line [33m=[39m [33mJSON[39m[33m.[39mstringify(payload)[33m;[39m
+     [90m 27 |[39m     [36mif[39m (level [33m===[39m [32m'error'[39m) {
+    [31m[1m>[22m[39m[90m 28 |[39m         console[33m.[39merror(line)[33m;[39m
+     [90m    |[39m                 [31m[1m^[22m[39m
+     [90m 29 |[39m         [36mreturn[39m[33m;[39m
+     [90m 30 |[39m     }
+     [90m 31 |[39m     [36mif[39m (level [33m===[39m [32m'warn'[39m) {[0m
+
+      at error (utils/logger.js:28:17)
+      at Object.write (utils/logger.js:42:31)
+      at error (utils/emailService.js:55:16)
+      at Object.sendEmail [as sendPaymentReceipt] (utils/emailService.js:154:12)
+      at integration/receipts.setup.cjs:21:72
+      at Object.sendPaymentReceipt [as drain] (utils/paymentReceiptQueue.js:10:19)
+      at Object.<anonymous> (integration/receipts.integration.cjs:99:42)
+
+  console.error
+    {"level":"error","time":"2026-11-02T08:19:38.591Z","message":"Payment receipt delivery pending retry","meta":{"order_id":"8fc50aa6-c1f3-4ca6-aa0a-843588662583","error":"Email credentials unavailable"}}
+
+    [0m [90m 26 |[39m     [36mconst[39m line [33m=[39m [33mJSON[39m[33m.[39mstringify(payload)[33m;[39m
+     [90m 27 |[39m     [36mif[39m (level [33m===[39m [32m'error'[39m) {
+    [31m[1m>[22m[39m[90m 28 |[39m         console[33m.[39merror(line)[33m;[39m
+     [90m    |[39m                 [31m[1m^[22m[39m
+     [90m 29 |[39m         [36mreturn[39m[33m;[39m
+     [90m 30 |[39m     }
+     [90m 31 |[39m     [36mif[39m (level [33m===[39m [32m'warn'[39m) {[0m
+
+      at error (utils/logger.js:28:17)
+      at Object.write (utils/logger.js:42:31)
+      at Object.error (utils/paymentReceiptQueue.js:17:20)
+      at Object.<anonymous> (integration/receipts.integration.cjs:99:42)
+
+  console.log
+    {"level":"info","time":"2026-11-02T08:19:38.622Z","message":"Email sent","meta":{"to":"7ecf6f52-7712-4d15-9f77-f6fabeda628c@example.test","subject":"Payment Receipt - Thirasara Property 🧾","response":"captured without delivery"}}
+
+      at console.<computed> [as log] (integration/setup.cjs:49:9)
+
+  console.log
+    {"level":"info","time":"2026-11-02T08:19:38.665Z","message":"Email sent","meta":{"to":"7ecf6f52-7712-4d15-9f77-f6fabeda628c@example.test","subject":"Payment Receipt - Thirasara Property 🧾","response":"captured before lease changed"}}
+
+      at console.<computed> [as log] (integration/setup.cjs:49:9)
+
+  console.log
+    {"level":"info","time":"2026-11-02T08:19:38.705Z","message":"Email sent","meta":{"to":"7ecf6f52-7712-4d15-9f77-f6fabeda628c@example.test","subject":"Payment Receipt - Thirasara Property 🧾","response":"captured without delivery"}}
+
+      at console.<computed> [as log] (integration/setup.cjs:49:9)
+
+PASS integration/receipts.integration.cjs
+  √ settlement is idempotent; real rendered receipt sends once with exact decimal content (155 ms)
+  √ concurrent drains of one exact order deliver once (27 ms)
+  √ SMTP rejection retains a protected lease, then owned expiry permits retry (114 ms)
+  √ missing dummy credentials never reach capture and leave retryable state (73 ms)
+  √ stale acknowledgement cannot overwrite newer lease; uncertain acknowledgement may redeliver (81 ms)
+  √ worker and unscoped drains and unrelated mail remain forbidden (5 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       6 passed, 6 total
+Snapshots:   0 total
+Time:        2.101 s
+Ran all test suites.
+PASS: 10 full table snapshot(s) and canonical ledger preserved after cleanup.

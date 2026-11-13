@@ -1,0 +1,518 @@
+[
+  {
+    "theme": "light",
+    "state": "populated",
+    "equal": true,
+    "before": {
+      "focus": [
+        {
+          "aria": null,
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "oklch(0.922 0 0)",
+          "color": "oklch(0.704 0.04 256.788)",
+          "focusVisible": true,
+          "hover": false,
+          "outline": "oklab(0.708 0 0 / 0.5) auto 0.8px",
+          "padding": "4px",
+          "radius": "0px",
+          "shadow": "none",
+          "text": "",
+          "title": "Delete search"
+        },
+        {
+          "aria": "Toggle email alerts for this saved search",
+          "background": "oklch(0.982 0.018 155.826)",
+          "border": "oklch(0.922 0 0)",
+          "color": "oklch(0.527 0.154 150.069)",
+          "focusVisible": true,
+          "hover": false,
+          "outline": "oklab(0.708 0 0 / 0.5) auto 0.8px",
+          "padding": "6px 10px",
+          "radius": "10px",
+          "shadow": "none",
+          "text": "Email alerts on",
+          "title": null
+        },
+        {
+          "aria": null,
+          "background": "oklch(0.97 0.014 254.604)",
+          "border": "oklch(0.922 0 0)",
+          "color": "oklch(0.546 0.245 262.881)",
+          "focusVisible": true,
+          "hover": false,
+          "outline": "oklab(0.708 0 0 / 0.5) auto 0.8px",
+          "padding": "8px 0px",
+          "radius": "14px",
+          "shadow": "none",
+          "text": "Run Search Radar",
+          "title": null
+        }
+      ],
+      "hover": [
+        {
+          "aria": null,
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "oklch(0.922 0 0)",
+          "color": "oklch(0.637 0.237 25.331)",
+          "focusVisible": false,
+          "hover": true,
+          "outline": "oklab(0.708 0 0 / 0.5) none 2.4px",
+          "padding": "4px",
+          "radius": "0px",
+          "shadow": "none",
+          "text": "",
+          "title": "Delete search"
+        },
+        {
+          "aria": "Toggle email alerts for this saved search",
+          "background": "oklch(0.982 0.018 155.826)",
+          "border": "oklch(0.922 0 0)",
+          "color": "oklch(0.527 0.154 150.069)",
+          "focusVisible": false,
+          "hover": true,
+          "outline": "oklab(0.708 0 0 / 0.5) none 2.4px",
+          "padding": "6px 10px",
+          "radius": "10px",
+          "shadow": "none",
+          "text": "Email alerts on",
+          "title": null
+        },
+        {
+          "aria": null,
+          "background": "oklch(0.546 0.245 262.881)",
+          "border": "oklch(0.922 0 0)",
+          "color": "rgb(255, 255, 255)",
+          "focusVisible": false,
+          "hover": true,
+          "outline": "oklab(0.708 0 0 / 0.5) none 2.4px",
+          "padding": "8px 0px",
+          "radius": "14px",
+          "shadow": "none",
+          "text": "Run Search Radar",
+          "title": null
+        }
+      ]
+    },
+    "after": {
+      "focus": [
+        {
+          "aria": null,
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "oklch(0.922 0 0)",
+          "color": "oklch(0.704 0.04 256.788)",
+          "focusVisible": true,
+          "hover": false,
+          "outline": "oklab(0.708 0 0 / 0.5) auto 0.8px",
+          "padding": "4px",
+          "radius": "0px",
+          "shadow": "none",
+          "text": "",
+          "title": "Delete search"
+        },
+        {
+          "aria": "Toggle email alerts for this saved search",
+          "background": "oklch(0.982 0.018 155.826)",
+          "border": "oklch(0.922 0 0)",
+          "color": "oklch(0.527 0.154 150.069)",
+          "focusVisible": true,
+          "hover": false,
+          "outline": "oklab(0.708 0 0 / 0.5) auto 0.8px",
+          "padding": "6px 10px",
+          "radius": "10px",
+          "shadow": "none",
+          "text": "Email alerts on",
+          "title": null
+        },
+        {
+          "aria": null,
+          "background": "oklch(0.97 0.014 254.604)",
+          "border": "oklch(0.922 0 0)",
+          "color": "oklch(0.546 0.245 262.881)",
+          "focusVisible": true,
+          "hover": false,
+          "outline": "oklab(0.708 0 0 / 0.5) auto 0.8px",
+          "padding": "8px 0px",
+          "radius": "14px",
+          "shadow": "none",
+          "text": "Run Search Radar",
+          "title": null
+        }
+      ],
+      "hover": [
+        {
+          "aria": null,
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "oklch(0.922 0 0)",
+          "color": "oklch(0.637 0.237 25.331)",
+          "focusVisible": false,
+          "hover": true,
+          "outline": "oklab(0.708 0 0 / 0.5) none 2.4px",
+          "padding": "4px",
+          "radius": "0px",
+          "shadow": "none",
+          "text": "",
+          "title": "Delete search"
+        },
+        {
+          "aria": "Toggle email alerts for this saved search",
+          "background": "oklch(0.982 0.018 155.826)",
+          "border": "oklch(0.922 0 0)",
+          "color": "oklch(0.527 0.154 150.069)",
+          "focusVisible": false,
+          "hover": true,
+          "outline": "oklab(0.708 0 0 / 0.5) none 2.4px",
+          "padding": "6px 10px",
+          "radius": "10px",
+          "shadow": "none",
+          "text": "Email alerts on",
+          "title": null
+        },
+        {
+          "aria": null,
+          "background": "oklch(0.546 0.245 262.881)",
+          "border": "oklch(0.922 0 0)",
+          "color": "rgb(255, 255, 255)",
+          "focusVisible": false,
+          "hover": true,
+          "outline": "oklab(0.708 0 0 / 0.5) none 2.4px",
+          "padding": "8px 0px",
+          "radius": "14px",
+          "shadow": "none",
+          "text": "Run Search Radar",
+          "title": null
+        }
+      ]
+    }
+  },
+  {
+    "theme": "light",
+    "state": "empty",
+    "equal": true,
+    "before": {
+      "focus": [
+        {
+          "aria": null,
+          "background": "oklch(0.546 0.245 262.881)",
+          "border": "oklch(0.922 0 0)",
+          "color": "rgb(255, 255, 255)",
+          "focusVisible": true,
+          "hover": false,
+          "outline": "oklab(0.708 0 0 / 0.5) auto 0.8px",
+          "padding": "10px 20px",
+          "radius": "14px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 4px 6px -1px, rgba(0, 0, 0, 0.1) 0px 2px 4px -2px",
+          "text": "Start Searching",
+          "title": null
+        }
+      ],
+      "hover": [
+        {
+          "aria": null,
+          "background": "oklch(0.488 0.243 264.376)",
+          "border": "oklch(0.922 0 0)",
+          "color": "rgb(255, 255, 255)",
+          "focusVisible": true,
+          "hover": true,
+          "outline": "oklab(0.708 0 0 / 0.5) auto 0.8px",
+          "padding": "10px 20px",
+          "radius": "14px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 4px 6px -1px, rgba(0, 0, 0, 0.1) 0px 2px 4px -2px",
+          "text": "Start Searching",
+          "title": null
+        }
+      ]
+    },
+    "after": {
+      "focus": [
+        {
+          "aria": null,
+          "background": "oklch(0.546 0.245 262.881)",
+          "border": "oklch(0.922 0 0)",
+          "color": "rgb(255, 255, 255)",
+          "focusVisible": true,
+          "hover": false,
+          "outline": "oklab(0.708 0 0 / 0.5) auto 0.8px",
+          "padding": "10px 20px",
+          "radius": "14px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 4px 6px -1px, rgba(0, 0, 0, 0.1) 0px 2px 4px -2px",
+          "text": "Start Searching",
+          "title": null
+        }
+      ],
+      "hover": [
+        {
+          "aria": null,
+          "background": "oklch(0.488 0.243 264.376)",
+          "border": "oklch(0.922 0 0)",
+          "color": "rgb(255, 255, 255)",
+          "focusVisible": true,
+          "hover": true,
+          "outline": "oklab(0.708 0 0 / 0.5) auto 0.8px",
+          "padding": "10px 20px",
+          "radius": "14px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 4px 6px -1px, rgba(0, 0, 0, 0.1) 0px 2px 4px -2px",
+          "text": "Start Searching",
+          "title": null
+        }
+      ]
+    }
+  },
+  {
+    "theme": "dark",
+    "state": "populated",
+    "equal": true,
+    "before": {
+      "focus": [
+        {
+          "aria": null,
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "oklch(1 0 0 / 0.1)",
+          "color": "oklch(0.704 0.04 256.788)",
+          "focusVisible": true,
+          "hover": false,
+          "outline": "oklab(0.556 0 0 / 0.5) auto 0.8px",
+          "padding": "4px",
+          "radius": "0px",
+          "shadow": "none",
+          "text": "",
+          "title": "Delete search"
+        },
+        {
+          "aria": "Toggle email alerts for this saved search",
+          "background": "rgba(20, 83, 45, 0.35)",
+          "border": "oklch(1 0 0 / 0.1)",
+          "color": "rgb(74, 222, 128)",
+          "focusVisible": true,
+          "hover": false,
+          "outline": "oklab(0.556 0 0 / 0.5) auto 0.8px",
+          "padding": "6px 10px",
+          "radius": "10px",
+          "shadow": "none",
+          "text": "Email alerts on",
+          "title": null
+        },
+        {
+          "aria": null,
+          "background": "rgba(30, 58, 138, 0.35)",
+          "border": "oklch(1 0 0 / 0.1)",
+          "color": "rgb(96, 165, 250)",
+          "focusVisible": true,
+          "hover": false,
+          "outline": "oklab(0.556 0 0 / 0.5) auto 0.8px",
+          "padding": "8px 0px",
+          "radius": "14px",
+          "shadow": "none",
+          "text": "Run Search Radar",
+          "title": null
+        }
+      ],
+      "hover": [
+        {
+          "aria": null,
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "oklch(1 0 0 / 0.1)",
+          "color": "oklch(0.637 0.237 25.331)",
+          "focusVisible": false,
+          "hover": true,
+          "outline": "oklab(0.556 0 0 / 0.5) none 2.4px",
+          "padding": "4px",
+          "radius": "0px",
+          "shadow": "none",
+          "text": "",
+          "title": "Delete search"
+        },
+        {
+          "aria": "Toggle email alerts for this saved search",
+          "background": "rgba(20, 83, 45, 0.35)",
+          "border": "oklch(1 0 0 / 0.1)",
+          "color": "rgb(74, 222, 128)",
+          "focusVisible": false,
+          "hover": true,
+          "outline": "oklab(0.556 0 0 / 0.5) none 2.4px",
+          "padding": "6px 10px",
+          "radius": "10px",
+          "shadow": "none",
+          "text": "Email alerts on",
+          "title": null
+        },
+        {
+          "aria": null,
+          "background": "rgba(30, 58, 138, 0.35)",
+          "border": "oklch(1 0 0 / 0.1)",
+          "color": "rgb(96, 165, 250)",
+          "focusVisible": false,
+          "hover": true,
+          "outline": "oklab(0.556 0 0 / 0.5) none 2.4px",
+          "padding": "8px 0px",
+          "radius": "14px",
+          "shadow": "none",
+          "text": "Run Search Radar",
+          "title": null
+        }
+      ]
+    },
+    "after": {
+      "focus": [
+        {
+          "aria": null,
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "oklch(1 0 0 / 0.1)",
+          "color": "oklch(0.704 0.04 256.788)",
+          "focusVisible": true,
+          "hover": false,
+          "outline": "oklab(0.556 0 0 / 0.5) auto 0.8px",
+          "padding": "4px",
+          "radius": "0px",
+          "shadow": "none",
+          "text": "",
+          "title": "Delete search"
+        },
+        {
+          "aria": "Toggle email alerts for this saved search",
+          "background": "rgba(20, 83, 45, 0.35)",
+          "border": "oklch(1 0 0 / 0.1)",
+          "color": "rgb(74, 222, 128)",
+          "focusVisible": true,
+          "hover": false,
+          "outline": "oklab(0.556 0 0 / 0.5) auto 0.8px",
+          "padding": "6px 10px",
+          "radius": "10px",
+          "shadow": "none",
+          "text": "Email alerts on",
+          "title": null
+        },
+        {
+          "aria": null,
+          "background": "rgba(30, 58, 138, 0.35)",
+          "border": "oklch(1 0 0 / 0.1)",
+          "color": "rgb(96, 165, 250)",
+          "focusVisible": true,
+          "hover": false,
+          "outline": "oklab(0.556 0 0 / 0.5) auto 0.8px",
+          "padding": "8px 0px",
+          "radius": "14px",
+          "shadow": "none",
+          "text": "Run Search Radar",
+          "title": null
+        }
+      ],
+      "hover": [
+        {
+          "aria": null,
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "oklch(1 0 0 / 0.1)",
+          "color": "oklch(0.637 0.237 25.331)",
+          "focusVisible": false,
+          "hover": true,
+          "outline": "oklab(0.556 0 0 / 0.5) none 2.4px",
+          "padding": "4px",
+          "radius": "0px",
+          "shadow": "none",
+          "text": "",
+          "title": "Delete search"
+        },
+        {
+          "aria": "Toggle email alerts for this saved search",
+          "background": "rgba(20, 83, 45, 0.35)",
+          "border": "oklch(1 0 0 / 0.1)",
+          "color": "rgb(74, 222, 128)",
+          "focusVisible": false,
+          "hover": true,
+          "outline": "oklab(0.556 0 0 / 0.5) none 2.4px",
+          "padding": "6px 10px",
+          "radius": "10px",
+          "shadow": "none",
+          "text": "Email alerts on",
+          "title": null
+        },
+        {
+          "aria": null,
+          "background": "rgba(30, 58, 138, 0.35)",
+          "border": "oklch(1 0 0 / 0.1)",
+          "color": "rgb(96, 165, 250)",
+          "focusVisible": false,
+          "hover": true,
+          "outline": "oklab(0.556 0 0 / 0.5) none 2.4px",
+          "padding": "8px 0px",
+          "radius": "14px",
+          "shadow": "none",
+          "text": "Run Search Radar",
+          "title": null
+        }
+      ]
+    }
+  },
+  {
+    "theme": "dark",
+    "state": "empty",
+    "equal": true,
+    "before": {
+      "focus": [
+        {
+          "aria": null,
+          "background": "oklch(0.546 0.245 262.881)",
+          "border": "oklch(1 0 0 / 0.1)",
+          "color": "rgb(255, 255, 255)",
+          "focusVisible": true,
+          "hover": false,
+          "outline": "oklab(0.556 0 0 / 0.5) auto 0.8px",
+          "padding": "10px 20px",
+          "radius": "14px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 4px 6px -1px, rgba(0, 0, 0, 0.1) 0px 2px 4px -2px",
+          "text": "Start Searching",
+          "title": null
+        }
+      ],
+      "hover": [
+        {
+          "aria": null,
+          "background": "oklch(0.488 0.243 264.376)",
+          "border": "oklch(1 0 0 / 0.1)",
+          "color": "rgb(255, 255, 255)",
+          "focusVisible": true,
+          "hover": true,
+          "outline": "oklab(0.556 0 0 / 0.5) auto 0.8px",
+          "padding": "10px 20px",
+          "radius": "14px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 4px 6px -1px, rgba(0, 0, 0, 0.1) 0px 2px 4px -2px",
+          "text": "Start Searching",
+          "title": null
+        }
+      ]
+    },
+    "after": {
+      "focus": [
+        {
+          "aria": null,
+          "background": "oklch(0.546 0.245 262.881)",
+          "border": "oklch(1 0 0 / 0.1)",
+          "color": "rgb(255, 255, 255)",
+          "focusVisible": true,
+          "hover": false,
+          "outline": "oklab(0.556 0 0 / 0.5) auto 0.8px",
+          "padding": "10px 20px",
+          "radius": "14px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 4px 6px -1px, rgba(0, 0, 0, 0.1) 0px 2px 4px -2px",
+          "text": "Start Searching",
+          "title": null
+        }
+      ],
+      "hover": [
+        {
+          "aria": null,
+          "background": "oklch(0.488 0.243 264.376)",
+          "border": "oklch(1 0 0 / 0.1)",
+          "color": "rgb(255, 255, 255)",
+          "focusVisible": true,
+          "hover": true,
+          "outline": "oklab(0.556 0 0 / 0.5) auto 0.8px",
+          "padding": "10px 20px",
+          "radius": "14px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 4px 6px -1px, rgba(0, 0, 0, 0.1) 0px 2px 4px -2px",
+          "text": "Start Searching",
+          "title": null
+        }
+      ]
+    }
+  }
+]

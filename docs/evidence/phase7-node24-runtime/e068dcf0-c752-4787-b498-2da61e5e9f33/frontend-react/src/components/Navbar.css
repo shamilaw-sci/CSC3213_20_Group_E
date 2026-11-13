@@ -1,0 +1,32 @@
+nav {
+  background: rgba(255, 255, 255, 0.15); /* Frosted semi-transparent center */
+  backdrop-filter: blur(20px) saturate(140%); /* Smooth frost layer */
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 250ms;
+}
+
+.dark nav {
+  background: rgba(17, 17, 17, 0.75);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Home page: force white navbar text in light & dark mode (dropdowns excluded) */
+.home-page nav span:not(:hover):not(.bg-white span),
+.home-page nav button:not(:hover):not(.bg-white button),
+.home-page nav a:not(:hover):not(.bg-white a),
+.home-page nav h1,
+.home-page nav svg:not(.bg-white svg) {
+  color: #ffffff;
+}
+
+/* --- Navigation Bar Tweaks --- */
+.navbar-logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #0a0a0a;
+}

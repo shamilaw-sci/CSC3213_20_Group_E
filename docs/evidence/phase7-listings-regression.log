@@ -1,0 +1,72 @@
+Running real Listings integration against verified stack-c; external delivery disabled.
+  console.log
+    [HTTP] GET /api/properties?limit=100 -> 200 (18ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] GET /api/properties?limit=100 -> 200 (10ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] GET /api/properties?limit=100 -> 200 (11ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] GET /api/properties?limit=100 -> 200 (11ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] GET /api/properties?limit=100 -> 200 (7ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    Listings fixtures removed: exact run-owned properties before eight users; partial inserts recovered by owner IDs.
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+PASS integration/listings.integration.cjs (6 s)
+  Real local listing lifecycle and ownership
+    √ SELLER multipart creation persists server-owned defaults, zero values and PostGIS geometry (139 ms)
+    √ AGENT multipart creation persists server-owned defaults, zero values and PostGIS geometry (78 ms)
+    √ anonymous post write is401 and unchanged (8 ms)
+    √ anonymous patch write is401 and unchanged (8 ms)
+    √ anonymous delete write is401 and unchanged (8 ms)
+    √ BUYER cannot create/edit/delete via seller endpoints (48 ms)
+    √ PENDING_AGENT cannot create/edit/delete via seller endpoints (47 ms)
+    √ REJECTED_AGENT cannot create/edit/delete via seller endpoints (48 ms)
+    √ ADMIN cannot create/edit/delete via seller endpoints (51 ms)
+    √ BANNED cannot create/edit/delete via seller endpoints (46 ms)
+    √ invalid title rejects with validation400 and no row (17 ms)
+    √ invalid description rejects with validation400 and no row (18 ms)
+    √ invalid price rejects with validation400 and no row (19 ms)
+    √ invalid latitude rejects with validation400 and no row (19 ms)
+    √ invalid longitude rejects with validation400 and no row (16 ms)
+    √ invalid bedrooms rejects with validation400 and no row (17 ms)
+    √ invalid bathrooms rejects with validation400 and no row (17 ms)
+    √ invalid landSize rejects with validation400 and no row (18 ms)
+    √ invalid upload MIME is rejected before storage or property insertion (27 ms)
+    √ each seller/agent sees only their own listings, including private rows (74 ms)
+    √ OTHER_SELLER cannot inspect, edit or delete another owner private row (67 ms)
+    √ AGENT cannot inspect, edit or delete another owner private row (67 ms)
+    √ public visibility excludes pending/rejected and permits approved; owner/admin can inspect private (146 ms)
+    √ owner edits rejected listing back to pending preserving identity/payment and valid zero values (31 ms)
+    √ owner can edit pending row but approved edit is400 without changes (56 ms)
+    √ SELLER cannot moderate a Paid listing (18 ms)
+    √ AGENT cannot moderate a Paid listing (27 ms)
+    √ BUYER cannot moderate a Paid listing (32 ms)
+    √ PENDING_AGENT cannot moderate a Paid listing (27 ms)
+    √ REJECTED_AGENT cannot moderate a Paid listing (28 ms)
+    √ Paid moderation approve/retry/reject/correction changes visibility without duplicate coordination (191 ms)
+    √ owner deletion removes only its disposable listing and detail becomes404 (51 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       32 passed, 32 total
+Snapshots:   0 total
+Time:        6.382 s
+Ran all test suites.
+PASS: 5 full table snapshot(s) and canonical ledger preserved after cleanup.

@@ -44,7 +44,7 @@ const getAgentProfile = async (req, res, next) => {
         
         // Filter out unapproved properties safely in memory
         if (agent.properties) {
-            agent.properties = agent.properties.filter(p => p.status === 'approved');
+            agent.properties = agent.properties.filter(p => p.status === 'approved' && !p.deleted_at);
         }
 
         res.status(200).json({ agent });

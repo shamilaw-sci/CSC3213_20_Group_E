@@ -32,9 +32,8 @@ const approveListing = async(req, res, next) => {
         checkSavedSearchMatches(data).catch(error => console.error('saved_search_alerts_failed'));
 
         const sellerEmail = data ?.seller ?.email;
-        const sellerName = data ?.seller ?.name || 'Seller';
         if (sellerEmail) {
-            await sendListingStatusEmail(sellerEmail, sellerName, data.title, 'approved');
+            await sendListingStatusEmail(sellerEmail, data.title, 'approved');
         }
 
         res.status(200).json({ message: "Listing approved successfully" });
@@ -52,9 +51,8 @@ const rejectListing = async(req, res, next) => {
         });
 
         const sellerEmail = data ?.seller ?.email;
-        const sellerName = data ?.seller ?.name || 'Seller';
         if (sellerEmail) {
-            await sendListingStatusEmail(sellerEmail, sellerName, data.title, 'rejected', reason);
+            await sendListingStatusEmail(sellerEmail, data.title, 'rejected', reason);
         }
 
         res.status(200).json({ message: "Listing rejected successfully" });

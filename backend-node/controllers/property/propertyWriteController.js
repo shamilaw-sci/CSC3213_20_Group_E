@@ -163,15 +163,15 @@ const updateMyProperty = async(req, res, next) => {
             title,
             description,
             price,
-            price_period: pricePeriod || null,
-            address: address || null,
+            price_period: pricePeriod === undefined ? undefined : pricePeriod || null,
+            address: address === undefined ? undefined : address || null,
             district,
             city,
-            contact_number: contactNumber || null,
-            bedrooms: bedrooms ?? null,
-            bathrooms: bathrooms ?? null,
-            land_size: landSize ?? null,
-            house_size: houseSize || null,
+            contact_number: contactNumber === undefined ? undefined : contactNumber || null,
+            bedrooms,
+            bathrooms,
+            land_size: landSize,
+            house_size: houseSize === undefined ? undefined : houseSize || null,
             status: "pending",
             rejection_reason: null,
         };
@@ -188,6 +188,7 @@ const updateMyProperty = async(req, res, next) => {
         }
 
         if (updateError) throw updateError;
+        if (!property) return res.status(409).json({ message: 'Listing changed. Refresh before editing again.' });
 
         res.status(200).json({
             message: "Property updated and sent to admin review.",

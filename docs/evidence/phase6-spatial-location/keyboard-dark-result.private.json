@@ -1,0 +1,56 @@
+{
+  "theme": "dark",
+  "pairs": 13,
+  "identical": true,
+  "focus": [
+    {
+      "name": "city",
+      "focusVisible": true
+    },
+    {
+      "name": "address",
+      "focusVisible": true
+    },
+    {
+      "name": "Single Pin Location",
+      "focusVisible": true
+    },
+    {
+      "name": "Draw Boundary Polygon",
+      "focusVisible": true
+    },
+    {
+      "name": "My GPS",
+      "focusVisible": true
+    },
+    {
+      "name": "+− Leaflet",
+      "focusVisible": true
+    },
+    {
+      "name": "",
+      "focusVisible": true
+    },
+    {
+      "name": "Zoom in",
+      "focusVisible": true
+    },
+    {
+      "name": "Zoom out",
+      "focusVisible": true
+    },
+    {
+      "name": "A JavaScript library for interactive maps",
+      "focusVisible": true
+    },
+    {
+      "name": "Previous Step",
+      "focusVisible": true
+    },
+    {
+      "name": "Continue to Specs & Photos",
+      "focusVisible": true
+    }
+  ],
+  "hover": true
+}

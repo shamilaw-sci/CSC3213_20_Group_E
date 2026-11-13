@@ -30,7 +30,7 @@ const getSimilarProperties = async(req, res, next) => {
 
         const { data: target, error: targetError } = await supabase
             .from("properties")
-            .select("id, type, price, bedrooms, bathrooms, latitude, longitude")
+            .select("id, type, price, bedrooms, bathrooms, latitude, longitude").is('deleted_at', null)
             .eq("id", id)
             .single();
 
@@ -40,7 +40,7 @@ const getSimilarProperties = async(req, res, next) => {
 
         const { data: candidates, error: candidatesError } = await supabase
             .from("properties")
-            .select("*, users(name, role)")
+            .select("*, users(name, role)").is('deleted_at', null)
             .eq("status", "approved")
             .neq("id", id)
             .limit(200);
@@ -69,7 +69,7 @@ const getPriceInsight = async(req, res, next) => {
 
         const { data: target, error: targetError } = await supabase
             .from("properties")
-            .select("id, type, listing_type, price, bedrooms, bathrooms, latitude, longitude, house_size, land_size")
+            .select("id, type, listing_type, price, bedrooms, bathrooms, latitude, longitude, house_size, land_size").is('deleted_at', null)
             .eq("id", id)
             .single();
 
@@ -79,7 +79,7 @@ const getPriceInsight = async(req, res, next) => {
 
         const { data: candidates, error: candidatesError } = await supabase
             .from("properties")
-            .select("id, type, listing_type, price, bedrooms, bathrooms, latitude, longitude, house_size, land_size")
+            .select("id, type, listing_type, price, bedrooms, bathrooms, latitude, longitude, house_size, land_size").is('deleted_at', null)
             .eq("status", "approved")
             .neq("id", id)
             .limit(200);
@@ -117,7 +117,7 @@ const searchProperties = async(req, res, next) => {
 
         const { data: candidates, error } = await supabase
             .from("properties")
-            .select("id, title, description, type, price, city, district, bedrooms, bathrooms")
+            .select("id, title, description, type, price, city, district, bedrooms, bathrooms").is('deleted_at', null)
             .eq("status", "approved")
             .limit(300);
 

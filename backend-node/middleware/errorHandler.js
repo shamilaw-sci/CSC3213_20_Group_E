@@ -5,7 +5,9 @@ const errorHandler=(err,req,res,_next)=>{
     const safe=publicErrorDetails(err);
     let status=safe?.status||500,message=safe?.message||'Internal Server Error',code=safe?.code||'INTERNAL_ERROR';
     if(!safe){
-        if(err?.name==='MulterError'){
+        if(err?.code==='PZ001'){
+            status=404;message='Property is no longer available.';code='PROPERTY_UNAVAILABLE';
+        }else if(err?.name==='MulterError'){
             status=400;message=typeof err.code==='string'&&Object.hasOwn(uploadMessages,err.code)?uploadMessages[err.code]:'Upload rejected.';code='UPLOAD_REJECTED';
         }else if(err?.code==='INVALID_FILE_TYPE'){
             status=400;message='Unsupported file type.';code='UPLOAD_TYPE';

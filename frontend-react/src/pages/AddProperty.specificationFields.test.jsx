@@ -16,7 +16,7 @@ vi.mock('framer-motion', () => ({ m: { div: ({ children }) => <div>{children}</d
 vi.mock('react-leaflet', () => ({
   MapContainer: ({ children, center }) => <div aria-label="Controlled map boundary" data-center={JSON.stringify(center)}>{children}</div>,
   TileLayer: () => null, Marker: () => null, Polygon: () => null, CircleMarker: () => null,
-  useMapEvents: () => null,
+  useMapEvents: () => null, useMap: () => ({ setView: () => {} }),
 }));
 vi.mock('leaflet', () => ({ default: { Icon: class {} } }));
 
@@ -41,7 +41,7 @@ function validCategory() {
   change(field('title'), '  Raw headline  ');
   change(field('price'), '1234567.50');
   change(field('district'), 'Kandy');
-  change(field('contactNumber'), ' +94 077 raw ');
+  change(field('contactNumber'), '+94771234567');
 }
 function specs() {
   next();
@@ -102,4 +102,10 @@ describe('Specification fields through the actual parent', () => {
     expect(field('description')).toHaveValue('  Raw description\nwith spacing  ');
     expect(field('houseSize')).toHaveValue(1800.5);
   });
+});
+
+test.each([['bedrooms','-1','Bedrooms'], ['bathrooms','1.5','Bathrooms'], ['landSize','-1','Land size'], ['houseSize','0','House size']])('invalid %s blocks review', async (name,value,label) => {
+ await mount(); validCategory(); specs(); change(field(name),value);
+ fireEvent.click(screen.getByRole('button',{name:'Review Property Details'}));
+ expect(screen.getByText(new RegExp(label+' must be'))).toBeInTheDocument(); expect(field(name)).toHaveValue(Number(value));
 });

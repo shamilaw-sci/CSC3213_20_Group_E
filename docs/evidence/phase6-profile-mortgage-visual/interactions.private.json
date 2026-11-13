@@ -1,0 +1,32 @@
+[
+  {
+    "theme": "light",
+    "keyboardCount": 8,
+    "keyboardEqual": false,
+    "hoverCount": 4,
+    "hoverEqual": true,
+    "focusObserved": true,
+    "hoverObserved": true,
+    "finalInputs": [
+      "40000000",
+      "40000000",
+      "25",
+      "11.75"
+    ]
+  },
+  {
+    "theme": "dark",
+    "keyboardCount": 8,
+    "keyboardEqual": false,
+    "hoverCount": 4,
+    "hoverEqual": true,
+    "focusObserved": true,
+    "hoverObserved": true,
+    "finalInputs": [
+      "40000000",
+      "40000000",
+      "25",
+      "11.75"
+    ]
+  }
+]

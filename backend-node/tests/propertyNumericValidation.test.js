@@ -11,7 +11,7 @@ const app = express();
 app.use(express.json(), (req, res, next) => { req.user = { id: 'seller-1', role: 'SELLER' }; next(); });
 app.post('/', validate(addPropertySchema), addProperty);
 app.put('/:id', validate(updatePropertySchema), updateMyProperty);
-const body = { type: 'House', title: 'Test listing', description: 'A listing with valid description.', price: '1000000', latitude: '7', longitude: '80' };
+const body = { contactNumber: '0771234567', type: 'House', title: 'Test listing', description: 'A listing with valid description.', price: '1000000', latitude: '7', longitude: '80' };
 beforeEach(() => {
     repo.addProperty.mockImplementation(async data => data);
     repo.getPropertyById.mockResolvedValue({ id: 'p1', seller_id: 'seller-1', status: 'pending' });

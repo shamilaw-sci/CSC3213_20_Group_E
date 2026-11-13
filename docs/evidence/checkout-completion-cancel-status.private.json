@@ -1,0 +1,87 @@
+{
+  "run": "9f8278c7-72d0-4ccb-8b3a-b1b494872312",
+  "sandbox": true,
+  "rows": [
+    {
+      "label": "Visa",
+      "property": {
+        "payment_status": "Paid",
+        "status": "pending"
+      },
+      "orders": [
+        {
+          "id": "16bb5005-4bcb-40c1-aa86-255739cbf990",
+          "status": "paid",
+          "provider_payment_id": "320032681388"
+        }
+      ],
+      "transactions": 1,
+      "outbox": [
+        {
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "label": "Mastercard",
+      "property": {
+        "payment_status": "Paid",
+        "status": "pending"
+      },
+      "orders": [
+        {
+          "id": "d500c42f-2b7f-4247-826e-6458ff9a965e",
+          "status": "paid",
+          "provider_payment_id": "320032681399"
+        }
+      ],
+      "transactions": 1,
+      "outbox": [
+        {
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "label": "Cancel",
+      "property": {
+        "payment_status": "Unpaid",
+        "status": "pending"
+      },
+      "orders": [
+        {
+          "id": "819b2d21-e0f6-43df-94b6-f1e2f81a771c",
+          "status": "pending",
+          "provider_payment_id": null
+        }
+      ],
+      "transactions": 0,
+      "outbox": []
+    },
+    {
+      "label": "Decline",
+      "property": {
+        "payment_status": "Unpaid",
+        "status": "pending"
+      },
+      "orders": [],
+      "transactions": 0,
+      "outbox": []
+    }
+  ],
+  "callbacks": [
+    {
+      "order_id": "16bb5005-4bcb-40c1-aa86-255739cbf990",
+      "payment_id": "320032681388",
+      "status_code": "2",
+      "http_status": 200
+    },
+    {
+      "order_id": "d500c42f-2b7f-4247-826e-6458ff9a965e",
+      "payment_id": "320032681399",
+      "status_code": "2",
+      "http_status": 200
+    }
+  ],
+  "receiptBoundaryCalls": 2
+}

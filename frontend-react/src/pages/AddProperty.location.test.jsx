@@ -5,7 +5,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import AddProperty from './AddProperty';
 import { UserAuthProvider } from '../context/UserAuthContext';
 
-const map = vi.hoisted(() => ({ click: null, mounts: 0, unmounts: 0, eventsMounts: 0, eventsUnmounts: 0, center: null, marker: null, circles: [], polygon: null }));
+const map = vi.hoisted(() => ({ click: null, mounts: 0, unmounts: 0, eventsMounts: 0, eventsUnmounts: 0, setView: vi.fn(), center: null, marker: null, circles: [], polygon: null }));
 const api = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
 const payment = vi.hoisted(() => ({ triggerPayment: vi.fn(), paymentConfig: {} }));
 vi.mock('../context/api', () => ({ default: api }));
@@ -22,6 +22,7 @@ vi.mock('react-leaflet', async () => {
     Marker: props => { map.marker = props.position; return null; },
     CircleMarker: props => { map.circles.push(props.center); return null; },
     Polygon: props => { map.polygon = props.positions; return null; },
+    useMap: () => map,
     useMapEvents: events => { map.click = events.click; React.useEffect(() => { map.eventsMounts++; return () => { map.eventsUnmounts++; }; }, []); },
   };
 });
@@ -36,6 +37,7 @@ async function mount() {
   change(screen.getByPlaceholderText('e.g. Beautiful 2-Story House in Colombo 07'), 'Test property');
   change(screen.getByPlaceholderText('Enter Price'), '100');
   change(screen.getByRole('combobox'), 'Colombo');
+  change(document.querySelector('[name=contactNumber]'), '0771234567');
   fireEvent.click(button('Continue to Spatial Location'));
 }
 beforeEach(() => {
@@ -120,4 +122,16 @@ test('GPS success clears boundary; failure and unsupported paths retain current 
   expect(screen.getByText(/1 selected/)).toBeInTheDocument(); expect(button('My GPS').className).not.toContain('bg-emerald-600');
   delete navigator.geolocation; fireEvent.click(button('My GPS'));
   expect(window.alert).toHaveBeenCalledWith('Geolocation is not supported by your browser'); expect(screen.getByText(/1 selected/)).toBeInTheDocument();
+});
+
+test('GPS recenters the live map once and manual clicks do not recenter', async () => {
+ await mount(); map.setView.mockClear(); fireEvent.click(button('My GPS'));
+ expect(map.setView).toHaveBeenCalledWith([6,80], 14);
+ map.setView.mockClear(); act(() => clickMap(8,81)); expect(map.setView).not.toHaveBeenCalled();
+});
+
+test('returning to location does not replay GPS after a manual pin', async () => {
+ await mount(); change(city(),'Town'); fireEvent.click(button('My GPS')); act(() => clickMap(8,81));
+ fireEvent.click(button('Continue to Specs & Photos')); map.setView.mockClear(); fireEvent.click(button('Previous Step'));
+ expect(map.center).toEqual([8,81]); expect(map.setView).not.toHaveBeenCalled();
 });

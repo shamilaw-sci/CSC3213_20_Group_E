@@ -16,7 +16,7 @@ vi.mock('framer-motion', () => ({ m: { div: ({ children }) => <div>{children}</d
 vi.mock('react-leaflet', () => ({
   MapContainer: ({ children, center }) => <div aria-label="Controlled map boundary" data-center={JSON.stringify(center)}>{children}</div>,
   TileLayer: () => null, Marker: () => null, Polygon: () => null, CircleMarker: () => null,
-  useMapEvents: () => null,
+  useMapEvents: () => null, useMap: () => ({ setView: () => {} }),
 }));
 vi.mock('leaflet', () => ({ default: { Icon: class {} } }));
 
@@ -40,7 +40,7 @@ function validCategory() {
   change(field('title'), '  Raw headline  ');
   change(field('price'), '1234567.50');
   change(field('district'), 'Kandy');
-  change(field('contactNumber'), ' +94 077 raw ');
+  change(field('contactNumber'), '0771234567');
 }
 function specs() {
   next();
@@ -159,7 +159,7 @@ describe('Media contracts through the actual wizard', () => {
     tours(Array.from({ length: 5 }, (_, i) => file(`${i}.jpg`, i === 0 ? 5 * 1024 * 1024 : 1)));
     expect(screen.getAllByAltText('360 preview')).toHaveLength(5);
     expect(labels().map(input => input.value)).toEqual(Array(5).fill('Room'));
-    tours([file('sixth.jpg')]); expect(window.alert).toHaveBeenCalledWith('You can only upload up to 5 virtual tours.');
+    tours([file('sixth.jpg')]); expect(screen.getByText('You can only upload up to 5 virtual tours.')).toBeInTheDocument(); expect(window.alert).not.toHaveBeenCalled();
     window.alert.mockClear(); tours([file('large.jpg', 5 * 1024 * 1024 + 1)]);
     expect(screen.getByText('Upload failed: One or more 360 panorama files exceed the 5MB limit.')).toBeInTheDocument();
     expect(window.alert).not.toHaveBeenCalled(); expect(labels()).toHaveLength(5);
@@ -179,4 +179,33 @@ describe('Media contracts through the actual wizard', () => {
     view.unmount();
     expect(URL.revokeObjectURL.mock.calls.map(call => call[0])).toEqual(['blob:synthetic-preview-1']);
   });
+});
+
+test('successful uploads clear only their obsolete upload feedback', async () => {
+ await ready(); hd([file('large.jpg', 6*1024*1024)]); hd([file('valid.jpg')]);
+ await waitFor(() => expect(previews()).toHaveLength(1)); expect(screen.queryByText(/maximum size limit/)).not.toBeInTheDocument();
+ tours([file('large.jpg',6*1024*1024)]); tours([file('tour.jpg')]);
+ expect(screen.queryByText(/panorama files exceed/)).not.toBeInTheDocument();
+});
+test('older compression success preserves a newer upload error', async () => {
+ await ready(); const pending = deferred(); compression.mockImplementationOnce(() => pending.promise);
+ hd([file('valid.jpg')]); hd([file('large.jpg',6*1024*1024)]);
+ await act(async () => pending.resolve(file('done.jpg')));
+ expect(screen.getByText(/maximum size limit/)).toBeInTheDocument();
+});
+
+test('upload success preserves unrelated specification feedback', async () => {
+ await ready(); change(field('bedrooms'), '-1'); fireEvent.click(screen.getByRole('button',{name:'Review Property Details'}));
+ hd([file('valid.jpg')]); await waitFor(() => expect(previews()).toHaveLength(1));
+ expect(screen.getByText('Bedrooms must be zero or a positive integer.')).toBeInTheDocument();
+ tours([file('tour.jpg')]); expect(screen.getByText('Bedrooms must be zero or a positive integer.')).toBeInTheDocument();
+});
+
+test('older compression rejection cannot replace newer success or validation feedback', async () => {
+ await ready(); const pending=deferred(); compression.mockImplementationOnce(() => pending.promise); hd([file('old.jpg')]);
+ hd([file('new.jpg')]); await waitFor(() => expect(previews()).toHaveLength(1));
+ change(field('bedrooms'),'-1'); fireEvent.click(screen.getByRole('button',{name:'Review Property Details'}));
+ await act(async () => pending.reject(new Error('old failure')));
+ expect(screen.getByText('Bedrooms must be zero or a positive integer.')).toBeInTheDocument();
+ expect(screen.queryByText('Failed to process some images.')).not.toBeInTheDocument();
 });

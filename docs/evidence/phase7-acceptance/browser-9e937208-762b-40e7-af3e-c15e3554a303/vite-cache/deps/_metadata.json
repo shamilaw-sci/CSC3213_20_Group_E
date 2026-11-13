@@ -1,0 +1,66 @@
+{
+  "hash": "095ae5ee",
+  "configHash": "3881a1b3",
+  "lockfileHash": "d0fceeb8",
+  "browserHash": "cb2005e6",
+  "optimized": {
+    "framer-motion": {
+      "src": "../../../../../../frontend-react/node_modules/framer-motion/dist/es/index.mjs",
+      "file": "framer-motion.js",
+      "fileHash": "ce47211d",
+      "needsInterop": false
+    },
+    "lucide-react": {
+      "src": "../../../../../../frontend-react/node_modules/lucide-react/dist/esm/lucide-react.mjs",
+      "file": "lucide-react.js",
+      "fileHash": "44b0ad29",
+      "needsInterop": false
+    },
+    "react-dom/client": {
+      "src": "../../../../../../frontend-react/node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "26ca28af",
+      "needsInterop": true
+    },
+    "react-hot-toast": {
+      "src": "../../../../../../frontend-react/node_modules/react-hot-toast/dist/index.mjs",
+      "file": "react-hot-toast.js",
+      "fileHash": "2cd54a68",
+      "needsInterop": false
+    },
+    "react-router-dom": {
+      "src": "../../../../../../frontend-react/node_modules/react-router-dom/dist/index.mjs",
+      "file": "react-router-dom.js",
+      "fileHash": "74b64733",
+      "needsInterop": false
+    },
+    "react": {
+      "src": "../../../../../../frontend-react/node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "966bd46c",
+      "needsInterop": true
+    },
+    "react/jsx-dev-runtime": {
+      "src": "../../../../../../frontend-react/node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "bcb50d12",
+      "needsInterop": true
+    },
+    "react/jsx-runtime": {
+      "src": "../../../../../../frontend-react/node_modules/react/jsx-runtime.js",
+      "file": "react_jsx-runtime.js",
+      "fileHash": "7e0668c7",
+      "needsInterop": true
+    }
+  },
+  "chunks": {
+    "react-dom-52QY9Fog": {
+      "file": "react-dom-52QY9Fog.js",
+      "isDynamicEntry": false
+    },
+    "rolldown-runtime-DC62tzP2": {
+      "file": "rolldown-runtime-DC62tzP2.js",
+      "isDynamicEntry": false
+    }
+  }
+}

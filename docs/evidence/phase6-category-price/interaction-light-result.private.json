@@ -1,0 +1,32 @@
+{
+  "theme": "light",
+  "pairs": 10,
+  "identical": true,
+  "focusOrder": [
+    {
+      "name": "title",
+      "focusVisible": true
+    },
+    {
+      "name": "price",
+      "focusVisible": true
+    },
+    {
+      "name": "pricePeriod",
+      "focusVisible": true
+    },
+    {
+      "name": "district",
+      "focusVisible": true
+    },
+    {
+      "name": "contactNumber",
+      "focusVisible": true
+    },
+    {
+      "name": "BUTTON",
+      "focusVisible": true
+    }
+  ],
+  "continueHovered": true
+}

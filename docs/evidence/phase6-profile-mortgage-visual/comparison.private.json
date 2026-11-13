@@ -1,0 +1,50 @@
+[
+  {
+    "size": "desktop",
+    "theme": "light",
+    "state": "default",
+    "identical": true
+  },
+  {
+    "size": "desktop",
+    "theme": "light",
+    "state": "adjusted",
+    "identical": true
+  },
+  {
+    "size": "desktop",
+    "theme": "dark",
+    "state": "default",
+    "identical": true
+  },
+  {
+    "size": "desktop",
+    "theme": "dark",
+    "state": "adjusted",
+    "identical": true
+  },
+  {
+    "size": "mobile",
+    "theme": "light",
+    "state": "default",
+    "identical": true
+  },
+  {
+    "size": "mobile",
+    "theme": "light",
+    "state": "adjusted",
+    "identical": true
+  },
+  {
+    "size": "mobile",
+    "theme": "dark",
+    "state": "default",
+    "identical": true
+  },
+  {
+    "size": "mobile",
+    "theme": "dark",
+    "state": "adjusted",
+    "identical": true
+  }
+]

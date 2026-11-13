@@ -20,7 +20,7 @@ test('both snapshot panels retain loading spinners until parent requests settle'
     expect(panel('Recent Listings').querySelector('.animate-spin')).toBeTruthy();
     expect(panel('Active Buyer Chats').querySelector('.animate-spin')).toBeTruthy();
     expect(screen.queryByText('No properties listed yet')).not.toBeInTheDocument();
-    expect(mocks.get.mock.calls.map(([path]) => path)).toEqual(['/properties/my-listings', '/conversations']);
+    expect(mocks.get.mock.calls.map(([path]) => path)).toEqual(['/properties/my-listings/activity', '/properties/my-listings', '/conversations']);
 });
 
 test('empty snapshots and listing/inbox actions preserve destinations', async () => {

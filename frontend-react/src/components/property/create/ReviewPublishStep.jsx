@@ -155,8 +155,8 @@ const ReviewPublishStep = ({ formData, isRentType, isLandType, images, virtualTo
                     <div className="absolute top-3 left-3 bg-blue-600 text-white font-bold text-xs px-3 py-1 rounded-full uppercase">
                       {formData.type}
                     </div>
-                    <div className="absolute bottom-3 left-3">
-                      <span className="text-xl font-black text-slate-900 dark:text-white drop-shadow-md">
+                    <div className="absolute bottom-3 left-3 rounded-lg bg-black/80 px-3 py-1.5">
+                      <span className="text-xl font-black text-white">
                         {formatLKRPreview(formData.price, isRentType ? formData.pricePeriod : null) || `Rs. ${formData.price}`}
                       </span>
                     </div>

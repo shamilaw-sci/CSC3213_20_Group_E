@@ -1,0 +1,4 @@
+{"version":"before","kind":"House","theme":"light","width":640,"name":"bedrooms","focused":true,"focusVisible":true,"borderColor":"oklch(0.623 0.214 259.815)","outlineStyle":"none"}
+{"version":"before","kind":"House","theme":"light","width":640,"name":"bathrooms","focused":true,"focusVisible":true,"borderColor":"oklch(0.623 0.214 259.815)","outlineStyle":"none"}
+{"version":"after","kind":"House","theme":"light","width":640,"name":"bedrooms","focused":true,"focusVisible":true,"borderColor":"oklch(0.623 0.214 259.815)","outlineStyle":"none"}
+{"version":"after","kind":"House","theme":"light","width":640,"name":"bathrooms","focused":true,"focusVisible":true,"borderColor":"oklch(0.623 0.214 259.815)","outlineStyle":"none"}

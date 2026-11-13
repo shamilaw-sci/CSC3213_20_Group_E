@@ -1,0 +1,114 @@
+[
+  {
+    "size": "desktop",
+    "panel": "appointments",
+    "theme": "light",
+    "state": "populated",
+    "identical": true
+  },
+  {
+    "size": "desktop",
+    "panel": "appointments",
+    "theme": "light",
+    "state": "empty",
+    "identical": true
+  },
+  {
+    "size": "desktop",
+    "panel": "appointments",
+    "theme": "dark",
+    "state": "populated",
+    "identical": true
+  },
+  {
+    "size": "desktop",
+    "panel": "appointments",
+    "theme": "dark",
+    "state": "empty",
+    "identical": true
+  },
+  {
+    "size": "desktop",
+    "panel": "favorites",
+    "theme": "light",
+    "state": "populated",
+    "identical": true
+  },
+  {
+    "size": "desktop",
+    "panel": "favorites",
+    "theme": "light",
+    "state": "empty",
+    "identical": true
+  },
+  {
+    "size": "desktop",
+    "panel": "favorites",
+    "theme": "dark",
+    "state": "populated",
+    "identical": true
+  },
+  {
+    "size": "desktop",
+    "panel": "favorites",
+    "theme": "dark",
+    "state": "empty",
+    "identical": true
+  },
+  {
+    "size": "mobile",
+    "panel": "appointments",
+    "theme": "light",
+    "state": "populated",
+    "identical": true
+  },
+  {
+    "size": "mobile",
+    "panel": "appointments",
+    "theme": "light",
+    "state": "empty",
+    "identical": true
+  },
+  {
+    "size": "mobile",
+    "panel": "appointments",
+    "theme": "dark",
+    "state": "populated",
+    "identical": true
+  },
+  {
+    "size": "mobile",
+    "panel": "appointments",
+    "theme": "dark",
+    "state": "empty",
+    "identical": true
+  },
+  {
+    "size": "mobile",
+    "panel": "favorites",
+    "theme": "light",
+    "state": "populated",
+    "identical": true
+  },
+  {
+    "size": "mobile",
+    "panel": "favorites",
+    "theme": "light",
+    "state": "empty",
+    "identical": true
+  },
+  {
+    "size": "mobile",
+    "panel": "favorites",
+    "theme": "dark",
+    "state": "populated",
+    "identical": true
+  },
+  {
+    "size": "mobile",
+    "panel": "favorites",
+    "theme": "dark",
+    "state": "empty",
+    "identical": true
+  }
+]

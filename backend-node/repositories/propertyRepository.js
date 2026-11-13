@@ -1,14 +1,14 @@
 const supabase = require('../config/supabase');
-const { cleanupPropertyImages } = require('../utils/propertyImageCleanup');
 
 const propertyRepository = {
     // Shared: Get property by ID
-    getPropertyById: async (id) => {
-        const { data, error } = await supabase
+    getPropertyById: async (id, { includeDeleted = false } = {}) => {
+        let query = supabase
             .from('properties')
             .select('*, users(name, role)')
-            .eq('id', id)
-            .single();
+            .eq('id', id);
+        if (!includeDeleted) query = query.is('deleted_at', null);
+        const { data, error } = await query.single();
         if (error && error.code !== 'PGRST116') throw error;
         return data;
     },
@@ -17,7 +17,7 @@ const propertyRepository = {
     getApprovedPropertiesForAI: async () => {
         const { data, error } = await supabase
             .from('properties')
-            .select('id, title, description, price, type, bedrooms, bathrooms, land_size, district, city, images')
+            .select('id, title, description, price, type, bedrooms, bathrooms, land_size, district, city, images').is('deleted_at', null)
             .eq('status', 'approved');
         if (error) throw error;
         return data;
@@ -85,7 +85,7 @@ const propertyRepository = {
     getProperties: async (from, to) => {
         const { data, error, count } = await supabase
             .from('properties')
-            .select('*, users(name, role)', { count: 'exact' })
+            .select('*, users(name, role)', { count: 'exact' }).is('deleted_at', null)
             .eq('status', 'approved')
             .order('created_at', { ascending: false })
             .range(from, to);
@@ -97,7 +97,7 @@ const propertyRepository = {
     getMyProperties: async (sellerId, from, to) => {
         const { data, error, count } = await supabase
             .from('properties')
-            .select('*, users(name, role)', { count: 'exact' })
+            .select('*, users(name, role)', { count: 'exact' }).is('deleted_at', null)
             .eq('seller_id', sellerId)
             .order('created_at', { ascending: false })
             .range(from, to);
@@ -109,11 +109,12 @@ const propertyRepository = {
     updateMyProperty: async (id, sellerId, updates) => {
         const { data, error } = await supabase
             .from('properties')
-            .update(updates)
+            .update(updates).is('deleted_at', null)
             .eq('id', id)
             .eq('seller_id', sellerId)
+            .in('status', ['pending', 'rejected'])
             .select()
-            .single();
+            .maybeSingle();
         return { data, error };
     },
 
@@ -121,13 +122,17 @@ const propertyRepository = {
     deleteMyProperty: async (id, sellerId) => {
         const { data, error } = await supabase
             .from('properties')
-            .delete()
+            .update({ deleted_at: new Date().toISOString() }).is('deleted_at', null)
             .eq('id', id)
             .eq('seller_id', sellerId)
-            .select('id,seller_id,images,virtual_tours');
+            .select('id');
         if (error) throw error;
-        if (!data?.length) return false; // Not found or unauthorized
-        await cleanupPropertyImages(supabase, data[0]);
+        if (!data?.length) {
+            const { data: archived, error: lookupError } = await supabase.from('properties')
+                .select('id,deleted_at').eq('id', id).eq('seller_id', sellerId).maybeSingle();
+            if (lookupError) throw lookupError;
+            return !!archived?.deleted_at;
+        }
         return true;
     },
 

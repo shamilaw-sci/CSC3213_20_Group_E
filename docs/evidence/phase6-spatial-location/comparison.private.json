@@ -1,0 +1,610 @@
+[
+  {
+    "size": "desktop",
+    "theme": "light",
+    "state": "point",
+    "validation": false,
+    "identical": true,
+    "styleProperties": 36,
+    "realMap": {
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    }
+  },
+  {
+    "size": "desktop",
+    "theme": "light",
+    "state": "gps",
+    "validation": false,
+    "identical": true,
+    "styleProperties": 36,
+    "realMap": {
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    }
+  },
+  {
+    "size": "desktop",
+    "theme": "light",
+    "state": "boundary-empty",
+    "validation": false,
+    "identical": true,
+    "styleProperties": 36,
+    "realMap": {
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    }
+  },
+  {
+    "size": "desktop",
+    "theme": "light",
+    "state": "boundary-partial",
+    "validation": false,
+    "identical": true,
+    "styleProperties": 36,
+    "realMap": {
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    }
+  },
+  {
+    "size": "desktop",
+    "theme": "light",
+    "state": "boundary-closed",
+    "validation": false,
+    "identical": true,
+    "styleProperties": 36,
+    "realMap": {
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    }
+  },
+  {
+    "size": "desktop",
+    "theme": "light",
+    "state": "boundary-valid",
+    "validation": false,
+    "identical": true,
+    "styleProperties": 36,
+    "realMap": {
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    }
+  },
+  {
+    "size": "desktop",
+    "theme": "light",
+    "state": "boundary-closedvalid",
+    "validation": false,
+    "identical": true,
+    "styleProperties": 36,
+    "realMap": {
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    }
+  },
+  {
+    "size": "desktop",
+    "theme": "dark",
+    "state": "point",
+    "validation": false,
+    "identical": true,
+    "styleProperties": 36,
+    "realMap": {
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    }
+  },
+  {
+    "size": "desktop",
+    "theme": "dark",
+    "state": "gps",
+    "validation": false,
+    "identical": true,
+    "styleProperties": 36,
+    "realMap": {
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    }
+  },
+  {
+    "size": "desktop",
+    "theme": "dark",
+    "state": "boundary-empty",
+    "validation": false,
+    "identical": true,
+    "styleProperties": 36,
+    "realMap": {
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    }
+  },
+  {
+    "size": "desktop",
+    "theme": "dark",
+    "state": "boundary-partial",
+    "validation": false,
+    "identical": true,
+    "styleProperties": 36,
+    "realMap": {
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    }
+  },
+  {
+    "size": "desktop",
+    "theme": "dark",
+    "state": "boundary-closed",
+    "validation": false,
+    "identical": true,
+    "styleProperties": 36,
+    "realMap": {
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    }
+  },
+  {
+    "size": "desktop",
+    "theme": "dark",
+    "state": "boundary-valid",
+    "validation": false,
+    "identical": true,
+    "styleProperties": 36,
+    "realMap": {
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    }
+  },
+  {
+    "size": "desktop",
+    "theme": "dark",
+    "state": "boundary-closedvalid",
+    "validation": false,
+    "identical": true,
+    "styleProperties": 36,
+    "realMap": {
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    }
+  },
+  {
+    "size": "mobile",
+    "theme": "light",
+    "state": "point",
+    "validation": false,
+    "identical": true,
+    "styleProperties": 36,
+    "realMap": {
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    }
+  },
+  {
+    "size": "mobile",
+    "theme": "light",
+    "state": "gps",
+    "validation": false,
+    "identical": true,
+    "styleProperties": 36,
+    "realMap": {
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    }
+  },
+  {
+    "size": "mobile",
+    "theme": "light",
+    "state": "boundary-empty",
+    "validation": false,
+    "identical": true,
+    "styleProperties": 36,
+    "realMap": {
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    }
+  },
+  {
+    "size": "mobile",
+    "theme": "light",
+    "state": "boundary-closed",
+    "validation": false,
+    "identical": true,
+    "styleProperties": 36,
+    "realMap": {
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    }
+  },
+  {
+    "size": "mobile",
+    "theme": "light",
+    "state": "boundary-valid",
+    "validation": false,
+    "identical": true,
+    "styleProperties": 36,
+    "realMap": {
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    }
+  },
+  {
+    "size": "mobile",
+    "theme": "light",
+    "state": "boundary-closedvalid",
+    "validation": false,
+    "identical": true,
+    "styleProperties": 36,
+    "realMap": {
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    }
+  },
+  {
+    "size": "mobile",
+    "theme": "dark",
+    "state": "point",
+    "validation": false,
+    "identical": true,
+    "styleProperties": 36,
+    "realMap": {
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    }
+  },
+  {
+    "size": "mobile",
+    "theme": "dark",
+    "state": "boundary-empty",
+    "validation": false,
+    "identical": true,
+    "styleProperties": 36,
+    "realMap": {
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    }
+  },
+  {
+    "size": "mobile",
+    "theme": "dark",
+    "state": "boundary-closed",
+    "validation": false,
+    "identical": true,
+    "styleProperties": 36,
+    "realMap": {
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    }
+  },
+  {
+    "size": "mobile",
+    "theme": "dark",
+    "state": "boundary-valid",
+    "validation": false,
+    "identical": true,
+    "styleProperties": 36,
+    "realMap": {
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    }
+  },
+  {
+    "size": "mobile",
+    "theme": "dark",
+    "state": "boundary-closedvalid",
+    "validation": false,
+    "identical": true,
+    "styleProperties": 36,
+    "realMap": {
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    }
+  },
+  {
+    "size": "desktop",
+    "theme": "light",
+    "state": "blank",
+    "validation": true,
+    "identical": true,
+    "styleProperties": 36,
+    "realMap": {
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    }
+  },
+  {
+    "size": "desktop",
+    "theme": "light",
+    "state": "boundary-closed",
+    "validation": true,
+    "identical": true,
+    "styleProperties": 36,
+    "realMap": {
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    }
+  },
+  {
+    "size": "desktop",
+    "theme": "dark",
+    "state": "blank",
+    "validation": true,
+    "identical": true,
+    "styleProperties": 36,
+    "realMap": {
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    }
+  },
+  {
+    "size": "desktop",
+    "theme": "dark",
+    "state": "boundary-closed",
+    "validation": true,
+    "identical": true,
+    "styleProperties": 36,
+    "realMap": {
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    }
+  },
+  {
+    "size": "mobile",
+    "theme": "light",
+    "state": "boundary-partial",
+    "validation": false,
+    "identical": true,
+    "styleProperties": 36,
+    "realMap": {
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    }
+  },
+  {
+    "size": "mobile",
+    "theme": "dark",
+    "state": "gps",
+    "validation": false,
+    "identical": true,
+    "styleProperties": 36,
+    "realMap": {
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    }
+  },
+  {
+    "size": "mobile",
+    "theme": "dark",
+    "state": "boundary-partial",
+    "validation": false,
+    "identical": true,
+    "styleProperties": 36,
+    "realMap": {
+      "alive": true,
+      "center": [
+        7.2906,
+        80.6337
+      ],
+      "created": 1,
+      "id": 1,
+      "removed": 0,
+      "zoom": 14
+    }
+  }
+]

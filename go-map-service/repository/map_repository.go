@@ -60,7 +60,7 @@ func (r *MapRepository) SearchProperties(ctx context.Context, req models.SearchR
 	r.mu.RLock()
 	if entry, found := r.cache[cacheKey]; found && time.Now().Before(entry.expiresAt) {
 		r.mu.RUnlock()
-		return entry.data, nil
+		return r.activeCachedProperties(ctx, entry.data)
 	}
 	r.mu.RUnlock()
 
@@ -137,4 +137,38 @@ func (r *MapRepository) SearchProperties(ctx context.Context, req models.SearchR
 	r.mu.Unlock()
 
 	return properties, nil
+}
+
+// Inventory visibility can change during the cache TTL.
+func (r *MapRepository) activeCachedProperties(ctx context.Context, cached []models.PropertyResponse) ([]models.PropertyResponse, error) {
+	if len(cached) == 0 {
+		return cached, nil
+	}
+	ids := make([]string, len(cached))
+	for i, property := range cached {
+		ids[i] = property.ID
+	}
+	rows, err := r.Pool.Query(ctx, "SELECT id FROM properties WHERE id = ANY($1::uuid[]) AND status = 'approved' AND deleted_at IS NULL", ids)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	active := make(map[string]bool)
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		active[id] = true
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	result := make([]models.PropertyResponse, 0, len(cached))
+	for _, property := range cached {
+		if active[property.ID] {
+			result = append(result, property)
+		}
+	}
+	return result, nil
 }

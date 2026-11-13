@@ -16,7 +16,7 @@ vi.mock('framer-motion', () => ({ m: { div: ({ children }) => <div>{children}</d
 vi.mock('react-leaflet', () => ({
   MapContainer: ({ children }) => <div aria-label="Controlled map boundary">{children}</div>,
   TileLayer: () => null, Marker: () => null, Polygon: () => null, CircleMarker: () => null,
-  useMapEvents: () => null,
+  useMapEvents: () => null, useMap: () => ({ setView: () => {} }),
 }));
 vi.mock('leaflet', () => ({ default: { Icon: class {} } }));
 
@@ -39,6 +39,7 @@ function fillCategory() {
   change(screen.getByPlaceholderText('e.g. Beautiful 2-Story House in Colombo 07'), 'Synthetic wizard property');
   change(screen.getByPlaceholderText('Enter Price'), '12500000');
   change(screen.getByRole('combobox'), 'Colombo');
+    change(document.querySelector('[name="contactNumber"]'), '0771234567');
   change(screen.getByPlaceholderText('e.g. 0771234567'), '0000000000');
 }
 
@@ -110,6 +111,7 @@ describe('Rendered AddProperty wizard with real submission hook', () => {
     fireEvent.click(next);
     expect(screen.getByText('Please select the property district.')).toBeInTheDocument();
     change(screen.getByRole('combobox'), 'Colombo');
+    change(document.querySelector('[name="contactNumber"]'), '0771234567');
     fireEvent.click(next);
     expect(screen.queryByText('Please select the property district.')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Continue to Specs & Photos' }));

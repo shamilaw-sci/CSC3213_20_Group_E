@@ -13,7 +13,7 @@ func literalLike(value string) string {
 // Keep all optional filtering in SQL so the result cap cannot discard matches.
 func buildSearchQuery(req models.SearchRequest) (string, []interface{}) {
 	query := `SELECT p.id, p.title, p.description, p.price, p.latitude, p.longitude, p.images, p.bedrooms, p.bathrooms, p.land_size, p.type, p.city, p.listing_type, p.virtual_tours
-        FROM properties p WHERE p.status = 'approved' AND (
+        FROM properties p WHERE p.status = 'approved' AND p.deleted_at IS NULL AND (
             (p.boundary IS NOT NULL AND (p.boundary::geometry && ST_GeomFromText($1, 4326) AND ST_Intersects(p.boundary::geometry, ST_GeomFromText($1, 4326))))
             OR (p.boundary IS NULL AND p.longitude IS NOT NULL AND p.latitude IS NOT NULL AND ST_Intersects(ST_SetSRID(ST_MakePoint(p.longitude, p.latitude), 4326), ST_GeomFromText($1, 4326)))
         )`

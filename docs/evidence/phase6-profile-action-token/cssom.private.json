@@ -1,0 +1,42 @@
+[
+  {
+    "version": "before",
+    "data": {
+      "actualHover": true,
+      "rules": [
+        {
+          "ancestors": [
+            "utilities",
+            "(hover: hover)"
+          ],
+          "css": ".hover\\:bg-blue-700:hover { background-color: var(--color-blue-700); }",
+          "selector": ".hover\\:bg-blue-700:hover"
+        }
+      ]
+    }
+  },
+  {
+    "version": "after",
+    "data": {
+      "actualHover": true,
+      "rules": [
+        {
+          "ancestors": [
+            "utilities",
+            "(hover: hover)"
+          ],
+          "css": ".hover\\:bg-blue-700:hover { background-color: var(--color-blue-700); }",
+          "selector": ".hover\\:bg-blue-700:hover"
+        },
+        {
+          "ancestors": [
+            "components",
+            "(hover: hover)"
+          ],
+          "css": ".profile-solid-action:hover { background-color: var(--profile-solid-action-hover-bg); }",
+          "selector": ".profile-solid-action:hover"
+        }
+      ]
+    }
+  }
+]

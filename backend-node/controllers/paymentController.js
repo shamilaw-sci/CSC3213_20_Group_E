@@ -51,7 +51,7 @@ const processWebhook = async (req, res) => {
     try {
         const order = await orders.find(body.order_id);
         if (!order) {
-            const legacy = await properties.getPropertyById(body.order_id);
+            const legacy = await properties.getPropertyById(body.order_id, { includeDeleted: true });
             if (legacy?.payment_status === 'Paid') return res.status(200).send('OK');
             logger.warn('Legacy unpaid checkout requires reconciliation', operationLogContext({ order_id: body.order_id }));
             return res.status(409).send('Legacy checkout requires reconciliation');

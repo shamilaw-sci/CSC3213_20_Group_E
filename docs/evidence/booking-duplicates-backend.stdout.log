@@ -1,0 +1,4195 @@
+◇ injected env (13) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+Server is running on port 5000
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 813 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 549 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 267 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 453 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 257 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 309
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 819 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 826 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 629
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 691 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 269 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 267 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 298 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 257 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 425 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 510 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 130 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 250 }
+http_request { method: 'GET', route: '/:id', status: 304, durationMs: 163 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 246 }
+http_request { method: 'GET', route: '/:id', status: 304, durationMs: 129 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 219 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 416 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 464 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 246 }
+http_request {
+  method: 'POST',
+  route: '/:id/book-viewing',
+  status: 201,
+  durationMs: 1167
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 380 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 200,
+  durationMs: 431
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 433 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 561 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 217 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 251
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 266 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 427 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 366 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 349 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 347 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 398 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 406 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 518 }
+http_request { method: 'GET', route: '/my-listings', status: 304, durationMs: 579 }
+http_request { method: 'GET', route: '/leads', status: 200, durationMs: 647 }
+http_request {
+  method: 'GET',
+  route: '/dashboard-stats',
+  status: 200,
+  durationMs: 952
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 421 }
+http_request { method: 'GET', route: '/my-listings', status: 304, durationMs: 360 }
+http_request { method: 'GET', route: '/leads', status: 304, durationMs: 545 }
+http_request {
+  method: 'GET',
+  route: '/dashboard-stats',
+  status: 304,
+  durationMs: 943
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 744 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 779 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 879 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 724 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 506 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 836 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 757 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 691 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 688 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 679 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 757 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 652 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 479 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 771 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 676 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 848 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 661 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 347 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 117 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 725 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 383 }
+http_request { method: 'GET', route: '/:id', status: 304, durationMs: 170 }
+http_request { method: 'GET', route: '/:id', status: 304, durationMs: 152 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 441 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 352 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 508 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 433 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 410 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 608 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 354 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 719 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 375 }
+http_request {
+  method: 'POST',
+  route: '/:id/book-viewing',
+  status: 201,
+  durationMs: 1625
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 410 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 357 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 200,
+  durationMs: 244
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 369 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 370 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 451 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 253
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 222 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 231 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 343 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 400 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 358 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 764 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 236 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 281 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 520 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 536 }
+http_request { method: 'GET', route: '/leads', status: 200, durationMs: 626 }
+http_request { method: 'GET', route: '/my-listings', status: 200, durationMs: 680 }
+http_request { method: 'GET', route: '/my-listings', status: 200, durationMs: 223 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 316 }
+http_request {
+  method: 'GET',
+  route: '/dashboard-stats',
+  status: 200,
+  durationMs: 1018
+}
+http_request { method: 'GET', route: '/leads', status: 200, durationMs: 501 }
+http_request {
+  method: 'GET',
+  route: '/dashboard-stats',
+  status: 200,
+  durationMs: 1177
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 694 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 330 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 704 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 798 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 594 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 123 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 977 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 388 }
+http_request { method: 'GET', route: '/:id', status: 304, durationMs: 213 }
+http_request { method: 'GET', route: '/:id', status: 304, durationMs: 160 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 460 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 375 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 651 }
+http_request {
+  method: 'POST',
+  route: '/:id/book-viewing',
+  status: 201,
+  durationMs: 707
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 391 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 200,
+  durationMs: 400
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 398 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 223 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 637 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 246 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 259
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 325 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 346 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 337 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 786 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1330 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 788 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 662 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 695 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 669 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 685 }
+http_request { method: 'PUT', route: '/leads/:id', status: 200, durationMs: 687 }
+http_request { method: 'GET', route: '/my-listings', status: 304, durationMs: 393 }
+http_request { method: 'GET', route: '/leads', status: 200, durationMs: 506 }
+http_request {
+  method: 'GET',
+  route: '/dashboard-stats',
+  status: 200,
+  durationMs: 908
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 351 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 909 }
+http_request { method: 'GET', route: '/me', status: 304, durationMs: 365 }
+http_request { method: 'GET', route: '/me', status: 304, durationMs: 238 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 255 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 200,
+  durationMs: 274
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 360 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 391 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 267 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 285
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 213 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 335 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 341 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 409 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 636 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 376 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 733 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 460 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 630 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 357 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 516 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 243 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 123 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 507 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 333 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 553 }
+http_request { method: 'GET', route: '/:id', status: 304, durationMs: 125 }
+http_request { method: 'GET', route: '/:id', status: 304, durationMs: 119 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 472 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 344 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 578 }
+http_request {
+  method: 'POST',
+  route: '/:id/book-viewing',
+  status: 201,
+  durationMs: 1040
+}
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 200,
+  durationMs: 255
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 447 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 450 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 343
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 200 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 234 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 720 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 337 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 401 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 363 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 358 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 475 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 487 }
+http_request { method: 'GET', route: '/my-listings', status: 304, durationMs: 438 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 546 }
+http_request { method: 'GET', route: '/leads', status: 200, durationMs: 703 }
+http_request { method: 'GET', route: '/my-listings', status: 304, durationMs: 498 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 439 }
+http_request {
+  method: 'GET',
+  route: '/dashboard-stats',
+  status: 200,
+  durationMs: 1031
+}
+http_request { method: 'GET', route: '/leads', status: 304, durationMs: 599 }
+http_request {
+  method: 'GET',
+  route: '/dashboard-stats',
+  status: 304,
+  durationMs: 941
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 651 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 854 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 720 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 668 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 740 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 758 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 654 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 657 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 685 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 676 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 714 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1139 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 808 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 640 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 628 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 711 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 634 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 634 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1231 }
+http_request {
+  method: 'DELETE',
+  route: '/my-appointments/:id',
+  status: 200,
+  durationMs: 581
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 473 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 362 }
+http_request { method: 'GET', route: '/:id', status: 304, durationMs: 206 }
+http_request { method: 'GET', route: '/:id', status: 304, durationMs: 126 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 571 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 408 }
+http_request {
+  method: 'POST',
+  route: '/:id/book-viewing',
+  status: 201,
+  durationMs: 1029
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 376 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 348 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 628 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 846 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 718 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 654 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 764 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 747 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 697 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 662 }
+http_request {
+  method: 'POST',
+  route: '/:id/book-viewing',
+  status: 201,
+  durationMs: 624
+}
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 200,
+  durationMs: 319
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 396 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 414 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 497 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 238
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 234 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 252 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 348 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 404 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 339 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 667 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 772 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 599 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 419 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 295 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 126 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 703 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 396 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 423 }
+http_request { method: 'GET', route: '/:id', status: 304, durationMs: 120 }
+http_request { method: 'GET', route: '/:id', status: 304, durationMs: 118 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 324 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 327 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 605 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 364 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 787 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 383 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 727 }
+http_request { method: 'POST', route: '/logout', status: 200, durationMs: 3 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 404 }
+http_request { method: 'POST', route: '/login', status: 200, durationMs: 488 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 369 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 200,
+  durationMs: 411
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 404 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 499 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 125 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 234 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 338
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 719 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 457
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 497 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 541 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 255
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 223 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 728 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 217 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 501 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 470 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 466 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 741 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 668 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 486 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 119 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 807 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 487 }
+http_request { method: 'GET', route: '/:id', status: 304, durationMs: 176 }
+http_request { method: 'GET', route: '/:id', status: 304, durationMs: 123 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 508 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 522 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 339 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 642 }
+http_request {
+  method: 'POST',
+  route: '/:id/book-viewing',
+  status: 201,
+  durationMs: 907
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 732 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 341 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 200,
+  durationMs: 358
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 414 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 501 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 252
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 264 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 252 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 704 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 516 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 488 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 454 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 387 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 395 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 441 }
+http_request { method: 'GET', route: '/my-listings', status: 304, durationMs: 656 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 383 }
+http_request { method: 'GET', route: '/leads', status: 200, durationMs: 915 }
+http_request { method: 'GET', route: '/my-listings', status: 304, durationMs: 257 }
+http_request {
+  method: 'GET',
+  route: '/dashboard-stats',
+  status: 200,
+  durationMs: 1038
+}
+http_request { method: 'GET', route: '/leads', status: 304, durationMs: 507 }
+http_request {
+  method: 'GET',
+  route: '/dashboard-stats',
+  status: 304,
+  durationMs: 898
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 710 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 506 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 641 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 468 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 756 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 595 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 208 }
+http_request { method: 'GET', route: '/me', status: 304, durationMs: 236 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 421
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 420 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 418 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 572 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 278
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 317 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 321 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 535 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 497 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 546 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 471 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 176 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 120 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 484 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 475 }
+http_request { method: 'GET', route: '/:id', status: 304, durationMs: 180 }
+http_request { method: 'GET', route: '/:id', status: 304, durationMs: 127 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 492 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 497 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 348 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 124 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 729 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 513 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 350 }
+http_request { method: 'GET', route: '/:id', status: 304, durationMs: 134 }
+http_request { method: 'GET', route: '/:id', status: 304, durationMs: 116 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 474 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 499 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 675 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 538 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 542 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 652 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 533 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 530 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 710 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 544 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 535 }
+http_request {
+  method: 'POST',
+  route: '/:id/book-viewing',
+  status: 201,
+  durationMs: 940
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 652 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 701 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 532 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 643 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 430 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 622 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 730 }
+http_request { method: 'POST', route: '/logout', status: 200, durationMs: 2 }
+http_request { method: 'POST', route: '/login', status: 200, durationMs: 446 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 307 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 452 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 200,
+  durationMs: 459
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 149 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 493 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 201 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 213
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 387 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 723 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 548 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 244 }
+http_request { method: 'GET', route: '/me', status: 304, durationMs: 234 }
+http_request { method: 'GET', route: '/me', status: 304, durationMs: 373 }
+http_request { method: 'GET', route: '/me', status: 304, durationMs: 216 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 351 }
+http_request { method: 'GET', route: '/my-listings', status: 304, durationMs: 523 }
+http_request { method: 'GET', route: '/leads', status: 200, durationMs: 678 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 354 }
+http_request { method: 'GET', route: '/my-listings', status: 304, durationMs: 258 }
+http_request {
+  method: 'GET',
+  route: '/dashboard-stats',
+  status: 200,
+  durationMs: 903
+}
+http_request { method: 'GET', route: '/leads', status: 304, durationMs: 449 }
+http_request {
+  method: 'GET',
+  route: '/dashboard-stats',
+  status: 304,
+  durationMs: 796
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 609 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 519 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 369 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 487 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 595 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 569 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 379 }
+http_request { method: 'GET', route: '/history', status: 200, durationMs: 706 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 511 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 498 }
+http_request { method: 'POST', route: '/calculate', status: 200, durationMs: 8 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 653 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 766 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 610 }
+http_request { method: 'GET', route: '/history', status: 304, durationMs: 576 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 534 }
+http_request { method: 'GET', route: '/history', status: 304, durationMs: 406 }
+http_request { method: 'POST', route: '/save', status: 201, durationMs: 321 }
+http_request { method: 'GET', route: '/history', status: 200, durationMs: 254 }
+http_request {
+  method: 'DELETE',
+  route: '/history/:id',
+  status: 200,
+  durationMs: 485
+}
+http_request {
+  method: 'DELETE',
+  route: '/history/:id',
+  status: 200,
+  durationMs: 224
+}
+http_request { method: 'POST', route: '/save', status: 201, durationMs: 234 }
+http_request { method: 'GET', route: '/history', status: 200, durationMs: 263 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 360 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 760 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 666 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 598 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 405 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 622 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 561 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 459 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 706 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 694 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 495 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 662 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 577 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 568 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 951 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 684 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 518 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 577 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 497 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 495 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 522 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 573 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 574 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 552 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 405 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 530 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 520 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 551 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 355 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 521 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 545 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 581 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 330 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 756 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 579 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 969 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 367 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 604 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 5893 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 5939 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 21500 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 366 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 667 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 651 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 688 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 552 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 2433 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 516 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 644 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 558 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 478 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 475 }
+http_request { method: 'GET', route: '/history', status: 304, durationMs: 368 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 395 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 603 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 599 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 573 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 383 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 615 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 539 }
+http_request {
+  method: 'DELETE',
+  route: '/history/:id',
+  status: 200,
+  durationMs: 529
+}
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 261 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 478 }
+http_request { method: 'GET', route: '/history', status: 200, durationMs: 288 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 379 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 432 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 587 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 4059 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 4815 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 2031 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1128 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 526 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 665 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 438 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 524 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1203 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 530 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 3207 }
+http_request { method: 'POST', route: '/calculate', status: 200, durationMs: 1 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 772 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 533 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 598 }
+http_request { method: 'POST', route: '/calculate', status: 200, durationMs: 20 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 388 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 549 }
+http_request { method: 'POST', route: '/calculate', status: 200, durationMs: 0 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 520 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 625 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 359 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 569 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 528 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 518 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 373 }
+http_request { method: 'POST', route: '/chat', status: 200, durationMs: 4370 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1684 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1381 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 2210 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 455 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 449 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 548 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 576
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 238 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 158 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 728 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 277
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 345 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 554 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 695 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 373 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 709 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 754 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 555 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 397 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 560 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 362 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 2484 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 373 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 628 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 413 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 494 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 344 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 560 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 360 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 478 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 366 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 277 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 118 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 540 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 370 }
+http_request { method: 'GET', route: '/:id', status: 304, durationMs: 132 }
+http_request { method: 'GET', route: '/:id', status: 304, durationMs: 142 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 410 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 335 }
+http_request {
+  method: 'POST',
+  route: '/agent/:agentId',
+  status: 200,
+  durationMs: 332
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 390 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 496 }
+http_request { method: 'GET', route: '/:id/messages', status: 200, durationMs: 637 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 485 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 374 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 375 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 473 }
+http_request {
+  method: 'POST',
+  route: '/:id/messages',
+  status: 201,
+  durationMs: 624
+}
+http_request { method: 'GET', route: '/:id/messages', status: 200, durationMs: 732 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 512 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 703 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 565 }
+http_request { method: 'GET', route: '/:id/messages', status: 200, durationMs: 441 }
+http_request { method: 'GET', route: '/:id/messages', status: 200, durationMs: 522 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 869 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 552 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 661 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 759 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 953 }
+http_request { method: 'GET', route: '/:id/messages', status: 200, durationMs: 999 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 636 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 815 }
+http_request { method: 'GET', route: '/:id/messages', status: 200, durationMs: 815 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 932 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 552 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 665 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 669 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 637 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 720 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 541 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 595 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 422 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 274
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 468 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 530 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 245
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 533 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 212 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 359 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 283 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 327 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 362 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 464 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 554 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 724 }
+http_request {
+  method: 'POST',
+  route: '/:id/messages',
+  status: 201,
+  durationMs: 574
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 618 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 2676
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 3044 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 2407 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 479 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 687 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 865 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 863 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 733 }
+http_request { method: 'GET', route: '/:id/messages', status: 200, durationMs: 819 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 505 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 659 }
+http_request { method: 'GET', route: '/:id/messages', status: 200, durationMs: 779 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 907 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 1019 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 529 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 556 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 822 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 521 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 865 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 907 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 516 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 603 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 669 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 558 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 640 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 640 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 537 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 644 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 779 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 938 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 462 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 560 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 620 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 451 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 3261 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 4414
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 3666 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 4194
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 451 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 652 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 820 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 907 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 562 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 704 }
+http_request { method: 'POST', route: '/logout', status: 200, durationMs: 4 }
+http_request { method: 'POST', route: '/login', status: 200, durationMs: 435 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 329 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 200,
+  durationMs: 482
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 514 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 512 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 182 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 211
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 248 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 583 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 504 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 714 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 736 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 560 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 925 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1193 }
+http_request { method: 'GET', route: '/:id/messages', status: 200, durationMs: 382 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 752 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 2648 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 1458
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1088 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 793 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 845 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 444 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1348 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 578 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 581 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 793 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 812 }
+http_request { method: 'POST', route: '/logout', status: 200, durationMs: 1 }
+http_request { method: 'POST', route: '/login', status: 200, durationMs: 427 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 377 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 200,
+  durationMs: 390
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 480 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 570 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 143 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 280
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 307 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 530 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 560 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 626 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 701 }
+http_request { method: 'GET', route: '/:id', status: 200, durationMs: 3253 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 4668 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 4818
+}
+http_request { method: 'GET', route: '/:id', status: 304, durationMs: 634 }
+http_request { method: 'POST', route: '/:id/view', status: 200, durationMs: 123 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 229 }
+http_request { method: 'GET', route: '/:id/similar', status: 200, durationMs: 259 }
+http_request { method: 'GET', route: '/history', status: 304, durationMs: 1 }
+http_request { method: 'GET', route: '/history', status: 304, durationMs: 1 }
+http_request {
+  method: 'GET',
+  route: '/:id/price-insight',
+  status: 304,
+  durationMs: 297
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 437 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 462 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 749 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 714 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 847 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 828 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 1014 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1019
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 486 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 3673
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 3675 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 466 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 532 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 669 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 756 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 822 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 836 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 859 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 473 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 3130 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 3313
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 455 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 444 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 718 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 798 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 6207 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 5318 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 6317
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 6415 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 571 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 619 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 607 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 613 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 561 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 750 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 712 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 630 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 850 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 920 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 4643 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 5317
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 651 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 467 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 744 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 864 }
+http_request { method: 'GET', route: '/:id', status: 200, durationMs: 268 }
+http_request { method: 'POST', route: '/:id/view', status: 200, durationMs: 140 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 250 }
+http_request {
+  method: 'GET',
+  route: '/:id/price-insight',
+  status: 200,
+  durationMs: 255
+}
+http_request { method: 'GET', route: '/:id/similar', status: 200, durationMs: 258 }
+http_request { method: 'GET', route: '/history', status: 304, durationMs: 0 }
+http_request { method: 'GET', route: '/history', status: 304, durationMs: 0 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 562 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 463 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 643 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 739 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 791 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 691 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 748 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 751 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 672 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 783 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 812 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 799 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 502 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 759 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 765 }
+http_request { method: 'GET', route: '/:id', status: 200, durationMs: 450 }
+http_request { method: 'GET', route: '/:id', status: 304, durationMs: 222 }
+http_request { method: 'POST', route: '/:id/view', status: 200, durationMs: 118 }
+http_request { method: 'GET', route: '/:id/similar', status: 200, durationMs: 328 }
+http_request {
+  method: 'GET',
+  route: '/:id/price-insight',
+  status: 200,
+  durationMs: 387
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 387 }
+http_request { method: 'GET', route: '/history', status: 304, durationMs: 1 }
+http_request { method: 'GET', route: '/history', status: 304, durationMs: 0 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 472 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 571 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 591 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 626 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 657 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 730 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 644 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 689 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 771 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 480 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 555 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 493 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 510 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 762 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 833 }
+http_request { method: 'GET', route: '/:id', status: 200, durationMs: 226 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1015 }
+http_request { method: 'POST', route: '/:id/view', status: 200, durationMs: 133 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 383 }
+http_request { method: 'GET', route: '/history', status: 304, durationMs: 1 }
+http_request { method: 'GET', route: '/history', status: 304, durationMs: 0 }
+http_request { method: 'GET', route: '/:id/similar', status: 200, durationMs: 472 }
+http_request {
+  method: 'GET',
+  route: '/:id/price-insight',
+  status: 200,
+  durationMs: 475
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 543 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 511 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 557 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 565 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 536 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 727 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 817 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 595 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 743 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 762 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 863 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 3952 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 4057 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 4126 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 4167
+}
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 674 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 780 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 621 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 820 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 707 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 726 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 614 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 622 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 797 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 902 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 3072 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 3264
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 549 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 553 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 847 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 847 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 444 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 446 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 444
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 456 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 225 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 237 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 269
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 502 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 477 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 476 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 700 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 846 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 871 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 877 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 707 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 832 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 138 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 117 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 260
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 273 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 259 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 542 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 278
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 503 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 497 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 226 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 233
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 234 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 434 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 233
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 233 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 349 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 473 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 456 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 469 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 641 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 785 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 588 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 746 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 748 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 500 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 2587 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 2706
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 518 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 509 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 725 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 729 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 446 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 452
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 466 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 900 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 448 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 527
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 590 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 661 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 965 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 546 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 990 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 440 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 448 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 897 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1039
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 490 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 504 }
+http_request { method: 'PUT', route: '/profile', status: 200, durationMs: 392 }
+http_request { method: 'PUT', route: '/profile', status: 200, durationMs: 371 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 575 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 681 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 605 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 835 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 688 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1027
+}
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 304 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 307 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 281 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 286
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 291 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 251 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 558 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 272
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 329 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 604 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 467 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 496 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 3465 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 3588
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 584 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 886 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 746 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 812 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 798 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 813 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 815 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 462 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 767 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 800 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 707 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 588 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 670 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 699 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 764 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 802 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 958 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 529 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 3416 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 3562
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 595 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 709 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 675 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 675 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 616 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 772 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 841 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 513 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 804 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 807 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 832 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 906 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 897 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 934 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 497 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 770 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 775 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 820 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 781 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 895 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 12493 }
+http_request { method: 'PUT', route: '/profile', status: 200, durationMs: 16289 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 728 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 408 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 563 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 565 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 251 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 257 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 229 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 245 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 243
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 322 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 328 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 326
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 643 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 456 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 482 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 498 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 789 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 790 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 796 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 778 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 949 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 968 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 484 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 758 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 942 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 753 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 660 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 816 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 851 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 478 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 838 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 10777 }
+http_request { method: 'PUT', route: '/profile', status: 200, durationMs: 23445 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 426 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 508 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 252 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 378 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 404
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 243 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 243 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 641 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 269
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 458 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 455 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 419 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 624 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 801 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 819 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 736 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 689 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 717 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 762 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 1645 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 1710 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 358 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 462 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 478
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 588 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 267 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 272 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 708 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 307
+}
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 818 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 953 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 520 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 440 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 510 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 684 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 803 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 729 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 610 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 799 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 795 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 848 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 806 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 836 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 439 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 532 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 619 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 444 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 680 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 712 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 599 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 705 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 644 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 763 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 769 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 874 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 881 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 464 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 241 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 477 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 349 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 545 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 200,
+  durationMs: 555
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 269 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 857 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 876 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 342 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 895 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 200,
+  durationMs: 610
+}
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 1930 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 3091 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 3876
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 493 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 827 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 938 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 470 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 501 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 764 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 783 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 720 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 564 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 587 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 640 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 858 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 878 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 482 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 602 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 721 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 767 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 588 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 656 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 675 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 761 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 853 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 965 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 489 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 674 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 976 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 979 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 758 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 670 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 833 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1602 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 685 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 774 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 533 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 656 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 869 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 902 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 672 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 2803
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 3249 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 491 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 17390 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 16024 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 16187
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 656 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 788 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 826 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 936 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 10668 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 12107
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 13538 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 13553 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 2974 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 4202
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 5603 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 5634 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 3897 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 6765 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 7542 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 7548 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 200,
+  durationMs: 7540
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 7566 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 5241 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 7845 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 11675 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 8758 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 8811 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 10356
+}
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 7297 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 14079 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 11109 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 8492 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 8548 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 8552 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 9976
+}
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 11301 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 7513 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 8350 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 9893 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 9892
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 11303 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 5899 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 6970
+}
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 8479 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 8519 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 36822 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 46863 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 32187 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 22201 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 7346 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 32336 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 32585
+}
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 774 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 698 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 749 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 784 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 792 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 2130 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 2286
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 2436 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 2430 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 726 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 731 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 875 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 877 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 716 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 779 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 844 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 841 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1446 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 975 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 34846 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 3375 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 15036 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 35119 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 35146
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 640 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 34638 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 39328 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 56606 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 57727 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 48289 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 28977
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 50461 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 50529 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 8823 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 50923 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 54292
+}
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 61402 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 61404 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 35445 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 25528 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 25543 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 25714 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 25870
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 585 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 4285 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 4357
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 620 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 811 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 689 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 590 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 523 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 813 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 843 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 727 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 899 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 984 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 676 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 706 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 726 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 28171
+}
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 37638 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 8826 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 8907 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 28590 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 46891 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 868 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 761 }
+http_request { method: 'GET', route: '/:id/messages', status: 200, durationMs: 851 }
+http_request { method: 'GET', route: '/:id/messages', status: 200, durationMs: 855 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 38755
+}
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 652 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 630 }
+http_request { method: 'GET', route: '/:id/messages', status: 200, durationMs: 709 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 684 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 612 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 543 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 529 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 510 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 634 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 540 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 690 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 737 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 893 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 917 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 617 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 753 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 733 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 644 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 644 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 793 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 668 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 889 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 893 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 791 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 798 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 843 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 825 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 896 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 679 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 804 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 815 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 753 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 760 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 595 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 507 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 30767 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 34599 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 12800 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 13131
+}
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 44317
+}
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 4460
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 45306 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 5438 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 3130 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 2937 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 2313
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 1527 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1196 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1237 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 493 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 855 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 512 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 625 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 436 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 479 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 7829 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 7824 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 12955 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 33004 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 50981
+}
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 15560
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 56180 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 5452 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 5453 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 200,
+  durationMs: 5491
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 17202 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 6412 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 6391 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 6383 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 6414 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 984 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 200,
+  durationMs: 945
+}
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 6439 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 994 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 6612
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1622 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 4323
+}
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 1594 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 1629 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 2475
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 2540 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 3528 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 3854
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 1287 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 637 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 514 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 554 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 743 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1007
+}
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 800 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 845 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 497 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 473 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 779 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 867 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 849 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 511 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 653 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 831 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 692 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 773 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 500 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 489 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 864 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 1035 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 900 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 556 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 744 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 896 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 860 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 924 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 477 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 559 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 869 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 872 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 848 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 495 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 667 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 855 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 626 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 846 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 475 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 492 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 783 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 869 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 817 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 554 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 808 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 833 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 869 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 969 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1081 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 545 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 823 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 960 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 817 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 555 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 730 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 738 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 754 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 874 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 703 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 488 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 781 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 874 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 885 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 489 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 671 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 824 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 3598
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 2124 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 4174 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1916 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 1151 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1573
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 2246 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1155 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 1614 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1719
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 30468 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 28820 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 25056
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 30580 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 40216
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1817 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 40822 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 22656 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 7783 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 446 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 12119 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 12341
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 542 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 493 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 545 }
+http_request { method: 'GET', route: '/:id/messages', status: 200, durationMs: 649 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 532 }
+http_request { method: 'GET', route: '/:id/messages', status: 200, durationMs: 866 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 827 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1052 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1952
+}
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 2104
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 2745 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 3119 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 4575
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 3887 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 3665 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 37791
+}
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 93015
+}
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 29461 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 4703 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 28606 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 43872 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 28760
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 901 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 25240 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 44804 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 5002
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 983 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 1054 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 1279
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1190 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1497 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 1932
+}
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 2477
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 3261 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 3444 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 3442 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 4182 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 4573
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 3806 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 4772
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 3763 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 4825
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 3936 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 4923
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 4400 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 5290 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 5646 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 10675 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 14852 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 8742 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 13782 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 8833
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 8918 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 599 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 680 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 682 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 817 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 567 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 513 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 942 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 980 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 715 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 820 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 3826
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 3888 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 3585 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 5309 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 14487 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 25525 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 34074 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 60705 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 45657 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1088 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 15981 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 19233
+}
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 31131 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 19404
+}
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 30166
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 45963 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 67860 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 30439 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1028 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 1009 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1055 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1032 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 1021 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1141 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 1402
+}
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 1326 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 1564
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1303 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 1762
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1533 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1753
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 2067 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 3402 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 5322
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 5759 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 7775 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 10485
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 9571 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 15477 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 24303
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 22888 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 34239 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 36928 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 24906
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 14901 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 19996 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 27995 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 26615
+}
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 8987 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 9252 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 16093 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 12208
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 17678 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 17951
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 17690 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 17676 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 47113 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 58494 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 63169
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 30629 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 34310 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 49333 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 26181 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 4469 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 7986 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 4691
+}
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 35123 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 7922 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 37335 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 14060
+}
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 37948
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 10353 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 17315
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 19438 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 19487 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 25722 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 34619 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 68855
+}
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 37549 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 40537
+}
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 50395
+}
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 54714 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 51328 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 39786 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 58998
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1036 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 15045 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 25394 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 2208 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 1549 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 2114
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 2285 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 3637 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 3762 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 4358
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 4794 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 5069 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 5941 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 6874
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 6553 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 6535 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 7801
+}
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 6478 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 7639
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 6276 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 8242
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 7062 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 8039 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 8595 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 9967 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 12776
+}
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 17623
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 11298 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 13107
+}
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 15511 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 15480 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 25768 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 22892
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 28907 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 22234 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 64429 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 64412 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 20727 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 26409
+}
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 57869 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 19718 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 43209 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 16749 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 6800
+}
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 28462 }
+http_request { method: 'GET', route: '/:id/messages', status: 200, durationMs: 984 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 744 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 2891 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 71771
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 649 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 704 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 675 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 716 }
+http_request { method: 'GET', route: '/:id/messages', status: 200, durationMs: 842 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 1000
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 754 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 763 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 1163
+}
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 1019 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1076 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 1780
+}
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 1517 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1442 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1500 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 1756
+}
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 200,
+  durationMs: 1682
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1117 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 1218 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1279 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1375
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 1247 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1461
+}
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 659 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 719 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 496 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 462 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 841 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 850 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 788 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 541 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 766 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 802 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 798 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 893 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 542 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 456 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 934 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 955 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 924 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 542 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 640 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 771 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 1049 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1419
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1139 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 537 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 3389 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 3504
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 494 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 804 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 871 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 469 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 610 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 383 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 699 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 200,
+  durationMs: 699
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 565 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 496 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 1198 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 200,
+  durationMs: 534
+}
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 1246 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 1280 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 677 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 4004 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 7328 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 7414
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 1416 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1356
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 513 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 737 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 842 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 846 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 647 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 753 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 760 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 662 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 801 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 886 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 773 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 806 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 806 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1040
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 641 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 663 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 756 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 755 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 4877
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 4996 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 482 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 773 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 882 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 940 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 652 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 820 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 968 }
+http_request { method: 'PUT', route: '/profile', status: 200, durationMs: 420 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 531 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 759 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 785 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 919 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 974 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1302
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 1382 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 733 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 849 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 854 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 678 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 4419 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 4436
+}
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 451 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 452 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 544 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 554 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 200,
+  durationMs: 553
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 385 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 200,
+  durationMs: 543
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 588 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 1149 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 1192 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 1362 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 1235 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 585 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 695 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 812 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 902 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 987 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 557 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 469 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 878 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 959 }
+http_request { method: 'PUT', route: '/profile', status: 200, durationMs: 571 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1008 }
+http_request { method: 'PUT', route: '/profile', status: 200, durationMs: 368 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 545 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 661 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 878 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 1992 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 2076
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1607 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 574 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 5387
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 5393 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 504 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 497 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 589 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 747 }
+http_request { method: 'PUT', route: '/profile', status: 200, durationMs: 364 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 883 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 939 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 530 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 460 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 753 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 778 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 787 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 465 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 668 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 741 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 2652 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 848 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 2877
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 543 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 4926
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 4947 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 557 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 762 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 923 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1045
+}
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 984 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 991 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 496 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 571 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 831 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 985 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 796 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 476 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 623 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 755 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 767 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1511
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 507 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 501 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 4143 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 4231
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 484 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 781 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 887 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1012
+}
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 749 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 835 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 503 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 508 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 830 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 833 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 941 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 324
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 457 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 463 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 269
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 252 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 718 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 245 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 526 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 690 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 539 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 542 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 640 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 526 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 2494 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 3415
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1140 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 477 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 5502
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 5541 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 539 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 497 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 691 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 888 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 826 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 861 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 451 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 567 }
+http_request {
+  method: 'POST',
+  route: '/request-role-upgrade',
+  status: 201,
+  durationMs: 415
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 745 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 760 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 644 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 790 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 1043 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 534 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 574 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 327
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 327 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 331 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 242
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 244 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 243 }
+http_request { method: 'GET', route: '/unread', status: 200, durationMs: 583 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 606 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 456 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 486 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 721 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 774 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 696 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 6032 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 3187 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 3415
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 648 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 854 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 904 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 604 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 4710
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 4849 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 675 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 518 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 721 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 790 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 709 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 809 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 881 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 518 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 658 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 767 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 758 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 5338 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 2372
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 2467 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 615 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 794 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 923 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 482 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 875 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 953 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 287 }
+http_request { method: 'GET', route: '/me', status: 304, durationMs: 276 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 528 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 642 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 576 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 627 }
+http_request { method: 'POST', route: '/login', status: 200, durationMs: 372 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 731 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 919 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 942 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 477 }
+http_request { method: 'POST', route: '/login', status: 200, durationMs: 728 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/revenue',
+  status: 200,
+  durationMs: 383
+}
+http_request { method: 'GET', route: '/listings', status: 200, durationMs: 537 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/user-growth',
+  status: 200,
+  durationMs: 548
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 200,
+  durationMs: 555
+}
+http_request { method: 'GET', route: '/listings', status: 304, durationMs: 251 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/user-growth',
+  status: 304,
+  durationMs: 254
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/revenue',
+  status: 304,
+  durationMs: 447
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 376
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 426
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 683
+}
+http_request { method: 'GET', route: '/:id/messages', status: 200, durationMs: 961 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 505
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1361 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 581
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1316 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 497 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 671 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1180 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 456 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 457 }
+http_request { method: 'GET', route: '/verify', status: 200, durationMs: 127 }
+http_request { method: 'GET', route: '/verify', status: 304, durationMs: 113 }
+http_request { method: 'GET', route: '/verify', status: 304, durationMs: 255 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/revenue',
+  status: 304,
+  durationMs: 270
+}
+http_request { method: 'GET', route: '/listings', status: 304, durationMs: 374 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 460
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/user-growth',
+  status: 304,
+  durationMs: 500
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/revenue',
+  status: 304,
+  durationMs: 235
+}
+http_request { method: 'GET', route: '/listings', status: 304, durationMs: 228 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/user-growth',
+  status: 304,
+  durationMs: 231
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 437
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 418
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 615
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 597
+}
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 917 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1151 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 567
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1440 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 516 }
+http_request {
+  method: 'GET',
+  route: '/pending-agents',
+  status: 200,
+  durationMs: 259
+}
+http_request {
+  method: 'GET',
+  route: '/pending-agents',
+  status: 304,
+  durationMs: 258
+}
+http_request { method: 'GET', route: '/listings', status: 200, durationMs: 563 }
+http_request {
+  method: 'GET',
+  route: '/pending-agents',
+  status: 304,
+  durationMs: 206
+}
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1131
+}
+http_request {
+  method: 'GET',
+  route: '/pending-agents',
+  status: 304,
+  durationMs: 241
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1176 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/user-growth',
+  status: 304,
+  durationMs: 309
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/revenue',
+  status: 304,
+  durationMs: 314
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 492
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/revenue',
+  status: 304,
+  durationMs: 236
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/user-growth',
+  status: 304,
+  durationMs: 440
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 436
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1153 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 888 }
+http_request { method: 'GET', route: '/:id/messages', status: 200, durationMs: 569 }
+http_request { method: 'GET', route: '/inquiries', status: 200, durationMs: 249 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1073 }
+http_request { method: 'GET', route: '/inquiries', status: 304, durationMs: 257 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1049 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 711 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 943 }
+http_request {
+  method: 'GET',
+  route: '/reports/transactions',
+  status: 200,
+  durationMs: 216
+}
+http_request {
+  method: 'GET',
+  route: '/reports/transactions',
+  status: 304,
+  durationMs: 216
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 479
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/user-growth',
+  status: 304,
+  durationMs: 499
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/revenue',
+  status: 304,
+  durationMs: 505
+}
+http_request { method: 'GET', route: '/listings', status: 304, durationMs: 720 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/revenue',
+  status: 304,
+  durationMs: 260
+}
+http_request { method: 'GET', route: '/listings', status: 304, durationMs: 246 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 622
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/user-growth',
+  status: 304,
+  durationMs: 742
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 507 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 473
+}
+http_request {
+  method: 'POST',
+  route: '/request-role-upgrade',
+  status: 200,
+  durationMs: 707
+}
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 760 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1092 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1256 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 513 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 386 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 428 }
+http_request { method: 'GET', route: '/verify', status: 304, durationMs: 133 }
+http_request { method: 'GET', route: '/verify', status: 304, durationMs: 153 }
+http_request { method: 'GET', route: '/verify', status: 304, durationMs: 283 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/user-growth',
+  status: 304,
+  durationMs: 370
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/revenue',
+  status: 304,
+  durationMs: 528
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 573
+}
+http_request { method: 'GET', route: '/listings', status: 304, durationMs: 634 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/user-growth',
+  status: 304,
+  durationMs: 383
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/revenue',
+  status: 304,
+  durationMs: 237
+}
+http_request { method: 'GET', route: '/listings', status: 304, durationMs: 230 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 420
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 507
+}
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 802 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 428
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1222 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 607
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 655
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1141 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 519 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 911 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1631 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1172 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 680 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1068 }
+http_request { method: 'GET', route: '/users', status: 200, durationMs: 292 }
+http_request { method: 'GET', route: '/users', status: 304, durationMs: 275 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 564 }
+http_request {
+  method: 'GET',
+  route: '/role-requests',
+  status: 200,
+  durationMs: 430
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 433
+}
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1046
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1150 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1136 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 533 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 681 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1209 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 899 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1153 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1448 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 555 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 962
+}
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1271
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1571 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1164 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 521 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 754 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1189 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 934 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1256 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1438 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 474 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 697
+}
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 892 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1275 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1173 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 669 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1124 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 865 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1244 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1308 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 804
+}
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1169
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1472 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1317 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 13200 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 11619 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1669 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 11761
+}
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 757 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 959 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 909
+}
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1077
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1460 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1228 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 714 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 516 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 639 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1328 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 417 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 440 }
+http_request { method: 'GET', route: '/verify', status: 200, durationMs: 137 }
+http_request { method: 'GET', route: '/verify', status: 200, durationMs: 158 }
+http_request { method: 'GET', route: '/verify', status: 304, durationMs: 241 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 504
+}
+http_request { method: 'GET', route: '/users', status: 304, durationMs: 592 }
+http_request { method: 'GET', route: '/users', status: 304, durationMs: 355 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 573
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 569
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 696
+}
+http_request {
+  method: 'GET',
+  route: '/role-requests',
+  status: 304,
+  durationMs: 360
+}
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 787 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1106 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1110 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 510 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 704 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 3841 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 859 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 3582 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1971
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 2106 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 531
+}
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 962 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1087 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1427 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 530 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 678 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1207 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 991 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 470 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 576 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 958 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 357 }
+http_request { method: 'GET', route: '/me', status: 200, durationMs: 365 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 274 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 281
+}
+http_request { method: 'GET', route: '/', status: 304, durationMs: 381 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 299 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 297
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 627 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 329 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 571 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 436 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 455 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 534
+}
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 804 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1051 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1228 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 652 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 632 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 988 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1341 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 2396
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 2790 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 492 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 428
+}
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 715 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1120 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1247 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 744 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 574 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 888 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1049 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 785 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1017 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 436 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 417
+}
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 872 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1016 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1245 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 605 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 655 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 991 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1156 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 2686
+}
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 9154
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 5177 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 585 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 10642 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 920 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 903 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 865 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 655 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1014 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1072 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 877 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1138 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 650 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 655
+}
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 953 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1238 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1485 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 856 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 845 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1113 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1048 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 8753
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 2878
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 5007 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 9017 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1029 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1049
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1181 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 776 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 557 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 976 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1151 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 620 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1093 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 556 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 445
+}
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 832 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1070 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1277 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 881 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1000 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1138 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 5020 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 3331 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 3374
+}
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 794 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1073 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1222 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 867 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1284 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1016 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 724 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1145 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 774
+}
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 747 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1001 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1192 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 789 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1092 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1103 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 6162 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 4541
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 4873 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 746 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1161 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1290 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 694 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1139 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1007 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 800 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 992 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 587
+}
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 925 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1154 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1375 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 750 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1019 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1794 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 4493 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 2765
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 2869 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 754 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 453
+}
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 765 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1142 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1136 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1296 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 949 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1331 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1632 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 777 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 924 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 872 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 420
+}
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 863 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1102 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1376 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 635 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 728 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1095 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1007 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 781 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1113 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 462 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 434
+}
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 761 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1183 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1483 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 773 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 558 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1008 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1223 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 998 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 2314 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 452 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 735
+}
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1800
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 2074 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 2194 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 630 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 832 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1547 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1033 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 4162
+}
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 10307
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 6563 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 10989 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 974 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1324 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1144 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 763 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 626 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1506 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1377 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 616 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1052 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 859 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1073 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1286 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 811 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1121 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1100 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 5652
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 12588 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 11021
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 11245 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 744 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1913 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1013 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1240
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 2130 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1243 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 818 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1134 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1426
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 2119 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 3821 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 839 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 2802 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 906 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 1499
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1678 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 756 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1381 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1020
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1126 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1187 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 258 }
+http_request { method: 'GET', route: '/', status: 304, durationMs: 265 }
+http_request {
+  method: 'GET',
+  route: '/my-appointments',
+  status: 304,
+  durationMs: 302
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 458 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 772 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1303 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1123 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 691 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1196 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 870 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1112 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1227 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 844 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1137 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1045 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 1611
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 2025 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 900 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1205 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 910 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 2314 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 2324 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 2189
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 3137 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1114 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 628
+}
+http_request {
+  method: 'GET',
+  route: '/role-requests',
+  status: 304,
+  durationMs: 629
+}
+http_request {
+  method: 'GET',
+  route: '/role-requests',
+  status: 304,
+  durationMs: 490
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 719
+}
+http_request { method: 'GET', route: '/users', status: 304, durationMs: 951 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1578
+}
+http_request { method: 'GET', route: '/users', status: 304, durationMs: 399 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1820 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 777 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1140 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1290 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 836 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1102 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1128 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 4358
+}
+http_request {
+  method: 'GET',
+  route: '/role-requests',
+  status: 304,
+  durationMs: 4641
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 5010 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 3152
+}
+http_request {
+  method: 'GET',
+  route: '/role-requests',
+  status: 304,
+  durationMs: 326
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 784
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 3480 }
+http_request {
+  method: 'GET',
+  route: '/role-requests',
+  status: 304,
+  durationMs: 262
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1240 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 804 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1073 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 803 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 771 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1091 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1156 }
+http_request {
+  method: 'GET',
+  route: '/role-requests',
+  status: 304,
+  durationMs: 265
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 550
+}
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 770 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1292 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 541 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 860 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1105 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1105 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 630 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 621 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1099 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1054 }
+http_request {
+  method: 'GET',
+  route: '/role-requests',
+  status: 304,
+  durationMs: 3757
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 5310
+}
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 4775
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 917 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 5061 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 820 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1205 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1326 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1095 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 2334 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1963
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 2058 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 686 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 971 }
+http_request { method: 'GET', route: '/history', status: 304, durationMs: 272 }
+http_request { method: 'POST', route: '/calculate', status: 200, durationMs: 56 }
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 1251
+}
+http_request {
+  method: 'GET',
+  route: '/role-requests',
+  status: 304,
+  durationMs: 835
+}
+http_request {
+  method: 'GET',
+  route: '/role-requests',
+  status: 304,
+  durationMs: 366
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 1097
+}
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1595
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 2039 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 2525 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1690
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 2708 }
+http_request { method: 'GET', route: '/users', status: 304, durationMs: 350 }
+http_request { method: 'GET', route: '/users', status: 304, durationMs: 415 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1873
+}
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 2356 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 2092 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1227
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1913 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 2123 }
+http_request {
+  method: 'GET',
+  route: '/role-requests',
+  status: 304,
+  durationMs: 562
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 1119
+}
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 922 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1249 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1260 }
+http_request {
+  method: 'GET',
+  route: '/role-requests',
+  status: 304,
+  durationMs: 1198
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 1635
+}
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 1952
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 3592 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 738 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1450 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1202 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 304,
+  durationMs: 4888
+}
+http_request { method: 'GET', route: '/', status: 200, durationMs: 5460 }
+http_request {
+  method: 'GET',
+  route: '/role-requests',
+  status: 304,
+  durationMs: 674
+}
+http_request {
+  method: 'GET',
+  route: '/dashboard/stats',
+  status: 304,
+  durationMs: 879
+}
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 804 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1231 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1515 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 816 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1140 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 1322 }
+http_request { method: 'GET', route: '/users', status: 304, durationMs: 350 }
+http_request { method: 'GET', route: '/users', status: 304, durationMs: 270 }
+http_request { method: 'GET', route: '/:id/messages', status: 304, durationMs: 756 }
+http_request { method: 'GET', route: '/', status: 200, durationMs: 989 }
+http_request { method: 'GET', route: '/unread', status: 304, durationMs: 1881 }

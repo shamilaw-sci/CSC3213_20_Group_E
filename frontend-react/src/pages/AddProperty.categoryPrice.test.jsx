@@ -16,7 +16,7 @@ vi.mock('framer-motion', () => ({ m: { div: ({ children }) => <div>{children}</d
 vi.mock('react-leaflet', () => ({
   MapContainer: ({ children, center }) => <div aria-label="Controlled map boundary" data-center={JSON.stringify(center)}>{children}</div>,
   TileLayer: () => null, Marker: () => null, Polygon: () => null, CircleMarker: () => null,
-  useMapEvents: () => null,
+  useMapEvents: () => null, useMap: () => ({ setView: () => {} }),
 }));
 vi.mock('leaflet', () => ({ default: { Icon: class {} } }));
 
@@ -41,7 +41,7 @@ function validCategory() {
   change(field('title'), '  Raw headline  ');
   change(field('price'), '1234567.50');
   change(field('district'), 'Kandy');
-  change(field('contactNumber'), ' +94 077 raw ');
+  change(field('contactNumber'), '+94771234567');
 }
 function specs() {
   next();
@@ -111,7 +111,7 @@ describe('Category and price through the actual AddProperty parent and real form
     fireEvent.click(screen.getByRole('button', { name: 'Previous Step' }));
     expect(field('title')).toHaveValue('  Raw headline  ');
     expect(field('price')).toHaveValue(1234567.5);
-    expect(field('contactNumber')).toHaveValue(' +94 077 raw ');
+    expect(field('contactNumber')).toHaveValue('+94771234567');
     expect(field('district')).toHaveValue('Kandy');
     next(); expect(field('city')).toHaveValue('Raw town');
   });
@@ -131,7 +131,7 @@ describe('Category and price through the actual AddProperty parent and real form
     step('Category & Price'); choose('Residential House'); specs(); expect(field('landSize')).toHaveValue(null);
     step('Category & Price'); choose('Rent House'); expect(field('pricePeriod')).toHaveValue('Month');
     expect(field('title')).toHaveValue('  Raw headline  ');
-    expect(field('contactNumber')).toHaveValue(' +94 077 raw ');
+    expect(field('contactNumber')).toHaveValue('+94771234567');
   });
 
   test('price thresholds, blank and string zero preserve preview and positive-price validation', async () => {
@@ -161,4 +161,13 @@ describe('Category and price through the actual AddProperty parent and real form
     expect(screen.getByText('Please upload at least 1 photograph of your property.')).toBeInTheDocument();
     step('Category & Price'); expect(field('title')).toHaveValue('  Raw headline  ');
   });
+});
+
+test.each(['', '123', '+940771234567'])('contact %s blocks leaving Category & Price', async value => {
+ await mount(); validCategory(); change(field('contactNumber'), value); next();
+ expect(screen.getByText(/Please enter a valid Sri Lankan contact number/)).toBeInTheDocument();
+ expect(field('title')).toBeInTheDocument();
+});
+test.each(['0771234567', '+94771234567'])('contact %s permits leaving Category & Price', async value => {
+ await mount(); validCategory(); change(field('contactNumber'), value); next(); expect(field('city')).toBeInTheDocument();
 });

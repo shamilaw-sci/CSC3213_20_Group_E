@@ -1,0 +1,42 @@
+{
+  "asset": "index-B7SvjWzd.css",
+  "tokens": [
+    {
+      "property": "--profile-solid-action-bg",
+      "value": "var(--color-blue-600)"
+    },
+    {
+      "property": "--profile-solid-action-hover-bg",
+      "value": "var(--color-blue-700)"
+    },
+    {
+      "property": "--profile-solid-action-fg",
+      "value": "var(--color-white)"
+    }
+  ],
+  "rules": [
+    {
+      "selector": ".profile-solid-action",
+      "ancestors": [
+        {
+          "name": "layer",
+          "params": "components"
+        }
+      ]
+    },
+    {
+      "selector": ".profile-solid-action:hover",
+      "ancestors": [
+        {
+          "name": "layer",
+          "params": "components"
+        },
+        {
+          "name": "media",
+          "params": "(hover:hover)"
+        }
+      ]
+    }
+  ],
+  "valid": true
+}

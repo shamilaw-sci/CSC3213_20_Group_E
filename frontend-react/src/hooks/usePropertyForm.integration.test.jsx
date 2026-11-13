@@ -25,7 +25,7 @@ async function submit(result) {
 describe('Actual listing form submission with HTTP and payment boundaries', () => {
   test('unavailable configuration prevents draft creation', async () => {
     payment.paymentConfig.status = 'error'; const { result } = renderHook(() => usePropertyForm());
-    act(() => result.current.setImages([image()])); await submit(result);
+    act(() => { result.current.setImages([image()]); result.current.setFormData(p => ({...p, contactNumber: '0771234567'})); }); await submit(result);
     expect(api.post).not.toHaveBeenCalled(); expect(payment.triggerPayment).not.toHaveBeenCalled();
   });
   test('captured submit cannot create a listing after unmount', async () => {
@@ -34,7 +34,7 @@ describe('Actual listing form submission with HTTP and payment boundaries', () =
   });
   test('synchronous duplicate submission creates one draft and releases saving state', async () => {
     let finish; api.post.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
-    const { result } = renderHook(() => usePropertyForm()); act(() => result.current.setImages([image()]));
+    const { result } = renderHook(() => usePropertyForm()); act(() => { result.current.setImages([image()]); result.current.setFormData(p => ({...p, contactNumber: '0771234567'})); });
     let first, second; act(() => { first = result.current.handleSubmit(submitEvent()); second = result.current.handleSubmit(submitEvent()); });
     expect(api.post).toHaveBeenCalledTimes(1); await act(async () => { finish({ data: { property: { id: 'saved-fixture-id' } } }); await Promise.all([first, second]); });
     expect(result.current.loading).toBe(false); expect(payment.triggerPayment).toHaveBeenCalledExactlyOnceWith('saved-fixture-id', '500.00');
@@ -55,6 +55,7 @@ describe('Actual listing form submission with HTTP and payment boundaries', () =
     const { result } = renderHook(() => usePropertyForm());
     act(() => {
       result.current.setImages([image()]);
+      result.current.setFormData(p => ({...p, contactNumber: '0771234567'}));
       result.current.setLocationMode('boundary');
       result.current.setBoundaryCoordinates(points);
     });
@@ -75,7 +76,7 @@ describe('Actual listing form submission with HTTP and payment boundaries', () =
         ...previous, listingType: 'Rent', address: 'Fixture address', type: 'Land',
         title: 'Synthetic listing', description: 'Test-only property description',
         price: 0, pricePeriod: 'Month', district: 'Colombo', city: 'Colombo',
-        contactNumber: '0000000000', bedrooms: 0, bathrooms: 0, landSize: 0, houseSize: 0,
+        contactNumber: '0000000000', bedrooms: 0, bathrooms: 0, landSize: 0, houseSize: '',
         latitude: 0, longitude: 0,
       }));
       result.current.setImages([photo]);
@@ -92,7 +93,7 @@ describe('Actual listing form submission with HTTP and payment boundaries', () =
       listingType: 'Rent', address: 'Fixture address', type: 'Land', title: 'Synthetic listing',
       description: 'Test-only property description', price: '0', pricePeriod: 'Month',
       district: 'Colombo', city: 'Colombo', contactNumber: '0000000000', bedrooms: '0',
-      bathrooms: '0', landSize: '0', houseSize: '0', latitude: '0', longitude: '0',
+      bathrooms: '0', landSize: '0', houseSize: '', latitude: '0', longitude: '0',
       boundary: 'POLYGON((-0.0001 -0.0001, 0.0001 -0.0001, 0.0001 0.0001, -0.0001 0.0001, -0.0001 -0.0001))',
       virtualTourMetadata: JSON.stringify(tourMetadata),
     });
@@ -109,6 +110,7 @@ describe('Actual listing form submission with HTTP and payment boundaries', () =
     const { result } = renderHook(() => usePropertyForm());
     act(() => {
       result.current.setImages([image()]);
+      result.current.setFormData(p => ({...p, contactNumber: '0771234567'}));
       result.current.setLocationMode('boundary');
       result.current.setBoundaryCoordinates(points);
     });
@@ -126,7 +128,7 @@ describe('Actual listing form submission with HTTP and payment boundaries', () =
     api.post.mockRejectedValueOnce(error);
     const log = vi.spyOn(console, 'error').mockImplementation(() => {});
     const { result } = renderHook(() => usePropertyForm());
-    act(() => result.current.setImages([image()]));
+    act(() => { result.current.setImages([image()]); result.current.setFormData(p => ({...p, contactNumber: '0771234567'})); });
     await submit(result);
     expect(result.current.message).toEqual({ type: 'error', text: 'Failed: Fixture validation rejected' });
     expect(result.current.loading).toBe(false);
@@ -139,7 +141,7 @@ describe('Actual listing form submission with HTTP and payment boundaries', () =
     payment.triggerPayment.mockRejectedValueOnce(new Error('Controlled payment failure'));
     vi.spyOn(console, 'error').mockImplementation(() => {});
     const { result } = renderHook(() => usePropertyForm());
-    act(() => result.current.setImages([image()]));
+    act(() => { result.current.setImages([image()]); result.current.setFormData(p => ({...p, contactNumber: '0771234567'})); });
     await submit(result);
     expect(result.current.message.type).toBe('error');
     expect(result.current.loading).toBe(false);
@@ -149,3 +151,14 @@ describe('Actual listing form submission with HTTP and payment boundaries', () =
     expect(result.current.message.text).toBe('Resuming payment for existing draft...');
   });
 });
+
+ test.each(['', '123', '+940771234567'])('rejects invalid contact at submit: %s', async contactNumber => {
+ const { result } = renderHook(() => usePropertyForm());
+ act(() => { result.current.setImages([image()]); result.current.setFormData(p => ({...p, contactNumber})); });
+ await submit(result); expect(api.post).not.toHaveBeenCalled(); expect(result.current.message.text).toMatch(/contact number/i);
+ });
+ test.each([{bedrooms: '-1'}, {bathrooms: '1.5'}, {landSize: 'Infinity'}, {houseSize: '0'}])('rejects invalid specification at submit: %o', async values => {
+ const { result } = renderHook(() => usePropertyForm());
+ act(() => { result.current.setImages([image()]); result.current.setFormData(p => ({...p, contactNumber: '0771234567', ...values})); });
+ await submit(result); expect(api.post).not.toHaveBeenCalled(); expect(result.current.message.type).toBe('error');
+ });

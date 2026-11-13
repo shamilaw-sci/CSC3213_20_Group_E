@@ -1,0 +1,59 @@
+11:05:03 PM [vite] (client) Re-optimizing dependencies because vite config has changed
+
+  VITE v8.3.3  ready in 1532 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+11:05:04 PM [vite] (client) [optimizer] bundling dependencies...
+11:06:23 PM [vite] .env changed, restarting server...
+11:06:23 PM [vite] server restarted.
+11:38:16 PM [vite] (client) hmr update /src/index.css
+11:38:55 PM [vite] (client) hmr update /src/pages/MyProperties.jsx, /src/index.css
+11:47:38 PM [vite] (client) hmr update /src/index.css
+11:48:59 PM [vite] (client) hmr update /src/pages/MyProperties.jsx, /src/index.css
+11:50:02 PM [vite] (client) hmr update /src/index.css
+11:53:50 PM [vite] (client) hmr update /src/index.css, /src/components/property/ListingCorrectionDialog.jsx
+11:54:18 PM [vite] (client) hmr update /src/index.css
+12:15:58 AM [vite] (client) hmr update /src/pages/MyProperties.jsx, /src/index.css
+12:15:58 AM [vite] (client) hmr update /src/index.css
+12:33:58 AM [vite] (client) hmr update /src/index.css
+12:34:27 AM [vite] (client) hmr update /src/index.css
+12:34:27 AM [vite] (client) hmr update /src/index.css
+12:34:28 AM [vite] (client) hmr update /src/index.css
+12:34:28 AM [vite] (client) hmr update /src/index.css
+12:35:08 AM [vite] (client) hmr update /src/pages/MyProperties.jsx, /src/index.css
+12:35:09 AM [vite] (client) hmr update /src/App.jsx
+12:35:11 AM [vite] (client) hmr update /src/index.css
+12:35:33 AM [vite] (client) hmr update /src/index.css
+12:35:33 AM [vite] (client) hmr update /src/index.css
+12:35:45 AM [vite] (client) hmr update /src/index.css
+12:35:46 AM [vite] (client) hmr update /src/index.css
+12:35:46 AM [vite] (client) hmr update /src/index.css
+12:35:46 AM [vite] (client) hmr update /src/index.css
+12:35:46 AM [vite] (client) hmr update /src/index.css
+12:35:46 AM [vite] (client) hmr update /src/index.css
+12:35:46 AM [vite] (client) hmr update /src/index.css
+12:35:46 AM [vite] (client) hmr update /src/index.css
+12:35:46 AM [vite] (client) hmr update /src/index.css
+12:36:00 AM [vite] (client) hmr update /src/index.css
+12:36:30 AM [vite] (client) hmr update /src/index.css
+12:36:30 AM [vite] (client) hmr update /src/App.jsx, /src/index.css
+12:36:37 AM [vite] (client) hmr update /src/index.css
+12:36:37 AM [vite] (client) hmr update /src/index.css
+12:36:37 AM [vite] (client) hmr update /src/index.css
+12:36:37 AM [vite] (client) hmr update /src/index.css
+12:36:37 AM [vite] (client) hmr update /src/index.css
+12:36:37 AM [vite] (client) hmr update /src/index.css
+12:36:37 AM [vite] (client) hmr update /src/index.css
+12:37:02 AM [vite] (client) hmr update /src/index.css
+12:37:02 AM [vite] (client) hmr update /src/index.css
+12:37:02 AM [vite] (client) hmr update /src/index.css
+12:37:39 AM [vite] (client) hmr update /src/index.css
+12:37:55 AM [vite] (client) hmr update /src/index.css
+12:38:29 AM [vite] (client) hmr update /src/index.css
+12:38:46 AM [vite] (client) hmr update /src/index.css
+12:39:03 AM [vite] (client) hmr update /src/pages/SellerDashboard.jsx, /src/index.css
+12:39:03 AM [vite] (client) hmr update /src/index.css
+12:39:03 AM [vite] (client) hmr update /src/index.css
+12:43:47 AM [vite] (client) hmr update /src/index.css, /src/components/dashboard/SellerWeeklyActivity.jsx
+12:43:48 AM [vite] (client) hmr update /src/pages/SellerDashboard.jsx, /src/index.css

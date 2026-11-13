@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../src/internal/database/migrations/transformers/disable-concurrent-index-transformer.ts"],
+  "sourcesContent": ["import { Migration } from 'postgres-migrations/dist/types'\nimport { MigrationTransformer } from './transformer'\n\nconst CONCURRENT_INDEX_FIND = 'INDEX CONCURRENTLY'\nconst CONCURRENT_INDEX_REPLACE = 'INDEX'\nconst DISABLE_TRANSACTION_STRING = '-- postgres-migrations disable-transaction'\n\nexport class DisableConcurrentIndexTransformer implements MigrationTransformer {\n  transform(migration: Migration): Migration {\n    if (!migration.sql.includes(CONCURRENT_INDEX_FIND)) {\n      return migration\n    }\n\n    return {\n      ...migration,\n      // strip concurrently, and remove disable-transaction in sql and contents\n      sql: migration.sql\n        .replaceAll(CONCURRENT_INDEX_FIND, CONCURRENT_INDEX_REPLACE)\n        .replace(DISABLE_TRANSACTION_STRING, ''),\n      contents: migration.contents\n        .replaceAll(CONCURRENT_INDEX_FIND, CONCURRENT_INDEX_REPLACE)\n        .replace(DISABLE_TRANSACTION_STRING, ''),\n    }\n  }\n}\n"],
+  "mappings": ";;;;;;;;;;;;;;;;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAGA,MAAM,wBAAwB;AAC9B,MAAM,2BAA2B;AACjC,MAAM,6BAA6B;AAE5B,MAAM,kCAAkE;AAAA,EAC7E,UAAU,WAAiC;AACzC,QAAI,CAAC,UAAU,IAAI,SAAS,qBAAqB,GAAG;AAClD,aAAO;AAAA,IACT;AAEA,WAAO;AAAA,MACL,GAAG;AAAA;AAAA,MAEH,KAAK,UAAU,IACZ,WAAW,uBAAuB,wBAAwB,EAC1D,QAAQ,4BAA4B,EAAE;AAAA,MACzC,UAAU,UAAU,SACjB,WAAW,uBAAuB,wBAAwB,EAC1D,QAAQ,4BAA4B,EAAE;AAAA,IAC3C;AAAA,EACF;AACF;",
+  "names": []
+}

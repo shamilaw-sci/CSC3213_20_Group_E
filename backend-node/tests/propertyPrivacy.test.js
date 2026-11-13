@@ -6,7 +6,7 @@ const { issueSessionToken } = require('../utils/sessionToken');
 
 jest.mock('../config/supabase', () => ({
     from: jest.fn().mockReturnThis(), select: jest.fn().mockReturnThis(),
-    eq: jest.fn().mockReturnThis(), single: jest.fn(),
+    eq: jest.fn().mockReturnThis(), is: jest.fn().mockReturnThis(), single: jest.fn(),
 }));
 jest.mock('../repositories/propertyRepository', () => ({ getPropertyById: jest.fn() }));
 

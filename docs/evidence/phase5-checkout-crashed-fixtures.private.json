@@ -1,0 +1,60 @@
+{
+  "run": "dd3c90e6-080b-4617-828f-11febaac1f67",
+  "users": [
+    {
+      "id": "e3d82706-5ee8-4d4d-8d20-e7e95bf9fea0",
+      "role": "SELLER",
+      "name": "Sandbox Seller",
+      "email": "dd3c90e6-080b-4617-828f-11febaac1f67-seller@example.test"
+    },
+    {
+      "id": "f9b346ee-c7ed-4575-88f0-8f910a2d60d8",
+      "role": "AGENT",
+      "name": "Sandbox Agent",
+      "email": "dd3c90e6-080b-4617-828f-11febaac1f67-agent@example.test"
+    }
+  ],
+  "fixtures": [
+    {
+      "label": "Visa",
+      "id": "7040807a-524e-4f53-93a9-c8f8f9292ff7",
+      "user": {
+        "id": "e3d82706-5ee8-4d4d-8d20-e7e95bf9fea0",
+        "role": "SELLER",
+        "name": "Sandbox Seller",
+        "email": "dd3c90e6-080b-4617-828f-11febaac1f67-seller@example.test"
+      }
+    },
+    {
+      "label": "Mastercard",
+      "id": "6bd7340c-30ef-4585-9d58-ab91a5ad61a9",
+      "user": {
+        "id": "f9b346ee-c7ed-4575-88f0-8f910a2d60d8",
+        "role": "AGENT",
+        "name": "Sandbox Agent",
+        "email": "dd3c90e6-080b-4617-828f-11febaac1f67-agent@example.test"
+      }
+    },
+    {
+      "label": "Cancel",
+      "id": "becd239b-99bd-4c31-aaa5-6890813240c9",
+      "user": {
+        "id": "e3d82706-5ee8-4d4d-8d20-e7e95bf9fea0",
+        "role": "SELLER",
+        "name": "Sandbox Seller",
+        "email": "dd3c90e6-080b-4617-828f-11febaac1f67-seller@example.test"
+      }
+    },
+    {
+      "label": "Decline",
+      "id": "589333e2-b19b-4907-b69e-739b239a9c80",
+      "user": {
+        "id": "e3d82706-5ee8-4d4d-8d20-e7e95bf9fea0",
+        "role": "SELLER",
+        "name": "Sandbox Seller",
+        "email": "dd3c90e6-080b-4617-828f-11febaac1f67-seller@example.test"
+      }
+    }
+  ],
+  "callbackBase": "/phase5/a1c2349a-da2f-49cf-b078-b101da96f398"
+}

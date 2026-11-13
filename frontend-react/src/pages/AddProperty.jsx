@@ -14,13 +14,14 @@ import {
   AlertCircle,
   Check } from "lucide-react";
 
-import { MapContainer, TileLayer, Marker, Polygon, CircleMarker, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Polygon, CircleMarker, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import imageCompression from "browser-image-compression";
 
 import { useAuth } from "../context/UserAuthContext";
 import Navbar from "../components/layout/Navbar";
+import { contactError, specificationError } from '../utils/propertyValidation';
 import usePropertyForm from "../hooks/usePropertyForm";
 import CategoryPriceStep from "../components/property/create/CategoryPriceStep";
 import LocationStep from "../components/property/create/LocationStep";
@@ -29,6 +30,16 @@ import HDPhotosSection from "../components/property/create/HDPhotosSection";
 import VirtualToursSection from "../components/property/create/VirtualToursSection";
 import ReviewPublishStep from "../components/property/create/ReviewPublishStep";
 
+const MapRecenter = ({ request, appliedRequestRef }) => {
+  const map = useMap();
+  React.useEffect(() => {
+    if (request && appliedRequestRef.current !== request) {
+      map.setView(request.coords, 14);
+      appliedRequestRef.current = request;
+    }
+  }, [map, request, appliedRequestRef]);
+  return null;
+};
 const MapClickEvents = ({ locationMode, setFormData, setGpsActive, setBoundaryCoordinates }) => {
   useMapEvents({
     click(e) {
@@ -118,6 +129,9 @@ const AddProperty = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
+  const [mapRequest, setMapRequest] = useState(null);
+  const uploadRevision = React.useRef(0);
+  const appliedMapRequestRef = React.useRef(null);
   const [gpsActive, setGpsActive] = useState(false);
   const [, setCompressing] = useState(false);
 
@@ -172,6 +186,8 @@ const AddProperty = () => {
   const handleDistrictChange = (e) => {
     const district = e.target.value;
     const coords = districtLocations[district] || [7.8731, 80.7718];
+    setGpsActive(false);
+    setMapRequest({ coords });
     setFormData((prev) => ({
       ...prev,
       district,
@@ -192,6 +208,7 @@ const AddProperty = () => {
           latitude: pos.coords.latitude,
           longitude: pos.coords.longitude,
         }));
+        setMapRequest({ coords: [pos.coords.latitude, pos.coords.longitude] });
         setGpsActive(true);
         setLocationMode("point");
         setBoundaryCoordinates([]);
@@ -204,19 +221,21 @@ const AddProperty = () => {
   };
 
   const handleVirtualTourUpload = (e) => {
+    const revision = ++uploadRevision.current;
     const files = Array.from(e.target.files);
 
       // Prevent individual files from exceeding the 5MB backend limit
       const oversized = files.filter(f => f.size > 5 * 1024 * 1024);
       if (oversized.length > 0) {
-        setMessage({ type: "error", text: "Upload failed: One or more 360 panorama files exceed the 5MB limit." });
+        setMessage({ source: "upload", revision, type: "error", text: "Upload failed: One or more 360 panorama files exceed the 5MB limit." });
         return;
       }
 
     if (files.length + virtualTourFiles.length > 5) {
-      alert('You can only upload up to 5 virtual tours.');
+      setMessage({ source: 'upload', revision, type: 'error', text: 'You can only upload up to 5 virtual tours.' });
       return;
     }
+    if (files.length) setMessage(previous => previous.source === 'upload' && previous.revision <= revision ? { type: '', text: '' } : previous);
     setVirtualTourFiles((prev) => [...prev, ...files]);
     const newMetadata = files.map(() => ({ room: 'Room' }));
     setVirtualTourMetadata((prev) => [...prev, ...newMetadata]);
@@ -236,17 +255,19 @@ const AddProperty = () => {
   };
 
   const handleImageUpload = async (e) => {
+    const initialMessage = message;
+    const revision = ++uploadRevision.current;
     const files = Array.from(e.target.files);
 
       // Prevent individual files from exceeding the 5MB backend limit
       const oversized = files.filter(f => f.size > 5 * 1024 * 1024);
       if (oversized.length > 0) {
-        setMessage({ type: "error", text: "Upload failed: One or more files exceed the 5MB maximum size limit." });
+        setMessage({ source: "upload", revision, type: "error", text: "Upload failed: One or more files exceed the 5MB maximum size limit." });
         return;
       }
 
     if (images.length + files.length > 8) {
-      setMessage({ type: "error", text: "You can upload up to 8 high-definition photos." });
+      setMessage({ source: "upload", revision, type: "error", text: "You can upload up to 8 high-definition photos." });
       return;
     }
     setCompressing(true);
@@ -258,10 +279,13 @@ const AddProperty = () => {
           return { file: comp, url: URL.createObjectURL(comp) };
         })
       );
+      if (files.length) setMessage(previous => previous.source === 'upload' && previous.revision <= revision ? { type: '', text: '' } : previous);
       setImages((prev) => [...prev, ...compressed.map((c) => c.file)]);
       setPreviewUrls((prev) => [...prev, ...compressed.map((c) => c.url)]);
     } catch {
-      setMessage({ type: "error", text: "Failed to process some images." });
+      setMessage(previous => uploadRevision.current === revision && (previous === initialMessage || (previous.source === 'upload' && previous.revision <= revision))
+        ? { source: 'upload', revision, type: 'error', text: 'Failed to process some images.' }
+        : previous);
     } finally {
       setCompressing(false);
     }
@@ -299,6 +323,8 @@ const AddProperty = () => {
         setMessage({ type: "error", text: "Please select the property district." });
         return false;
       }
+      const error = contactError(formData.contactNumber);
+      if (error) { setMessage({ type: 'error', text: error }); return false; }
     } else if (step === 2) {
       if (!formData.city?.trim() && !formData.address?.trim()) {
         setMessage({ type: "error", text: "Please specify the town or street address." });
@@ -319,6 +345,8 @@ const AddProperty = () => {
         }
       }
     } else if (step === 3) {
+      const error = specificationError(formData);
+      if (error) { setMessage({ type: 'error', text: error }); return false; }
       if (images.length === 0) {
         setMessage({ type: "error", text: "Please upload at least 1 photograph of your property." });
         return false;
@@ -499,6 +527,7 @@ const AddProperty = () => {
                     zoom={14}
                     style={{ height: "100%", width: "100%" }}
                   >
+                    <MapRecenter request={mapRequest} appliedRequestRef={appliedMapRequestRef} />
                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                     <MapClickEvents locationMode={locationMode} setFormData={setFormData} setGpsActive={setGpsActive} setBoundaryCoordinates={setBoundaryCoordinates} />
 

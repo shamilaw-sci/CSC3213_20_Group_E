@@ -1,0 +1,258 @@
+{
+  "pairs": 28,
+  "identical": 28,
+  "results": [
+    {
+      "case": "desktop-light-House",
+      "size": [
+        1440,
+        948
+      ],
+      "identical": true,
+      "differenceBox": null
+    },
+    {
+      "case": "desktop-light-Land",
+      "size": [
+        1440,
+        948
+      ],
+      "identical": true,
+      "differenceBox": null
+    },
+    {
+      "case": "desktop-light-Rent_Villa",
+      "size": [
+        1440,
+        948
+      ],
+      "identical": true,
+      "differenceBox": null
+    },
+    {
+      "case": "desktop-dark-House",
+      "size": [
+        1440,
+        948
+      ],
+      "identical": true,
+      "differenceBox": null
+    },
+    {
+      "case": "desktop-dark-Land",
+      "size": [
+        1440,
+        948
+      ],
+      "identical": true,
+      "differenceBox": null
+    },
+    {
+      "case": "desktop-dark-Rent_House",
+      "size": [
+        1440,
+        948
+      ],
+      "identical": true,
+      "differenceBox": null
+    },
+    {
+      "case": "desktop-dark-Rent_Villa",
+      "size": [
+        1440,
+        948
+      ],
+      "identical": true,
+      "differenceBox": null
+    },
+    {
+      "case": "mobile-light-House",
+      "size": [
+        390,
+        1165
+      ],
+      "identical": true,
+      "differenceBox": null
+    },
+    {
+      "case": "mobile-light-Land",
+      "size": [
+        390,
+        1165
+      ],
+      "identical": true,
+      "differenceBox": null
+    },
+    {
+      "case": "mobile-light-Rent_House",
+      "size": [
+        390,
+        1165
+      ],
+      "identical": true,
+      "differenceBox": null
+    },
+    {
+      "case": "mobile-light-Rent_Villa",
+      "size": [
+        390,
+        1165
+      ],
+      "identical": true,
+      "differenceBox": null
+    },
+    {
+      "case": "mobile-dark-House",
+      "size": [
+        390,
+        1165
+      ],
+      "identical": true,
+      "differenceBox": null
+    },
+    {
+      "case": "mobile-dark-Land",
+      "size": [
+        390,
+        1165
+      ],
+      "identical": true,
+      "differenceBox": null
+    },
+    {
+      "case": "mobile-dark-Rent_House",
+      "size": [
+        390,
+        1165
+      ],
+      "identical": true,
+      "differenceBox": null
+    },
+    {
+      "case": "mobile-dark-Rent_Villa",
+      "size": [
+        390,
+        1165
+      ],
+      "identical": true,
+      "differenceBox": null
+    },
+    {
+      "case": "desktop-light-empty",
+      "size": [
+        1440,
+        948
+      ],
+      "identical": true,
+      "differenceBox": null
+    },
+    {
+      "case": "desktop-light-zero",
+      "size": [
+        1440,
+        948
+      ],
+      "identical": true,
+      "differenceBox": null
+    },
+    {
+      "case": "desktop-light-numberzero",
+      "size": [
+        1440,
+        948
+      ],
+      "identical": true,
+      "differenceBox": null
+    },
+    {
+      "case": "desktop-light-empty-validation",
+      "size": [
+        1440,
+        948
+      ],
+      "identical": true,
+      "differenceBox": null
+    },
+    {
+      "case": "desktop-light-zero-validation",
+      "size": [
+        1440,
+        948
+      ],
+      "identical": true,
+      "differenceBox": null
+    },
+    {
+      "case": "desktop-dark-empty",
+      "size": [
+        1440,
+        948
+      ],
+      "identical": true,
+      "differenceBox": null
+    },
+    {
+      "case": "desktop-dark-zero",
+      "size": [
+        1440,
+        948
+      ],
+      "identical": true,
+      "differenceBox": null
+    },
+    {
+      "case": "desktop-dark-numberzero",
+      "size": [
+        1440,
+        948
+      ],
+      "identical": true,
+      "differenceBox": null
+    },
+    {
+      "case": "desktop-dark-empty-validation",
+      "size": [
+        1440,
+        948
+      ],
+      "identical": true,
+      "differenceBox": null
+    },
+    {
+      "case": "desktop-dark-zero-validation",
+      "size": [
+        1440,
+        948
+      ],
+      "identical": true,
+      "differenceBox": null
+    },
+    {
+      "case": "desktop-light-Rent_House",
+      "size": [
+        1440,
+        948
+      ],
+      "identical": true,
+      "differenceBox": null
+    },
+    {
+      "case": "interaction-light",
+      "size": [
+        1440,
+        948
+      ],
+      "identical": true,
+      "differenceBox": null
+    },
+    {
+      "case": "interaction-dark",
+      "size": [
+        1440,
+        948
+      ],
+      "identical": true,
+      "differenceBox": null
+    }
+  ]
+}

@@ -1,0 +1,136 @@
+{
+  "run": "9e937208-762b-40e7-af3e-c15e3554a303",
+  "status": "ready",
+  "callbacks": [
+    {
+      "order": "4b2b9c2f-ae65-47ca-b162-71ac2e36f55f",
+      "code": "2",
+      "http": 200
+    },
+    {
+      "order": "c1d149be-7150-44a0-9b9c-64ca80004de8",
+      "code": "2",
+      "http": 200
+    },
+    {
+      "order": "07c9f24a-ee81-47b3-8ff8-aaf0b2c0d594",
+      "code": "-2",
+      "http": 200
+    }
+  ],
+  "originalHashes": {
+    "D:\\CSC3213_20_Group_E\\docs\\evidence\\phase7-acceptance\\completion-receipt.json": "3781dea7a7b069d75fc8a1bf5de1791f466c9acd66378b96d2878fc8eba39002",
+    "D:\\CSC3213_20_Group_E\\docs\\evidence\\phase7-acceptance\\provenance.json": "3a98304ce4b2d2c6388e1bed22174db7d1ccfaa5436561980bfcbb02a05f9ba7"
+  },
+  "manifest": {
+    "run": "9e937208-762b-40e7-af3e-c15e3554a303",
+    "users": [
+      {
+        "id": "f6d2dc5f-f4e5-4bba-878a-a4625fd5a4a9",
+        "role": "SELLER",
+        "name": "Synthetic SELLER",
+        "email": "9e937208-762b-40e7-af3e-c15e3554a303-seller@example.test",
+        "password_hash": null
+      },
+      {
+        "id": "677911f1-2d6c-4927-ac2f-288878a75cad",
+        "role": "AGENT",
+        "name": "Synthetic AGENT",
+        "email": "9e937208-762b-40e7-af3e-c15e3554a303-agent@example.test",
+        "password_hash": null
+      }
+    ],
+    "fixtures": [
+      {
+        "id": "25ce0063-4af3-4a53-8f0a-1b4efff4ba8c",
+        "label": "Visa",
+        "title": "9e937208-762b-40e7-af3e-c15e3554a303 Visa",
+        "userId": "f6d2dc5f-f4e5-4bba-878a-a4625fd5a4a9"
+      },
+      {
+        "id": "77db036e-0afa-486c-885c-b9830882cd1d",
+        "label": "Mastercard",
+        "title": "9e937208-762b-40e7-af3e-c15e3554a303 Mastercard",
+        "userId": "677911f1-2d6c-4927-ac2f-288878a75cad"
+      },
+      {
+        "id": "05a45136-3575-4c6c-9b74-928172305bff",
+        "label": "Cancel",
+        "title": "9e937208-762b-40e7-af3e-c15e3554a303 Cancel",
+        "userId": "f6d2dc5f-f4e5-4bba-878a-a4625fd5a4a9"
+      },
+      {
+        "id": "0e0dae4a-1c42-4767-8500-1c8a84427ecf",
+        "label": "Decline",
+        "title": "9e937208-762b-40e7-af3e-c15e3554a303 Decline",
+        "userId": "f6d2dc5f-f4e5-4bba-878a-a4625fd5a4a9"
+      }
+    ]
+  },
+  "nonce": "bbc2a0d1-d131-490e-8261-f83d03977710",
+  "baselineHash": "08faa85a82ad435eda6241c03d7dc5720d56860613659e21487a9df7575329a2",
+  "health": "https://strep-reenact-rocket.ngrok-free.dev/phase7/9e937208-762b-40e7-af3e-c15e3554a303/health",
+  "inertReceiptCalls": 2,
+  "finalObservation": {
+    "cases": [
+      {
+        "label": "Visa",
+        "payment": "Paid",
+        "status": "pending",
+        "orders": 1,
+        "paid_orders": 1,
+        "transactions": 1,
+        "outbox": 1,
+        "callbacks": [
+          {
+            "code": "2",
+            "http": 200
+          }
+        ]
+      },
+      {
+        "label": "Mastercard",
+        "payment": "Paid",
+        "status": "pending",
+        "orders": 1,
+        "paid_orders": 1,
+        "transactions": 1,
+        "outbox": 1,
+        "callbacks": [
+          {
+            "code": "2",
+            "http": 200
+          }
+        ]
+      },
+      {
+        "label": "Cancel",
+        "payment": "Unpaid",
+        "status": "pending",
+        "orders": 1,
+        "paid_orders": 0,
+        "transactions": 0,
+        "outbox": 0,
+        "callbacks": []
+      },
+      {
+        "label": "Decline",
+        "payment": "Unpaid",
+        "status": "pending",
+        "orders": 1,
+        "paid_orders": 0,
+        "transactions": 0,
+        "outbox": 0,
+        "callbacks": [
+          {
+            "code": "-2",
+            "http": 200
+          }
+        ]
+      }
+    ],
+    "inertReceiptCalls": 2
+  },
+  "restored": true,
+  "freshPairStopped": true
+}

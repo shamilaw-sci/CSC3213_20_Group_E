@@ -13,7 +13,7 @@ const controller = require('../controllers/propertyController');
 const response = () => ({ status: jest.fn().mockReturnThis(), json: jest.fn() });
 const request = () => ({ params: { id: 'p' }, query: {}, body: {}, user: { id: 'owner', role: 'SELLER' } });
 function query(result) {
-    const chain = { select: jest.fn().mockReturnThis(), eq: jest.fn().mockReturnThis(), neq: jest.fn().mockReturnThis(), single: jest.fn().mockResolvedValue(result), limit: jest.fn().mockResolvedValue(result) };
+    const chain = { select: jest.fn().mockReturnThis(), eq: jest.fn().mockReturnThis(), is: jest.fn().mockReturnThis(), neq: jest.fn().mockReturnThis(), is: jest.fn().mockReturnThis(), single: jest.fn().mockResolvedValue(result), limit: jest.fn().mockResolvedValue(result) };
     db.from.mockReturnValueOnce(chain); return chain;
 }
 beforeEach(() => jest.resetAllMocks());
@@ -78,7 +78,7 @@ test('update retries only rejection_reason failure and preserves default/null/un
     repo.getPropertyById.mockResolvedValue({ seller_id: 'owner', status: 'rejected' }); const data = { id: 'p' };
     repo.updateMyProperty.mockResolvedValueOnce({ error: new Error('missing rejection_reason column') }).mockResolvedValueOnce({ data });
     const req = request(); req.body = { city: null, bedrooms: 0 }; const res = response(); await controller.updateMyProperty(req, res, jest.fn());
-    const updates = { price_period: null, address: null, city: null, contact_number: null, bedrooms: 0, bathrooms: null, land_size: null, house_size: null, status: 'pending', rejection_reason: null };
+    const updates = { city: null, bedrooms: 0, status: 'pending', rejection_reason: null };
     expect(repo.updateMyProperty).toHaveBeenNthCalledWith(1, 'p', 'owner', updates); const { rejection_reason, ...fallback } = updates; expect(repo.updateMyProperty).toHaveBeenNthCalledWith(2, 'p', 'owner', fallback); expect(res.json).toHaveBeenCalledWith({ message: 'Property updated and sent to admin review.', property: data });
 });
 test('create uploads photos before tours, pairs metadata, then inserts pending defaults', async () => {

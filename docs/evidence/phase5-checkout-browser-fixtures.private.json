@@ -1,0 +1,73 @@
+{
+  "run": "9f8278c7-72d0-4ccb-8b3a-b1b494872312",
+  "users": [
+    {
+      "id": "fc9a6556-b42c-4157-9e81-9d1e005968ea",
+      "role": "SELLER",
+      "name": "Sandbox Seller",
+      "email": "9f8278c7-72d0-4ccb-8b3a-b1b494872312-seller@example.test"
+    },
+    {
+      "id": "2efb52f5-049b-4c0d-b775-24dfa94ccb3b",
+      "role": "AGENT",
+      "name": "Sandbox Agent",
+      "email": "9f8278c7-72d0-4ccb-8b3a-b1b494872312-agent@example.test"
+    }
+  ],
+  "fixtures": [
+    {
+      "label": "Visa",
+      "id": "dcf56155-0ebc-4231-81da-8f8dd119859f",
+      "user": {
+        "id": "fc9a6556-b42c-4157-9e81-9d1e005968ea",
+        "role": "SELLER",
+        "name": "Sandbox Seller",
+        "email": "9f8278c7-72d0-4ccb-8b3a-b1b494872312-seller@example.test"
+      }
+    },
+    {
+      "label": "Mastercard",
+      "id": "e52bb0ff-a831-41ac-b58d-8c2258535a5f",
+      "user": {
+        "id": "2efb52f5-049b-4c0d-b775-24dfa94ccb3b",
+        "role": "AGENT",
+        "name": "Sandbox Agent",
+        "email": "9f8278c7-72d0-4ccb-8b3a-b1b494872312-agent@example.test"
+      }
+    },
+    {
+      "label": "Cancel",
+      "id": "fa7c1ea4-27da-45e4-b4b8-1b6e81cfad27",
+      "user": {
+        "id": "fc9a6556-b42c-4157-9e81-9d1e005968ea",
+        "role": "SELLER",
+        "name": "Sandbox Seller",
+        "email": "9f8278c7-72d0-4ccb-8b3a-b1b494872312-seller@example.test"
+      }
+    },
+    {
+      "label": "Decline",
+      "id": "0d102958-3344-4bf2-8c7e-2927036ca003",
+      "user": {
+        "id": "fc9a6556-b42c-4157-9e81-9d1e005968ea",
+        "role": "SELLER",
+        "name": "Sandbox Seller",
+        "email": "9f8278c7-72d0-4ccb-8b3a-b1b494872312-seller@example.test"
+      }
+    }
+  ],
+  "callbackBase": "/phase5/461b1e31-4b70-4f3c-a9ed-324aaa80ece3",
+  "beforeHashes": {
+    "users": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "properties": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "saved_searches": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "transactions": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "payment_orders": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "payment_receipt_outbox": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "leads": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "conversations": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "messages": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "message_receipts": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "platform_settings": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  }
+}

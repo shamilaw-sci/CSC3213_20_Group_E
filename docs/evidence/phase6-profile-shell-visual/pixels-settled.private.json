@@ -1,0 +1,82 @@
+[
+  {
+    "case": "desktop-dark-AGENT",
+    "recaptured": true,
+    "identical": true
+  },
+  {
+    "case": "desktop-dark-BUYER",
+    "recaptured": true,
+    "identical": true
+  },
+  {
+    "case": "desktop-dark-fallback",
+    "recaptured": false,
+    "identical": true
+  },
+  {
+    "case": "desktop-dark-PENDING_AGENT",
+    "recaptured": false,
+    "identical": true
+  },
+  {
+    "case": "desktop-light-AGENT",
+    "recaptured": true,
+    "identical": true
+  },
+  {
+    "case": "desktop-light-BUYER",
+    "recaptured": false,
+    "identical": true
+  },
+  {
+    "case": "desktop-light-fallback",
+    "recaptured": true,
+    "identical": true
+  },
+  {
+    "case": "desktop-light-PENDING_AGENT",
+    "recaptured": false,
+    "identical": true
+  },
+  {
+    "case": "mobile-dark-AGENT",
+    "recaptured": false,
+    "identical": true
+  },
+  {
+    "case": "mobile-dark-BUYER",
+    "recaptured": false,
+    "identical": true
+  },
+  {
+    "case": "mobile-dark-fallback",
+    "recaptured": true,
+    "identical": true
+  },
+  {
+    "case": "mobile-dark-PENDING_AGENT",
+    "recaptured": false,
+    "identical": true
+  },
+  {
+    "case": "mobile-light-AGENT",
+    "recaptured": false,
+    "identical": true
+  },
+  {
+    "case": "mobile-light-BUYER",
+    "recaptured": false,
+    "identical": true
+  },
+  {
+    "case": "mobile-light-fallback",
+    "recaptured": false,
+    "identical": true
+  },
+  {
+    "case": "mobile-light-PENDING_AGENT",
+    "recaptured": false,
+    "identical": true
+  }
+]

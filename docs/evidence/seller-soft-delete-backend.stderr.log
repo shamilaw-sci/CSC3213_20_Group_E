@@ -1,0 +1,12 @@
+http_request { method: 'GET', route: 'unmatched', status: 404, durationMs: 5 }
+http_request { method: 'GET', route: 'unmatched', status: 404, durationMs: 0 }
+http_request { method: 'GET', route: 'unmatched', status: 404, durationMs: 2 }
+http_request { method: 'GET', route: 'unmatched', status: 404, durationMs: 1 }
+http_request { method: 'GET', route: 'unmatched', status: 404, durationMs: 1 }
+http_request { method: 'GET', route: 'unmatched', status: 404, durationMs: 0 }
+http_request { method: 'GET', route: 'unmatched', status: 404, durationMs: 1 }
+http_request { method: 'GET', route: 'unmatched', status: 404, durationMs: 5 }
+http_request { method: 'GET', route: 'unmatched', status: 404, durationMs: 1 }
+http_request { method: 'GET', route: 'unmatched', status: 404, durationMs: 2 }
+http_request { method: 'GET', route: 'unmatched', status: 404, durationMs: 1 }
+http_request { method: 'GET', route: 'unmatched', status: 404, durationMs: 0 }

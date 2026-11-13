@@ -7,6 +7,7 @@ const { protect, optionalAuth } = require('../middleware/authMiddleware');
 const validate = require('../middleware/validate');
 const { addPropertySchema, updatePropertySchema, getPropertiesSchema } = require('../validators/propertyValidator');
 const { searchPropertiesSchema } = require('../validators/searchValidator');
+const { getSellerActivity } = require('../controllers/property/sellerActivityController');
 
 // 1. Get all properties (Public route - no authentication required)
 router.get('/', validate(getPropertiesSchema), getProperties);
@@ -17,6 +18,7 @@ router.post('/', protect, propertyImageUpload.fields([{ name: 'images', maxCount
 
 // 3. Get properties submitted by the logged-in seller
 router.get('/my-listings', protect, validate(getPropertiesSchema), getMyProperties);
+router.get('/my-listings/activity', protect, getSellerActivity);
 
 router.patch('/my-listings/:id', protect, validate(updatePropertySchema), updateMyProperty);
 router.delete('/my-listings/:id', protect, deleteMyProperty);

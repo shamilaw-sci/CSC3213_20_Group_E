@@ -1,0 +1,22 @@
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] GET    /health                   --> go-map-service/routes.SetupRouter.func3 (6 handlers)
+[GIN-debug] GET    /health/ready             --> go-map-service/routes.SetupRouter.func4 (6 handlers)
+[GIN-debug] POST   /api/map/search           --> go-map-service/handlers.(*MapHandler).SearchMap-fm (7 handlers)
+[GIN] 2026/11/14 - 00:26:00 | 200 | 143.78ms |             ::1 | GET      "/health/ready"
+[GIN] 2026/11/14 - 00:27:52 | 204 |    1.6ms |             ::1 | OPTIONS  "/api/map/search"
+[GIN] 2026/11/14 - 00:27:52 | 200 | 495.99ms |             ::1 | POST     "/api/map/search"
+[GIN] 2026/11/14 - 00:27:56 | 200 |  171.7ms |             ::1 | POST     "/api/map/search"
+[GIN] 2026/11/14 - 00:27:57 | 200 |  99.36ms |             ::1 | POST     "/api/map/search"
+[GIN] 2026/11/14 - 00:27:57 | 204 |       0s |             ::1 | OPTIONS  "/api/map/search"
+[GIN] 2026/11/14 - 00:27:57 | 200 | 122.59ms |             ::1 | POST     "/api/map/search"
+[GIN] 2026/11/14 - 00:27:59 | 200 | 315.39ms |             ::1 | POST     "/api/map/search"
+[GIN] 2026/11/14 - 00:28:11 | 204 |  515.7µs |             ::1 | OPTIONS  "/api/map/search"
+[GIN] 2026/11/14 - 00:28:11 | 200 | 208.43ms |             ::1 | POST     "/api/map/search"
+[GIN] 2026/11/14 - 00:28:12 | 200 |    102ms |             ::1 | POST     "/api/map/search"
+[GIN] 2026/11/14 - 00:42:31 | 204 |   3.61ms |             ::1 | OPTIONS  "/api/map/search"
+[GIN] 2026/11/14 - 00:42:31 | 200 | 293.76ms |             ::1 | POST     "/api/map/search"

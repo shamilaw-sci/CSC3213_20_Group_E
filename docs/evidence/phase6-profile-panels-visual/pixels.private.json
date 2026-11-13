@@ -1,0 +1,66 @@
+[
+  {
+    "case": "desktop-appointments-dark-empty",
+    "identical": true
+  },
+  {
+    "case": "desktop-appointments-dark-populated",
+    "identical": true
+  },
+  {
+    "case": "desktop-appointments-light-empty",
+    "identical": true
+  },
+  {
+    "case": "desktop-appointments-light-populated",
+    "identical": true
+  },
+  {
+    "case": "desktop-favorites-dark-empty",
+    "identical": true
+  },
+  {
+    "case": "desktop-favorites-dark-populated",
+    "identical": true
+  },
+  {
+    "case": "desktop-favorites-light-empty",
+    "identical": true
+  },
+  {
+    "case": "desktop-favorites-light-populated",
+    "identical": true
+  },
+  {
+    "case": "mobile-appointments-dark-empty",
+    "identical": true
+  },
+  {
+    "case": "mobile-appointments-dark-populated",
+    "identical": true
+  },
+  {
+    "case": "mobile-appointments-light-empty",
+    "identical": true
+  },
+  {
+    "case": "mobile-appointments-light-populated",
+    "identical": true
+  },
+  {
+    "case": "mobile-favorites-dark-empty",
+    "identical": true
+  },
+  {
+    "case": "mobile-favorites-dark-populated",
+    "identical": true
+  },
+  {
+    "case": "mobile-favorites-light-empty",
+    "identical": true
+  },
+  {
+    "case": "mobile-favorites-light-populated",
+    "identical": true
+  }
+]

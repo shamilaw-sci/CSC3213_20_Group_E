@@ -1,0 +1,50 @@
+[
+  {
+    "case": "desktop-dark-focus",
+    "identical": true
+  },
+  {
+    "case": "desktop-dark-hover",
+    "identical": true
+  },
+  {
+    "case": "desktop-dark-normal",
+    "identical": true
+  },
+  {
+    "case": "desktop-light-focus",
+    "identical": true
+  },
+  {
+    "case": "desktop-light-hover",
+    "identical": true
+  },
+  {
+    "case": "desktop-light-normal",
+    "identical": true
+  },
+  {
+    "case": "mobile-dark-focus",
+    "identical": true
+  },
+  {
+    "case": "mobile-dark-hover",
+    "identical": true
+  },
+  {
+    "case": "mobile-dark-normal",
+    "identical": true
+  },
+  {
+    "case": "mobile-light-focus",
+    "identical": true
+  },
+  {
+    "case": "mobile-light-hover",
+    "identical": true
+  },
+  {
+    "case": "mobile-light-normal",
+    "identical": true
+  }
+]

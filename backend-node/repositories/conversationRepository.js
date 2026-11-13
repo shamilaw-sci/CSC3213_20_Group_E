@@ -21,7 +21,7 @@ const conversationRepository = {
             .from('properties')
             .select('id, title, seller_id, status')
             .eq('id', propertyId)
-            .eq('status', 'approved')
+            .eq('status', 'approved').is('deleted_at', null)
             .single();
         return { data, error }; // Let controller handle error/missing
     },

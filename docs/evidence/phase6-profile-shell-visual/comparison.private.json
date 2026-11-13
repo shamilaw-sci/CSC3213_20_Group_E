@@ -1,0 +1,98 @@
+[
+  {
+    "size": "desktop",
+    "theme": "light",
+    "state": "fallback",
+    "identical": true
+  },
+  {
+    "size": "desktop",
+    "theme": "light",
+    "state": "BUYER",
+    "identical": true
+  },
+  {
+    "size": "desktop",
+    "theme": "light",
+    "state": "AGENT",
+    "identical": true
+  },
+  {
+    "size": "desktop",
+    "theme": "light",
+    "state": "PENDING_AGENT",
+    "identical": true
+  },
+  {
+    "size": "desktop",
+    "theme": "dark",
+    "state": "fallback",
+    "identical": true
+  },
+  {
+    "size": "desktop",
+    "theme": "dark",
+    "state": "BUYER",
+    "identical": true
+  },
+  {
+    "size": "desktop",
+    "theme": "dark",
+    "state": "AGENT",
+    "identical": true
+  },
+  {
+    "size": "desktop",
+    "theme": "dark",
+    "state": "PENDING_AGENT",
+    "identical": true
+  },
+  {
+    "size": "mobile",
+    "theme": "light",
+    "state": "fallback",
+    "identical": true
+  },
+  {
+    "size": "mobile",
+    "theme": "light",
+    "state": "BUYER",
+    "identical": true
+  },
+  {
+    "size": "mobile",
+    "theme": "light",
+    "state": "AGENT",
+    "identical": true
+  },
+  {
+    "size": "mobile",
+    "theme": "light",
+    "state": "PENDING_AGENT",
+    "identical": true
+  },
+  {
+    "size": "mobile",
+    "theme": "dark",
+    "state": "fallback",
+    "identical": true
+  },
+  {
+    "size": "mobile",
+    "theme": "dark",
+    "state": "BUYER",
+    "identical": true
+  },
+  {
+    "size": "mobile",
+    "theme": "dark",
+    "state": "AGENT",
+    "identical": true
+  },
+  {
+    "size": "mobile",
+    "theme": "dark",
+    "state": "PENDING_AGENT",
+    "identical": true
+  }
+]

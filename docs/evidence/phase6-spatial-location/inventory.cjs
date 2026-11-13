@@ -1,0 +1,25 @@
+const fs = require('node:fs');
+const crypto = require('node:crypto');
+const assert = require('node:assert/strict');
+const { parse } = require('../../../frontend-react/node_modules/@babel/parser');
+const page = fs.readFileSync('frontend-react/src/pages/AddProperty.jsx');
+const hook = fs.readFileSync('frontend-react/src/hooks/usePropertyForm.js');
+assert.deepEqual(page, fs.readFileSync(__dirname + '/AddProperty.before.jsx'));
+assert.deepEqual(hook, fs.readFileSync(__dirname + '/usePropertyForm.before.js'));
+const source = page.toString('utf8');
+const program = parse(source, { sourceType: 'module', plugins: ['jsx'] }).program;
+const parent = program.body.find(n => n.type === 'VariableDeclaration' && n.declarations[0].id.name === 'AddProperty').declarations[0].init;
+const statements = parent.body.body.filter(n => n.type !== 'ReturnStatement');
+assert.equal(statements.length, 31);
+const nodes = [];
+function visit(n) { if (!n || typeof n !== 'object') return; nodes.push(n); for (const v of Object.values(n)) if (Array.isArray(v)) v.forEach(visit); else if (v && typeof v === 'object') visit(v); }
+visit(program);
+const step = nodes.find(n => n.type === 'LogicalExpression' && n.operator === '&&' && n.left.type === 'BinaryExpression' && n.left.left.name === 'currentStep' && n.left.right.value === 2).right;
+const subtree = nodes.filter(n => n.start >= step.start && n.end <= step.end);
+const map = subtree.find(n => n.type === 'JSXElement' && n.openingElement.name.name === 'MapContainer');
+const sha = b => crypto.createHash('sha256').update(b).digest('hex');
+const tests = JSON.parse(fs.readFileSync(__dirname + '/baseline.private.json', 'utf8'));
+assert.equal(tests.success, true); assert.equal(tests.numPassedTests, 24); assert.equal(tests.numFailedTests, 0);
+const report = { sourceUnchanged: true, parentStatements: statements.length, pageSha256: sha(page), hookSha256: sha(hook), step2Lines: [source.slice(0, step.start).split('\n').length, source.slice(0, step.end).split('\n').length], directElementChildren: step.children.filter(n => n.type === 'JSXElement').length, inputs: subtree.filter(n => n.type === 'JSXOpeningElement' && n.name.name === 'input').map(n => n.attributes.find(a => a.name?.name === 'name').value.value), conditionalAndUnconditionalButtons: subtree.filter(n => n.type === 'JSXOpeningElement' && n.name.name === 'button').length, mapSubtreeSha256: sha(source.slice(map.start, map.end)), mapSubtree: source.slice(map.start, map.end), tests: { passed: tests.numPassedTests, files: tests.testResults.length, seconds: (Math.max(...tests.testResults.map(t => t.endTime)) - tests.startTime) / 1000 } };
+fs.writeFileSync(__dirname + '/inventory.private.json', JSON.stringify(report, null, 2));
+console.log(JSON.stringify({ ...report, mapSubtree: '(preserved privately)' }));

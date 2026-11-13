@@ -10,7 +10,7 @@ const reply = (calls = undefined) => ({ response: { text: () => 'Normal reply [I
 beforeEach(() => {
     jest.clearAllMocks();
     process.env.GEMINI_API_KEY = 'synthetic-only';
-    query = { select: jest.fn().mockReturnThis(), eq: jest.fn().mockReturnThis(),
+    query = { select: jest.fn().mockReturnThis(), eq: jest.fn().mockReturnThis(), is: jest.fn().mockReturnThis(),
         in: jest.fn().mockReturnThis(), limit: jest.fn().mockReturnThis(),
         or: jest.fn().mockReturnThis(), lte: jest.fn().mockReturnThis(), ilike: jest.fn().mockReturnThis(),
         then: resolve => Promise.resolve({ data: [], error: null }).then(resolve) };

@@ -10,7 +10,7 @@ let query, lookup, result, next, res;
 beforeEach(() => {
     jest.clearAllMocks();
     lookup = { data: null, error: null }; result = { data: [], error: null };
-    query = { select: jest.fn().mockReturnThis(), eq: jest.fn().mockReturnThis(),
+    query = { select: jest.fn().mockReturnThis(), eq: jest.fn().mockReturnThis(), is: jest.fn().mockReturnThis(),
         single: jest.fn(async () => lookup), maybeSingle: jest.fn(async () => lookup),
         insert: jest.fn().mockReturnThis(), delete: jest.fn().mockReturnThis(),
         then: resolve => Promise.resolve(result).then(resolve) };

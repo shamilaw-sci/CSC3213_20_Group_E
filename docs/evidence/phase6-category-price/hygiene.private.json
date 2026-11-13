@@ -1,0 +1,13 @@
+{
+  "changedFiles": 43,
+  "newFiles": 37,
+  "branch": "version-3.0",
+  "indexEmpty": true,
+  "problems": [],
+  "tests": {
+    "success": true,
+    "passed": 219,
+    "failed": 0,
+    "files": 31
+  }
+}

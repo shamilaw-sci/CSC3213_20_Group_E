@@ -1,0 +1,508 @@
+{"level":"error","time":"2026-11-12T10:49:53.229Z","message":"Booking conversation requires recovery.","meta":{"event":"booking_conversation_recovery","leadId":"05e5d705-30ae-4e8b-9909-33972506c414","agentId":"f1b9a9bc-4270-429e-aa7a-181058d0c767","buyerId":"30a9bc2f-e37d-41c0-be6e-7df2061ad501","stage":"message"}}
+{"level":"error","time":"2026-11-12T10:52:31.189Z","message":"Booking lead creation failed.","meta":{"event":"booking_lead_failure","databaseCode":"UNCLASSIFIED"}}
+request_error {
+  method: 'POST',
+  route: '/:id/book-viewing',
+  status: 409,
+  code: 'BOOKING_DUPLICATE'
+}
+http_request {
+  method: 'POST',
+  route: '/:id/book-viewing',
+  status: 409,
+  durationMs: 518
+}
+{"level":"error","time":"2026-11-12T10:53:24.384Z","message":"Booking conversation requires recovery.","meta":{"event":"booking_conversation_recovery","leadId":"9dec32a7-4ec5-4c0e-a883-b639692a952a","agentId":"f1b9a9bc-4270-429e-aa7a-181058d0c767","buyerId":"30a9bc2f-e37d-41c0-be6e-7df2061ad501","stage":"message"}}
+{"level":"error","time":"2026-11-12T10:54:31.401Z","message":"Booking conversation requires recovery.","meta":{"event":"booking_conversation_recovery","leadId":"86d99c85-05c4-48e6-b726-659485bec943","agentId":"f1b9a9bc-4270-429e-aa7a-181058d0c767","buyerId":"30a9bc2f-e37d-41c0-be6e-7df2061ad501","stage":"message"}}
+{"level":"error","time":"2026-11-12T10:57:07.363Z","message":"Booking lead creation failed.","meta":{"event":"booking_lead_failure","databaseCode":"UNCLASSIFIED"}}
+request_error {
+  method: 'POST',
+  route: '/:id/book-viewing',
+  status: 409,
+  code: 'BOOKING_DUPLICATE'
+}
+http_request {
+  method: 'POST',
+  route: '/:id/book-viewing',
+  status: 409,
+  durationMs: 366
+}
+{"level":"error","time":"2026-11-12T10:57:14.512Z","message":"Booking lead creation failed.","meta":{"event":"booking_lead_failure","databaseCode":"UNCLASSIFIED"}}
+request_error {
+  method: 'POST',
+  route: '/:id/book-viewing',
+  status: 409,
+  code: 'BOOKING_DUPLICATE'
+}
+http_request {
+  method: 'POST',
+  route: '/:id/book-viewing',
+  status: 409,
+  durationMs: 258
+}
+{"level":"error","time":"2026-11-12T10:57:21.202Z","message":"Booking conversation requires recovery.","meta":{"event":"booking_conversation_recovery","leadId":"bf8c56e8-4055-4235-b00e-22517b45c9ac","agentId":"f1b9a9bc-4270-429e-aa7a-181058d0c767","buyerId":"30a9bc2f-e37d-41c0-be6e-7df2061ad501","stage":"message"}}
+{"level":"error","time":"2026-11-12T11:02:10.359Z","message":"Booking conversation requires recovery.","meta":{"event":"booking_conversation_recovery","leadId":"5a737ef7-2047-49e8-b0bc-03caa9add85d","agentId":"f1b9a9bc-4270-429e-aa7a-181058d0c767","buyerId":"30a9bc2f-e37d-41c0-be6e-7df2061ad501","stage":"message"}}
+{"level":"error","time":"2026-11-12T11:03:16.479Z","message":"Booking conversation requires recovery.","meta":{"event":"booking_conversation_recovery","leadId":"6d5144fa-4b77-41cc-81b3-932af76209cb","agentId":"f1b9a9bc-4270-429e-aa7a-181058d0c767","buyerId":"30a9bc2f-e37d-41c0-be6e-7df2061ad501","stage":"message"}}
+{"level":"error","time":"2026-11-12T11:04:21.035Z","message":"Booking lead creation failed.","meta":{"event":"booking_lead_failure","databaseCode":"UNCLASSIFIED"}}
+request_error {
+  method: 'POST',
+  route: '/:id/book-viewing',
+  status: 409,
+  code: 'CONSULTATION_DUPLICATE'
+}
+http_request {
+  method: 'POST',
+  route: '/:id/book-viewing',
+  status: 409,
+  durationMs: 411
+}
+{"level":"error","time":"2026-11-12T11:06:10.977Z","message":"Booking conversation requires recovery.","meta":{"event":"booking_conversation_recovery","leadId":"e04794f2-d4f9-4884-8249-5a2fefbcae0e","agentId":"f1b9a9bc-4270-429e-aa7a-181058d0c767","buyerId":"153a9c8e-1853-4462-a378-0083c2dc3a2c","stage":"message"}}
+{"level":"error","time":"2026-11-12T11:08:30.616Z","message":"Booking conversation requires recovery.","meta":{"event":"booking_conversation_recovery","leadId":"7c3f689b-796a-4444-9ba2-c4bc3b82a6fa","agentId":"f1b9a9bc-4270-429e-aa7a-181058d0c767","buyerId":"153a9c8e-1853-4462-a378-0083c2dc3a2c","stage":"message"}}
+{"level":"error","time":"2026-11-12T11:08:30.949Z","message":"Booking lead creation failed.","meta":{"event":"booking_lead_failure","databaseCode":"UNCLASSIFIED"}}
+request_error {
+  method: 'POST',
+  route: '/:id/book-viewing',
+  status: 409,
+  code: 'BOOKING_DUPLICATE'
+}
+http_request {
+  method: 'POST',
+  route: '/:id/book-viewing',
+  status: 409,
+  durationMs: 257
+}
+http_request { method: 'POST', route: '/calculate', status: 400, durationMs: 12 }
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 421 }
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 237 }
+http_request {
+  method: 'POST',
+  route: '/:id/messages',
+  status: 404,
+  durationMs: 255
+}
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 232 }
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 259 }
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 262 }
+http_request {
+  method: 'POST',
+  route: '/:id/messages',
+  status: 404,
+  durationMs: 222
+}
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 292 }
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 236 }
+http_request {
+  method: 'POST',
+  route: '/:id/messages',
+  status: 404,
+  durationMs: 244
+}
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 377 }
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 218 }
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 418 }
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 273 }
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 404,
+  durationMs: 2123
+}
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 267 }
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 212 }
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 233 }
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 495 }
+http_request {
+  method: 'POST',
+  route: '/:id/messages',
+  status: 404,
+  durationMs: 240
+}
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 233 }
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 680 }
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 281 }
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 273 }
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 226 }
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 239 }
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 206 }
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 222 }
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 291 }
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 245 }
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 229 }
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 215 }
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 261 }
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 241 }
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 209 }
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 355 }
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 215 }
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 233 }
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 253 }
+http_request { method: 'GET', route: '/:id/messages', status: 404, durationMs: 270 }
+http_request { method: 'PUT', route: '/profile', status: 400, durationMs: 418 }
+http_request { method: 'PUT', route: '/profile', status: 400, durationMs: 403 }
+http_request { method: 'PUT', route: '/profile', status: 400, durationMs: 716 }
+http_request { method: 'PUT', route: '/profile', status: 400, durationMs: 924 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 49048 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 49052 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 47540 }
+{"level":"error","time":"2026-11-12T12:14:55.691Z","message":"Payment receipt queue unavailable"}
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 47608 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 39551 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 39553 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 33594 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 37215 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 37219 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 28273 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 28657 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 17290 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 17293 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 27801 }
+{"level":"error","time":"2026-11-12T12:15:55.632Z","message":"Payment receipt queue unavailable"}
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 47909 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48400 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48403 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 42363 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 36372 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 36372 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 28387 }
+{"level":"error","time":"2026-11-12T12:23:55.766Z","message":"Payment receipt queue unavailable"}
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48205 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48295 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48299 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48298 }
+{"level":"error","time":"2026-11-12T12:29:56.035Z","message":"Payment receipt queue unavailable"}
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 47794 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48269 }
+{"level":"error","time":"2026-11-12T12:30:56.165Z","message":"Payment receipt queue unavailable"}
+request_error {
+  method: 'GET',
+  route: '/unread',
+  status: 500,
+  code: 'INTERNAL_ERROR'
+}
+http_request { method: 'GET', route: '/unread', status: 500, durationMs: 48424 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 47806 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 47827 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 47833 }
+{"level":"error","time":"2026-11-12T12:31:56.076Z","message":"Payment receipt queue unavailable"}
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48046 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48752 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48064 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48275 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48286 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48289 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48286 }
+{"level":"error","time":"2026-11-12T12:33:55.950Z","message":"Payment receipt queue unavailable"}
+request_error {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 500,
+  code: 'INTERNAL_ERROR'
+}
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 500,
+  durationMs: 86791
+}
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 41313 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 41288 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 41314 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 41322 }
+{"level":"error","time":"2026-11-12T12:35:56.204Z","message":"Payment receipt queue unavailable"}
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 49403 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 49436 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 49432 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 49428 }
+{"level":"error","time":"2026-11-12T12:36:56.319Z","message":"Payment receipt queue unavailable"}
+request_error {
+  method: 'GET',
+  route: '/unread',
+  status: 500,
+  code: 'INTERNAL_ERROR'
+}
+http_request { method: 'GET', route: '/unread', status: 500, durationMs: 53358 }
+{"level":"error","time":"2026-11-12T12:37:55.835Z","message":"Payment receipt queue unavailable"}
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 404,
+  durationMs: 60259
+}
+request_error {
+  method: 'GET',
+  route: '/unread',
+  status: 500,
+  code: 'INTERNAL_ERROR'
+}
+http_request { method: 'GET', route: '/unread', status: 500, durationMs: 60270 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 49599 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 49604 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 49329 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 49328 }
+request_error { method: 'GET', route: '/', status: 500, code: 'INTERNAL_ERROR' }
+http_request { method: 'GET', route: '/', status: 500, durationMs: 54744 }
+request_error {
+  method: 'GET',
+  route: '/unread',
+  status: 500,
+  code: 'INTERNAL_ERROR'
+}
+http_request { method: 'GET', route: '/unread', status: 500, durationMs: 54746 }
+{"level":"error","time":"2026-11-12T12:40:55.830Z","message":"Payment receipt queue unavailable"}
+request_error {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 500,
+  code: 'INTERNAL_ERROR'
+}
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 500,
+  durationMs: 83714
+}
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48603 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48614 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48610 }
+{"level":"error","time":"2026-11-12T12:41:55.842Z","message":"Payment receipt queue unavailable"}
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 47887 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48710 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48735 }
+request_error {
+  method: 'GET',
+  route: '/unread',
+  status: 500,
+  code: 'INTERNAL_ERROR'
+}
+http_request { method: 'GET', route: '/unread', status: 500, durationMs: 57865 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 47895 }
+{"level":"error","time":"2026-11-12T12:43:55.978Z","message":"Payment receipt queue unavailable"}
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 47575 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 47587 }
+request_error {
+  method: 'GET',
+  route: '/unread',
+  status: 500,
+  code: 'INTERNAL_ERROR'
+}
+http_request { method: 'GET', route: '/unread', status: 500, durationMs: 46833 }
+request_error { method: 'GET', route: '/', status: 500, code: 'INTERNAL_ERROR' }
+http_request { method: 'GET', route: '/', status: 500, durationMs: 49350 }
+request_error {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 500,
+  code: 'INTERNAL_ERROR'
+}
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 500,
+  durationMs: 58972
+}
+{"level":"error","time":"2026-11-12T12:52:56.133Z","message":"Payment receipt queue unavailable"}
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 47678 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 47682 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48792 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 47824 }
+{"level":"error","time":"2026-11-12T12:53:55.964Z","message":"Payment receipt queue unavailable"}
+request_error { method: 'GET', route: '/', status: 500, code: 'INTERNAL_ERROR' }
+http_request { method: 'GET', route: '/', status: 500, durationMs: 54239 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 47746 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 47787 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48035 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48017 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 47703 }
+{"level":"error","time":"2026-11-12T12:54:56.299Z","message":"Payment receipt queue unavailable"}
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 47720 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48714 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48220 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48706 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48681 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48747 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48768 }
+request_error {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 500,
+  code: 'INTERNAL_ERROR'
+}
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 500,
+  durationMs: 52082
+}
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 46086 }
+request_error { method: 'GET', route: '/', status: 500, code: 'INTERNAL_ERROR' }
+http_request { method: 'GET', route: '/', status: 500, durationMs: 51154 }
+{"level":"error","time":"2026-11-12T12:56:56.217Z","message":"Payment receipt queue unavailable"}
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 47740 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 47769 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 47767 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 47780 }
+request_error {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 500,
+  code: 'INTERNAL_ERROR'
+}
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 500,
+  durationMs: 62291
+}
+request_error { method: 'GET', route: '/', status: 500, code: 'INTERNAL_ERROR' }
+http_request { method: 'GET', route: '/', status: 500, durationMs: 63560 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48045 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48729 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48746 }
+{"level":"error","time":"2026-11-12T13:00:54.363Z","message":"Payment receipt queue unavailable"}
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 47763 }
+request_error { method: 'GET', route: '/', status: 500, code: 'INTERNAL_ERROR' }
+http_request { method: 'GET', route: '/', status: 500, durationMs: 63807 }
+request_error {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 500,
+  code: 'INTERNAL_ERROR'
+}
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 500,
+  durationMs: 73815
+}
+request_error {
+  method: 'GET',
+  route: '/unread',
+  status: 500,
+  code: 'INTERNAL_ERROR'
+}
+http_request { method: 'GET', route: '/unread', status: 500, durationMs: 71746 }
+request_error { method: 'GET', route: '/', status: 500, code: 'INTERNAL_ERROR' }
+http_request { method: 'GET', route: '/', status: 500, durationMs: 65011 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 48518 }
+request_error {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 500,
+  code: 'INTERNAL_ERROR'
+}
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 500,
+  durationMs: 91584
+}
+{"level":"error","time":"2026-11-12T13:02:56.239Z","message":"Payment receipt queue unavailable"}
+{"level":"error","time":"2026-11-12T13:03:56.207Z","message":"Payment receipt queue unavailable"}
+request_error {
+  method: 'GET',
+  route: '/unread',
+  status: 500,
+  code: 'INTERNAL_ERROR'
+}
+http_request { method: 'GET', route: '/unread', status: 500, durationMs: 55567 }
+request_error { method: 'GET', route: '/', status: 500, code: 'INTERNAL_ERROR' }
+http_request { method: 'GET', route: '/', status: 500, durationMs: 51699 }
+request_error {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 500,
+  code: 'INTERNAL_ERROR'
+}
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 500,
+  durationMs: 60626
+}
+{"level":"error","time":"2026-11-12T13:05:56.365Z","message":"Payment receipt queue unavailable"}
+request_error {
+  method: 'GET',
+  route: '/unread',
+  status: 500,
+  code: 'INTERNAL_ERROR'
+}
+http_request { method: 'GET', route: '/unread', status: 500, durationMs: 59529 }
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 47879 }
+request_error {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 500,
+  code: 'INTERNAL_ERROR'
+}
+http_request {
+  method: 'GET',
+  route: '/:id/messages',
+  status: 500,
+  durationMs: 86763
+}
+http_request { method: 'GET', route: 'unmatched', status: 401, durationMs: 47898 }
+http_request { method: 'PUT', route: '/profile', status: 400, durationMs: 502 }
+request_error {
+  method: 'PATCH',
+  route: '/role-requests/:id/approve',
+  status: 500,
+  code: 'INTERNAL_ERROR'
+}
+http_request {
+  method: 'PATCH',
+  route: '/role-requests/:id/approve',
+  status: 500,
+  durationMs: 278
+}
+request_error {
+  method: 'PATCH',
+  route: '/role-requests/:id/approve',
+  status: 500,
+  code: 'INTERNAL_ERROR'
+}
+http_request {
+  method: 'PATCH',
+  route: '/role-requests/:id/approve',
+  status: 500,
+  durationMs: 363
+}
+request_error {
+  method: 'PATCH',
+  route: '/role-requests/:id/approve',
+  status: 500,
+  code: 'INTERNAL_ERROR'
+}
+http_request {
+  method: 'PATCH',
+  route: '/role-requests/:id/approve',
+  status: 500,
+  durationMs: 355
+}
+request_error {
+  method: 'PATCH',
+  route: '/role-requests/:id/approve',
+  status: 500,
+  code: 'INTERNAL_ERROR'
+}
+http_request {
+  method: 'PATCH',
+  route: '/role-requests/:id/approve',
+  status: 500,
+  durationMs: 261
+}
+request_error {
+  method: 'PATCH',
+  route: '/role-requests/:id/approve',
+  status: 500,
+  code: 'INTERNAL_ERROR'
+}
+http_request {
+  method: 'PATCH',
+  route: '/role-requests/:id/approve',
+  status: 500,
+  durationMs: 231
+}
+http_request { method: 'GET', route: 'unmatched', status: 404, durationMs: 6 }
+http_request { method: 'GET', route: 'unmatched', status: 404, durationMs: 2 }
+http_request { method: 'GET', route: 'unmatched', status: 404, durationMs: 1 }
+http_request { method: 'GET', route: 'unmatched', status: 404, durationMs: 1 }

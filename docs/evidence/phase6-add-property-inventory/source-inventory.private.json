@@ -1,0 +1,219 @@
+{
+  "pageLines": 1264,
+  "parentNonRenderStatements": 31,
+  "pageSha256": "f4da175bedfbf841feb5ebe10009972885da292dd475e82ff1616e96ec445531",
+  "hookSha256": "801a35eb641f6e81486187d2e4525cd9e75bd66bb8b0da7f633d60a9b60279b5",
+  "steps": [
+    {
+      "step": 1,
+      "start": 468,
+      "end": 626,
+      "fields": [
+        {
+          "tag": "input",
+          "name": "title"
+        },
+        {
+          "tag": "input",
+          "name": "price"
+        },
+        {
+          "tag": "select",
+          "name": "pricePeriod"
+        },
+        {
+          "tag": "select",
+          "name": "district"
+        },
+        {
+          "tag": "input",
+          "name": "contactNumber"
+        }
+      ],
+      "events": [
+        {
+          "event": "onClick",
+          "source": "{() => handleTypeSelect(cat.id)}"
+        },
+        {
+          "event": "onChange",
+          "source": "{handleChange}"
+        },
+        {
+          "event": "onChange",
+          "source": "{handleChange}"
+        },
+        {
+          "event": "onChange",
+          "source": "{handleChange}"
+        },
+        {
+          "event": "onChange",
+          "source": "{handleDistrictChange}"
+        },
+        {
+          "event": "onChange",
+          "source": "{handleChange}"
+        },
+        {
+          "event": "onClick",
+          "source": "{nextStep}"
+        }
+      ]
+    },
+    {
+      "step": 2,
+      "start": 633,
+      "end": 773,
+      "fields": [
+        {
+          "tag": "input",
+          "name": "city"
+        },
+        {
+          "tag": "input",
+          "name": "address"
+        }
+      ],
+      "events": [
+        {
+          "event": "onChange",
+          "source": "{handleChange}"
+        },
+        {
+          "event": "onChange",
+          "source": "{handleChange}"
+        },
+        {
+          "event": "onClick",
+          "source": "{() => {\n                        setLocationMode(\"point\");\n                        setBoundaryCoordinates([]);"
+        },
+        {
+          "event": "onClick",
+          "source": "{() => setLocationMode(\"boundary\")}"
+        },
+        {
+          "event": "onClick",
+          "source": "{handleGetGPS}"
+        },
+        {
+          "event": "onClick",
+          "source": "{() => setBoundaryCoordinates([])}"
+        },
+        {
+          "event": "onClick",
+          "source": "{prevStep}"
+        },
+        {
+          "event": "onClick",
+          "source": "{nextStep}"
+        }
+      ]
+    },
+    {
+      "step": 3,
+      "start": 780,
+      "end": 1020,
+      "fields": [
+        {
+          "tag": "input",
+          "name": "bedrooms"
+        },
+        {
+          "tag": "input",
+          "name": "bathrooms"
+        },
+        {
+          "tag": "input",
+          "name": "houseSize"
+        },
+        {
+          "tag": "input",
+          "name": "landSize"
+        },
+        {
+          "tag": "textarea",
+          "name": "description"
+        }
+      ],
+      "events": [
+        {
+          "event": "onChange",
+          "source": "{handleChange}"
+        },
+        {
+          "event": "onChange",
+          "source": "{handleChange}"
+        },
+        {
+          "event": "onChange",
+          "source": "{handleChange}"
+        },
+        {
+          "event": "onChange",
+          "source": "{handleChange}"
+        },
+        {
+          "event": "onChange",
+          "source": "{handleChange}"
+        },
+        {
+          "event": "onChange",
+          "source": "{handleImageUpload}"
+        },
+        {
+          "event": "onClick",
+          "source": "{() => removeImage(i)}"
+        },
+        {
+          "event": "onChange",
+          "source": "{handleVirtualTourUpload}"
+        },
+        {
+          "event": "onChange",
+          "source": "{(e) => handleVirtualTourLabel(index, e.target.value)}"
+        },
+        {
+          "event": "onClick",
+          "source": "{() => removeVirtualTour(index)}"
+        },
+        {
+          "event": "onClick",
+          "source": "{prevStep}"
+        },
+        {
+          "event": "onClick",
+          "source": "{nextStep}"
+        }
+      ]
+    },
+    {
+      "step": 4,
+      "start": 1027,
+      "end": 1254,
+      "fields": [],
+      "events": [
+        {
+          "event": "onClick",
+          "source": "{() => goToStep(1)}"
+        },
+        {
+          "event": "onClick",
+          "source": "{() => goToStep(2)}"
+        },
+        {
+          "event": "onClick",
+          "source": "{() => goToStep(3)}"
+        },
+        {
+          "event": "onClick",
+          "source": "{() => goToStep(3)}"
+        },
+        {
+          "event": "onClick",
+          "source": "{handleSubmit}"
+        }
+      ]
+    }
+  ]
+}

@@ -1,5 +1,4 @@
 const supabase = require('../config/supabase');
-const { cleanupPropertyImages } = require('../utils/propertyImageCleanup');
 const { publicError } = require('../utils/publicError');
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const sameId = (value, expected) => typeof value === 'string' && uuid.test(value) && value.toLowerCase() === expected.toLowerCase();
@@ -22,14 +21,14 @@ const adminRepository = {
     getDashboardStats: async () => {
         return await Promise.all([
             supabase.from('users').select('*', { count: 'exact', head: true }),
-            supabase.from('properties').select('*', { count: 'exact', head: true }).eq('payment_status', 'Paid'),
-            supabase.from('properties').select('*', { count: 'exact', head: true }).eq('status', 'approved').eq('payment_status', 'Paid'),
-            supabase.from('properties').select('*', { count: 'exact', head: true }).eq('status', 'pending').eq('payment_status', 'Paid'),
-            supabase.from('properties').select('*', { count: 'exact', head: true }).eq('status', 'rejected'),
+            supabase.from('properties').select('*', { count: 'exact', head: true }).is('deleted_at', null).eq('payment_status', 'Paid'),
+            supabase.from('properties').select('*', { count: 'exact', head: true }).is('deleted_at', null).eq('status', 'approved').eq('payment_status', 'Paid'),
+            supabase.from('properties').select('*', { count: 'exact', head: true }).is('deleted_at', null).eq('status', 'pending').eq('payment_status', 'Paid'),
+            supabase.from('properties').select('*', { count: 'exact', head: true }).is('deleted_at', null).eq('status', 'rejected'),
             supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'BUYER'),
             supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'SELLER'),
             supabase.from('transactions').select('amount').eq('status', 'SUCCESS'),
-            supabase.from('properties').select('type').eq('payment_status', 'Paid')
+            supabase.from('properties').select('type').is('deleted_at', null).eq('payment_status', 'Paid')
         ]);
     },
 
@@ -61,7 +60,7 @@ const adminRepository = {
             .select(`
                 *,
                 seller:users!properties_seller_id_fkey(id, name, email, role, phone)
-            `)
+            `).is('deleted_at', null)
             .order('created_at', { ascending: false })
             .limit(50);
         
@@ -86,9 +85,10 @@ const adminRepository = {
             .select(`
                 *,
                 seller:users!properties_seller_id_fkey(id, name, email, role, phone)
-            `)
+            `).is('deleted_at', null)
             .eq('id', id)
             .single();
+        if (listingError?.code === 'PGRST116') return null;
         if (listingError) throw listingError;
 
         const { data: txData } = await supabase
@@ -104,7 +104,7 @@ const adminRepository = {
     // Only the request that changes moderation state should send match alerts.
     approveListingOnce: async (id) => {
         const { data, error } = await supabase.from('properties')
-            .update({ status: 'approved', rejection_reason: null })
+            .update({ status: 'approved', rejection_reason: null }).is('deleted_at', null)
             .eq('id', id).neq('status', 'approved')
             .select('*, seller:users!properties_seller_id_fkey(name, email)').maybeSingle();
         if (error) throw error;
@@ -115,7 +115,7 @@ const adminRepository = {
     updateListingStatus: async (id, updates) => {
         const { data, error } = await supabase
             .from('properties')
-            .update(updates)
+            .update(updates).is('deleted_at', null)
             .eq('id', id)
             .select(`
                 *,
@@ -130,11 +130,10 @@ const adminRepository = {
     deleteListing: async (id) => {
         const { data, error } = await supabase
             .from('properties')
-            .delete()
+            .update({ deleted_at: new Date().toISOString() }).is('deleted_at', null)
             .eq('id', id)
-            .select('id,seller_id,images,virtual_tours');
+            .select('id');
         if (error) throw error;
-        if (data?.length) await cleanupPropertyImages(supabase, data[0]);
     },
 
     // 9. Get Users
@@ -212,7 +211,7 @@ const adminRepository = {
     // 13. Get Analytics Counts
     getAnalyticsCounts: async () => {
         const { count: userCount } = await supabase.from('users').select('*', { count: 'exact', head: true });
-        const { count: propertyCount } = await supabase.from('properties').select('*', { count: 'exact', head: true });
+        const { count: propertyCount } = await supabase.from('properties').select('*', { count: 'exact', head: true }).is('deleted_at', null);
         return { userCount, propertyCount };
     },
 
@@ -244,7 +243,7 @@ const adminRepository = {
             dataToExport = data || [];
             headers = ['id', 'name', 'email', 'role', 'created_at'];
         } else if (type === 'listings') {
-            const { data, error } = await supabase.from('properties').select('id, title, price, type, status, created_at');
+            const { data, error } = await supabase.from('properties').select('id, title, price, type, status, created_at').is('deleted_at', null);
             if (error) throw error;
             dataToExport = data || [];
             headers = ['id', 'title', 'price', 'type', 'status', 'created_at'];

@@ -51,3 +51,10 @@ func TestCacheKeyIncludesOptionalFilters(t *testing.T) {
 		t.Fatal("different filters must not share cached results")
 	}
 }
+
+func TestSearchQueryExcludesArchivedListings(t *testing.T) {
+	query, _ := buildSearchQuery(models.SearchRequest{Polygon: "polygon"})
+	if !strings.Contains(query, "p.deleted_at IS NULL") {
+		t.Fatal("archived listings must be excluded")
+	}
+}

@@ -1,0 +1,44 @@
+[
+  {
+    "theme": "light",
+    "keyboardSteps": 10,
+    "keyboardEqual": true,
+    "hoverSteps": 6,
+    "hoverEqual": true,
+    "focusObserved": true,
+    "hoverObserved": true,
+    "selectedSequence": [
+      "Agent Brand Settings",
+      "Agent Brand Settings",
+      "My Appointments & Tours2",
+      "Saved Shortlist3",
+      "Search Radars4",
+      "Home Loan & EMI Planner",
+      "Due-Diligence Guide",
+      "Profile & Security",
+      "Theme & Preferences",
+      "Agent Brand Settings"
+    ]
+  },
+  {
+    "theme": "dark",
+    "keyboardSteps": 10,
+    "keyboardEqual": true,
+    "hoverSteps": 6,
+    "hoverEqual": true,
+    "focusObserved": true,
+    "hoverObserved": true,
+    "selectedSequence": [
+      "Agent Brand Settings",
+      "Agent Brand Settings",
+      "My Appointments & Tours2",
+      "Saved Shortlist3",
+      "Search Radars4",
+      "Home Loan & EMI Planner",
+      "Due-Diligence Guide",
+      "Profile & Security",
+      "Theme & Preferences",
+      "Agent Brand Settings"
+    ]
+  }
+]

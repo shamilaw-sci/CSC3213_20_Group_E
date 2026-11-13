@@ -1,0 +1,546 @@
+Running real Saved searches integration against verified stack-c; external delivery disabled.
+  console.log
+    [HTTP] POST /api/saved-searches -> 201 (45ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/saved-searches -> 201 (26ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/saved-searches -> 201 (24ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/saved-searches -> 201 (27ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/saved-searches -> 201 (19ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] GET /api/saved-searches -> 200 (19ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] GET /api/saved-searches -> 200 (18ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] GET /api/saved-searches -> 200 (17ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] GET /api/saved-searches -> 200 (17ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] PATCH /api/saved-searches/de1c5a22-8c1f-4e91-a560-d88e871bc80d/alerts -> 200 (21ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] PATCH /api/saved-searches/32c8b3c4-060a-473c-a461-73877cf93267/alerts -> 200 (21ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] PATCH /api/saved-searches/90375269-b983-4e6a-b2da-9a2922cda0b1/alerts -> 200 (20ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.warn
+    [HTTP] POST /api/saved-searches -> 400 (11ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.warn
+    [HTTP] POST /api/saved-searches -> 400 (7ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.warn
+    [HTTP] POST /api/saved-searches -> 400 (11ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.warn
+    [HTTP] POST /api/saved-searches -> 400 (13ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.warn
+    [HTTP] POST /api/saved-searches -> 400 (10ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.warn
+    [HTTP] GET /api/saved-searches -> 401 (0ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.warn
+    [HTTP] POST /api/saved-searches -> 401 (0ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.warn
+    [HTTP] PATCH /api/saved-searches/32c8b3c4-060a-473c-a461-73877cf93267/alerts -> 401 (0ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.warn
+    [HTTP] DELETE /api/saved-searches/32c8b3c4-060a-473c-a461-73877cf93267 -> 401 (1ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.warn
+    [HTTP] GET /api/saved-searches -> 403 (8ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.warn
+    [HTTP] POST /api/saved-searches -> 403 (9ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.warn
+    [HTTP] PATCH /api/saved-searches/32c8b3c4-060a-473c-a461-73877cf93267/alerts -> 403 (13ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.warn
+    [HTTP] DELETE /api/saved-searches/32c8b3c4-060a-473c-a461-73877cf93267 -> 403 (10ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.log
+    [HTTP] POST /api/saved-searches -> 201 (19ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] PATCH /api/saved-searches/59420869-473b-45d4-ac22-c6bdc7f062fb/alerts -> 200 (20ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] PATCH /api/saved-searches/59420869-473b-45d4-ac22-c6bdc7f062fb/alerts -> 200 (18ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.warn
+    [HTTP] PATCH /api/saved-searches/59420869-473b-45d4-ac22-c6bdc7f062fb/alerts -> 400 (7ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.warn
+    [HTTP] PATCH /api/saved-searches/59420869-473b-45d4-ac22-c6bdc7f062fb/alerts -> 400 (7ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.warn
+    [HTTP] PATCH /api/saved-searches/59420869-473b-45d4-ac22-c6bdc7f062fb/alerts -> 400 (9ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.warn
+    [HTTP] PATCH /api/saved-searches/bad-id/alerts -> 400 (10ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.warn
+    [HTTP] DELETE /api/saved-searches/bad-id -> 400 (10ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.warn
+    [HTTP] PATCH /api/saved-searches/59420869-473b-45d4-ac22-c6bdc7f062fb/alerts -> 404 (15ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.warn
+    [HTTP] PATCH /api/saved-searches/6f3e707b-0426-4109-9dbb-3e41cb6c2463/alerts -> 404 (15ms)
+
+    [0m [90m 47 |[39m         [36mif[39m (args[33m.[39mlength [33m===[39m [35m1[39m [33m&&[39m [36mtypeof[39m args[[35m0[39m] [33m===[39m [32m'string'[39m
+     [90m 48 |[39m             [33m&&[39m [35m/^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/[39m[33m.[39mtest(args[[35m0[39m])) [36mreturn[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 49 |[39m         original([33m...[39margs)[33m;[39m
+     [90m    |[39m         [31m[1m^[22m[39m
+     [90m 50 |[39m     }[33m;[39m
+     [90m 51 |[39m }
+     [90m 52 |[39m[0m
+
+      at console.<computed> (integration/setup.cjs:49:9)
+      at ServerResponse.logMethod (server.js:41:9)
+
+  console.log
+    [HTTP] DELETE /api/saved-searches/59420869-473b-45d4-ac22-c6bdc7f062fb -> 200 (14ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] DELETE /api/saved-searches/5d1c7995-c4ff-40ac-a4ce-7a293a3eeace -> 200 (17ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] DELETE /api/saved-searches/59420869-473b-45d4-ac22-c6bdc7f062fb -> 200 (20ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] DELETE /api/saved-searches/59420869-473b-45d4-ac22-c6bdc7f062fb -> 200 (17ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/saved-searches -> 201 (20ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/saved-searches -> 201 (20ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/saved-searches -> 201 (20ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] PATCH /api/saved-searches/56cfde86-2a99-4740-ac9e-248f6ba634c4/alerts -> 200 (18ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/saved-searches -> 201 (17ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] DELETE /api/saved-searches/f4603087-d7b3-4b2d-98c2-e763a1630d22 -> 200 (18ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/saved-searches -> 201 (19ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/saved-searches -> 201 (17ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/saved-searches -> 201 (21ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/saved-searches -> 201 (21ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/saved-searches -> 201 (23ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/saved-searches -> 201 (14ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/saved-searches -> 201 (20ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/saved-searches -> 201 (18ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/saved-searches -> 201 (18ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/saved-searches -> 201 (17ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    {"level":"info","time":"2026-11-03T05:07:25.892Z","message":"Saved search alerts sent","meta":{"propertyId":"2c033bcb-f9f2-4979-af9b-5946eccd4e91","matchCount":2}}
+
+      at console.<computed> [as log] (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] PATCH /api/saved-searches/2684a957-e0fb-4236-a6d7-630effe92bed/alerts -> 200 (17ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    {"level":"info","time":"2026-11-03T05:07:25.927Z","message":"Saved search alerts sent","meta":{"propertyId":"2c033bcb-f9f2-4979-af9b-5946eccd4e91","matchCount":1}}
+
+      at console.<computed> [as log] (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] PATCH /api/saved-searches/2684a957-e0fb-4236-a6d7-630effe92bed/alerts -> 200 (17ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] DELETE /api/saved-searches/92d6660a-7804-4c20-9267-628cba07e7cc -> 200 (17ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    {"level":"info","time":"2026-11-03T05:07:25.978Z","message":"Saved search alerts sent","meta":{"propertyId":"2c033bcb-f9f2-4979-af9b-5946eccd4e91","matchCount":1}}
+
+      at console.<computed> [as log] (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/saved-searches -> 201 (17ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] POST /api/saved-searches -> 201 (21ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] PATCH /api/admin/listings/2c033bcb-f9f2-4979-af9b-5946eccd4e91/approve -> 200 (16ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.error
+    {"level":"error","time":"2026-11-03T05:07:26.054Z","message":"Failed to send saved-search alert email","meta":{"message":"Controlled fixture delivery failure","stack":"Error: Controlled fixture delivery failure\n    at D:\\CSC3213_20_Group_E\\backend-node\\integration\\saved-searches.integration.cjs:201:26\n    at D:\\CSC3213_20_Group_E\\backend-node\\node_modules\\jest-mock\\build\\index.js:370:39\n    at D:\\CSC3213_20_Group_E\\backend-node\\node_modules\\jest-mock\\build\\index.js:377:13\n    at mockConstructor (D:\\CSC3213_20_Group_E\\backend-node\\node_modules\\jest-mock\\build\\index.js:116:19)\n    at sendSavedSearchAlertEmail (D:\\CSC3213_20_Group_E\\backend-node\\controllers\\savedSearchController.js:137:24)\n    at Array.map (<anonymous>)\n    at map (D:\\CSC3213_20_Group_E\\backend-node\\controllers\\savedSearchController.js:134:21)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)"}}
+
+    [0m [90m 26 |[39m     [36mconst[39m line [33m=[39m [33mJSON[39m[33m.[39mstringify(payload)[33m;[39m
+     [90m 27 |[39m     [36mif[39m (level [33m===[39m [32m'error'[39m) {
+    [31m[1m>[22m[39m[90m 28 |[39m         console[33m.[39merror(line)[33m;[39m
+     [90m    |[39m                 [31m[1m^[22m[39m
+     [90m 29 |[39m         [36mreturn[39m[33m;[39m
+     [90m 30 |[39m     }
+     [90m 31 |[39m     [36mif[39m (level [33m===[39m [32m'warn'[39m) {[0m
+
+      at error (utils/logger.js:28:17)
+      at Object.write (utils/logger.js:42:31)
+      at error (controllers/savedSearchController.js:138:28)
+          at async Promise.all (index 1)
+      at checkSavedSearchMatches (controllers/savedSearchController.js:133:9)
+
+  console.log
+    {"level":"info","time":"2026-11-03T05:07:26.057Z","message":"Saved search alerts sent","meta":{"propertyId":"2c033bcb-f9f2-4979-af9b-5946eccd4e91","matchCount":3}}
+
+      at console.<computed> [as log] (integration/setup.cjs:49:9)
+
+  console.log
+    [HTTP] PATCH /api/admin/listings/2c033bcb-f9f2-4979-af9b-5946eccd4e91/approve -> 200 (26ms)
+
+      at console.<computed> (integration/setup.cjs:49:9)
+
+  console.log
+    Saved-search fixtures removed: exact owner searches, properties, UUID/email users; partial API inserts recovered.
+
+      at console.<computed> [as log] (integration/setup.cjs:49:9)
+
+PASS integration/saved-searches.integration.cjs (5.398 s)
+  √ persists legacy/default, full zero criteria, type derivation, duplicates and isolated newest-first lists (379 ms)
+  √ invalid inputs, anonymous and banned operations preserve complete run-owned rows (171 ms)
+  √ owner toggle/delete persist while malformed, foreign, missing and repeated requests preserve unrelated rows (279 ms)
+  √ real joined matching, toggle and deletion enforce full/legacy criteria and exact recipients (493 ms)
+  √ real admin approval tolerates one rejected alert, sends other captures and repeats without coordination (111 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       5 passed, 5 total
+Snapshots:   0 total
+Time:        5.782 s
+Ran all test suites.
+PASS: 6 full table snapshot(s) and canonical ledger preserved after cleanup.

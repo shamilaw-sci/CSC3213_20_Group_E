@@ -16,7 +16,7 @@ vi.mock('framer-motion', () => ({ m: { div: ({ children }) => <div>{children}</d
 vi.mock('react-leaflet', () => ({
   MapContainer: ({ children }) => <div aria-label="Controlled map boundary">{children}</div>,
   TileLayer: () => null, Marker: () => null, Polygon: () => null, CircleMarker: () => null,
-  useMapEvents: () => null,
+  useMapEvents: () => null, useMap: () => ({ setView: () => {} }),
 }));
 vi.mock('leaflet', () => ({ default: { Icon: class {} } }));
 
@@ -124,6 +124,7 @@ describe('Review and publish through the actual parent', () => {
     change(document.querySelector('[name="title"]'), 'Category fixture');
     change(document.querySelector('[name="price"]'), '12500000');
     change(document.querySelector('[name="district"]'), 'Colombo');
+    change(document.querySelector('[name="contactNumber"]'), '0771234567');
     fireEvent.click(screen.getByText('Review & Publish', { exact: true }));
     expect(screen.getByText(summary)).toBeInTheDocument();
     expect(screen.getAllByText(price)).toHaveLength(2);
