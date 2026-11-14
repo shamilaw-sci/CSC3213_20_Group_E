@@ -1,6 +1,8 @@
 jest.mock('../repositories/propertyRepository', () => ({ getPropertyById: jest.fn(), updateMyProperty: jest.fn() }));
 const repo = require('../repositories/propertyRepository');
-const { updateMyProperty } = require('../controllers/propertyController');
+// Test the write controller directly; the compatibility facade loads unrelated
+// discovery/read dependencies, including the real Supabase client.
+const { updateMyProperty } = require('../controllers/property/propertyWriteController');
 const response = () => ({ status: jest.fn().mockReturnThis(), json: jest.fn() });
 beforeEach(() => jest.resetAllMocks());
 test('paid rejected correction preserves payment and omitted saved fields', async () => {
