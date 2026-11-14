@@ -4,7 +4,10 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import * as api from '../api/adminApi';
 import DashboardPage from './DashboardPage';
 vi.mock('../api/adminApi', () => ({ fetchDashboardStats: vi.fn(), fetchRevenueData: vi.fn(), fetchUserGrowth: vi.fn(), fetchListings: vi.fn() }));
-vi.mock('framer-motion', () => ({ m: { div: ({ children, className }) => <div className={className}>{children}</div> } }));
+vi.mock('framer-motion', () => ({ m: {
+    div: ({ children, className }) => <div className={className}>{children}</div>,
+    button: ({ children, className, type, onClick }) => <button type={type} className={className} onClick={onClick}>{children}</button>
+} }));
 beforeEach(() => {
     vi.resetAllMocks();
     api.fetchDashboardStats.mockResolvedValue({ totalListings: 123, pendingApproval: 1, totalUsers: 10 });
