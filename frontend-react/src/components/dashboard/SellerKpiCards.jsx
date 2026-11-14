@@ -3,7 +3,7 @@ import { DollarSign, CheckCircle2, Clock, Eye, Heart } from 'lucide-react';
 
 export default function SellerKpiCards({ loading, stats, formatLKR }) {
     return (
-                <section aria-label="Key Performance Indicators" className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 sm:gap-4 mb-8">
+                <section aria-label="Key Performance Indicators" className="seller-kpis grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 sm:gap-4 mb-8">
                     
                     {/* Portfolio Value */}
                     <div className="bg-white dark:bg-gray-900 p-4 sm:p-5 rounded-2xl border border-gray-200/70 dark:border-gray-800 shadow-xs flex flex-col justify-between">

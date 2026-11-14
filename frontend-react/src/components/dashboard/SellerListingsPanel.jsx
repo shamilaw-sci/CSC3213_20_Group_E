@@ -3,7 +3,7 @@ import { ArrowRight, Building, CheckCircle2, Clock, XCircle, Eye, ArrowUpRight }
 
 const SellerListingsPanel = ({ stats, navigate, loading, recentListings, formatLKR }) => {
     return (
-                        <div className="bg-white dark:bg-gray-900 p-5 sm:p-6 rounded-2xl border border-gray-200/70 dark:border-gray-800 shadow-xs">
+                        <div className="seller-listings bg-white dark:bg-gray-900 p-5 sm:p-6 rounded-2xl border border-gray-200/70 dark:border-gray-800 shadow-xs">
                             <div className="flex items-center justify-between mb-4">
                                 <div>
                                     <h2 className="text-base font-bold text-gray-900 dark:text-white">Recent Listings</h2>

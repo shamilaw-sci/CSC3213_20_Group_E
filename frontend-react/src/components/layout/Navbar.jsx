@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from '../../context/UserAuthContext';
 import { useTheme } from '../../context/ThemeProvider';
@@ -10,7 +10,7 @@ import "./Navbar.css";
  * Global Navigation Bar Component (Premium Enterprise Edition)
  * Features balanced 3-zone layout: Left Brand Logo, Center Nav Links, Right Actions & Profile.
  */
-const Navbar = ({ transparent = false }) => {
+const Navbar = ({ transparent = false, onUnreadCountChange }) => {
   const navigate = useNavigate();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const notificationsButtonRef = useRef(null);
@@ -27,13 +27,16 @@ const Navbar = ({ transparent = false }) => {
   };
 
   // Polls /conversations/unread every 15 seconds while user is logged in.
-  const { data: unreadData } = usePoll("/conversations/unread", 15000, { enabled: !!user });
+  const { data: unreadData } = usePoll("/conversations/unread", 15000, { enabled: !!user, scopeKey: user?.id });
   const unreadCount = unreadData?.unreadCount || 0;
+  useEffect(() => {
+    onUnreadCountChange?.({ userId: user?.id, count: unreadCount });
+  }, [onUnreadCountChange, user?.id, unreadCount]);
   const recentMessages = unreadData?.recentMessages || [];
 
   const isSeller = user?.role === "SELLER";
   const isAgent = user?.role === "AGENT";
-  const { data: bookingData } = usePoll("/agents/leads", 15000, { enabled: isAgent });
+  const { data: bookingData } = usePoll("/agents/leads", 15000, { enabled: isAgent, scopeKey: user?.id });
   const pendingBookings = isAgent ? (bookingData?.leads || []).filter(lead => lead.is_direct_booking && (!lead.lead_status || lead.lead_status === 'New')) : [];
 
   return (

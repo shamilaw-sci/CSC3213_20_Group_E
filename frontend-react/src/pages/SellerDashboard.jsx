@@ -1,9 +1,10 @@
+import './SellerDashboard.css';
 import { logClientError } from '../utils/clientLog';
 import SellerConversationsPanel from '../components/dashboard/SellerConversationsPanel';
 import SellerListingsPanel from '../components/dashboard/SellerListingsPanel';
 import SellerKpiCards from '../components/dashboard/SellerKpiCards';
 import SellerWeeklyActivity from '../components/dashboard/SellerWeeklyActivity';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/UserAuthContext';
 import Navbar from '../components/layout/Navbar';
@@ -33,13 +34,17 @@ const SellerDashboard = () => {
         pending: 0,
         rejected: 0,
         draft: 0,
-        messages: 0,
         views: 0,
         saves: 0,
         totalPortfolioValue: 0
     });
     const [recentListings, setRecentListings] = useState([]);
     const [recentConversations, setRecentConversations] = useState([]);
+    const [unread, setUnread] = useState(null);
+    const handleUnreadCountChange = useCallback(next => {
+        setUnread(previous => previous?.userId === next.userId && previous?.count === next.count ? previous : next);
+    }, []);
+    const unreadCount = unread?.userId === user?.id ? unread.count : 0;
     const [loading, setLoading] = useState(true);
 
     // Ensure only Sellers can access this page
@@ -81,7 +86,6 @@ const SellerDashboard = () => {
                     pending,
                     rejected,
                     draft,
-                    messages: conversations.length,
                     views: totalViews,
                     saves: totalSaves,
                     totalPortfolioValue: portfolioValue
@@ -106,11 +110,11 @@ const SellerDashboard = () => {
     const firstName = user.name?.split(' ')[0] || 'Seller';
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-gray-950 flex flex-col font-sans selection:bg-blue-500 selection:text-white pb-12">
-            <Navbar />
+        <div className="seller-dashboard min-h-screen bg-slate-50 dark:bg-gray-950 flex flex-col font-sans selection:bg-blue-500 selection:text-white pb-12">
+            <Navbar onUnreadCountChange={handleUnreadCountChange} />
             
             {/* Header & Quick Action Command Bar */}
-            <header className="bg-white dark:bg-gray-900 border-b border-gray-200/80 dark:border-gray-800 sticky top-16 z-20 shadow-xs">
+            <header className="seller-dashboard-header bg-white dark:bg-gray-900 border-b border-gray-200/80 dark:border-gray-800 sticky top-16 z-20 shadow-xs">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div>
@@ -138,9 +142,9 @@ const SellerDashboard = () => {
                             >
                                 <MessageSquare className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                                 <span>Inquiries</span>
-                                {stats.messages > 0 && (
+                                {unreadCount > 0 && (
                                     <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-600 text-white">
-                                        {stats.messages}
+                                        {unreadCount}
                                     </span>
                                 )}
                             </button>
@@ -166,7 +170,7 @@ const SellerDashboard = () => {
             </header>
 
             {/* Main Content Area */}
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 w-full flex-1">
+            <main className="seller-dashboard-main max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 w-full flex-1">
                 
                 {/* Unpaid Drafts Banner */}
                 {stats.draft > 0 && (
@@ -190,7 +194,7 @@ const SellerDashboard = () => {
                 <SellerKpiCards loading={loading} stats={stats} formatLKR={formatLKR} />
 
                 {/* 2. Main Analytics & Operational Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <div className="seller-dashboard-grid grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                     
                     {/* Left 8-Cols: Performance Curve & Recent Listings Snapshot */}
                     <div className="lg:col-span-8 space-y-6">
@@ -205,7 +209,7 @@ const SellerDashboard = () => {
                     <div className="lg:col-span-4 space-y-6">
                         
                         {/* Quick Launch Cards */}
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="seller-shortcuts grid grid-cols-2 gap-3">
                             <button
                                 onClick={() => navigate('/add-property')}
                                 className="p-4 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 text-white text-left shadow-sm hover:shadow-md transition group"

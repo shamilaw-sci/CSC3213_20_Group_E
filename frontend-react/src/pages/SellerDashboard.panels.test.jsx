@@ -18,7 +18,7 @@ test('both snapshot panels retain loading spinners until parent requests settle'
     mocks.get.mockImplementation(() => new Promise(() => {}));
     show();
     expect(panel('Recent Listings').querySelector('.animate-spin')).toBeTruthy();
-    expect(panel('Active Buyer Chats').querySelector('.animate-spin')).toBeTruthy();
+    expect(panel('Buyer Conversations').querySelector('.animate-spin')).toBeTruthy();
     expect(screen.queryByText('No properties listed yet')).not.toBeInTheDocument();
     expect(mocks.get.mock.calls.map(([path]) => path)).toEqual(['/properties/my-listings/activity', '/properties/my-listings', '/conversations']);
 });
@@ -26,7 +26,7 @@ test('both snapshot panels retain loading spinners until parent requests settle'
 test('empty snapshots and listing/inbox actions preserve destinations', async () => {
     respond(); show();
     await screen.findByText('No properties listed yet');
-    expect(screen.getByText(/No active inquiries yet/)).toBeInTheDocument();
+    expect(screen.getByText(/No conversations yet/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '+ List Your First Property' }));
     expect(screen.getByLabelText('Current route')).toHaveTextContent('/add-property');
     fireEvent.click(screen.getByRole('button', { name: 'View all (0)' }));
@@ -70,7 +70,7 @@ test('conversation snapshot keeps first three server rows and buyer/property fal
         { id: 'hidden', buyer: { name: 'Excluded buyer' } },
     ]); show();
     await screen.findByText('Zelda');
-    const chats = panel('Active Buyer Chats');
+    const chats = panel('Buyer Conversations');
     expect([...chats.querySelectorAll('.cursor-pointer')].map(node => node.textContent)).toEqual(['ZZeldaFirst inquiry', 'BProspective BuyerProperty Inquiry', 'MMayaThird inquiry']);
     expect(screen.queryByText('Excluded buyer')).not.toBeInTheDocument();
     fireEvent.click(screen.getByText('Prospective Buyer'));

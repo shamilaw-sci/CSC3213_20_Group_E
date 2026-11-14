@@ -31,7 +31,7 @@ export default function SellerWeeklyActivity({ sellerId, listingCount = 0, total
   const data=state.data;
   const max=data ? Math.max(1,...data.days.flatMap(day=>[day.views,day.inquiries])) : 1;
   return (
-    <section aria-label="Weekly listing activity" className="bg-white dark:bg-gray-900 p-5 sm:p-6 rounded-2xl border border-gray-200/70 dark:border-gray-800 shadow-xs">
+    <section aria-label="Weekly listing activity" className="seller-activity bg-white dark:bg-gray-900 p-5 sm:p-6 rounded-2xl border border-gray-200/70 dark:border-gray-800 shadow-xs">
       <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
         <div>
           <h2 className="text-base font-bold text-gray-900 dark:text-white">Weekly Listing Activity</h2>

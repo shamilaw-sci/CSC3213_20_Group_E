@@ -4,11 +4,11 @@ import { MessageSquare, ChevronRight } from 'lucide-react';
 
 const SellerConversationsPanel = ({ loading, recentConversations, navigate }) => {
     return (
-                        <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-gray-200/70 dark:border-gray-800 shadow-xs">
+                        <div className="seller-conversations bg-white dark:bg-gray-900 p-5 rounded-2xl border border-gray-200/70 dark:border-gray-800 shadow-xs">
                             <div className="flex items-center justify-between mb-3.5">
                                 <div className="flex items-center gap-2">
                                     <MessageSquare className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                                    <h2 className="text-sm font-bold text-gray-900 dark:text-white">Active Buyer Chats</h2>
+                                    <h2 className="text-sm font-bold text-gray-900 dark:text-white">Buyer Conversations</h2>
                                 </div>
                                 <Link to="/messages" className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">
                                     Open Inbox
@@ -21,7 +21,7 @@ const SellerConversationsPanel = ({ loading, recentConversations, navigate }) =>
                                 </div>
                             ) : recentConversations.length === 0 ? (
                                 <div className="py-6 text-center text-xs text-gray-400 dark:text-gray-500">
-                                    No active inquiries yet. Inquiries will appear here as soon as buyers message you.
+                                    No conversations yet. Inquiries will appear here as soon as buyers message you.
                                 </div>
                             ) : (
                                 <div className="space-y-2.5">

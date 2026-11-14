@@ -1,4 +1,4 @@
-ï»¿# Seller manual E2E - 2026-11-13
+# Seller manual E2E - 2026-11-13
 
 ## Workflow
 
@@ -12,24 +12,24 @@ Source: current Seller dashboard/panels, original SE-01 through SE-06 plan and m
 
 | Case | Scope | Status |
 | --- | --- | --- |
-| SE-01A | Dashboard identity, loading, current totals/panels and refresh | Pass by user report; analytics issue SELLER-01 logged |
-| SE-01B | Dashboard action links; My Listings baseline and count/status agreement | My Listings empty-state navigation/refresh Pass by user report; other links pending |
-| SE-02A | Add Property required/invalid inputs, category-specific fields/pricing | Not run |
-| SE-02B | Location search/map pin, address and coordinates | Not run |
-| SE-02C | Specifications, amenities and category-dependent controls | Not run |
-| SE-02D | Media upload/remove/order and HD/360 where offered; invalid media | Not run |
-| SE-02E | Back/Next value retention, review accuracy and submit | Not run |
-| SE-03A | Unpaid draft persistence, sandbox payment cancellation and retry | Not run |
-| SE-03B | Sandbox decline/failure and retry without false Paid/duplicate listing | Not run |
-| SE-03C | Sandbox success, backend-confirmed payment, refresh and receipt where configured | Not run |
-| SE-04A | Paid/pending state, Admin receipt, rejection reason and correction/resubmit where offered | Not run |
-| SE-04B | Admin approval, Seller status and exact public search/map/detail data/media | Not run |
-| SE-05A | Edit disposable listing details/media; persistence and moderation/public behavior | Not run |
-| SE-05B | Available status/visibility controls and Buyer saved-listing handoff | Not run |
-| SE-06A | Seller fixture inquiry reaches correct Seller/thread; reply/refresh and dashboard counts | Not run |
-| SE-07A | Ownership isolation: another account cannot see/manage private Seller listing records | Not run |
-| SE-05C | Delete disposable listing: cancel/confirm, refresh, totals and public removal | Not run |
-| SE-08A | Seller narrow-screen layout, empty/error states and remaining exposed controls | Not run |
+| SE-01A | Dashboard identity, loading, current totals/panels and refresh | Pass; real analytics fixed and manually retested |
+| SE-01B | Dashboard action links; My Listings baseline and count/status agreement | Pass for guided links, filters and counts |
+| SE-02A | Add Property required/invalid inputs, category-specific fields/pricing | Pass for guided required inputs and category/pricing checks |
+| SE-02B | Location search/map pin, address and coordinates | Pass for guided pin/boundary/GPS and retention checks |
+| SE-02C | Specifications, amenities and category-dependent controls | Pass for guided specifications/validation; batch confirmation recorded |
+| SE-02D | Media upload/remove/order and HD/360 where offered; invalid media | Pass for guided photo/360 size/count/upload/remove/retention checks; full format/order coverage not claimed |
+| SE-02E | Back/Next value retention, review accuracy and submit | Pass for guided review, back/edit retention and submission |
+| SE-03A | Unpaid draft persistence, sandbox payment cancellation and retry | Pass |
+| SE-03B | Sandbox decline/failure and retry without false Paid/duplicate listing | Pass for four sandbox decline scenarios and unpaid persistence |
+| SE-03C | Sandbox success, backend-confirmed payment, refresh and receipt where configured | Pass; fresh automatic callback and receipt verified |
+| SE-04A | Paid/pending state, Admin receipt, rejection reason and correction/resubmit where offered | Pass; rejection/correction/resubmit with paid status preserved |
+| SE-04B | Admin approval, Seller status and exact public search/map/detail data/media | Pass for public search/map/detail/media handoff |
+| SE-05A | Edit disposable listing details/media; persistence and moderation/public behavior | Details correction/resubmission Pass; media replacement outside approved correction scope |
+| SE-05B | Available status/visibility controls and Buyer saved-listing handoff | Soft-delete public visibility Pass; saved-favorite handoff not manually exercised |
+| SE-06A | Seller fixture inquiry reaches correct Seller/thread; reply/refresh and dashboard counts | Seller receipt/context/dashboard Pass; common Buyer chat mechanics reused |
+| SE-07A | Ownership isolation: another account cannot see/manage private Seller listing records | Cross-Seller list/detail isolation Pass; direct mutation boundaries automated |
+| SE-05C | Delete disposable listing: cancel/confirm, refresh, totals and public removal | Pass; new dialog cancel/confirm and soft-delete/history verified |
+| SE-08A | Seller narrow-screen layout, empty/error states and remaining exposed controls | Mobile deferred by user; guided desktop/error states accepted |
 
 ## Observations and bugs
 
@@ -37,7 +37,7 @@ SE-01A: User reports all guided dashboard checks working correctly. Screenshot s
 
 ## Current guided case
 
-SE-01A: Open Seller Dashboard using the approved Seller account. Check identity, loading, totals/panels and refresh. Do not modify listings. Empty data is valid. Capture totals as baseline and await user observation before advancing.
+Final guided retest queue SF-01 through SF-13 is complete as of 2026-11-14. See closeout and scoped coverage notes below. Mobile remains deferred.
 
 
 ### SELLER-01 - Mock weekly engagement presented as actual analytics
@@ -673,3 +673,119 @@ Next SELLER-03 GPS retest: remain on Single Pin Location, pan map away from curr
 User confirms My GPS immediately recenters map and shows current-location pin without leaving/reentering step. SELLER-03 reported issue manually accepted. No exact coordinate audit claimed.
 Next SELLER-05 Bedrooms validation: fill Town/City Kandy if empty, continue to Specs & Photos, upload one valid photo if needed and set Bedrooms -1. Click Review Property Details once and observe field-specific rejection. Do not publish/pay.
 
+
+## Resume checkpoint - 2026-11-14
+
+Current commit is dfc33d0 (save seller E2E progress and listing fixes). Current worktree change is only a runtime map stderr log under docs/evidence; no additional source commit needed for this checkpoint.
+
+Last accepted case is remaining-fixes retest 4, immediate GPS recenter. Resume with negative Bedrooms validation. Current agreed desktop final acceptance queue has 13 guided cases; cases contain related subchecks and may expand if a new failure appears. Mobile remains deferred. Media replacement beyond the approved correction editor remains outside this correction scope. Docker/concurrent database runtime testing remains skipped/unverified as previously agreed.
+
+| Final case | Scope | Status |
+| --- | --- | --- |
+| SF-01 | Negative Bedrooms validation | Pass by user report |
+| SF-02 | Negative Bathrooms validation | Pass by user batch confirmation |
+| SF-03 | Negative House Size validation | Pass by user batch confirmation |
+| SF-04 | Negative Land Size validation | Pass by user batch confirmation |
+| SF-05 | Valid specification recovery and retained review details | Pass by user batch confirmation |
+| SF-06 | Photo oversize error followed by valid-upload error clearing | Pass by user report |
+| SF-07 | Panorama oversize error followed by valid-upload error clearing | Pass by user report |
+| SF-08 | Panorama count limit uses in-page feedback and retains files | In-page feedback Pass; retention previously accepted |
+| SF-09 | Review price overlay readability | Pass by user report |
+| SF-10 | New in-app delete dialog cancel/confirm/refresh and retained history | Pass by user report and read-only persistence verification |
+| SF-11 | Real weekly graph counts from new views/inquiry, refresh and scoped data | Real views/inquiry and refreshed graph Pass; isolation automated |
+| SF-12 | Fresh automatic sandbox payment callback, Paid/pending state and receipt | Pass |
+| SF-13 | Corrected rejection email title/status/exact reason | Pass by user report |
+
+### SF-01 negative Bedrooms - Pass
+User confirms guided Bedrooms -1 Review attempt is blocked by working validation. Exact message not supplied. Twelve guided final cases remain in current desktop queue. Next SF-02 correct Bedrooms to 3, enter Bathrooms -1 and attempt Review Property Details; await result.
+
+
+### SF-02 through SF-05 validation batch confirmation - Pass by user report
+User states all validation tests work now. Accepted as batch confirmation for remaining negative Bathrooms/House Size/Land Size and valid specification recovery cases; individual values/messages/review screenshot were not separately supplied. Eight guided final cases SF-06 through SF-13 remain. Next SF-06 reject photo over 5 MB then upload valid photo under 5 MB and confirm preview plus old error clearing.
+
+
+### SF-06 photo upload error recovery - Pass
+User confirms guided oversized-photo rejection followed by valid photo upload displays preview and immediately clears old size-limit error. Seven guided final cases remain. Next SF-07 repeat oversize-to-valid recovery in 360 Virtual Tours using a real panorama under 5 MB; expect preview/storage update and immediate obsolete-error clearing without step navigation.
+
+
+### SF-07 panorama upload error recovery - Pass
+User confirms guided oversized panorama rejection then valid real panorama upload updates preview/storage and immediately clears stale error without navigation. Six final guided cases remain. Next SF-08 attempt more than total five panorama files with each under 5 MB; verify count error is in-page rather than native browser popup and existing previews/labels remain. Do not publish/pay.
+
+
+### SF-08 panorama count-limit presentation - Pass
+User reports You can only upload up to 5 virtual tours and explicitly confirms it appears in-page. SELLER-07 presentation accepted. Preview/label retention was not separately reconfirmed in this response; earlier count-limit retention acceptance remains recorded. Five final guided cases remain. Next SF-09 Review Property Details and inspect price overlay on uploaded photo for light-theme readability. Do not publish/pay yet.
+
+
+### SF-09 review price contrast - Pass
+User confirms photo price overlay is readable with white text/dark backing. Four final guided cases remain (SF-10/11/12/13). Reorder SF-12 first because existing original fixture is archived and remaining dialog/analytics/moderation cases need a fresh saved listing. Verify sandbox/callback readiness before payment. No new payment requested until checks complete.
+
+
+### SF-12 callback readiness restored
+Payment config sandbox true, fee 600.00. Vite loaded callback URL matches original reserved ngrok domain. Tunnel API was initially unavailable; restored ngrok HTTP 5000 tunnel using existing installation/config. User confirms tunnel active. No checkout/payment created by assistant. Next use current valid review fixture with identifiable title and perform single sandbox success; await gateway and app status before any retry.
+
+
+### SF-12 fresh automatic sandbox callback - Payment state Pass
+User confirms guided fresh sandbox success works correctly. Read-only hosted lookup finds exactly one active SELLER-FINAL-20261114 listing, id 30f5f8d6-da9b-4a55-b532-4783e4bce719, payment_status Paid and status pending. Ngrok inspector shows actual POST /api/payment/notify 200 OK (earlier empty probe 400 separate). No reconciliation/manual settlement used for this new payment. Receipt delivery remains final subcheck before SF-12 closure. Other pending cases SF-10 delete dialog, SF-11 real analytics, SF-13 rejection email.
+
+
+### SF-12 receipt acceptance - Pass
+User confirms receipt for fresh SELLER-FINAL-20261114 / Rs 600 received. SF-12 complete including actual callback 200, unique Paid/pending listing and user-received receipt. Three final guided cases remain SF-10/11/13. Next SF-13 reject exact fresh fixture once as Admin with reason Final Seller check - update description; verify new email title/status/exact reason and Seller rejection reason. Do not delete yet; retain fixture for analytics and dialog final checks.
+
+
+### SF-13 corrected rejection email - Pass
+User confirms fresh rejection email for SELLER-FINAL-20261114 correctly shows title/status/exact reason Final Seller check - update description. Two original final cases remain SF-10 deletion dialog and SF-11 real analytics.
+### SELLER-14 Admin audit/rejection dialog stacking - Fixed, manual retest pending
+User reports rejection reason dialog appears under still-open audit window. Root cause ListingsPage renders rejectTarget and detailsTarget independently. Regression failed because Close Audit remained present while rejection was open. Changed audit rendering to require !rejectTarget. Cancel restores existing audit target; successful rejection already clears both targets. Focused Admin rejection/audit tests 5/5 pass, including only-one-overlay and cancel restoration. No backend/schema/payment changes. Retest after current rejected listing is resubmitted to pending, inspect/reject and cancel; do not send another email unnecessarily.
+
+
+### SELLER-14 dialog stacking manual retest - Pass
+User confirms guided resubmit to pending, Admin refresh/Inspect/Reject displays only rejection window and Cancel restores audit correctly. No second rejection requested. Two original final cases remain SF-11 real weekly activity and SF-10 styled delete flow. Next approve current pending fresh fixture so real public views/new inquiry can exercise analytics before final deletion.
+
+
+### SF-11 analytics fixture approved
+User confirms current SELLER-FINAL-20261114 is Live & Approved after Admin approval. Next record Seller Dashboard weekly current totals (views/new inquiry threads) as baseline before controlled public view. Tracking comparison may show Building comparison history because rollout is recent. No fabricated growth expected.
+
+
+### SF-11 real activity baseline - Zero state observed
+User screenshot shows Weekly Listing Activity for 8-14 Nov 2026, Building comparison history, no recorded active-listing activity, Views 0 / New inquiry threads 0, tracking started 14 Nov. Old inquiry in Active Buyer Chats refers to archived original fixture, correctly absent from active-listing graph. Next open approved fresh fixture once in signed-out/private public view and refresh Seller Dashboard; expected views increases from zero and today's bar appears. Avoid repeat refresh of property during controlled view check.
+
+
+### SF-11 controlled real view - Pass
+After guided single signed-out property detail visit, user screenshot shows Total Views 1 and blue bar on 14 Nov; earlier days have no artificial bars. Real view tracking/display accepted. Weekly total labels below screenshot not independently visible, though total KPI/bar evidence matches one view. Next separate signed-in Buyer sends first inquiry on fresh SELLER-FINAL-20261114 (not archived original thread), Seller refresh should show today's green new-inquiry bar/count 1. Public visit for Buyer may add another legitimate view.
+
+
+### SF-11 real inquiry and refreshed graph - Pass
+User screenshot after guided first inquiry shows Weekly views 2 / new inquiry threads 1, blue/green bars on 14 Nov, Building comparison history and correct fresh listing conversation. Fresh title now displays SELLER-FINAL-20261114-Resubmit; same fixture identity intended, rename not a fault. Inquiries header 2 includes historical archived thread plus fresh thread; graph correctly counts only active fixture. SF-11 UI/data acceptance passes within observed scope; cross-Seller/date-boundary logic covered automatically, future full-history comparison not yet manually observable. One final guided case remains SF-10 new deletion dialog.
+Next SF-10 cancellation: My Listings fresh disposable test card trash opens in-app Remove listing dialog; Cancel must preserve card after refresh. Await before final confirmation/removal.
+
+
+### SF-10 in-app confirmation and cancellation - Pass
+User confirms trash opens app Remove listing dialog rather than browser popup, Cancel retains fresh test listing after refresh. Final confirm/removal subcheck remains before desktop queue closeout.
+Next confirm removal once for fresh disposable SELLER-FINAL-20261114(-Resubmit) fixture, refresh My Listings and verify success/card removal. Preserve financial/chat history via implemented soft delete. Do not remove unrelated listings.
+
+
+## Seller final guided retest closeout - 2026-11-14
+
+SF-01 through SF-13 are accepted within the guided scope. Admin dialog stacking discovered during SF-13 was fixed and manually accepted as SELLER-14. SF-02 through SF-05 acceptance uses the user batch confirmation that all validation works; exact individual messages were not separately supplied. SF-08 in-page presentation is retested; original file-retention acceptance is reused.
+
+Final SF-10 user confirms Remove success and no listing after refresh. Read-only hosted verification confirms fresh listing 30f5f8d6-da9b-4a55-b532-4783e4bce719 archived, Paid status retained, one transaction and one conversation retained. Active weekly counters return views 0 / inquiries 0 after archival. Signed-out detail endpoint returns 404.
+
+Reported bugs SELLER-01 through SELLER-14 have implemented fixes and guided manual acceptance for their reported paths. No claim of exhaustive endpoint/security/media-format coverage or production deployment. Mobile was explicitly deferred. Media replacement beyond the approved correction editor, saved-favorite removal handoff, and database concurrency/rollback execution were not manually exercised. Future full-history percentage comparison cannot be observed until the recording period exists; boundary/zero-history cases have automated coverage.
+
+Commit dfc33d0 contains the earlier implementation checkpoint. The subsequent Admin dialog fix and final run-log updates remain uncommitted. Private runtime evidence is excluded from intended commits, including the already-tracked runtime log whose changes should not be staged.
+
+## SELLER-15 - Inquiries badge counts retained conversations
+
+Reported: dashboard purple Inquiries badge remains at 2 after messages are read and listings archived. Root cause: badge used total conversation count rather than unread messages. Historical conversations are intentionally retained by soft delete.
+
+Approved fix: share Navbar unread polling results with SellerDashboard; hide badge at zero; rename Active Buyer Chats to Buyer Conversations. No schema change or additional polling. Poll results are scoped to the signed-in user and late responses from a previous account are ignored. Automated regressions cover unread-to-zero with retained history and account changes. Manual browser acceptance pending: refresh Seller Dashboard with all messages read and confirm no purple count, then receive/read a fresh message and confirm the badge clears on return (poll interval 15 seconds).
+Verification: frontend suite 69 files / 483 tests passed; focused unread/dashboard/Navbar checks 12 passed; ESLint and production build passed. Existing chunk-size/Lottie build warnings remain. Browser acceptance of SELLER-15 is pending.
+
+## Seller Dashboard visual refresh — 2026-11-14
+
+User approved the restrained neutral property-workspace design. Added a dashboard-scoped stylesheet and presentation class hooks only. Existing component boundaries, content, data, conditionals, props and handlers are retained by the visual refresh. Changed typography to existing local Geist, coordinated KPI strip, neutral shortcut surfaces, subdued chart colors, clear light/dark surfaces, and a normal-flow header that cannot obscure metrics. Earlier unread and Admin modal fixes remain separately included in pending changes.
+
+Verification: focused dashboard/activity/Navbar/polling 16 tests passed; Admin audit/reject 5 passed; ESLint and production build passed. Existing bundle-size/Lottie warnings remain. Independent code review found no blocking issues. Nonblocking prior polling behavior: transient polling errors clear the displayed result until a successful poll. Visual browser review could not run: CUA reported browser access host and native pipe unavailable twice, including after user authorized connection. Light/dark appearance reviewed statically; live visual acceptance remains pending.
+
+User will perform the commit personally (latest instruction). No staging, commit or push performed. Provide explicit source/docs commands that exclude docs/evidence runtime logs. Guided Seller functional queue is complete within the previously recorded scope; mobile and visual acceptance limitations remain as documented.
+Screenshot follow-up: user supplied dark desktop screenshot. Header and KPI surfaces still inherited legacy global .dark .bg-white navy overrides. Added higher-specificity dashboard-scoped surface/icon rules to resolve the cascade conflict. No functional changes. Live rendering of this follow-up remains for user refresh confirmation.

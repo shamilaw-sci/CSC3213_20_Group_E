@@ -143,7 +143,7 @@ const ListingsPage = () => {
       )}
 
       {/* Comprehensive Executive Inspection Modal */}
-      {detailsTarget && (
+      {detailsTarget && !rejectTarget && (
         <ListingDetailsModal
           listing={detailsTarget}
           onApprove={handleApprove}

@@ -12,3 +12,13 @@ afterEach(() => { cleanup(); client.clear(); });
 async function open() { render(<QueryClientProvider client={client}><ListingsPage /></QueryClientProvider>); fireEvent.click(await screen.findByRole('button', { name: 'Inspect' })); fireEvent.click(await screen.findByRole('button', { name: 'Reject Listing' })); return screen.findByPlaceholderText(/e.g. Deed boundary/); }
 test('reject trims only for gating and forwards original reason', async () => { const input = await open(); const confirm = screen.getByRole('button', { name: 'Confirm Rejection' }); expect(confirm).toBeDisabled(); fireEvent.change(input, { target: { value: '   ' } }); expect(confirm).toBeDisabled(); fireEvent.change(input, { target: { value: '  amend boundary  ' } }); fireEvent.click(confirm); await vi.waitFor(() => expect(mocks.rejectListing).toHaveBeenCalledWith('p', '  amend boundary  ')); });
 test('cancel closes dialog and reopening resets local reason', async () => { const input = await open(); fireEvent.change(input, { target: { value: 'temporary' } }); fireEvent.click(screen.getByRole('button', { name: 'Cancel' })); expect(screen.queryByPlaceholderText(/e.g. Deed boundary/)).not.toBeInTheDocument(); fireEvent.click(screen.getByRole('button', { name: 'Reject Listing' })); expect(await screen.findByPlaceholderText(/e.g. Deed boundary/)).toHaveValue(''); expect(mocks.rejectListing).not.toHaveBeenCalled(); });
+
+test('rejection replaces audit window and cancel restores audit', async () => {
+  await open();
+  expect(screen.getByRole('heading', { name: 'Reject Property Listing' })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Close Audit' })).not.toBeInTheDocument();
+  expect(document.querySelectorAll('.admin-modal-overlay')).toHaveLength(1);
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+  expect(screen.getByRole('button', { name: 'Close Audit' })).toBeInTheDocument();
+  expect(document.querySelectorAll('.admin-modal-overlay')).toHaveLength(1);
+});
