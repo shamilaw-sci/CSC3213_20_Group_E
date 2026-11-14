@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getWKTFromBounds } from '../components/map/MapControls';
 import { restoreSavedSearchFilters } from '../utils/savedSearchFilters';
+import { newSearchEventId } from '../utils/searchDemand';
 
 const DEFAULT_SRI_LANKA_BOUNDS_WKT = 'POLYGON((79.2 10.1, 82.3 10.1, 82.3 5.5, 79.2 5.5, 79.2 10.1))';
 
@@ -13,6 +14,7 @@ export const useMapSearch = () => {
     const [properties, setProperties] = useState([]);
     const [resultSearchTerm, setResultSearchTerm] = useState(null);
     const routeSearchRef = useRef(location.search);
+    const pendingDemandRef = useRef(location.state?.searchSubmission?.id ? location.state.searchSubmission : null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [activeMarkerId, setActiveMarkerId] = useState(null);
@@ -21,7 +23,12 @@ export const useMapSearch = () => {
     const [isDrawMode, setIsDrawMode] = useState(false); 
     const [isFeasibilityOpen, setIsFeasibilityOpen] = useState(new URLSearchParams(location.search).get('feasibility') === '1');
     const [maxPriceFilter, setMaxPriceFilter] = useState(null);
-    const [selectedDistrict, setSelectedDistrict] = useState(null);
+    const [selectedDistrict, setSelectedDistrictState] = useState(null);
+    const setSelectedDistrict = useCallback(district => {
+        setSelectedDistrictState(district);
+        const id = newSearchEventId();
+        pendingDemandRef.current = id ? { id, district: district?.replace(/ District$/i, '') || '' } : null;
+    }, []);
     
     // Pre-populate with default boundary to trigger instant load on initial render
     const [currentPolygon, setCurrentPolygon] = useState(savedSearch?.polygon || DEFAULT_SRI_LANKA_BOUNDS_WKT);
@@ -85,6 +92,11 @@ export const useMapSearch = () => {
                 const apiUrl = import.meta.env.VITE_MAP_API_URL || 'http://localhost:9090/api/map/search';
                 
                 const payload = { polygon: currentPolygon };
+                const demand = pendingDemandRef.current;
+                if (demand) {
+                    payload.search_event_id = demand.id;
+                    payload.search_district = demand.district;
+                }
                 if (filters.beds !== 'Any') payload.beds = parseInt(filters.beds.replace('+', ''));
                 if (filters.baths !== 'Any') payload.baths = parseInt(filters.baths.replace('+', ''));
                 
@@ -109,6 +121,7 @@ export const useMapSearch = () => {
                 });
                 if (!res.ok) throw new Error('Map service failed');
                 const data = await res.json();
+                if (pendingDemandRef.current === demand) pendingDemandRef.current = null;
                 if (!controller.signal.aborted) {
                     setProperties(data.properties || []);
                     setResultSearchTerm(filters.searchTerm);
@@ -159,6 +172,8 @@ export const useMapSearch = () => {
     }, []);
 
     const handleSearch = (newFilters) => {
+        const eventId = newSearchEventId();
+        pendingDemandRef.current = eventId ? { id: eventId, district: newFilters.searchTerm?.trim() || '' } : null;
         if (newFilters.searchTerm !== filters.searchTerm) {
             setProperties([]);
             setResultSearchTerm(null);

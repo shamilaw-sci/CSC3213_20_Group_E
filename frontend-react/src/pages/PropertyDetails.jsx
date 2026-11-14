@@ -1,3 +1,4 @@
+import ReportListingModal from '../components/property/ReportListingModal';
 import { logClientError } from '../utils/clientLog';
 import PropertyComparisonSidebar from '../components/property/details/PropertyComparisonSidebar';
 import PropertyCriticalDetails from '../components/property/details/PropertyCriticalDetails';
@@ -39,6 +40,7 @@ const PropertyDetails = () => {
     const { compareList, addToCompare, removeFromCompare } = useCompare();
     
     const [property, setProperty] = useState(null);
+    const [showListingReport, setShowListingReport] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -226,6 +228,8 @@ const PropertyDetails = () => {
                     Back to results
                 </button>
 
+                <button type="button" className="text-sm text-slate-600 dark:text-slate-300 underline mb-4" onClick={() => user ? setShowListingReport(true) : navigate('/login')}>Report this listing</button>
+                {showListingReport && <ReportListingModal propertyId={property.id} onClose={() => setShowListingReport(false)} />}
                 {/* TOP SECTION: Gallery (Left) + Critical Details (Right) */}
                 <div className="flex flex-col lg:flex-row gap-6 mb-8">
                     

@@ -68,7 +68,7 @@ const ListingsPage = () => {
     mutationFn: approveListing,
     onSuccess: (data, id) => {
       queryClient.invalidateQueries({ queryKey: ['adminListings'] });
-      toast.success("Property approved and published live!");
+      if (data?.warning) toast.error(data.warning); else toast.success("Property approved and published live!");
       if (detailsTarget?._id === id) {
         setDetailsTarget((prev) => ({ ...prev, status: "Approved", statusKey: "approved" }));
       }
@@ -78,20 +78,20 @@ const ListingsPage = () => {
 
   const rejectMutation = useMutation({
     mutationFn: ({ id, reason }) => rejectListing(id, reason),
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['adminListings'] });
       setRejectTarget(null);
       setDetailsTarget(null);
-      toast.success("Property rejected and feedback dispatched to seller.");
+      if (result?.warning) toast.error(result.warning); else toast.success("Property rejected and feedback dispatched to seller.");
     },
     onError: () => toast.error("Failed to reject property.")
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteListing,
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['adminListings'] });
-      toast.success("Listing deleted permanently.");
+      if (result?.warning) toast.error(result.warning); else toast.success("Listing archived; financial and conversation history retained.");
     },
     onError: () => toast.error("Failed to delete listing.")
   });
@@ -113,7 +113,7 @@ const ListingsPage = () => {
     rejectMutation.mutate({ id: rejectTarget._id, reason });
   };
   const handleDelete = (id) => {
-    if (!window.confirm("Are you sure you want to permanently delete this listing?")) return;
+    if (!window.confirm("Archive this listing and remove it from public discovery? Payment and conversation history will be retained.")) return;
     deleteMutation.mutate(id);
   };
 

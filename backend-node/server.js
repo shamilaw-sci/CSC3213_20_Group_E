@@ -63,6 +63,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const favoritesRoutes = require('./routes/favoritesRoutes'); // Added favorites route
 app.use('/api/admin', adminRoutes);
 app.use('/api/inquiries', require('./routes/inquiryRoutes'));
+app.use('/api/reports', require('./routes/listingReportRoutes'));
 // Routes: /api/admin/login, /api/admin/dashboard/stats, etc.
 // ----------------------------------------
 

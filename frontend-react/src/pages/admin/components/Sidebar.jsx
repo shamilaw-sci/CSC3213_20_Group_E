@@ -51,6 +51,8 @@ const Sidebar = () => {
     { path: "/admin/analytics", icon: BarChart3, label: "Analytics" },
     { path: "/admin/messages", icon: MessageSquare, label: "Messages" },
     { path: "/admin/inquiries", icon: MessageSquare, label: "Inquiries" },
+    { path: "/admin/boosts", icon: List, label: "Featured Listings" },
+    { path: "/admin/reported", icon: ShieldAlert, label: "Reported Listings" },
     { path: "/admin/reports", icon: FileText, label: "Reports" },
     { path: "/admin/audit-logs", icon: ShieldAlert, label: "Audit Logs" },
     { path: "/admin/settings", icon: Settings, label: "Settings" },

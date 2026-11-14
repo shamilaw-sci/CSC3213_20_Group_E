@@ -7,7 +7,7 @@ const getSettings = async(req, res, next) => {
 
         const settings = { listing_fee: data === null ? '500.00' : parseListingFee(data.setting_value) };
 
-        res.status(200).json({ settings });
+        res.status(200).json({ settings, source: data === null ? 'configured_default' : 'database' });
     } catch (error) {
         next(error);
     }

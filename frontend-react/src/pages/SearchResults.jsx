@@ -6,6 +6,7 @@ import api from '../context/api';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import PropertyCard from '../components/property/PropertyCard';
+import { newSearchEventId } from '../utils/searchDemand';
 
 /**
  * Smart Property Search results page.
@@ -23,13 +24,14 @@ const SearchResults = () => {
     const [error, setError] = useState(null);
     const [searched, setSearched] = useState(false);
 
-    const runSearch = useCallback(async (query) => {
+    const runSearch = useCallback(async (query, submitted = false) => {
         if (!query.trim()) return;
         setLoading(true);
         setError(null);
         setSearched(true);
         try {
-            const res = await api.get('/properties/search', { params: { q: query, limit: 24 } });
+            const eventId = submitted ? newSearchEventId() : null;
+            const res = await api.get('/properties/search', { params: { q: query, limit: 24, ...(eventId ? { search_event_id: eventId } : {}) } });
             setResults(res.data.properties || []);
         } catch (err) {
             setError(err.response?.data?.message || 'Search failed. Please try again.');
@@ -49,7 +51,7 @@ const SearchResults = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         setSearchParams(inputValue ? { q: inputValue } : {});
-        runSearch(inputValue);
+        runSearch(inputValue, true);
     };
 
     return (

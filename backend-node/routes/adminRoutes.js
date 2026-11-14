@@ -16,6 +16,7 @@ router.post("/login", adminLoginLimiter, adminController.login);
 
 // All routes below require admin auth
 router.use(protect, adminController.requireAdmin);
+router.use(require("../middleware/adminAudit"));
 
 // Verify admin session validity with database
 router.get("/verify", adminController.verifyAdmin);

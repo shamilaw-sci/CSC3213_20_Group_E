@@ -1,4 +1,5 @@
 const propertyRepository = require('../../repositories/propertyRepository');
+const recordSearchDemand = require('../../utils/recordSearchDemand');
 
 const getProperties = async(req, res, next) => {
     try {
@@ -8,6 +9,8 @@ const getProperties = async(req, res, next) => {
         const to = from + limit - 1;
 
         const { data, count } = await propertyRepository.getProperties(from, to);
+
+        recordSearchDemand(req, req.query.search_district);
 
         res.status(200).json({
             message: "Properties fetched successfully",

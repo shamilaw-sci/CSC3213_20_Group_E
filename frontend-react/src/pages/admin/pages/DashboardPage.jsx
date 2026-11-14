@@ -103,8 +103,8 @@ const DashboardPage = () => {
             pending.listings.slice(0, 5).map((listing) => ({
               id: listing.id,
               title: listing.title,
-              seller: listing.seller_id || "Verified Seller",
-              city: listing.city || listing.district || "Colombo",
+              seller: listing.seller_id || "Seller unavailable",
+              city: listing.city || listing.district || "Location unavailable",
               date: listing.created_at?.slice(0, 10) || "-",
               price: `LKR ${Number(listing.price || 0).toLocaleString("en-LK")}`,
             }))
@@ -145,7 +145,7 @@ const DashboardPage = () => {
       route: "/admin/listings?status=pending"
     },
     { 
-      title: "Verified Platform Users", 
+      title: "Registered Platform Users", 
       value: fmt(stats.totalUsers || 0), 
       icon: Users, 
       desc: `${stats.buyerCount || 0} Buyers · ${stats.sellerCount || 0} Sellers`, 
@@ -158,7 +158,7 @@ const DashboardPage = () => {
       title: "Total Platform Revenue", 
       value: fmtCur(stats.revenue || 0), 
       icon: DollarSign, 
-      desc: "Listing Fees & Promotion Subscriptions", 
+      desc: "Recorded successful listing payments", 
       color: "from-emerald-600 to-teal-500",
       textColor: "text-emerald-400",
       bgLight: "bg-emerald-950/60 border border-emerald-800/60",
@@ -266,7 +266,7 @@ const DashboardPage = () => {
                 </span>
               </div>
               <p className="text-xs font-semibold text-slate-400 mt-0.5">
-                Paid listing subscriptions, premium highlights & agent commissions
+                Recorded successful listing payments
               </p>
             </div>
             <button 
@@ -296,7 +296,7 @@ const DashboardPage = () => {
                 </span>
               </div>
               <p className="text-xs font-semibold text-slate-400 mt-0.5">
-                Total verified buyers, sellers, and licensed property brokers
+                Cumulative registered platform accounts
               </p>
             </div>
             <button 
@@ -326,7 +326,7 @@ const DashboardPage = () => {
             <h3 className="text-base font-black text-white">Platform Health & Inventory</h3>
             <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest flex items-center gap-1.5 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              Live Sync
+              Loaded on page open
             </span>
           </div>
 
@@ -349,8 +349,8 @@ const DashboardPage = () => {
           <div className="mt-5 p-4 rounded-2xl bg-blue-950/40 border border-blue-800/50 flex items-start gap-3">
             <ShieldCheck className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
             <div className="text-[11px] text-slate-300 leading-relaxed font-light">
-              <span className="font-bold text-white block mb-0.5">PostGIS Spatial Verification:</span>
-              Coordinates and boundaries are automatically cross-checked against Sri Lanka Surveyor General survey maps.
+              <span className="font-bold text-white block mb-0.5">Location review:</span>
+              Review submitted coordinates, boundaries and supporting documents before approving a listing.
             </div>
           </div>
         </m.div>

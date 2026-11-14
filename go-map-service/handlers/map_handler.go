@@ -53,5 +53,6 @@ func (h *MapHandler) SearchMap(c *gin.Context) {
 	}
 
 	zap.L().Info("Found Properties", zap.Int("count", len(properties)))
+	h.recordDemand(c, req.SearchEventID, req.SearchDistrict)
 	c.JSON(http.StatusOK, gin.H{"properties": properties})
 }

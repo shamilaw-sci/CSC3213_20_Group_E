@@ -48,6 +48,9 @@ func NewMapRepository(pool *pgxpool.Pool) *MapRepository {
 }
 
 func (r *MapRepository) getCacheKey(req models.SearchRequest) string {
+	// Submission metadata must not fragment or bypass the search-result cache.
+	req.SearchEventID = ""
+	req.SearchDistrict = ""
 	raw, _ := json.Marshal(req)
 	hash := sha256.Sum256(raw)
 	return hex.EncodeToString(hash[:])

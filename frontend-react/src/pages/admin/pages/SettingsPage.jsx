@@ -22,6 +22,7 @@ const themes = [
 export default function SettingsPage() {
   const { theme, changeTheme } = useTheme();
   const [draft, setDraft] = useState("");
+  const [feeSource, setFeeSource] = useState('database');
   const [saved, setSaved] = useState("");
   const [phase, setPhase] = useState("loading");
   const [reload, setReload] = useState(0);
@@ -39,7 +40,7 @@ export default function SettingsPage() {
       if (cancelled) return;
       const value = canonicalFee(result?.settings?.listing_fee);
       if (value === null) throw new Error("Unconfirmed settings.");
-      setDraft(value); setSaved(value); setPhase("ready");
+      setDraft(value); setSaved(value); setFeeSource(result.source || 'database'); setPhase("ready");
     }).catch(() => {
       if (!cancelled) setPhase("error");
     });
@@ -54,7 +55,7 @@ export default function SettingsPage() {
       const result = await updateSettings({ listing_fee: fee });
       if (!mounted.current) return;
       if (result?.settings?.listing_fee !== fee) throw new Error("Unconfirmed settings.");
-      setDraft(fee); setSaved(fee); setFeedback({ error: false, message: "Listing fee saved." });
+      setDraft(fee); setSaved(fee); setFeeSource('database'); setFeedback({ error: Boolean(result.warning), message: result.warning || "Listing fee saved." });
     } catch {
       if (mounted.current) setFeedback({ error: true, message: "Listing fee could not be confirmed. Refresh before retrying." });
     } finally {
@@ -104,7 +105,7 @@ export default function SettingsPage() {
             <input id="listing-fee" type="text" inputMode="decimal" maxLength={64} className="admin-form-control"
               value={draft} disabled={phase !== "ready" || saving} aria-invalid={dirty && fee === null}
               aria-describedby="listing-fee-help" onChange={event => { setDraft(event.target.value); setFeedback(null); }} />
-            <p id="listing-fee-help" className="text-xs mt-2">Enter a positive amount with at most two decimal places, up to 9,999,999,999.99 LKR.</p>
+            <p id="listing-fee-help" className="text-xs mt-2">{feeSource === 'configured_default' ? 'Showing the configured default; no saved fee record exists. ' : ''}Enter a positive amount with at most two decimal places, up to 9,999,999,999.99 LKR.</p>
             {dirty && fee === null && <p role="alert">Enter a valid listing fee.</p>}
           </div>
         </div>

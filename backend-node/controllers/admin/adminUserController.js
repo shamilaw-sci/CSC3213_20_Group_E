@@ -47,9 +47,10 @@ const banUser = async(req, res, next) => {
 const unbanUser = async(req, res, next) => {
     try {
         if (!validTarget(req, res)) return;
-        await adminRepository.updateUserRole(req.params.id, 'BUYER', null);
-        res.status(200).json({ message: "User unbanned successfully" });
+        const user = await adminRepository.restoreBannedUserRole(req.params.id);
+        res.status(200).json({ message: 'User unbanned successfully', role: user.role });
     } catch (error) {
+        if (error.code === 'PZ002') return res.status(409).json({ message: 'Previous role is unavailable for this older ban. Administrator review is required; no role was changed.' });
         next(error);
     }
 };

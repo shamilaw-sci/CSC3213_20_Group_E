@@ -16,6 +16,7 @@ import {
 
 const ReportsPage = () => {
   const [transactions, setTransactions] = useState([]);
+  const [loadState, setLoadState] = useState('loading');
   const [typeFilter] = useState("all");
   const [statusFilter] = useState("all");
   const [exporting, setExporting] = useState(false);
@@ -36,21 +37,27 @@ const ReportsPage = () => {
     fetchTransactionHistory()
       .then((d) => { 
         if (cancelled) return;
-        if (d?.transactions) {
-          const mapped = d.transactions.map((t) => ({
-            id: `TXN-${String(t.id).slice(0, 8)}`,
-            listing: t.properties?.title || "Premium Property Listing",
-            seller: t.properties?.users?.name || "Verified Seller",
+        if (!Array.isArray(d?.transactions)) throw new Error('Invalid transaction response');
+        {
+          const mapped = d.transactions.map((t) => {
+            const property = Array.isArray(t.properties) ? t.properties[0] : t.properties;
+            const seller = t.payer;
+            return ({
+            id: t.id,
+            listing: property?.title || "Listing details unavailable",
+            seller: seller?.name || "Payer unavailable",
+            currency: t.currency || "Unknown",
             amount: Number(t.amount || 0),
             type: "Listing Fee",
             status: t.status === "SUCCESS" ? "Completed" : t.status,
             date: t.created_at ? new Date(t.created_at).toLocaleDateString("en-LK") : "-",
-            paymentId: t.transaction_id || "TXN-AUTO",
-          }));
+            paymentId: t.transaction_id || "Gateway reference unavailable",
+          }); });
           setTransactions(mapped);
+          setLoadState('ready');
         }
       })
-      .catch(() => { if (!cancelled) logClientError('admin_transactions_load_failed'); });
+      .catch(() => { if (!cancelled) { setLoadState('error'); logClientError('admin_transactions_load_failed'); } });
     return () => { cancelled = true; mounted.current = false; clearTimeout(feedbackTimer.current); };
   }, []);
 
@@ -77,7 +84,8 @@ const ReportsPage = () => {
     return matchType && matchStatus;
   });
 
-  const totalRevenue = transactions.reduce((acc, t) => acc + (t.status === "Completed" ? t.amount : 0), 0);
+  const completed = transactions.filter(t => t.status === 'Completed' && t.currency === 'LKR');
+  const totalRevenue = transactions.reduce((acc, t) => acc + (t.status === "Completed" && t.currency === "LKR" ? t.amount : 0), 0);
 
   return (
     <div className="space-y-6">
@@ -125,23 +133,23 @@ const ReportsPage = () => {
         <div className="admin-stat-card">
           <span className="admin-stat-label">Total Revenue Collected</span>
           <div className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400">
-            LKR {totalRevenue.toLocaleString()}
+            {loadState === 'ready' ? `LKR ${totalRevenue.toLocaleString()}` : 'Unavailable'}
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-semibold">100% Settled via Gateway</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-semibold">Recorded successful LKR payments; not bank settlement confirmation</p>
         </div>
         <div className="admin-stat-card">
           <span className="admin-stat-label">Completed Transactions</span>
           <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-            {transactions.filter(t => t.status === "Completed").length}
+            {loadState === 'ready' ? transactions.filter(t => t.status === 'Completed').length : 'Unavailable'}
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-semibold">Successful listing activations</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-semibold">Recorded successful payment transactions</p>
         </div>
         <div className="admin-stat-card">
-          <span className="admin-stat-label">Average Fee per Listing</span>
+          <span className="admin-stat-label">Average Completed Payment</span>
           <div className="text-2xl sm:text-3xl font-black text-blue-600 dark:text-blue-400">
-            LKR {transactions.length > 0 ? Math.round(totalRevenue / (transactions.length || 1)).toLocaleString() : "1,500"}
+            {loadState === 'ready' && completed.length > 0 ? `LKR ${Math.round(totalRevenue / completed.length).toLocaleString()}` : 'Unavailable'}
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-semibold">Standard Moderation Tier</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-semibold">Average of completed LKR payments</p>
         </div>
       </div>
 
@@ -150,10 +158,10 @@ const ReportsPage = () => {
         <table className="admin-data-table">
           <thead>
             <tr>
-              <th>Receipt Ref</th>
+              <th>Transaction ID</th>
               <th>Property / Service</th>
-              <th>Payer (Seller)</th>
-              <th>Amount (LKR)</th>
+              <th>Payer</th>
+              <th>Amount / Currency</th>
               <th>Date</th>
               <th>Status</th>
             </tr>
@@ -162,7 +170,7 @@ const ReportsPage = () => {
             {filtered.length === 0 && (
               <tr>
                 <td colSpan={6} className="text-center py-12 text-slate-500 dark:text-slate-400">
-                  No transaction records found.
+                  {loadState === 'loading' ? 'Loading transactions?' : loadState === 'error' ? 'Transactions unavailable. Refresh to retry.' : 'No transaction records found.'}
                 </td>
               </tr>
             )}
@@ -180,7 +188,7 @@ const ReportsPage = () => {
                 <td className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t.seller}</td>
                 <td>
                   <span className="font-black text-emerald-600 dark:text-emerald-400 text-sm">
-                    LKR {t.amount.toLocaleString()}
+                    {t.currency} {t.amount.toLocaleString()}
                   </span>
                 </td>
                 <td className="text-xs text-slate-500 dark:text-slate-400">{t.date}</td>

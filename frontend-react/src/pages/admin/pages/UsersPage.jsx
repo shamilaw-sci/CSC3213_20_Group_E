@@ -76,7 +76,7 @@ const UsersPage = () => {
 
   const loadUsers = useCallback(() => {
     fetchUsers({ role: roleFilter !== "all" ? roleFilter : undefined })
-      .then((d) => { if (d?.users) setUsers(d.users); })
+      .then((d) => { if (d?.users) setUsers(d.users.map(user => ({ ...user, is_banned: user.role === 'BANNED' }))); })
       .catch(() => { toast.error("Failed to load users"); logClientError('admin_users_load_failed'); });
   }, [roleFilter]);
 
@@ -94,46 +94,46 @@ const UsersPage = () => {
   const handleBan = async (reason) => {
     if (!banTarget) return;
     try {
-      await banUser(banTarget.id, reason);
-      setUsers((prev) => prev.map((u) => (u.id === banTarget.id ? { ...u, is_banned: true, status: "Banned" } : u)));
+      const result = await banUser(banTarget.id, reason);
+      loadUsers();
       setBanTarget(null);
-      showToast("User banned successfully.");
+      showToast(result?.warning || "User banned successfully.", result?.warning ? "error" : "success");
     } catch { showToast("Failed to ban user.", "error"); }
   };
 
   const handleUnban = async (id) => {
     try {
-      await unbanUser(id);
-      setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, is_banned: false, status: "Active" } : u)));
-      showToast("User access restored.");
-    } catch { showToast("Failed to restore user access.", "error"); }
+      const result = await unbanUser(id);
+      loadUsers();
+      showToast(result?.warning || "User access restored.", result?.warning ? "error" : "success");
+    } catch (error) { showToast(error.response?.data?.message || "Failed to restore user access.", "error"); }
   };
 
   const handleRoleChange = async (userId, newRole) => {
     if (!newRole) return;
     setRoleChanging((prev) => ({ ...prev, [userId]: true }));
     try {
-      await updateUserRole(userId, newRole);
+      const result = await updateUserRole(userId, newRole);
       setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u)));
       setRoleChangeSelections((prev) => ({ ...prev, [userId]: "" }));
-      showToast(`Role updated to ${newRole} successfully.`);
+      showToast(result?.warning || `Role updated to ${newRole} successfully.`, result?.warning ? "error" : "success");
     } catch { showToast("Failed to update role.", "error"); }
     finally { setRoleChanging((prev) => ({ ...prev, [userId]: false })); }
   };
 
   const handleApproveRequest = async (requestId) => {
     try {
-      await approveRoleRequest(requestId);
+      const result = await approveRoleRequest(requestId);
       setRoleRequests((prev) => prev.filter((r) => r.id !== requestId));
-      showToast("Role request approved. User is now a Seller.");
+      showToast(result?.warning || "Role request approved. User is now a Seller.", result?.warning ? "error" : "success");
     } catch { showToast("Failed to approve request.", "error"); }
   };
 
   const handleRejectRequest = async (requestId) => {
     try {
-      await rejectRoleRequest(requestId);
+      const result = await rejectRoleRequest(requestId);
       setRoleRequests((prev) => prev.filter((r) => r.id !== requestId));
-      showToast("Role request rejected.");
+      showToast(result?.warning || "Role request rejected.", result?.warning ? "error" : "success");
     } catch { showToast("Failed to reject request.", "error"); }
   };
 

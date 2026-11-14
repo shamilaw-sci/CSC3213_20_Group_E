@@ -11,6 +11,7 @@ const { getSellerActivity } = require('../controllers/property/sellerActivityCon
 
 // 1. Get all properties (Public route - no authentication required)
 router.get('/', validate(getPropertiesSchema), getProperties);
+router.get('/featured', require('../controllers/admin/adminPromotionController').getFeaturedProperties);
 
 // 2. Add new property (Protected route - requires authentication)
 // Accepts up to 10 images with 5MB limit each and strict MIME validation

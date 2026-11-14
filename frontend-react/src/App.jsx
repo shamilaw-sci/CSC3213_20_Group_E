@@ -56,6 +56,8 @@ const AdminDashboard = lazy(() => import('./pages/admin/pages/DashboardPage'));
 const AdminListings = lazy(() => import('./pages/admin/pages/ListingsPage'));
 const AdminUsers = lazy(() => import('./pages/admin/pages/UsersPage'));
 const AdminAgentApprovals = lazy(() => import('./pages/admin/pages/AgentApprovalsPage'));
+const AdminBoosts = lazy(() => import('./pages/admin/pages/BoostsPage'));
+const AdminReportedContent = lazy(() => import('./pages/admin/pages/ReportedContentPage'));
 const AdminAnalytics = lazy(() => import('./pages/admin/pages/AnalyticsPage'));
 const AdminReports = lazy(() => import('./pages/admin/pages/ReportsPage'));
 const AdminSettings = lazy(() => import('./pages/admin/pages/SettingsPage'));
@@ -153,6 +155,8 @@ function App() {
                   <Route path="users" element={<AdminUsers />} />
                   <Route path="agent-approvals" element={<AdminAgentApprovals />} />
                   <Route path="analytics" element={<AdminAnalytics />} />
+                  <Route path="boosts" element={<AdminBoosts />} />
+                  <Route path="reported" element={<AdminReportedContent />} />
                   <Route path="messages" element={<AdminMessages />} />
                   <Route path="inquiries" element={<AdminInquiries />} />
                   <Route path="reports" element={<AdminReports />} />

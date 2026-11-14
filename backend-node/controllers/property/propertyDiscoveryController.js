@@ -3,6 +3,7 @@ const { findSimilarProperties } = require("../../utils/similarityEngine");
 const { calculatePriceInsight } = require("../../utils/priceInsightEngine");
 const { rankPropertiesByRelevance } = require("../../utils/searchRelevance");
 const supabase = require('../../config/supabase');
+const recordSearchDemand = require('../../utils/recordSearchDemand');
 
 const incrementViews = async(req, res, next) => {
     try {
@@ -124,6 +125,8 @@ const searchProperties = async(req, res, next) => {
         if (error) throw error;
 
         const ranked = rankPropertiesByRelevance(q, candidates || []).slice(0, resultLimit);
+
+        recordSearchDemand(req);
 
         res.status(200).json({
             message: "Search results fetched successfully",

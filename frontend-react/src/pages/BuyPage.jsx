@@ -1,5 +1,6 @@
 import { logClientError } from '../utils/clientLog';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { newSearchEventId } from '../utils/searchDemand';
 import { m } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import api from '../context/api';
@@ -49,6 +50,7 @@ const BuyPage = () => {
     const navigate = useNavigate();
     const [mapStyle, setMapStyle] = useState('streets'); // 'streets' | 'satellite' | 'dark'
     const [properties, setProperties] = useState([]);
+    const pendingDemandRef = useRef(null);
     const [loading, setLoading] = useState(true);
     const [activeMarkerId, setActiveMarkerId] = useState(null);
     const [hoveredPropId, setHoveredPropId] = useState(null);
@@ -83,6 +85,11 @@ const BuyPage = () => {
             try {
                 // Build query params
                 const params = new URLSearchParams();
+                const demand = pendingDemandRef.current;
+                if (demand) {
+                    params.set('search_event_id', demand.id);
+                    params.set('search_district', demand.district);
+                }
 
                 // Check property types (if only one is selected, pass it, else don't strictly filter or handle multiple in backend)
                 // For now, if exactly one is true, pass it. If multiple are true, we might need a different API approach,
@@ -97,6 +104,7 @@ const BuyPage = () => {
                 params.append('listing_type', filters.listingType);
 
                 const res = await api.get(`/properties?${params.toString()}`);
+                if (pendingDemandRef.current === demand) pendingDemandRef.current = null;
                 const fetchedProps = Array.isArray(res.data)
                     ? res.data
                     : (res.data?.properties || res.data?.data || []);
@@ -115,6 +123,8 @@ const BuyPage = () => {
     };
 
     const handleSearch = (newFilters) => {
+        const id = newSearchEventId();
+        pendingDemandRef.current = id ? { id, district: newFilters.searchTerm.trim() } : null;
         setFilters(newFilters);
     };
 

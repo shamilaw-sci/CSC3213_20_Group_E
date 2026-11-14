@@ -46,7 +46,7 @@ const AgentApprovalsPage = () => {
         setRejectReason('');
         showToast(result?.warning || 'Agent application rejected.', result?.warning ? 'error' : 'success');
       } else {
-        showToast('Agent credentials approved successfully!');
+        showToast(result?.warning || 'Agent credentials approved successfully!', result?.warning ? 'error' : 'success');
       }
     } catch (err) {
       showToast(`Update failed: ${err.message || 'Error'}`, 'error');

@@ -3,17 +3,20 @@ package models
 // SearchRequest represents the incoming JSON payload for a map search.
 // It expects a WKT (Well-Known Text) Polygon string.
 type SearchRequest struct {
-	Polygon     string   `json:"polygon" binding:"required"`
-	Beds        *int     `json:"beds" binding:"omitempty,min=0,max=50"`
-	Baths       *int     `json:"baths" binding:"omitempty,min=0,max=50"`
-	Type        *string  `json:"type" binding:"omitempty,max=50"`
-	ListingType *string  `json:"listing_type" binding:"omitempty,oneof=sale rent sold Sale Rent Sold"`
-	SearchTerm  string   `json:"search_term" binding:"max=200"`
-	MinPrice    *float64 `json:"min_price" binding:"omitempty,min=0,max=1000000000000"`
-	MaxPrice    *float64 `json:"max_price" binding:"omitempty,min=0,max=1000000000000"`
-	Types       []string `json:"types" binding:"max=4,dive,oneof=House Land Apartment Villa"`
-	ExactMatch  bool     `json:"exact_match"`
-	Has360Tour  bool     `json:"has_360_tour"`
+	// Optional analytics metadata: validation is isolated from ordinary search.
+	SearchEventID  string   `json:"search_event_id"`
+	SearchDistrict string   `json:"search_district"`
+	Polygon        string   `json:"polygon" binding:"required"`
+	Beds           *int     `json:"beds" binding:"omitempty,min=0,max=50"`
+	Baths          *int     `json:"baths" binding:"omitempty,min=0,max=50"`
+	Type           *string  `json:"type" binding:"omitempty,max=50"`
+	ListingType    *string  `json:"listing_type" binding:"omitempty,oneof=sale rent sold Sale Rent Sold"`
+	SearchTerm     string   `json:"search_term" binding:"max=200"`
+	MinPrice       *float64 `json:"min_price" binding:"omitempty,min=0,max=1000000000000"`
+	MaxPrice       *float64 `json:"max_price" binding:"omitempty,min=0,max=1000000000000"`
+	Types          []string `json:"types" binding:"max=4,dive,oneof=House Land Apartment Villa"`
+	ExactMatch     bool     `json:"exact_match"`
+	Has360Tour     bool     `json:"has_360_tour"`
 }
 
 // PropertyResponse represents a single property returned from the map search.

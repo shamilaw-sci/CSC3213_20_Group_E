@@ -74,19 +74,17 @@ const { getDashboardStats, getRevenueData, getUserGrowth, getAnalytics } = requi
 const { getListings, getListingById, approveListing, rejectListing, deleteListing } = require('./admin/adminListingController');
 const { getUsers, getPendingAgents, getUserById, banUser, unbanUser, updateUserRole } = require('./admin/adminUserController');
 
-const getSearchHeatmap = async(req, res, next) => {
-    try {
-        res.status(200).json({ heatmap: [] });
-    } catch (error) {
-        next(error);
-    }
-};
+const { getSearchHeatmap } = require('./searchDemandController');
 
 const { getTransactions, exportReport } = require('./admin/adminReportController');
 
 const getAuditLogs = async(req, res, next) => {
     try {
-        res.status(200).json({ logs: [] });
+        const { data, error } = await require('../config/supabase').from('admin_audit_events')
+            .select('id, actor_id, actor, action, target, ip, severity, created_at')
+            .order('created_at', { ascending: false }).limit(500);
+        if (error) throw error;
+        res.status(200).json({ logs: (data || []).map(row => ({ ...row, timestamp: row.created_at })), limit: 500 });
     } catch (error) {
         next(error);
     }
@@ -94,37 +92,8 @@ const getAuditLogs = async(req, res, next) => {
 
 const { getSettings, updateSettings } = require('./admin/adminSettingsController');
 
-const getBoosts = async(req, res, next) => {
-    try {
-        res.status(200).json({ boosts: [] });
-    } catch (error) {
-        next(error);
-    }
-};
-
-const toggleBoost = async(req, res, next) => {
-    try {
-        res.status(200).json({ message: "Boost toggled" });
-    } catch (error) {
-        next(error);
-    }
-};
-
-const getReportedContent = async(req, res, next) => {
-    try {
-        res.status(200).json({ reports: [] });
-    } catch (error) {
-        next(error);
-    }
-};
-
-const resolveReport = async(req, res, next) => {
-    try {
-        res.status(200).json({ message: "Report resolved" });
-    } catch (error) {
-        next(error);
-    }
-};
+const { getBoosts, toggleBoost } = require('./admin/adminPromotionController');
+const { getReportedContent, resolveReport } = require('./admin/listingReportController');
 
 const { getRoleRequests, approveRoleRequest, rejectRoleRequest } = require('./admin/adminRoleRequestController');
 

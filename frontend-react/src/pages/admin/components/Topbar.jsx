@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { fetchDashboardStats, fetchRoleRequests, fetchPendingAgents } from "../api/adminApi";
+import { fetchDashboardStats, fetchRoleRequests, fetchPendingAgents, fetchReportedContent } from "../api/adminApi";
 import { useTheme } from "../../../context/ThemeProvider";
 import { Bell, Search, CheckCircle2, Clock, MessageSquare, ArrowRight, ShieldCheck, X, Sun, Moon } from "lucide-react";
 
 const PAGE_TITLES = {
+  "/admin/boosts": { title: "Featured Listings", subtitle: "Manage real featured listing placements" },
+  "/admin/reported": { title: "Reported Listings", subtitle: "Review listing complaints and record decisions" },
   "/admin/dashboard": { title: "Executive Dashboard", subtitle: "Live platform vitals, deed verifications & revenue analytics" },
   "/admin/listings": { title: "Listings & Spatial Moderation", subtitle: "Inspect PostGIS polygons, deeds, and approve properties" },
   "/admin/users": { title: "User & Role Management", subtitle: "Manage verified buyers, sellers, and system roles" },
@@ -12,7 +14,7 @@ const PAGE_TITLES = {
   "/admin/analytics": { title: "Intelligence & Analytics", subtitle: "Search demand heatmaps, conversion rates & growth velocity" },
   "/admin/messages": { title: "Administrative Messaging Hub", subtitle: "Audit platform conversations, inquiries & dispute resolution" },
   "/admin/reports": { title: "Financial & Revenue Audit", subtitle: "Listing fees, transactions, and commission records" },
-  "/admin/audit-logs": { title: "Security & Audit Trail", subtitle: "Immutable system activity log & security telemetry" },
+  "/admin/audit-logs": { title: "Security & Audit Trail", subtitle: "Recorded Admin changes, actors and targets" },
   "/admin/settings": { title: "System Parameters & Config", subtitle: "Platform rules, fee structures & API integrations" },
 };
 
@@ -23,7 +25,8 @@ const Topbar = () => {
   const [pendingCount, setPendingCount] = useState(0);
   const [roleCount, setRoleCount] = useState(0);
   const [agentCount, setAgentCount] = useState(0);
-  const actionCount = pendingCount + roleCount + agentCount;
+  const [reportCount, setReportCount] = useState(0);
+  const actionCount = pendingCount + roleCount + agentCount + reportCount;
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const notifRef = useRef(null);
@@ -43,6 +46,9 @@ const Topbar = () => {
       .catch(() => setPendingCount(0));
     fetchRoleRequests('pending')
       .then(data => setRoleCount(data.requests?.length || 0))
+      .catch(() => {});
+    fetchReportedContent({ status: 'open', page: 1, limit: 1 })
+      .then(data => setReportCount(data.total || 0))
       .catch(() => {});
     fetchPendingAgents()
       .then(data => setAgentCount(data.agents?.length || 0))
@@ -111,7 +117,7 @@ const Topbar = () => {
             <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{now}</span>
             <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">System Online</span>
+                <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Admin workspace</span>
             </div>
         </div>
 
@@ -170,6 +176,12 @@ const Topbar = () => {
 
                     {/* Notification Items List */}
                     <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/80 p-2">
+                        {reportCount > 0 && (
+                            <button type="button" className="w-full p-3.5 text-left rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/70 text-sm font-bold text-red-700 dark:text-red-400"
+                                onClick={() => { setIsNotifOpen(false); navigate('/admin/reported'); }}>
+                                {reportCount} listing report{reportCount === 1 ? '' : 's'} awaiting review
+                            </button>
+                        )}
                         {agentCount > 0 && (
                             <button type="button" className="w-full p-3.5 text-left rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/70 text-sm font-bold text-blue-600 dark:text-blue-400"
                                 onClick={() => { setIsNotifOpen(false); navigate('/admin/agent-approvals'); }}>
@@ -236,11 +248,11 @@ const Topbar = () => {
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-xs font-bold text-slate-900 dark:text-white">Security & Audit Health</span>
-                                    <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">Verified</span>
+                                    <span className="text-xs font-bold text-slate-900 dark:text-white">Admin Audit Trail</span>
+                                    <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">View records</span>
                                 </div>
                                 <p className="text-[11px] text-slate-500 dark:text-slate-300 mt-0.5">
-                                    RBAC guards, JWT protection, and immutable logs active.
+                                    Review recorded Admin changes and their actor, target and timestamp.
                                 </p>
                             </div>
                         </div>

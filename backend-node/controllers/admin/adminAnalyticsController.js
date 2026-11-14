@@ -40,73 +40,44 @@ const getDashboardStats = async(req, res, next) => {
     }
 };
 
+const monthKey = value => {
+    const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Colombo', year: 'numeric', month: '2-digit' }).formatToParts(new Date(value));
+    return `${parts.find(p => p.type === 'year').value}-${parts.find(p => p.type === 'month').value}`;
+};
+const recentMonths = () => {
+    const [year, month] = monthKey(new Date()).split('-').map(Number);
+    return Array.from({ length: 6 }, (_, index) => {
+        const d = new Date(Date.UTC(year, month - 6 + index, 1));
+        return { key: `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`, label: d.toLocaleString('en-LK', { timeZone: 'UTC', month: 'short', year: 'numeric' }) };
+    });
+};
 const getRevenueData = async(req, res, next) => {
     try {
-        const transactions = await adminRepository.getSuccessfulTransactions();
-
+        const rows = await adminRepository.getSuccessfulTransactions();
         const grouped = {};
-        (transactions || []).forEach(tx => {
-            if (!tx.created_at) return;
-            const date = new Date(tx.created_at);
-            const month = date.toLocaleString('default', { month: 'short' });
-            grouped[month] = (grouped[month] || 0) + Number(tx.amount || 0);
-        });
-
-        const months = [];
-        const d = new Date();
-        d.setMonth(d.getMonth() - 5);
-        for (let i = 0; i < 6; i++) {
-            const m = d.toLocaleString('default', { month: 'short' });
-            months.push(m);
-            if (!grouped[m]) grouped[m] = 0;
-            d.setMonth(d.getMonth() + 1);
+        for (const row of rows || []) {
+            if (!row.created_at || !Number.isFinite(new Date(row.created_at).getTime())) continue;
+            const key = monthKey(row.created_at);
+            grouped[key] = (grouped[key] || 0) + Number(row.amount || 0);
         }
-
-        const formattedData = months.map(m => ({ label: m, value: grouped[m] }));
-
-        res.status(200).json({ data: formattedData });
-    } catch (error) {
-        next(error);
-    }
+        res.status(200).json({ data: recentMonths().map(({ key, label }) => ({ label, value: grouped[key] || 0 })), timezone: 'Asia/Colombo' });
+    } catch (error) { next(error); }
 };
-
 const getUserGrowth = async(req, res, next) => {
     try {
-        const users = await adminRepository.getAllUsersCreatedAt();
-
+        const rows = await adminRepository.getAllUsersCreatedAt();
+        const months = recentMonths();
+        const grouped = {};
         let cumulative = 0;
-        const countsPerMonth = {};
-        (users || []).forEach(u => {
-            if (!u.created_at) return;
-            const monthYear = new Date(u.created_at).toLocaleString('default', { month: 'short', year: 'numeric' });
-            countsPerMonth[monthYear] = (countsPerMonth[monthYear] || 0) + 1;
-        });
-
-        const months = [];
-        const d = new Date();
-        d.setMonth(d.getMonth() - 5);
-
-        (users || []).forEach(u => {
-            if (!u.created_at) return;
-            if (new Date(u.created_at) < d) {
-                cumulative++;
-            }
-        });
-
-        for (let i = 0; i < 6; i++) {
-            const monthLabel = d.toLocaleString('default', { month: 'short' });
-            const key = d.toLocaleString('default', { month: 'short', year: 'numeric' });
-
-            cumulative += (countsPerMonth[key] || 0);
-            months.push({ label: monthLabel, users: cumulative });
-
-            d.setMonth(d.getMonth() + 1);
+        for (const row of rows || []) {
+            if (!row.created_at || !Number.isFinite(new Date(row.created_at).getTime())) continue;
+            const key = monthKey(row.created_at);
+            if (key < months[0].key) cumulative++;
+            else grouped[key] = (grouped[key] || 0) + 1;
         }
-
-        res.status(200).json({ data: months });
-    } catch (error) {
-        next(error);
-    }
+        const data = months.map(({ key, label }) => { cumulative += grouped[key] || 0; return { label, users: cumulative }; });
+        res.status(200).json({ data, timezone: 'Asia/Colombo' });
+    } catch (error) { next(error); }
 };
 
 const getAnalytics = async(req, res, next) => {

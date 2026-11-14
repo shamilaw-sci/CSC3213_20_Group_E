@@ -112,8 +112,8 @@ export const updateUserRole = (userId, role, reason = null) =>
 export const fetchAnalytics = (params = {}) =>
   unwrap(adminApi.get('/admin/analytics', { params }));
 
-export const fetchSearchHeatmap = () =>
-  unwrap(adminApi.get('/admin/analytics/heatmap'));
+export const fetchSearchHeatmap = (params = {}) =>
+  unwrap(adminApi.get('/admin/analytics/heatmap', { params }));
 
 // ─── Reports ──────────────────────────────────────────────────────────────────
 export const fetchTransactionHistory = (params = {}) =>
@@ -152,18 +152,18 @@ export const updateSettings = (settings) =>
   unwrap(adminApi.put('/admin/settings', settings));
 
 // ─── Listing Boosts / Promotions ──────────────────────────────────────────────
-export const fetchBoosts = () =>
-  unwrap(adminApi.get('/admin/boosts'));
+export const fetchBoosts = (params = {}) =>
+  unwrap(adminApi.get('/admin/boosts', { params }));
 
 export const toggleBoost = (listingId, enabled) =>
   unwrap(adminApi.patch(`/admin/boosts/${listingId}`, { enabled }));
 
 // ─── Reported Content ─────────────────────────────────────────────────────────
-export const fetchReportedContent = () =>
-  unwrap(adminApi.get('/admin/reported'));
+export const fetchReportedContent = (params = {}) =>
+  unwrap(adminApi.get('/admin/reported', { params }));
 
-export const resolveReport = (reportId, action) =>
-  unwrap(adminApi.patch(`/admin/reported/${reportId}/resolve`, { action }));
+export const resolveReport = (reportId, payload) =>
+  unwrap(adminApi.patch(`/admin/reported/${reportId}/resolve`, payload));
 
 // ─── Role Upgrade Requests ─────────────────────────────────────────────────────
 export const fetchRoleRequests = (status = 'pending') =>

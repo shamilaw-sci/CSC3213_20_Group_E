@@ -16,26 +16,18 @@ import {
   Activity
 } from "lucide-react";
 
-const MOCK_LOGS = [
-  { id: "LOG-001", actor: "Super Admin", action: "LISTING_APPROVED", target: "REF: 41769d4f (Luxury Villa Colombo 03)", timestamp: "2026-08-21 16:40:14", ip: "192.168.1.10", severity: "info" },
-  { id: "LOG-002", actor: "Super Admin", action: "USER_BANNED", target: "Fraudulent Seller (user_9402)", timestamp: "2026-08-21 15:18:05", ip: "192.168.1.10", severity: "warning" },
-  { id: "LOG-003", actor: "Super Admin", action: "LISTING_REJECTED", target: "REF: 2e05f6a7 (Invalid Survey Boundary)", timestamp: "2026-08-21 14:44:22", ip: "192.168.1.10", severity: "warning" },
-  { id: "LOG-004", actor: "System Gateway", action: "PAYMENT_SETTLED", target: "TXN-15000 (LKR 15,000 Listing Fee)", timestamp: "2026-08-21 12:02:51", ip: "Webhook-TLS1.3", severity: "success" },
-  { id: "LOG-005", actor: "Super Admin", action: "SETTINGS_UPDATED", target: "Base Listing Fee → LKR 1,500", timestamp: "2026-08-21 10:30:00", ip: "192.168.1.10", severity: "info" },
-  { id: "LOG-006", actor: "System Cron", action: "DATABASE_INTEGRITY_CHECK", target: "PostGIS Spatial R-Tree Index Verified", timestamp: "2026-08-21 02:00:00", ip: "Internal-Cron", severity: "success" },
-  { id: "LOG-007", actor: "RateLimiter Guard", action: "RATE_LIMIT_BLOCKED", target: "IP: 45.33.12.201 — Threshold Exceeded", timestamp: "2026-08-20 17:55:10", ip: "45.33.12.201", severity: "danger" },
-  { id: "LOG-008", actor: "Auth Daemon", action: "ADMIN_LOGIN_SUCCESS", target: "admin@gmail.com (Session Initialized)", timestamp: "2026-08-20 13:22:00", ip: "127.0.0.1", severity: "success" },
-];
-
 const AuditLogsPage = () => {
-  const [logs, setLogs] = useState(MOCK_LOGS);
+  const [logs, setLogs] = useState([]);
+  const [loadError, setLoadError] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [sevFilter, setSevFilter] = useState("all");
 
   useEffect(() => {
     fetchAuditLogs()
-      .then((d) => { if (d?.logs?.length) setLogs(d.logs); })
-      .catch(() => { toast.error("Failed to fetch audit logs"); logClientError('admin_audit_logs_load_failed'); });
+      .then((d) => { setLogs(d?.logs || []); setLoadError(false); })
+      .catch(() => { setLogs([]); setLoadError(true); toast.error("Failed to fetch audit logs"); logClientError('admin_audit_logs_load_failed'); })
+      .finally(() => setLoading(false));
   }, []);
 
   const filtered = logs.filter((l) => {
@@ -53,12 +45,12 @@ const AuditLogsPage = () => {
       {/* Header */}
       <div className="admin-page-header">
         <div>
-          <h1>Security & Immutable Audit Trail</h1>
-          <p>Cryptographically timestamped telemetry of all administrative and security actions</p>
+          <h1>Admin Audit Trail</h1>
+          <p>Latest 500 recorded Admin changes. Search by action, Admin name or target ID.</p>
         </div>
         <div className="flex items-center gap-2">
           <span className="px-3 py-1 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center gap-1.5">
-            <Lock className="w-3.5 h-3.5" /> Immutable Append-Only
+            <Lock className="w-3.5 h-3.5" /> Recorded Admin Changes
           </span>
         </div>
       </div>
@@ -111,7 +103,7 @@ const AuditLogsPage = () => {
             {filtered.length === 0 && (
               <tr>
                 <td colSpan={7} className="text-center py-12 text-slate-500 dark:text-slate-400">
-                  No log entries matched your filter.
+                  {loading ? 'Loading audit records?' : loadError ? 'Audit records could not be loaded. Refresh to retry.' : logs.length === 0 ? 'No recorded Admin changes yet.' : 'No log entries matched your filter.'}
                 </td>
               </tr>
             )}
@@ -132,7 +124,7 @@ const AuditLogsPage = () => {
                 <td>
                   <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400">{l.ip}</span>
                 </td>
-                <td className="text-xs text-slate-600 dark:text-slate-400 font-mono">{l.timestamp}</td>
+                <td className="text-xs text-slate-600 dark:text-slate-400 font-mono">{new Date(l.timestamp).toLocaleString('en-LK')}</td>
                 <td>
                   <span className={`admin-badge ${
                     l.severity === 'success' ? 'admin-badge-approved' :

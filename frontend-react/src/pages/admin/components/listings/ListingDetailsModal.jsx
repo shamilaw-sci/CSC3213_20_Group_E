@@ -136,7 +136,7 @@ const ListingDetailsModal = ({ listing, onApprove, onReject, onClose, loading })
               {/* Card 2: Seller & Contact Details Hub */}
               <div className="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
                 <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-blue-500" /> Verified Seller & Contact Hub
+                  <User className="w-3.5 h-3.5 text-blue-500" /> Seller & Contact Details
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                   <div className="flex items-center gap-3">
