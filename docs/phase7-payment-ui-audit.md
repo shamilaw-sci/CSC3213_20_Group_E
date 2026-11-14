@@ -17,7 +17,7 @@ is absent, completion ignores its order argument and current tests accept multip
 terminal outcomes for a single attempt. Existing draft retention is useful but
 needs busy/lifetime coordination for the proposed quote/config states.
 
-[Concrete proposed design](superpowers/specs/2026-11-04-payment-ui-boundary-design.md)
+Concrete proposed design (development document archived locally)
 groups these related changes for review. It preserves server settlement and adds
 no backend/SQL/provider operations. The original audit baseline backend1320/1320 and frontend347/347/lint/build
 predated the design implementation; subsequent batch28 frontend401/401/lint/build

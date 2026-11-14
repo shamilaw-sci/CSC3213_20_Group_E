@@ -1,8 +1,0 @@
-{
-  "states": 32,
-  "feedback": 4,
-  "realMapInteractionObservations": 24,
-  "keyboardAndHoverComparisons": 26,
-  "actualLeafletIdentityCleanupAndRetention": true,
-  "syntheticGpsAndLocalImagery": true
-}

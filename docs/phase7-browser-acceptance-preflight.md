@@ -16,7 +16,7 @@ Read-only preflight results:
 - Old Phase5 browser launcher targets retained stack-c and the former hook/API
   interface, so it was inspected but not run.
 
-The [concrete proposed guarded test setup](superpowers/specs/2026-11-04-payhere-browser-acceptance-design.md)
+The concrete proposed guarded test setup (development document archived locally)
 separates local browser simulation from real Sandbox/fixture acceptance. It
 requires design review before implementing the new adapter/runner. No credentials,
 fixtures, database/schema, Docker resources, tunnel, dependency, Git or deployed

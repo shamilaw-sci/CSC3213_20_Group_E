@@ -19,7 +19,7 @@ No SECURITY DEFINER function or CREATE VIEW appears in this application baseline
 
 ## Proposed boundary for a later owner-applied change
 
-Concrete options, explicit object scope, compatibility risks, rollback-only test design and rollout gates are in [the proposed grant-hardening design](superpowers/specs/2026-11-03-database-grant-hardening-design.md). Recommendation: backend-only access for existing application objects; no managed-role default changes in the first batch.
+Concrete options, explicit object scope, compatibility risks, rollback-only test design and rollout gates are in the proposed grant-hardening design (development document archived locally). Recommendation: backend-only access for existing application objects; no managed-role default changes in the first batch.
 
 Prefer backend-only writes for application tables, and narrowly projected public reads where required. Remove unneeded non-DML grants and explicitly restrict RPC execution. Confirm external clients first; do not blindly revoke all access or rewrite the applied baseline. Review default privileges separately so future objects do not reintroduce broad access. Public agent data needs a projection that excludes moderation fields and an approved-agent filter.
 

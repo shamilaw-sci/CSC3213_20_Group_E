@@ -1,1 +1,0 @@
-Task1 complete: source/test extraction; spec/quality review approved after both coverage fixes. Task2 complete: source/browser/actual-map/224 tests/lint/build/docs; final hygiene follows. No git mutations.

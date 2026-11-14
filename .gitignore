@@ -23,7 +23,32 @@ Submissions/
 .idea/
 
 # Agent Skills
-.agents/skills/
+.agents/
+.codex/
+skills-lock.json
+
+# Local development plans and one-off maintenance helper
+docs/superpowers/
+fix_consoles.js
 
 # Graphify
 graphify-out/
+
+# Generated verification screenshots (existing tracked documentation images remain)
+docs/evidence/
+docs/evidence/**/*.png
+docs/evidence/**/*.jpg
+docs/evidence/**/*.jpeg
+docs/evidence/**/*.webp
+docs/evidence/**/*.gif
+docs/evidence/image-cleanup-list.txt
+
+# Generated verification output
+docs/evidence/**/*.log
+docs/evidence/**/*.exe
+
+docs/evidence/**/*.private.*
+
+docs/evidence/**/vite-cache/
+docs/evidence/phase7-node24-runtime/*/
+docs/evidence/phase7-browser/*/

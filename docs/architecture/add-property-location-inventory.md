@@ -1,6 +1,6 @@
 # AddProperty Spatial Location inventory — 2026-11-01
 
-Initial read-only Step2 inventory followed the verified Category & Price extraction. The approved LocationStep extraction is now locally verified. See [overall wizard inventory](add-property-inventory.md), [approved design](../superpowers/specs/2026-11-01-add-property-location-design.md) and [implementation plan](../superpowers/plans/2026-11-01-add-property-location.md).
+Initial read-only Step2 inventory followed the verified Category & Price extraction. The approved LocationStep extraction is now locally verified. See [overall wizard inventory](add-property-inventory.md), approved design (development document archived locally) and implementation plan (development document archived locally).
 
 ## Actual owners and controls
 

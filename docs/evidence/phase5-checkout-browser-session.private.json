@@ -1,7 +1,0 @@
-{
-  "run": "9f8278c7-72d0-4ccb-8b3a-b1b494872312",
-  "url": "http://localhost:5173/__phase5_checkout",
-  "health": "https://strep-reenact-rocket.ngrok-free.dev/phase5/461b1e31-4b70-4f3c-a9ed-324aaa80ece3/health",
-  "notify": "https://strep-reenact-rocket.ngrok-free.dev/phase5/461b1e31-4b70-4f3c-a9ed-324aaa80ece3/api/payment/notify",
-  "apiPort": 3472
-}

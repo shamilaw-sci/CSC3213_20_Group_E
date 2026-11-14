@@ -30,4 +30,4 @@ All10 hover targets matched :hover and all10 keyboard targets matched :focus-vis
 
 Desktop1440x900 inventory only; synthetic current presentation, not a full signed-in page or every navigation-history stylesheet combination. No provider preference change, API, database or real identity was used. No layout/font/token migration is inferred from this inventory. The approved implementation must add mobile and before/after comparisons and retain native focus/form behavior.
 
-See [approved pilot design](../superpowers/specs/2026-11-01-profile-action-token-pilot-design.md). The installed Tailwind hover utility uses a hover-capability media guard; the new opt-in class retains it. Viewport width does not emulate touch capability.
+See approved pilot design (development document archived locally). The installed Tailwind hover utility uses a hover-capability media guard; the new opt-in class retains it. Viewport width does not emulate touch capability.

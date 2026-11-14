@@ -23,7 +23,7 @@ the dashboard selector is not connected to it. Unrendered maintenance/email/
 loan fields are also present as frontend defaults. The current Admin guard
 remains in place; this is not an authorization bypass finding.
 
-[Proposed settings correction](superpowers/specs/2026-11-04-platform-settings-integrity-design.md)
+Proposed settings correction (development document archived locally)
 was subsequently owner approved and implemented as batch25.
 
 ## CSV exports

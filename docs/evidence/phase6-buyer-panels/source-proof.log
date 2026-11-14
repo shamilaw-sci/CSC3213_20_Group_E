@@ -1,1 +1,0 @@
-PASS: 3 exact JSX root transplants; complete normalized parent reconstruction including original imports; all non-return statements and UpgradeToSellerTab helper unchanged.

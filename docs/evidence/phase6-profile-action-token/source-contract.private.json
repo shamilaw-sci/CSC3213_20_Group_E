@@ -1,8 +1,0 @@
-{
-  "onlyExpectedClassesDiffer": true,
-  "normalizedPanelAstIdentical": true,
-  "oldStylesheetPreserved": true,
-  "consumers": [
-    "frontend-react/src\\components\\profile\\SavedSearchesPanel.jsx"
-  ]
-}

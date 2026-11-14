@@ -1,2 +1,0 @@
-WARNING:  01000: only superusers can specify extension versions, ignoring version "3.3.7" and installing the default version
-LOCATION:  restrict_version_specification, extensions.c:43

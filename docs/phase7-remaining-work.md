@@ -118,7 +118,7 @@ Role-request audit2026-11-03 reproduced banned-user restoration, a role/status
 partial write and acceptance of an unexpected stored requested role using actual
 controller/repository code with a synthetic offline database. The normal buyer
 endpoint creates only SELLER requests; no normal buyer-to-ADMIN exploit is
-claimed. [Atomic resolution design](superpowers/specs/2026-11-03-role-request-transaction-design.md)
+claimed. Atomic resolution design (development document archived locally)
 was approved and endpoint/repository implemented. The owner then approved the
 [concrete local amendment](phase7-role-request-rollout.md): exact candidate
 rollback testing and temporary committed supplement SQL/HTTP/ACL/rollback/lock
@@ -128,7 +128,7 @@ retained resources preserved. Guard26/26/latest full backend1135/1135 and
 independent pre/post reviews passed. Production function adoption still required;
 do not deploy without it. No automatic crash recovery or idempotency closure.
 
-Apple [key-fetch deadline](superpowers/specs/2026-11-03-apple-key-fetch-deadline-design.md) is approved/implemented:15 new cases red then green, focused168/168/full backend1061/1061 and independent review passed. Nonce binding still needs a coordinated browser/backend/shared-state design. No real Apple/Node20 runtime or replay closure claim.
+Apple key-fetch deadline (development document archived locally) is approved/implemented:15 new cases red then green, focused168/168/full backend1061/1061 and independent review passed. Nonce binding still needs a coordinated browser/backend/shared-state design. No real Apple/Node20 runtime or replay closure claim.
 
 Latest2026-11-03: eighteen runtime batches prepared. Facebook app-binding and Apple key deadlines verified in scoped mocks/SDK tests; real Meta/Apple/browser/configuration readiness remains open. Latest backend1135/1135; no production OAuth clearance.
 
@@ -145,7 +145,7 @@ Production/CI adoption remains open; no image CVE clearance or whole-phase claim
 The original Node20/Supabase>=22 mismatch is addressed in prepared code and local
 images; existing Nginx/action/dependency policies were not upgraded.
 
-Facebook [expected-app validation](superpowers/specs/2026-11-03-facebook-app-binding-design.md) is implemented after approval. No actual provider token/config/account was used; main documentation access/current real-provider acceptance remain limited. The OAuth package remains open.
+Facebook expected-app validation (development document archived locally) is implemented after approval. No actual provider token/config/account was used; main documentation access/current real-provider acceptance remain limited. The OAuth package remains open.
 
 Approved [separate disposable acceptance](phase7-local-acceptance.md) completed:58/58 actuallocal cases, backend1009/1009,26guard cases, independent reviews. Explicitly approved loopback bridge after internal publishing refusal; cached minimum official prerequisites and unchanged canonical chain applied only to fresh target. All19 tables empty at finish; retained resource identities/states preserved; new pair stopped and volume/two networks retained. Live/schema/Git actions remain excluded.
 
@@ -157,6 +157,6 @@ Frontend source search found no dangerouslySetInnerHTML, .innerHTML, eval or new
 
 Next priorities are remaining endpoint/recovery assessment, plus owner-controlled credential/Storage/database and Node24 release adoption gates. Seller-request SQL/HTTP/race acceptance is complete locally. Durable reconciliation remains open. Do not inflate progress by closing optional coverage gaps while urgent release gates remain open.
 
-Chat recovery [approved design](superpowers/specs/2026-11-03-chat-send-recovery-design.md) is implemented: definite returned insert rejections clean only the request-owned upload; ambiguous outcomes retain files and log recovery; confirmed messages remain201 after timestamp failure. Focused41/41/full backend943/943 and independent review passed. Actual Storage acceptance, durable reconciliation, crash/retry idempotency and non-atomic profile/same-lead work remain open; the recovery package is partially complete.
+Chat recovery approved design (development document archived locally) is implemented: definite returned insert rejections clean only the request-owned upload; ambiguous outcomes retain files and log recovery; confirmed messages remain201 after timestamp failure. Focused41/41/full backend943/943 and independent review passed. Actual Storage acceptance, durable reconciliation, crash/retry idempotency and non-atomic profile/same-lead work remain open; the recovery package is partially complete.
 
 Go verification limitation: ordinary `go test ./...` produced no output and was stopped without a result. Retried outside the sandbox with MAP_VERIFY_DATABASE=0, GOTOOLCHAIN=local and downloads disabled. It failed before tests because installed Go is1.26.2 while go.mod requires>=1.26.10. No Go test result or vulnerability clearance is claimed; no toolchain/dependencies were installed or go.mod changed. Matching installed tooling or separately authorized toolchain provisioning is required to close this gate.
