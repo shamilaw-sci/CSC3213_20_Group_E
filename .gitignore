@@ -11,6 +11,7 @@ DBPwd.txt
 Payment Mock details
 *.pem
 *.key
+evaluation-access.private.md
 
 # Large Code Dumps / Submissions
 project_code.txt

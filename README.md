@@ -14,7 +14,7 @@ Code navigation: [entry points and feature paths](docs/architecture/code-map.md)
 ## Prerequisites
 
 - Node.js24 LTS and npm (see `.nvmrc`; both applications declare `>=24 <25`)
-- Go
+- Go 1.26.10 or compatible newer toolchain (see `go-map-service/go.mod`)
 - Supabase/Postgres database with the required schema
 - Environment files based on the included `.env.example` files
 
@@ -32,6 +32,70 @@ environment. Shared request logs record route templates rather than full request
 URLs; see [logging contract and remaining scope](docs/phase7-error-logging.md).
 
 Database setup and isolated verification: [repeatable database setup](docs/database/setup.md). Existing installations must use its adoption procedure; do not replay the fresh baseline against a populated database.
+
+## Evaluation quick start (Windows PowerShell)
+
+Obtain the private evaluation environment values and Buyer, Seller, approved Agent and Admin test-account logins from the project team through the evaluation submission channel. They are not stored in Git. Both backend services must target the same hosted database; no local database installation is needed for this path.
+
+```powershell
+git clone https://github.com/shamilaw-sci/CSC3213_20_Group_E.git
+cd CSC3213_20_Group_E
+git switch main
+Copy-Item backend-node/.env.example backend-node/.env
+Copy-Item go-map-service/.env.example go-map-service/.env
+Copy-Item frontend-react/.env.example frontend-react/.env
+```
+
+Fill the copied files privately. Keep Go `PORT=9090` and frontend `VITE_MAP_API_URL=http://localhost:9090/api/map/search`. The local Go example and code fallback both use 9090. Docker Compose uses a separate 8080 configuration; do not mix its URLs with this local setup.
+
+Open three terminals from the repository root:
+
+```powershell
+# Terminal 1
+cd backend-node
+npm ci
+npm run dev
+```
+
+```powershell
+# Terminal 2
+cd go-map-service
+go mod download
+go run .
+```
+
+```powershell
+# Terminal 3
+cd frontend-react
+npm ci
+npm run dev -- --port 5173 --strictPort
+```
+
+Open http://localhost:5173; Admin login is http://localhost:5173/admin/login. Check http://localhost:5000/health/ready and http://localhost:9090/health/ready for database readiness. `/health` alone does not prove database access. Stop each service with Ctrl+C.
+
+If port 5173 is occupied, stop the existing frontend or coordinate the frontend port, backend CLIENT_URL and Go ALLOWED_ORIGIN. If maps fail, check the Go terminal, database connectivity and matching map URL. Restart services after editing their environment files.
+
+### Configuration required for evaluated features
+
+| Feature | Configuration |
+| --- | --- |
+| Backend/database | Backend SUPABASE_URL, server-only service-role SUPABASE_KEY, strong JWT_SECRET; Go DATABASE_URL with provider-required TLS |
+| Origins | Backend CLIENT_URL and Go ALLOWED_ORIGIN set to http://localhost:5173 |
+| AI chat | Backend GEMINI_API_KEY |
+| Email/reset/notifications | Backend EMAIL_USER, EMAIL_PASS; EMAIL_HOST and EMAIL_PORT default to smtp.gmail.com and 465 |
+| Sandbox payments | Backend PAYHERE_MERCHANT_ID, PAYHERE_MERCHANT_SECRET, PAYHERE_MODE=sandbox; frontend VITE_PAYHERE_NOTIFY_URL must publicly reach this backend's /api/payment/notify over HTTPS for gateway settlement |
+| Google login | Backend GOOGLE_CLIENT_ID and frontend VITE_GOOGLE_CLIENT_ID, plus provider origin configuration |
+| Facebook login | Backend FACEBOOK_APP_ID, FACEBOOK_APP_SECRET; frontend VITE_FACEBOOK_APP_ID, plus provider configuration |
+| Apple login | Backend APPLE_SERVICES_ID; frontend VITE_APPLE_CLIENT_ID, VITE_APPLE_REDIRECT_URI, plus provider configuration |
+| Optional Mapbox imagery | Frontend VITE_MAPBOX_ACCESS_TOKEN for views that use Mapbox |
+
+Missing third-party configuration may leave the corresponding feature unavailable even if startup succeeds. Never put backend secrets in VITE_* variables; these are public browser configuration.
+
+Before submission, privately supply all evaluation environment values, role-account logins, hosted app/API URLs if deployed, current payment callback address and provider test instructions. Use synthetic evaluation accounts/listings. Do not publish customer data or privileged credentials in Git or screenshots. This private handoff must still be completed by the team.
+
+Hosted metadata supplied by the owner on 2026-11-14 confirms appointment ownership/slot columns and indexes, the restricted seller-resolution RPC, private chat bucket/restrictive client policy and RLS on the reported application tables. Backend readiness was confirmed. This point-in-time check does not apply changes to another database. Historical rollout notes below describe prerequisites for other environments.
+
+For a new database, read [database setup](docs/database/setup.md). Its two-file baseline is for an isolated empty test environment and does not by itself certify the latest hosted additions. Never replay it against the hosted evaluation database. A complete fresh-database upgrade/seed package is separate from this hosted setup.
 
 ## Environment
 
@@ -83,7 +147,7 @@ Start the backend:
 
 ```bash
 cd backend-node
-npm install
+npm ci
 npm run dev
 ```
 
@@ -91,7 +155,7 @@ Start the frontend:
 
 ```bash
 cd frontend-react
-npm install
+npm ci
 npm run dev
 ```
 
