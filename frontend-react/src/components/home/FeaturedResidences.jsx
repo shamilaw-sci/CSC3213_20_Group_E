@@ -1,50 +1,9 @@
+import { logClientError } from '../../utils/clientLog';
 import React, { useEffect, useState } from 'react';
 import { m } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Bed, Bath, Maximize2, MapPin } from 'lucide-react';
 import api from '../../context/api';
-
-const fallbackResidences = [
-    {
-        id: 1,
-        title: "The Grand Cinnamon Estate",
-        type: "Luxury Villa",
-        listing_type: "Sale",
-        price: 145000000,
-        city: "Colombo 07",
-        district: "Colombo",
-        bedrooms: 5,
-        bathrooms: 6,
-        house_size: 6200,
-        images: ["https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80"]
-    },
-    {
-        id: 2,
-        title: "Oceanfront Cliff Villa",
-        type: "Beach Villa",
-        listing_type: "Sale",
-        price: 98000000,
-        city: "Mirissa",
-        district: "Matara",
-        bedrooms: 4,
-        bathrooms: 4,
-        house_size: 4500,
-        images: ["https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80"]
-    },
-    {
-        id: 3,
-        title: "Misty Mountain Modern Manor",
-        type: "Estate Home",
-        listing_type: "Sale",
-        price: 65000000,
-        city: "Hantana",
-        district: "Kandy",
-        bedrooms: 4,
-        bathrooms: 5,
-        house_size: 4800,
-        images: ["https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"]
-    }
-];
 
 const formatLKR = (num) => {
     if (!num || isNaN(num)) return 'Rs. Contact';
@@ -58,23 +17,24 @@ export default function FeaturedResidences() {
     const navigate = useNavigate();
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
 
     useEffect(() => {
         const fetchCurated = async () => {
             try {
-                const res = await api.get('/properties?limit=3');
-                const fetched = Array.isArray(res.data) 
-                    ? res.data 
-                    : (res.data?.properties || res.data?.data || []);
+                const res = await api.get('/properties/featured?limit=3');
+                const fetched = res.data?.properties;
+                if (!Array.isArray(fetched)) throw new Error('Invalid featured response');
                 
                 if (fetched && fetched.length > 0) {
                     setProperties(fetched.slice(0, 3));
                 } else {
-                    setProperties(fallbackResidences);
+                    setProperties([]);
                 }
             } catch (err) {
-                console.error("Failed to load featured properties, using curated showcase:", err);
-                setProperties(fallbackResidences);
+                logClientError('featured_properties_load_failed');
+                setError(true);
+                setProperties([]);
             } finally {
                 setLoading(false);
             }
@@ -82,7 +42,7 @@ export default function FeaturedResidences() {
         fetchCurated();
     }, []);
 
-    const displayList = properties.length > 0 ? properties : fallbackResidences;
+    const displayList = properties;
 
     return (
         <section className="relative bg-neutral-950 text-white py-24 sm:py-32 px-6 sm:px-8 lg:px-16 font-sans overflow-hidden border-t border-white/10">
@@ -114,12 +74,12 @@ export default function FeaturedResidences() {
                     </button>
                 </m.div>
 
-                {/* Property Grid */}
+                {loading && <p role="status">Loading featured listings…</p>}{error && <p role="status">Featured listings are currently unavailable.</p>}{!loading && !error && properties.length === 0 && <p>No featured listings are currently available. Explore the map for listings.</p>}{/* Property Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10">
                     {displayList.map((prop, idx) => {
                         const imgUrl = prop.images && prop.images[0] 
                             ? (prop.images[0].startsWith('http') ? prop.images[0] : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${prop.images[0]}`)
-                            : fallbackResidences[idx % fallbackResidences.length].images[0];
+                            : null;
 
                         return (
                             <m.div
@@ -133,20 +93,20 @@ export default function FeaturedResidences() {
                             >
                                 {/* Image Container */}
                                 <div className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-900">
-                                    <img
+                                    {imgUrl ? <img
                                         src={imgUrl}
                                         alt={prop.title}
                                         className="w-full h-full object-cover group-hover:scale-105 transition duration-700 ease-out"
-                                    />
+                                    /> : <div className="h-full flex items-center justify-center text-gray-400">Photo unavailable</div>}
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20"></div>
 
                                     {/* District & Type Tag */}
                                     <div className="absolute top-4 left-4 flex items-center gap-2">
                                         <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-black/60 backdrop-blur-md text-white border border-white/20">
-                                            {prop.city || prop.district || 'Sri Lanka'}
+                                            {prop.city || prop.district || 'Location unavailable'}
                                         </span>
                                         <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-blue-600/80 backdrop-blur-md text-white border border-blue-400/30 uppercase">
-                                            {prop.type || 'Villa'}
+                                            {prop.type || 'Type unavailable'}
                                         </span>
                                     </div>
 
@@ -166,7 +126,7 @@ export default function FeaturedResidences() {
                                         </h3>
                                         <p className="text-xs text-gray-400 flex items-center gap-1.5 mt-1">
                                             <MapPin className="w-3.5 h-3.5 text-gray-400" />
-                                            {prop.address || (prop.city ? `${prop.city}, ${prop.district || ''}` : 'Sri Lanka')}
+                                            {prop.address || (prop.city ? `${prop.city}, ${prop.district || ''}` : 'Location unavailable')}
                                         </p>
                                     </div>
 
@@ -186,7 +146,7 @@ export default function FeaturedResidences() {
                                         )}
                                         <div className="flex items-center gap-1.5">
                                             <Maximize2 className="w-4 h-4 text-gray-400" />
-                                            <span>{prop.house_size ? `${prop.house_size} sqft` : 'Prime Area'}</span>
+                                            <span>{prop.house_size ? `${prop.house_size} sqft` : 'Area unavailable'}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -199,3 +159,4 @@ export default function FeaturedResidences() {
         </section>
     );
 }
+

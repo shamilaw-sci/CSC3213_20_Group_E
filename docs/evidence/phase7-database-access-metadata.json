@@ -1,0 +1,4567 @@
+{
+  "date": "2026-11-03",
+  "scope": "verified isolated stack-c; catalog only",
+  "tables": [
+    {
+      "schema_name": "public",
+      "relation_name": "agent_profiles",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_profiles",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_profiles",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_profiles",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_profiles",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_profiles",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_profiles",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_profiles",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_profiles",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_profiles",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_profiles",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_profiles",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_profiles",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_profiles",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_profiles",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_profiles",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_profiles",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_profiles",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_profiles",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_profiles",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_profiles",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_reviews",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_reviews",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_reviews",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_reviews",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_reviews",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_reviews",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_reviews",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_reviews",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_reviews",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_reviews",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_reviews",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_reviews",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_reviews",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_reviews",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_reviews",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_reviews",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_reviews",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_reviews",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_reviews",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_reviews",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "agent_reviews",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "contact_inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "DELETE",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "contact_inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "INSERT",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "contact_inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "REFERENCES",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "contact_inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "SELECT",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "contact_inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRIGGER",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "contact_inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRUNCATE",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "contact_inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "UPDATE",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "contact_inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "DELETE",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "contact_inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "INSERT",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "contact_inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "REFERENCES",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "contact_inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "SELECT",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "contact_inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRIGGER",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "contact_inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRUNCATE",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "contact_inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "UPDATE",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "contact_inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "contact_inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "contact_inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "contact_inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "contact_inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "contact_inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "contact_inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "conversations",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "conversations",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "conversations",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "conversations",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "conversations",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "conversations",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "conversations",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "conversations",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "conversations",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "conversations",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "conversations",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "conversations",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "conversations",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "conversations",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "conversations",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "conversations",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "conversations",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "conversations",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "conversations",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "conversations",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "conversations",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "favorites",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "favorites",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "favorites",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "favorites",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "favorites",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "favorites",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "favorites",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "favorites",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "favorites",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "favorites",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "favorites",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "favorites",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "favorites",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "favorites",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "favorites",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "favorites",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "favorites",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "favorites",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "favorites",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "favorites",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "favorites",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "feasibility_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "feasibility_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "feasibility_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "feasibility_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "feasibility_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "feasibility_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "feasibility_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "feasibility_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "feasibility_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "feasibility_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "feasibility_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "feasibility_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "feasibility_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "feasibility_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "feasibility_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "feasibility_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "feasibility_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "feasibility_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "feasibility_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "feasibility_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "feasibility_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "inquiries",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "leads",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "leads",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "leads",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "leads",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "leads",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "leads",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "leads",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "leads",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "leads",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "leads",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "leads",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "leads",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "leads",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "leads",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "leads",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "leads",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "leads",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "leads",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "leads",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "leads",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "leads",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "message_receipts",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "DELETE",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "message_receipts",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "INSERT",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "message_receipts",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "REFERENCES",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "message_receipts",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "SELECT",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "message_receipts",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRIGGER",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "message_receipts",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRUNCATE",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "message_receipts",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "UPDATE",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "message_receipts",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "DELETE",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "message_receipts",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "INSERT",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "message_receipts",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "REFERENCES",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "message_receipts",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "SELECT",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "message_receipts",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRIGGER",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "message_receipts",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRUNCATE",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "message_receipts",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "UPDATE",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "message_receipts",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "message_receipts",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "message_receipts",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "message_receipts",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "message_receipts",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "message_receipts",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "message_receipts",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "messages",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "messages",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "messages",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "messages",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "messages",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "messages",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "messages",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "messages",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "messages",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "messages",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "messages",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "messages",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "messages",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "messages",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "messages",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "messages",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "messages",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "messages",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "messages",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "messages",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "messages",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_orders",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "DELETE",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_orders",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "INSERT",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_orders",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "REFERENCES",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_orders",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "SELECT",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_orders",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRIGGER",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_orders",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRUNCATE",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_orders",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "UPDATE",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_orders",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "DELETE",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_orders",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "INSERT",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_orders",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "REFERENCES",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_orders",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "SELECT",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_orders",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRIGGER",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_orders",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRUNCATE",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_orders",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "UPDATE",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_orders",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_orders",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_orders",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_orders",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_orders",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_orders",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_orders",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_receipt_outbox",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "DELETE",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_receipt_outbox",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "INSERT",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_receipt_outbox",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "REFERENCES",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_receipt_outbox",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "SELECT",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_receipt_outbox",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRIGGER",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_receipt_outbox",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRUNCATE",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_receipt_outbox",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "UPDATE",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_receipt_outbox",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "DELETE",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_receipt_outbox",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "INSERT",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_receipt_outbox",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "REFERENCES",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_receipt_outbox",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "SELECT",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_receipt_outbox",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRIGGER",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_receipt_outbox",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRUNCATE",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_receipt_outbox",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "UPDATE",
+      "effective_grant": false
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_receipt_outbox",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_receipt_outbox",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_receipt_outbox",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_receipt_outbox",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_receipt_outbox",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_receipt_outbox",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "payment_receipt_outbox",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "platform_settings",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "platform_settings",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "platform_settings",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "platform_settings",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "platform_settings",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "platform_settings",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "platform_settings",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "platform_settings",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "platform_settings",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "platform_settings",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "platform_settings",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "platform_settings",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "platform_settings",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "platform_settings",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "platform_settings",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "platform_settings",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "platform_settings",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "platform_settings",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "platform_settings",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "platform_settings",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "platform_settings",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "properties",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "properties",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "properties",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "properties",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "properties",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "properties",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "properties",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "properties",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "properties",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "properties",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "properties",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "properties",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "properties",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "properties",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "properties",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "properties",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "properties",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "properties",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "properties",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "properties",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "properties",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "property_sales_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "property_sales_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "property_sales_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "property_sales_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "property_sales_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "property_sales_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "property_sales_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "property_sales_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "property_sales_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "property_sales_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "property_sales_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "property_sales_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "property_sales_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "property_sales_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "property_sales_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "property_sales_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "property_sales_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "property_sales_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "property_sales_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "property_sales_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "property_sales_history",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "role_requests",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "role_requests",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "role_requests",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "role_requests",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "role_requests",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "role_requests",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "role_requests",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "role_requests",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "role_requests",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "role_requests",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "role_requests",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "role_requests",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "role_requests",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "role_requests",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "role_requests",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "role_requests",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "role_requests",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "role_requests",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "role_requests",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "role_requests",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "role_requests",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "saved_searches",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "saved_searches",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "saved_searches",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "saved_searches",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "saved_searches",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "saved_searches",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "saved_searches",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "saved_searches",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "saved_searches",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "saved_searches",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "saved_searches",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "saved_searches",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "saved_searches",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "saved_searches",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "saved_searches",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "saved_searches",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "saved_searches",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "saved_searches",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "saved_searches",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "saved_searches",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "saved_searches",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "transactions",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "transactions",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "transactions",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "transactions",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "transactions",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "transactions",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "transactions",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "transactions",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "transactions",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "transactions",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "transactions",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "transactions",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "transactions",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "transactions",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "transactions",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "transactions",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "transactions",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "transactions",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "transactions",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "transactions",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "transactions",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "users",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "users",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "users",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "users",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "users",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "users",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "users",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "anon",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "users",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "users",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "users",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "users",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "users",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "users",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "users",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "authenticated",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "users",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "DELETE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "users",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "INSERT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "users",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "REFERENCES",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "users",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "SELECT",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "users",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRIGGER",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "users",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "TRUNCATE",
+      "effective_grant": true
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "users",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "role_name": "service_role",
+      "privilege": "UPDATE",
+      "effective_grant": true
+    }
+  ],
+  "policies": [
+    {
+      "schemaname": "public",
+      "tablename": "agent_profiles",
+      "policyname": "Agent profiles are viewable by everyone",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "agent_profiles",
+      "policyname": "Agents can insert their own profile",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(auth.uid() = agent_id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "agent_profiles",
+      "policyname": "Agents can update their own profile",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "UPDATE",
+      "qual": "(auth.uid() = agent_id)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "agent_reviews",
+      "policyname": "Logged in users can insert reviews",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(auth.uid() = reviewer_id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "agent_reviews",
+      "policyname": "Reviews are viewable by everyone",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "favorites",
+      "policyname": "Users can delete their own favorites",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "DELETE",
+      "qual": "(auth.uid() = user_id)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "favorites",
+      "policyname": "Users can insert their own favorites",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(auth.uid() = user_id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "favorites",
+      "policyname": "Users can view their own favorites",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "(auth.uid() = user_id)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "feasibility_history",
+      "policyname": "Users can delete their own feasibility history",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "DELETE",
+      "qual": "(auth.uid() = user_id)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "feasibility_history",
+      "policyname": "Users can insert their own feasibility history",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(auth.uid() = user_id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "feasibility_history",
+      "policyname": "Users can view their own feasibility history",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "(auth.uid() = user_id)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "leads",
+      "policyname": "Agents can update their own leads",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "UPDATE",
+      "qual": "(auth.uid() = assigned_agent_id)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "leads",
+      "policyname": "Agents can view their own leads",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "(auth.uid() = assigned_agent_id)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "leads",
+      "policyname": "Anyone can insert a lead",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "true"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "property_sales_history",
+      "policyname": "Anyone can view property sales history",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "property_sales_history",
+      "policyname": "Authenticated users can insert sales history",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(auth.role() = 'authenticated'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "saved_searches",
+      "policyname": "Users can delete their own saved searches",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "DELETE",
+      "qual": "(auth.uid() = user_id)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "saved_searches",
+      "policyname": "Users can insert their own saved searches",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(auth.uid() = user_id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "saved_searches",
+      "policyname": "Users can view their own saved searches",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "(auth.uid() = user_id)",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "Allow authenticated uploads",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(bucket_id = 'chat-attachments'::text)"
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "Allow public read access",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "(bucket_id = 'chat-attachments'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "Allow users to delete their own uploads",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "((bucket_id = 'chat-attachments'::text) AND (auth.uid() = owner))",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "Avatar images are publicly accessible.",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "(bucket_id = 'avatars'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "Users can update their own avatars.",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "UPDATE",
+      "qual": "((bucket_id = 'avatars'::text) AND (auth.uid() = owner))",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "Users can upload their own avatars.",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "((bucket_id = 'avatars'::text) AND (auth.uid() = owner))"
+    }
+  ],
+  "functions": [
+    {
+      "schema_name": "public",
+      "function_signature": "claim_payment_receipts(uuid)",
+      "owner_name": "postgres",
+      "security_definer": false,
+      "proconfig": [
+        "search_path=public, pg_temp"
+      ],
+      "role_name": "anon",
+      "effective_execute": false
+    },
+    {
+      "schema_name": "public",
+      "function_signature": "claim_payment_receipts(uuid)",
+      "owner_name": "postgres",
+      "security_definer": false,
+      "proconfig": [
+        "search_path=public, pg_temp"
+      ],
+      "role_name": "authenticated",
+      "effective_execute": false
+    },
+    {
+      "schema_name": "public",
+      "function_signature": "claim_payment_receipts(uuid)",
+      "owner_name": "postgres",
+      "security_definer": false,
+      "proconfig": [
+        "search_path=public, pg_temp"
+      ],
+      "role_name": "service_role",
+      "effective_execute": true
+    },
+    {
+      "schema_name": "public",
+      "function_signature": "create_listing_checkout(uuid,uuid,numeric,text,text,text)",
+      "owner_name": "postgres",
+      "security_definer": false,
+      "proconfig": [
+        "search_path=public, pg_temp"
+      ],
+      "role_name": "anon",
+      "effective_execute": false
+    },
+    {
+      "schema_name": "public",
+      "function_signature": "create_listing_checkout(uuid,uuid,numeric,text,text,text)",
+      "owner_name": "postgres",
+      "security_definer": false,
+      "proconfig": [
+        "search_path=public, pg_temp"
+      ],
+      "role_name": "authenticated",
+      "effective_execute": false
+    },
+    {
+      "schema_name": "public",
+      "function_signature": "create_listing_checkout(uuid,uuid,numeric,text,text,text)",
+      "owner_name": "postgres",
+      "security_definer": false,
+      "proconfig": [
+        "search_path=public, pg_temp"
+      ],
+      "role_name": "service_role",
+      "effective_execute": true
+    },
+    {
+      "schema_name": "public",
+      "function_signature": "increment_property_views(uuid)",
+      "owner_name": "postgres",
+      "security_definer": false,
+      "proconfig": null,
+      "role_name": "anon",
+      "effective_execute": true
+    },
+    {
+      "schema_name": "public",
+      "function_signature": "increment_property_views(uuid)",
+      "owner_name": "postgres",
+      "security_definer": false,
+      "proconfig": null,
+      "role_name": "authenticated",
+      "effective_execute": true
+    },
+    {
+      "schema_name": "public",
+      "function_signature": "increment_property_views(uuid)",
+      "owner_name": "postgres",
+      "security_definer": false,
+      "proconfig": null,
+      "role_name": "service_role",
+      "effective_execute": true
+    },
+    {
+      "schema_name": "public",
+      "function_signature": "search_properties(text)",
+      "owner_name": "postgres",
+      "security_definer": false,
+      "proconfig": null,
+      "role_name": "anon",
+      "effective_execute": true
+    },
+    {
+      "schema_name": "public",
+      "function_signature": "search_properties(text)",
+      "owner_name": "postgres",
+      "security_definer": false,
+      "proconfig": null,
+      "role_name": "authenticated",
+      "effective_execute": true
+    },
+    {
+      "schema_name": "public",
+      "function_signature": "search_properties(text)",
+      "owner_name": "postgres",
+      "security_definer": false,
+      "proconfig": null,
+      "role_name": "service_role",
+      "effective_execute": true
+    },
+    {
+      "schema_name": "public",
+      "function_signature": "settle_listing_checkout(uuid,text,numeric,text,text,text)",
+      "owner_name": "postgres",
+      "security_definer": false,
+      "proconfig": [
+        "search_path=public, pg_temp"
+      ],
+      "role_name": "anon",
+      "effective_execute": false
+    },
+    {
+      "schema_name": "public",
+      "function_signature": "settle_listing_checkout(uuid,text,numeric,text,text,text)",
+      "owner_name": "postgres",
+      "security_definer": false,
+      "proconfig": [
+        "search_path=public, pg_temp"
+      ],
+      "role_name": "authenticated",
+      "effective_execute": false
+    },
+    {
+      "schema_name": "public",
+      "function_signature": "settle_listing_checkout(uuid,text,numeric,text,text,text)",
+      "owner_name": "postgres",
+      "security_definer": false,
+      "proconfig": [
+        "search_path=public, pg_temp"
+      ],
+      "role_name": "service_role",
+      "effective_execute": true
+    }
+  ],
+  "defaults": [
+    {
+      "owner_name": "postgres",
+      "schema_name": "public",
+      "defaclobjtype": "S",
+      "defaclacl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}"
+    },
+    {
+      "owner_name": "postgres",
+      "schema_name": "public",
+      "defaclobjtype": "f",
+      "defaclacl": "{postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}"
+    },
+    {
+      "owner_name": "postgres",
+      "schema_name": "public",
+      "defaclobjtype": "r",
+      "defaclacl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "owner_name": "postgres",
+      "schema_name": "storage",
+      "defaclobjtype": "S",
+      "defaclacl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}"
+    },
+    {
+      "owner_name": "postgres",
+      "schema_name": "storage",
+      "defaclobjtype": "f",
+      "defaclacl": "{postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}"
+    },
+    {
+      "owner_name": "postgres",
+      "schema_name": "storage",
+      "defaclobjtype": "r",
+      "defaclacl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "owner_name": "supabase_admin",
+      "schema_name": "extensions",
+      "defaclobjtype": "S",
+      "defaclacl": "{postgres=r*w*U*/supabase_admin}"
+    },
+    {
+      "owner_name": "supabase_admin",
+      "schema_name": "extensions",
+      "defaclobjtype": "f",
+      "defaclacl": "{postgres=X*/supabase_admin}"
+    },
+    {
+      "owner_name": "supabase_admin",
+      "schema_name": "extensions",
+      "defaclobjtype": "r",
+      "defaclacl": "{postgres=a*r*w*d*D*x*t*m*/supabase_admin}"
+    },
+    {
+      "owner_name": "supabase_admin",
+      "schema_name": "graphql",
+      "defaclobjtype": "S",
+      "defaclacl": "{postgres=rwU/supabase_admin,anon=rwU/supabase_admin,authenticated=rwU/supabase_admin,service_role=rwU/supabase_admin}"
+    },
+    {
+      "owner_name": "supabase_admin",
+      "schema_name": "graphql",
+      "defaclobjtype": "f",
+      "defaclacl": "{postgres=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+    },
+    {
+      "owner_name": "supabase_admin",
+      "schema_name": "graphql",
+      "defaclobjtype": "r",
+      "defaclacl": "{postgres=arwdDxtm/supabase_admin,anon=arwdDxtm/supabase_admin,authenticated=arwdDxtm/supabase_admin,service_role=arwdDxtm/supabase_admin}"
+    },
+    {
+      "owner_name": "supabase_admin",
+      "schema_name": "graphql_public",
+      "defaclobjtype": "S",
+      "defaclacl": "{postgres=rwU/supabase_admin,anon=rwU/supabase_admin,authenticated=rwU/supabase_admin,service_role=rwU/supabase_admin}"
+    },
+    {
+      "owner_name": "supabase_admin",
+      "schema_name": "graphql_public",
+      "defaclobjtype": "f",
+      "defaclacl": "{postgres=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+    },
+    {
+      "owner_name": "supabase_admin",
+      "schema_name": "graphql_public",
+      "defaclobjtype": "r",
+      "defaclacl": "{postgres=arwdDxtm/supabase_admin,anon=arwdDxtm/supabase_admin,authenticated=arwdDxtm/supabase_admin,service_role=arwdDxtm/supabase_admin}"
+    },
+    {
+      "owner_name": "supabase_admin",
+      "schema_name": "public",
+      "defaclobjtype": "S",
+      "defaclacl": "{postgres=rwU/supabase_admin,anon=rwU/supabase_admin,authenticated=rwU/supabase_admin,service_role=rwU/supabase_admin}"
+    },
+    {
+      "owner_name": "supabase_admin",
+      "schema_name": "public",
+      "defaclobjtype": "f",
+      "defaclacl": "{postgres=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+    },
+    {
+      "owner_name": "supabase_admin",
+      "schema_name": "public",
+      "defaclobjtype": "r",
+      "defaclacl": "{postgres=arwdDxtm/supabase_admin,anon=arwdDxtm/supabase_admin,authenticated=arwdDxtm/supabase_admin,service_role=arwdDxtm/supabase_admin}"
+    },
+    {
+      "owner_name": "supabase_admin",
+      "schema_name": "realtime",
+      "defaclobjtype": "S",
+      "defaclacl": "{postgres=rwU/supabase_admin,dashboard_user=rwU/supabase_admin}"
+    },
+    {
+      "owner_name": "supabase_admin",
+      "schema_name": "realtime",
+      "defaclobjtype": "f",
+      "defaclacl": "{postgres=X/supabase_admin,dashboard_user=X/supabase_admin}"
+    },
+    {
+      "owner_name": "supabase_admin",
+      "schema_name": "realtime",
+      "defaclobjtype": "r",
+      "defaclacl": "{postgres=arwdDxtm/supabase_admin,dashboard_user=arwdDxtm/supabase_admin}"
+    },
+    {
+      "owner_name": "supabase_admin",
+      "schema_name": "supabase_functions",
+      "defaclobjtype": "S",
+      "defaclacl": "{postgres=rwU/supabase_admin,anon=rwU/supabase_admin,authenticated=rwU/supabase_admin,service_role=rwU/supabase_admin}"
+    },
+    {
+      "owner_name": "supabase_admin",
+      "schema_name": "supabase_functions",
+      "defaclobjtype": "f",
+      "defaclacl": "{postgres=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+    },
+    {
+      "owner_name": "supabase_admin",
+      "schema_name": "supabase_functions",
+      "defaclobjtype": "r",
+      "defaclacl": "{postgres=arwdDxtm/supabase_admin,anon=arwdDxtm/supabase_admin,authenticated=arwdDxtm/supabase_admin,service_role=arwdDxtm/supabase_admin}"
+    },
+    {
+      "owner_name": "supabase_auth_admin",
+      "schema_name": "auth",
+      "defaclobjtype": "S",
+      "defaclacl": "{postgres=rwU/supabase_auth_admin,dashboard_user=rwU/supabase_auth_admin}"
+    },
+    {
+      "owner_name": "supabase_auth_admin",
+      "schema_name": "auth",
+      "defaclobjtype": "f",
+      "defaclacl": "{postgres=X/supabase_auth_admin,dashboard_user=X/supabase_auth_admin}"
+    },
+    {
+      "owner_name": "supabase_auth_admin",
+      "schema_name": "auth",
+      "defaclobjtype": "r",
+      "defaclacl": "{postgres=arwdDxtm/supabase_auth_admin,dashboard_user=arwdDxtm/supabase_auth_admin}"
+    }
+  ]
+}

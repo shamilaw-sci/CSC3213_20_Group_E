@@ -1,6 +1,8 @@
 const path = require('path');
 const conversationRepository = require('../repositories/conversationRepository');
 const { generateSafeFileName } = require('../middleware/uploadMiddleware');
+const logger = require('../utils/logger');
+const { isDefiniteMessageRejection, originalMessageError } = require('../utils/chatMessageFailure');
 
 const isAdmin = (user) => user.role === 'ADMIN';
 const isBuyer = (user) => ['BUYER', 'SELLER', 'AGENT'].includes(user.role);
@@ -167,12 +169,13 @@ const getConversations = async (req, res, next) => {
         const lastMessageMap = new Map();
         const unreadCountMap = new Map();
 
-        messages.forEach((message) => {
+        const messagesWithReceipts = await conversationRepository.withReadReceipts(messages, req.user.id, conversations);
+        messagesWithReceipts.forEach((message) => {
             if (!lastMessageMap.has(message.conversation_id)) {
                 lastMessageMap.set(message.conversation_id, message);
             }
 
-            if (!message.read_at && message.sender_id !== req.user.id) {
+            if (!message.viewer_read_at && message.sender_id !== req.user.id) {
                 unreadCountMap.set(
                     message.conversation_id,
                     (unreadCountMap.get(message.conversation_id) || 0) + 1
@@ -202,9 +205,10 @@ const getMessages = async (req, res, next) => {
 
         const messages = await conversationRepository.getMessagesByConversationId(conversation.id);
 
-        await conversationRepository.markMessagesAsRead(conversation.id, req.user.id);
+        await conversationRepository.markMessagesAsRead(conversation.id, req.user.id, messages);
+        const messagesWithReceipts = await conversationRepository.withReadReceipts(messages, req.user.id, [conversation]);
 
-        res.status(200).json({ conversation, messages });
+        res.status(200).json({ conversation, messages: messagesWithReceipts });
     } catch (error) {
         next(error);
     }
@@ -223,31 +227,58 @@ const sendMessage = async (req, res, next) => {
         if (!conversation) return;
 
         let attachment = {};
+        let uploadedKey;
         if (file) {
             const safeName = generateSafeFileName(file.originalname);
             const fileName = `${conversation.id}/${safeName}`;
 
-            const publicUrl = await conversationRepository.uploadAttachment(fileName, file.buffer, file.mimetype);
+            const attachmentReference = await conversationRepository.uploadAttachment(fileName, file.buffer, file.mimetype);
+            uploadedKey = fileName;
 
             attachment = {
-                attachment_url: publicUrl,
+                attachment_url: attachmentReference,
                 attachment_type: file.mimetype,
                 attachment_name: path.basename(file.originalname)
             };
         }
 
-        const message = await conversationRepository.createMessage({
-            conversation_id: conversation.id,
-            sender_id: req.user.id,
-            sender_role: req.user.role === 'AGENT' ? 'SELLER' : req.user.role,
-            body: body?.trim() || '',
-            created_at: new Date(),
-            ...attachment
-        });
+        let message;
+        try {
+            message = await conversationRepository.createMessage({
+                conversation_id: conversation.id,
+                sender_id: req.user.id,
+                sender_role: req.user.role === 'AGENT' ? 'SELLER' : req.user.role,
+                body: body?.trim() || '',
+                created_at: new Date(),
+                ...attachment
+            });
+            if (!message || typeof message.id !== 'string' || !message.id.trim()
+                || message.conversation_id !== conversation.id) {
+                throw new Error('Message persistence could not be confirmed.');
+            }
+        } catch (error) {
+            if (uploadedKey) {
+                const meta = { conversationId: conversation.id, userId: req.user.id, objectKey: uploadedKey };
+                if (isDefiniteMessageRejection(error)) {
+                    try { await conversationRepository.removeAttachment(conversation.id, uploadedKey); }
+                    catch { logger.error('chat_attachment_cleanup_failed', meta); }
+                } else {
+                    logger.error('chat_attachment_recovery_required', meta);
+                }
+            }
+            throw originalMessageError(error);
+        }
 
-        await conversationRepository.updateConversationTimestamp(conversation.id);
+        try { await conversationRepository.updateConversationTimestamp(conversation.id); }
+        catch {
+            logger.error('chat_timestamp_recovery_required', {
+                conversationId: conversation.id, userId: req.user.id, messageId: message.id,
+            });
+        }
 
-        res.status(201).json({ message });
+        const delivered = message.attachment_url
+            ? (await conversationRepository.withAttachmentUrls([message]))[0] : message;
+        res.status(201).json({ message: delivered });
     } catch (error) {
         next(error);
     }

@@ -1,0 +1,55 @@
+import { fireEvent, render, screen, waitFor, cleanup, act } from '@testing-library/react';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import FeasibilityCalculator from './FeasibilityCalculator';
+import api from '../../context/api';
+vi.mock('../../context/api', () => ({ default: { get: vi.fn(), post: vi.fn(), delete: vi.fn() } }));
+vi.mock('../../context/UserAuthContext', () => { const user = { id: 'buyer' }; return { useAuth: () => ({ user }) }; });
+vi.mock('recharts', () => ({ ResponsiveContainer: () => null, LineChart: () => null, Line: () => null, XAxis: () => null, YAxis: () => null, CartesianGrid: () => null, Tooltip: () => null }));
+afterEach(cleanup);
+beforeEach(() => { vi.clearAllMocks(); api.get.mockResolvedValue({ data: { history: [{ id: 'saved', salary: 200000, savings: 2000000, loan_deductions: 20000, tenure_years: 15, max_buying_power: 6182031 }] } }); });
+const open = () => render(<FeasibilityCalculator isOpen onClose={() => {}} onFilterApply={() => {}} />);
+test('latest restore wins and edits invalidate completed and pending results', async () => {
+ const entry = { salary: 200000, savings: 2000000, loan_deductions: 20000, tenure_years: 15 };
+ api.get.mockResolvedValue({ data: { history: [{ ...entry, id: 'a', max_buying_power: 100 }, { ...entry, id: 'b', salary: 300000, max_buying_power: 200 }] } });
+ let first, second;
+ api.post.mockImplementationOnce(() => new Promise(resolve => { first = resolve; })).mockImplementationOnce(() => new Promise(resolve => { second = resolve; }));
+ open(); fireEvent.click(screen.getByRole('button', { name: 'Toggle saved calculations history' }));
+ fireEvent.click(await screen.findByRole('button', { name: 'Restore calculation LKR 100' }));
+ fireEvent.click(screen.getByRole('button', { name: 'Restore calculation LKR 200' }));
+ await act(async () => second({ data: { maxBuyingPower: 200 } }));
+ await act(async () => first({ data: { maxBuyingPower: 100 } }));
+ expect(screen.getByText('Two hundred rupees')).toBeInTheDocument();
+ expect(screen.queryByText('One hundred rupees')).not.toBeInTheDocument();
+ fireEvent.click(screen.getByRole('button', { name: 'Save this calculation' }));
+ expect(api.post).toHaveBeenLastCalledWith('/feasibility/save', expect.objectContaining({ salary: 300000, maxBuyingPower: 200 }));
+ fireEvent.change(screen.getByLabelText('Monthly Salary (LKR)'), { target: { value: '400000' } });
+ expect(screen.queryByRole('button', { name: 'Save this calculation' })).not.toBeInTheDocument();
+ let pending;
+ api.post.mockImplementationOnce(() => new Promise(resolve => { pending = resolve; }));
+ fireEvent.click(screen.getByRole('button', { name: 'Calculate Buying Power' }));
+ fireEvent.change(screen.getByLabelText('Monthly Salary (LKR)'), { target: { value: '500000' } });
+ await act(async () => pending({ data: { maxBuyingPower: 400 } }));
+ expect(screen.queryByText('Four hundred rupees')).not.toBeInTheDocument();
+});
+test('formats monetary inputs and explains buying power in words', async () => {
+ api.post.mockResolvedValue({ data: { maxBuyingPower: 6182031, loanCapacity: 4182031, monthlyInstallment: 60000 } }); open();
+ for (const [label, value] of [['Monthly Salary (LKR)', '200000'], ['Current Savings / Downpayment', '2000000'], ['Existing Monthly Loan Deductions', '20000']]) fireEvent.change(screen.getByLabelText(label), { target: { value } });
+ expect(screen.getByLabelText('Monthly Salary (LKR)')).toHaveValue('200,000');
+ fireEvent.click(screen.getByRole('button', { name: 'Calculate Buying Power' }));
+ expect(await screen.findByText(/Six million one hundred eighty-two thousand thirty-one rupees/i)).toBeInTheDocument();
+ expect(api.post).toHaveBeenCalledWith('/feasibility/calculate', { salary: 200000, savings: 2000000, loanDeductions: 20000, tenureYears: 10 });
+});
+test('restores all saved financial inputs and recalculates', async () => {
+ api.post.mockResolvedValue({ data: { maxBuyingPower: 6182031 } }); open();
+ fireEvent.click(screen.getByRole('button', { name: 'Toggle saved calculations history' }));
+ fireEvent.click(await screen.findByRole('button', { name: /Restore calculation/ }));
+ await waitFor(() => expect(api.post).toHaveBeenCalledWith('/feasibility/calculate', { salary: 200000, savings: 2000000, loanDeductions: 20000, tenureYears: 15 }));
+ expect(screen.getByLabelText('Existing Monthly Loan Deductions')).toHaveValue('20,000');
+ expect(screen.getByLabelText('Desired Repayment Tenure (Years)')).toHaveValue('15');
+});
+test('shows structured deduction error', async () => {
+ api.post.mockRejectedValue({ response: { data: { message: 'Validation Error', errors: [{ path: 'body.loanDeductions', message: 'Loan deductions cannot exceed salary' }] } } }); open();
+ for (const input of document.querySelectorAll('input')) fireEvent.change(input, { target: { value: '200000' } });
+ fireEvent.click(screen.getByText('Calculate Buying Power'));
+ expect(await screen.findByRole('alert')).toHaveTextContent('Loan deductions cannot exceed salary');
+});

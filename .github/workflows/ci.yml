@@ -2,9 +2,12 @@ name: Thirasara CI Pipeline
 
 on:
   push:
-    branches: [ "main", "master", "developer" ]
+    branches: [ "main", "master", "developer", "version-3.0" ]
   pull_request:
-    branches: [ "main", "master", "developer" ]
+    branches: [ "main", "master", "developer", "version-3.0" ]
+
+permissions:
+  contents: read
 
 jobs:
   # ==========================================
@@ -18,10 +21,10 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up Go 1.23
+      - name: Set up Go from module version
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          go-version-file: go-map-service/go.mod
           cache-dependency-path: go-map-service/go.sum
 
       - name: Download Go Dependencies
@@ -30,11 +33,11 @@ jobs:
 
       - name: Run Go Vet (Static Analysis)
         working-directory: go-map-service
-        run: go vet ./models/... ./handlers/... ./routes/... ./middleware/...
+        run: go vet ./...
 
       - name: Run Go Unit Tests
         working-directory: go-map-service
-        run: go test -v -race ./models/... ./handlers/... ./routes/... ./middleware/...
+        run: go test -v -race -count=1 ./...
 
       - name: Verify Go Binary Compilation
         working-directory: go-map-service
@@ -51,10 +54,10 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js 20
+      - name: Set up Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
           cache-dependency-path: backend-node/package-lock.json
 
@@ -64,29 +67,37 @@ jobs:
 
       - name: Validate Node.js Syntax Across Codebase
         working-directory: backend-node
+        shell: bash
         run: |
           node -c server.js
-          find routes controllers middleware repositories validators -name "*.js" -exec node -c {} +
+          find routes controllers middleware repositories validators utils -name "*.js" -print0 |
+            while IFS= read -r -d '' file; do
+              node --check "$file"
+            done
+
+      - name: Run Backend Tests
+        working-directory: backend-node
+        run: npm test -- --runInBand
 
       - name: Security Scan (npm audit)
         working-directory: backend-node
         run: npm audit --audit-level=high
 
   # ==========================================
-  # 3. React Frontend Build & Type Check CI Job
+  # 3. React Frontend Tests & Build CI Job (no TypeScript check)
   # ==========================================
   build-frontend:
-    name: React Frontend Build Check
+    name: React Frontend Tests & Build
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js 20
+      - name: Set up Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
           cache-dependency-path: frontend-react/package-lock.json
 
@@ -100,6 +111,10 @@ jobs:
         env:
           VITE_API_URL: "http://localhost:5000"
           VITE_MAP_API_URL: "http://localhost:8080/api/map/search"
+
+      - name: Run Frontend Tests
+        working-directory: frontend-react
+        run: npm test -- --maxWorkers=1
 
       - name: Security Scan (npm audit)
         working-directory: frontend-react

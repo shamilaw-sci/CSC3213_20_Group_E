@@ -2,9 +2,10 @@ const { z } = require('zod');
 
 const generateHashSchema = z.object({
   body: z.object({
-    order_id: z.string().or(z.number()),
-    amount: z.string().or(z.number())
-  }).passthrough()
+    property_id: z.string().uuid().optional(),
+    order_id: z.string().uuid().optional(),
+    amount: z.string().or(z.number()).optional()
+  }).passthrough().refine(body => body.property_id || body.order_id, 'property_id is required')
 });
 
 const notifyWebhookSchema = z.object({

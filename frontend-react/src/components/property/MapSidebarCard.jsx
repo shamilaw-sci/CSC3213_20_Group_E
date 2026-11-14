@@ -1,3 +1,4 @@
+import { logClientError } from '../../utils/clientLog';
 import React, { useState } from 'react';
 import { useCompare } from '../../context/CompareContext';
 import api from '../../context/api';
@@ -27,7 +28,7 @@ const MapSidebarCard = React.memo(({ prop, isActive, onMouseEnter, onMouseLeave,
             await api.post(`/favorites/${prop.id}`);
             setIsFavorite(!isFavorite);
         } catch (error) {
-            (toast.error('Failed to toggle favorite'), console.error('Failed to toggle favorite', error));
+            (toast.error('Failed to toggle favorite'), logClientError('favorite_update_failed'));
         }
     };
 

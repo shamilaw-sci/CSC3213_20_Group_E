@@ -1,0 +1,746 @@
+Checkout-only harness/API/browser safety review; prior batches excluded; no production changes.
+diff --git a/docs/evidence/phase5-checkout-hook-test.before.jsx b/frontend-react/src/hooks/usePayhere.test.jsx
+index f52fd1b..5ff4fda 100644
+--- a/docs/evidence/phase5-checkout-hook-test.before.jsx
++++ b/frontend-react/src/hooks/usePayhere.test.jsx
+@@ -3,13 +3,15 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+ import { usePayhere } from './usePayhere';
+ 
+ const api = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
++const state = vi.hoisted(() => ({ user: { id: 'seller-1', role: 'SELLER' }, navigate: vi.fn() }));
+ vi.mock('../context/api', () => ({ default: api }));
+-vi.mock('../context/UserAuthContext', () => ({ useAuth: () => ({ user: { id: 'seller-1', role: 'SELLER' } }) }));
+-vi.mock('react-router-dom', () => ({ useNavigate: () => vi.fn() }));
++vi.mock('../context/UserAuthContext', () => ({ useAuth: () => ({ user: state.user }) }));
++vi.mock('react-router-dom', () => ({ useNavigate: () => state.navigate }));
+ 
+ describe('PayHere checkout mode', () => {
+     beforeEach(() => {
+         vi.clearAllMocks();
++        state.user = { id: 'seller-1', role: 'SELLER' };
+         window.payhere = { startPayment: vi.fn() };
+         api.post.mockResolvedValue({ data: { hash: 'test-hash', order_id: 'checkout-1', amount: '750.00', currency: 'LKR', merchant_id: 'test-merchant', sandbox: true } });
+     });
+@@ -67,4 +69,56 @@ describe('PayHere checkout mode', () => {
+         await act(async () => { await result.current.triggerPayment('property-1'); });
+         expect(window.payhere.startPayment).not.toHaveBeenCalled();
+     });
++    test.each(['SELLER', 'AGENT'])('%s cancellation and SDK error preserve drafts and navigate to its dashboard', async role => {
++        state.user = { id: 'owner', role };
++        api.get.mockResolvedValue({ data: {} });
++        const message = vi.fn();
++        const { result } = renderHook(() => usePayhere(message));
++        await act(async () => { await result.current.triggerPayment('property-1'); });
++        vi.useFakeTimers();
++        try {
++            act(() => window.payhere.onDismissed());
++            expect(message).toHaveBeenLastCalledWith(expect.objectContaining({ text: expect.stringContaining('private Draft') }));
++            expect(api.post).toHaveBeenCalledTimes(1);
++            act(() => vi.advanceTimersByTime(3000));
++            expect(state.navigate).toHaveBeenLastCalledWith(role === 'SELLER' ? '/seller-dashboard' : '/agent-dashboard');
++            act(() => window.payhere.onError('synthetic decline'));
++            expect(message).toHaveBeenLastCalledWith({ type: 'error', text: 'Payment Error: synthetic decline. Listing is safely saved in your Drafts.' });
++            expect(api.post).toHaveBeenCalledTimes(1);
++            act(() => vi.advanceTimersByTime(3000));
++            expect(state.navigate).toHaveBeenCalledTimes(2);
++        } finally { vi.useRealTimers(); }
++    });
++    test.each(['Unpaid', 'Paid'])('completion trusts property status %s rather than advisory confirmation', async payment_status => {
++        api.get.mockResolvedValueOnce({ data: {} }).mockResolvedValueOnce({ data: { property: { payment_status, status: 'approved' } } });
++        const message = vi.fn();
++        const { result } = renderHook(() => usePayhere(message));
++        await act(async () => { await result.current.triggerPayment('property-1'); });
++        vi.useFakeTimers();
++        try {
++            await act(async () => { await window.payhere.onCompleted('wrong-browser-order'); });
++            expect(api.post).toHaveBeenLastCalledWith('/payment/confirm-client-success', { property_id: 'property-1', order_id: 'checkout-1' });
++            expect(api.get).toHaveBeenLastCalledWith('/properties/property-1');
++            expect(message).toHaveBeenLastCalledWith(expect.objectContaining({ type: payment_status === 'Paid' ? 'success' : 'info',
++                text: expect.stringContaining(payment_status === 'Paid' ? 'Payment confirmed!' : 'awaiting server confirmation') }));
++            act(() => vi.advanceTimersByTime(2500));
++            expect(state.navigate).toHaveBeenLastCalledWith('/seller-dashboard');
++        } finally { vi.useRealTimers(); }
++    });
++    test.each([{ currency: 'USD' }, { sandbox: 'true' }, { merchant_id: '' }, { amount: '' }, { hash: '' }, { order_id: '' }])(
++        'invalid locked terms %j refuse the SDK', async invalid => {
++            api.get.mockResolvedValue({ data: {} });
++            api.post.mockResolvedValue({ data: { hash: 'h', order_id: 'o', amount: '500.00', currency: 'LKR', merchant_id: 'm', sandbox: true, ...invalid } });
++            vi.spyOn(console, 'error').mockImplementation(() => {});
++            const message = vi.fn();
++            const { result } = renderHook(() => usePayhere(message));
++            vi.useFakeTimers();
++            try {
++                await act(async () => { await result.current.triggerPayment('property-1'); });
++                expect(window.payhere.startPayment).not.toHaveBeenCalled();
++                expect(message).toHaveBeenCalledWith(expect.objectContaining({ type: 'error' }));
++                act(() => vi.advanceTimersByTime(3000));
++            } finally { vi.useRealTimers(); }
++        }
++    );
+ });
+diff --git a/backend-node/integration/run-local.cjs b/backend-node/integration/run-local.cjs
+new file mode 100644
+index 0000000..8768f3e
+--- /dev/null
++++ b/backend-node/integration/run-local.cjs
+@@ -0,0 +1,104 @@
++const { spawnSync } = require('node:child_process');
++const path = require('node:path');
++const jwt = require('jsonwebtoken');
++const { Client } = require('pg');
++const { inspectLocalStack, validateDatabase, identitySql } = require('./local-stack.cjs');
++const { snapshotState, assertSameState } = require('./database-state.cjs');
++
++const profiles = Object.freeze({
++    checkout: { label: 'Checkout', config: 'checkout.jest.config.cjs', tables: ['users', 'properties', 'saved_searches',
++        'transactions', 'payment_orders', 'payment_receipt_outbox', 'leads', 'conversations', 'messages', 'message_receipts', 'platform_settings'] },
++    receipts: { label: 'Payment receipts', config: 'receipts.jest.config.cjs', tables: ['users', 'properties', 'saved_searches',
++        'transactions', 'payment_orders', 'payment_receipt_outbox', 'leads', 'conversations', 'messages', 'message_receipts'] },
++    crm: { label: 'CRM', config: 'crm.jest.config.cjs', tables: ['users', 'properties', 'saved_searches',
++        'transactions', 'payment_orders', 'payment_receipt_outbox', 'leads', 'conversations', 'messages', 'message_receipts'] },
++    'login-roles': { label: 'Login/roles', config: 'jest.config.cjs', tables: ['users'] },
++    listings: { label: 'Listings', config: 'listings.jest.config.cjs',
++        tables: ['users', 'properties', 'transactions', 'payment_orders', 'payment_receipt_outbox'] },
++    'saved-searches': { label: 'Saved searches', config: 'saved-searches.jest.config.cjs',
++        tables: ['users', 'properties', 'saved_searches', 'transactions', 'payment_orders', 'payment_receipt_outbox'] },
++    storage: { label: 'Listings Storage', config: 'storage.jest.config.cjs',
++        tables: ['users', 'properties', 'transactions', 'payment_orders', 'payment_receipt_outbox'] },
++});
++
++async function runLocal(profileName) {
++    let stage = 'container/workdir/checksum identity';
++    let client;
++    try {
++        if (!Object.hasOwn(profiles, profileName)) throw new Error('Unknown test profile.');
++        const profile = profiles[profileName];
++        const local = inspectLocalStack();
++        client = new Client(local.database);
++        stage = 'read-only database connection';
++        await client.connect();
++        await client.query('BEGIN READ ONLY');
++        stage = 'database marker and ledger identity';
++        validateDatabase((await client.query(identitySql)).rows[0]);
++        const before = await snapshotState(client, profile.tables);
++        let storage, storageBefore;
++        if (profileName === 'storage') {
++            storage = require('./storage-local.cjs').inspectStorageStack();
++            storageBefore = { database: await require('./storage-state.cjs').storageDatabaseState(client),
++                files: require('./storage-state.cjs').fileManifest(storage.containerId) };
++        }
++        const ids = (await client.query('SELECT id FROM public.users ORDER BY id')).rows.map(row => row.id);
++        const key = jwt.sign({ role: 'service_role', iss: 'supabase' }, local.jwtSecret, { expiresIn: '10m' });
++        stage = 'PostgREST read-only identity cross-check';
++        const response = await fetch(`${local.apiUrl}/users?select=id&order=id`, {
++            headers: { Authorization: `Bearer ${key}` }, redirect: 'error', signal: AbortSignal.timeout(5000),
++        });
++        if (!response.ok || JSON.stringify((await response.json()).map(row => row.id)) !== JSON.stringify(ids)) {
++            throw new Error('Local API and database identity cross-check failed.');
++        }
++        if (storage) {
++            const bucket = await fetch(`${storage.apiUrl}/bucket/properties`, { headers: { Authorization: `Bearer ${key}` },
++                redirect: 'error', signal: AbortSignal.timeout(5000) });
++            if (!bucket.ok || (await bucket.json()).id !== 'properties') throw new Error('Checked Storage bucket unavailable.');
++            require('./storage-state.cjs').assertStorageState(storageBefore.database,
++                await require('./storage-state.cjs').storageDatabaseState(client));
++        }
++        await client.query('ROLLBACK');
++        if (process.argv.includes('--preflight')) {
++            console.log(`PASS: ${profile.label} stack-c container/DB/API/marker/checksums/ledger; read-only state snapshot. No fixture writes.`);
++            return;
++        }
++        const env = Object.fromEntries(['PATH', 'SystemRoot', 'WINDIR', 'TEMP', 'TMP', 'COMSPEC', 'PATHEXT']
++            .filter(name => process.env[name]).map(name => [name, process.env[name]]));
++        Object.assign(env, {
++            NODE_ENV: 'test', JWT_SECRET: 'phase5-isolated-auth-tests-only',
++            SUPABASE_URL: local.apiUrl, SUPABASE_KEY: key,
++            PHASE5_DATABASE: JSON.stringify(local.database), PHASE5_LOCAL_APPROVED: 'stack-c',
++        });
++        if (storage) env.PHASE5_STORAGE_APPROVED = 'stack-c';
++        console.log(`Running real ${profile.label} integration against verified stack-c; external delivery disabled.`);
++        stage = 'integration assertions and fixture cleanup';
++        const result = spawnSync(process.execPath, [require.resolve('jest/bin/jest'), '--config',
++            path.join(__dirname, profile.config), '--runInBand', '--no-cache'], {
++            cwd: path.resolve(__dirname, '..'), env, stdio: 'inherit', timeout: 120000,
++        });
++        // Check preservation after child failure/timeout as well as success.
++        stage = 'post-run state preservation';
++        validateDatabase((await client.query(identitySql)).rows[0]);
++        assertSameState(before, await snapshotState(client, profile.tables));
++        if (storage) {
++            require('./storage-state.cjs').assertStorageState(storageBefore, {
++                database: await require('./storage-state.cjs').storageDatabaseState(client),
++                files: require('./storage-state.cjs').fileManifest(storage.containerId),
++            });
++            console.log('PASS: full native Storage schema/metadata and persisted file manifest preserved.');
++        }
++        console.log(`PASS: ${profile.tables.length} full table snapshot(s) and canonical ledger preserved after cleanup.`);
++        if (result.status !== 0) {
++            stage = 'integration assertions or fixture cleanup';
++            throw new Error('Integration assertions or cleanup failed.');
++        }
++    } catch {
++        // Docker/pg errors can include generated credentials or private configuration.
++        console.error(`FAIL: local ${profileName} integration at ${stage}; credentials suppressed.`);
++        process.exitCode = 1;
++    } finally {
++        if (client) await client.end().catch(() => { process.exitCode = 1; });
++    }
++}
++
++module.exports = { runLocal };
+diff --git a/backend-node/integration/database-state.cjs b/backend-node/integration/database-state.cjs
+new file mode 100644
+index 0000000..017153d
+--- /dev/null
++++ b/backend-node/integration/database-state.cjs
+@@ -0,0 +1,32 @@
++const tables = Object.freeze({ users: 'id', properties: 'id', saved_searches: 'id', transactions: 'id',
++    payment_orders: 'id', payment_receipt_outbox: 'order_id', leads: 'lead_id', conversations: 'id',
++    messages: 'id', message_receipts: 'message_id,user_id', platform_settings: 'id' });
++
++async function snapshotState(client, names) {
++    if (!names.length || names.some(name => !Object.hasOwn(tables, name))) throw new Error('Unsupported snapshot table.');
++    const result = {};
++    for (const name of names) {
++        const response = await client.query(`SELECT coalesce(jsonb_agg(to_jsonb(t) ORDER BY ${tables[name]}), '[]'::jsonb) AS snapshot FROM public.${name} t`);
++        result[name] = response.rows[0].snapshot;
++    }
++    return result;
++}
++
++function assertSameState(before, after) {
++    if (JSON.stringify(Object.keys(before).sort()) !== JSON.stringify(Object.keys(after).sort())) {
++        throw new Error('Starting state not preserved: snapshot table set differs.');
++    }
++    for (const name of Object.keys(before)) {
++        if (JSON.stringify(before[name]) !== JSON.stringify(after[name])) {
++            throw new Error(`Starting state not preserved for ${name}.`);
++        }
++    }
++}
++
++function assertOwnedListings(rows, sellerIds) {
++    const owned = new Set(sellerIds);
++    if (rows.some(row => !row.id || !owned.has(row.seller_id))) throw new Error('Cleanup requires run-owned listing rows.');
++    return rows.map(row => row.id);
++}
++
++module.exports = { snapshotState, assertSameState, assertOwnedListings };
+diff --git a/backend-node/tests/integrationState.test.js b/backend-node/tests/integrationState.test.js
+new file mode 100644
+index 0000000..c399d1f
+--- /dev/null
++++ b/backend-node/tests/integrationState.test.js
+@@ -0,0 +1,59 @@
++const { snapshotState, assertSameState, assertOwnedListings } = require('../integration/database-state.cjs');
++
++describe('Local integration state preservation (no database connections)', () => {
++    test('snapshots complete platform settings without changing the listing fee', async () => {
++        const settings = [{ id: 'listing_fee', value: '750.00', updated_at: 'unchanged' }];
++        const client = { query: jest.fn().mockResolvedValue({ rows: [{ snapshot: settings }] }) };
++        expect(await snapshotState(client, ['platform_settings'])).toEqual({ platform_settings: settings });
++        expect(client.query).toHaveBeenCalledTimes(1);
++        expect(client.query).toHaveBeenCalledWith("SELECT coalesce(jsonb_agg(to_jsonb(t) ORDER BY id), '[]'::jsonb) AS snapshot FROM public.platform_settings t");
++    });
++    test('snapshots complete CRM rows with deterministic primary and composite keys', async () => {
++        const client = { query: jest.fn().mockResolvedValue({ rows: [{ snapshot: [] }] }) };
++        expect(await snapshotState(client, ['leads', 'conversations', 'messages', 'message_receipts']))
++            .toEqual({ leads: [], conversations: [], messages: [], message_receipts: [] });
++        expect(client.query.mock.calls.map(([sql]) => sql)).toEqual([
++            expect.stringContaining('ORDER BY lead_id'), expect.stringContaining('ORDER BY id'),
++            expect.stringContaining('ORDER BY id'), expect.stringContaining('ORDER BY message_id,user_id'),
++        ]);
++    });
++    test('snapshots complete saved searches in deterministic id order', async () => {
++        const client = { query: jest.fn().mockResolvedValue({ rows: [{ snapshot: [{ id: 'search', filters: { version: 1 } }] }] }) };
++        expect((await snapshotState(client, ['saved_searches'])).saved_searches).toEqual([{ id: 'search', filters: { version: 1 } }]);
++        expect(client.query).toHaveBeenCalledWith(expect.stringContaining('to_jsonb(t) ORDER BY id'));
++        expect(client.query).toHaveBeenCalledWith(expect.stringContaining('FROM public.saved_searches t'));
++    });
++    test('snapshots complete rows in deterministic id order for allowlisted tables', async () => {
++        const client = { query: jest.fn().mockResolvedValue({ rows: [{ snapshot: [{ id: 'original', title: 'Preserve me' }] }] }) };
++        const result = await snapshotState(client, ['users', 'properties']);
++        expect(client.query.mock.calls.map(([sql]) => sql)).toEqual([
++            expect.stringContaining('to_jsonb(t) ORDER BY id'), expect.stringContaining('to_jsonb(t) ORDER BY id'),
++        ]);
++        expect(result.properties).toEqual([{ id: 'original', title: 'Preserve me' }]);
++    });
++    test.each(['settings', 'users;DROP TABLE users', 'properties WHERE true'])('refuses table %s before querying', async table => {
++        const client = { query: jest.fn() };
++        await expect(snapshotState(client, [table])).rejects.toThrow(/snapshot table/);
++        expect(client.query).not.toHaveBeenCalled();
++    });
++    test('accepts identical full snapshots', () => {
++        expect(() => assertSameState({ users: [], properties: [{ id: 'p', price: 5 }] },
++            { users: [], properties: [{ id: 'p', price: 5 }] })).not.toThrow();
++    });
++    test.each([
++        { users: [{ id: 'unremoved-fixture' }], properties: [] },
++        { users: [], properties: [{ id: 'original', title: 'Changed' }] },
++        { users: [] },
++    ])('rejects drift without exposing row contents', after => {
++        expect(() => assertSameState({ users: [], properties: [{ id: 'original', title: 'Private original' }] }, after))
++            .toThrow(/^Starting state not preserved/);
++        try { assertSameState({ users: [{ id: 'secret-identity' }] }, after); }
++        catch (error) { expect(error.message).not.toContain('secret-identity'); }
++    });
++    test('allows cleanup recovery only for run-owned listing rows', () => {
++        expect(assertOwnedListings([{ id: 'p1', seller_id: 'own-seller' }], ['own-seller'])).toEqual(['p1']);
++    });
++    test('refuses a pre-existing or foreign-owner listing before cleanup', () => {
++        expect(() => assertOwnedListings([{ id: 'p1', seller_id: 'other' }], ['own-seller'])).toThrow(/run-owned/);
++    });
++});
+diff --git a/backend-node/integration/run-checkout.cjs b/backend-node/integration/run-checkout.cjs
+new file mode 100644
+index 0000000..e72ef8d
+--- /dev/null
++++ b/backend-node/integration/run-checkout.cjs
+@@ -0,0 +1 @@
++require('./run-local.cjs').runLocal('checkout');
+diff --git a/backend-node/integration/checkout.jest.config.cjs b/backend-node/integration/checkout.jest.config.cjs
+new file mode 100644
+index 0000000..62d9b8a
+--- /dev/null
++++ b/backend-node/integration/checkout.jest.config.cjs
+@@ -0,0 +1,3 @@
++module.exports = { rootDir: '..', testMatch: ['<rootDir>/integration/checkout.integration.cjs'],
++    setupFiles: ['<rootDir>/integration/setup.cjs', '<rootDir>/integration/checkout.setup.cjs'],
++    testTimeout: 15000, verbose: true };
+diff --git a/backend-node/integration/checkout.setup.cjs b/backend-node/integration/checkout.setup.cjs
+new file mode 100644
+index 0000000..88b3859
+--- /dev/null
++++ b/backend-node/integration/checkout.setup.cjs
+@@ -0,0 +1,12 @@
++// The shared setup refuses direct invocation and suppresses dotenv and outbound transport.
++process.env.PAYHERE_MERCHANT_ID = 'phase5-checkout-dummy-merchant';
++process.env.PAYHERE_MERCHANT_SECRET = 'phase5-checkout-dummy-signing-secret';
++process.env.PAYHERE_MODE = 'sandbox';
++globalThis.__checkoutReceiptDrain = jest.fn(async () => {});
++jest.doMock('../utils/paymentReceiptQueue', () => ({
++    start: () => { throw new Error('Checkout receipt worker forbidden.'); },
++    drain: id => {
++        if (!globalThis.__checkoutOrders?.has(id)) throw new Error('Unowned checkout receipt drain forbidden.');
++        return globalThis.__checkoutReceiptDrain(id);
++    },
++}));
+diff --git a/backend-node/integration/checkout.integration.cjs b/backend-node/integration/checkout.integration.cjs
+new file mode 100644
+index 0000000..1ebec9d
+--- /dev/null
++++ b/backend-node/integration/checkout.integration.cjs
+@@ -0,0 +1,141 @@
++const { randomUUID, createHash } = require('node:crypto');
++const request = require('supertest');
++const bcrypt = require('bcryptjs');
++const { Client } = require('pg');
++const { validateDatabase, identitySql } = require('./local-stack.cjs');
++const { allowedAppPorts } = require('./network-policy.cjs');
++const app = require('../server');
++const md5 = value => createHash('md5').update(value).digest('hex').toUpperCase();
++const run = randomUUID(), password = 'Phase5-checkout-only-123!';
++const users = ['SELLER', 'AGENT', 'BUYER', 'BANNED'].map(role => ({ id: randomUUID(), role,
++    email: `${run}-${role.toLowerCase()}@example.test` }));
++const fixtures = ['locked', 'concurrent', 'conflict', 'agent'].map((name, index) => ({
++    id: randomUUID(), title: `${run} checkout ${name}`, owner: users[index === 3 ? 1 : 0],
++}));
++const db = new Client(JSON.parse(process.env.PHASE5_DATABASE));
++const ownedOrders = globalThis.__checkoutOrders = new Set();
++let connected = false, server, port, fee;
++const sessions = new Map();
++const hash = (f, role = 'SELLER', extra = {}) => sessions.get(role).post('/api/payment/generate-hash')
++    .send({ property_id: f.id, ...extra });
++const notify = (order, extra = {}) => {
++    const body = { merchant_id: process.env.PAYHERE_MERCHANT_ID, order_id: order.order_id,
++        payhere_amount: order.amount, payhere_currency: 'LKR', status_code: '2', payment_id: `${run}-${order.order_id}`, ...extra };
++    body.md5sig = md5(body.merchant_id + body.order_id + body.payhere_amount + body.payhere_currency + body.status_code + md5(process.env.PAYHERE_MERCHANT_SECRET));
++    return body;
++};
++const post = body => request(server).post('/api/payment/notify').type('form').send(body);
++const state = async f => ({
++    property: (await db.query('SELECT * FROM public.properties WHERE id=$1', [f.id])).rows,
++    orders: (await db.query('SELECT * FROM public.payment_orders WHERE property_id=$1 ORDER BY id', [f.id])).rows,
++    transactions: (await db.query('SELECT * FROM public.transactions WHERE property_id=$1 ORDER BY id', [f.id])).rows,
++    outbox: (await db.query('SELECT r.* FROM public.payment_receipt_outbox r JOIN public.payment_orders o ON o.id=r.order_id WHERE o.property_id=$1 ORDER BY r.order_id', [f.id])).rows,
++});
++const checkout = async (f, role = 'SELLER') => {
++    const response = await hash(f, role); expect(response.status).toBe(200);
++    ownedOrders.add(response.body.order_id); return response.body;
++};
++beforeAll(async () => {
++    await db.connect(); connected = true;
++    validateDatabase((await db.query(identitySql)).rows[0]);
++    const setting = (await db.query("SELECT setting_value FROM public.platform_settings WHERE setting_key='listing_fee'")).rows[0];
++    fee = require('../utils/paymentMoney').formatMoney(setting?.setting_value ?? '500.00');
++    const passwordHash = await bcrypt.hash(password, 10);
++    for (const user of users) await db.query('INSERT INTO public.users(id,name,email,password_hash,role) VALUES($1,$2,$3,$4,$5)',
++        [user.id, `Checkout ${user.role}`, user.email, passwordHash, user.role]);
++    for (const f of fixtures) await db.query(`INSERT INTO public.properties(id,seller_id,title,description,price,status,payment_status,type,latitude,longitude,bedrooms,bathrooms,listing_type)
++        VALUES($1,$2,$3,'Checkout fixture',1000,'pending','Unpaid','House',7,80,1,1,'Sale')`, [f.id, f.owner.id, f.title]);
++    await new Promise((resolve, reject) => { server = app.listen(0, '127.0.0.1', resolve); server.once('error', reject); });
++    port = server.address().port; allowedAppPorts.add(port);
++    for (const user of users.filter(u => u.role !== 'BANNED')) {
++        const session = request.agent(server);
++        const login = await session.post('/api/auth/login').send({ email: user.email, password });
++        expect(login.status).toBe(200); sessions.set(user.role, session);
++    }
++});
++afterAll(async () => {
++    try {
++        if (connected) {
++            validateDatabase((await db.query(identitySql)).rows[0]);
++            // Recovery discovers only this run's exact property + UUID/email owner pairs, including partial setup.
++            for (const f of fixtures) {
++                const args = [f.id, f.owner.id, f.owner.email, f.title];
++                const predicate = 'o.property_id=$1 AND o.owner_id=$2 AND u.id=o.owner_id AND u.email=$3 AND p.id=o.property_id AND p.seller_id=$2 AND p.title=$4';
++                await db.query(`DELETE FROM public.payment_receipt_outbox r USING public.payment_orders o,public.users u,public.properties p WHERE r.order_id=o.id AND ${predicate}`, args);
++                await db.query(`DELETE FROM public.transactions t USING public.payment_orders o,public.users u,public.properties p WHERE t.payment_order_id=o.id AND t.property_id=$1 AND ${predicate}`, args);
++                await db.query(`DELETE FROM public.payment_orders o USING public.users u,public.properties p WHERE ${predicate}`, args);
++                await db.query('DELETE FROM public.properties p USING public.users u WHERE p.id=$1 AND p.seller_id=$2 AND u.id=$2 AND u.email=$3 AND p.title=$4', args);
++            }
++            for (const user of users) await db.query('DELETE FROM public.users WHERE id=$1 AND email=$2', [user.id, user.email]);
++            expect((await db.query('SELECT id FROM public.properties WHERE id=ANY($1::uuid[])', [fixtures.map(f => f.id)])).rows).toEqual([]);
++            expect((await db.query('SELECT id FROM public.users WHERE id=ANY($1::uuid[])', [users.map(u => u.id)])).rows).toEqual([]);
++        }
++    } finally {
++        try { await db.end(); } finally {
++            if (server?.listening) await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
++            allowedAppPorts.delete(port);
++        }
++    }
++});
++test('real auth, ownership and locked server terms; reuse and advisory completion preserve unpaid state', async () => {
++    const f = fixtures[0], before = await state(f);
++    expect((await request(server).post('/api/payment/generate-hash').send({ property_id: f.id })).status).toBe(401);
++    for (const role of ['AGENT', 'BUYER']) expect((await hash(f, role)).status).toBe(403);
++    const banned = require('jsonwebtoken').sign({ id: users[3].id, role: 'SELLER' }, process.env.JWT_SECRET);
++    expect((await request(server).post('/api/payment/generate-hash').set('Authorization', `Bearer ${banned}`).send({ property_id: f.id })).status).toBe(403);
++    expect(await state(f)).toEqual(before);
++    const response = await hash(f, 'SELLER', { amount: '0.01', currency: 'USD', merchant_id: 'evil', sandbox: false, mode: 'live' });
++    expect(response.status).toBe(200); const order = response.body; ownedOrders.add(order.order_id);
++    expect(order).toMatchObject({ property_id: f.id, amount: fee, currency: 'LKR', merchant_id: 'phase5-checkout-dummy-merchant', sandbox: true });
++    expect(order.hash).toBe(md5(order.merchant_id + order.order_id + fee + 'LKR' + md5(process.env.PAYHERE_MERCHANT_SECRET)));
++    expect((await checkout(f)).order_id).toBe(order.order_id);
++    const locked = await state(f);
++    expect(locked.orders).toHaveLength(1); expect(locked.orders[0]).toMatchObject({ owner_id: f.owner.id, amount: fee, mode: 'sandbox', status: 'pending' });
++    expect(locked.transactions).toEqual([]); expect(locked.outbox).toEqual([]);
++    const confirm = await sessions.get('SELLER').post('/api/payment/confirm-client-success').send({ property_id: f.id, order_id: order.order_id });
++    expect(confirm.status).toBe(200); expect(confirm.body.payment_status).toBe('Unpaid'); expect(await state(f)).toEqual(locked);
++    expect((await sessions.get('AGENT').post('/api/payment/confirm-client-success').send({ property_id: f.id, order_id: order.order_id })).status).toBe(403);
++    expect((await sessions.get('SELLER').post('/api/payment/confirm-client-success').send({ property_id: f.id, order_id: randomUUID() })).status).toBe(404);
++    expect(await state(f)).toEqual(locked);
++});
++test('concurrent initialization reuses one real pending order; agent owns its checkout', async () => {
++    const f = fixtures[1];
++    const responses = await Promise.all([hash(f), hash(f), hash(f)]);
++    for (const response of responses) { expect(response.status).toBe(200); ownedOrders.add(response.body.order_id); }
++    expect(new Set(responses.map(r => r.body.order_id)).size).toBe(1);
++    expect((await state(f)).orders).toHaveLength(1);
++    const agent = await checkout(fixtures[3], 'AGENT'); expect(agent.property_id).toBe(fixtures[3].id);
++});
++test('form notifications reject tampering and signed mismatches and ignore non-success without any state changes', async () => {
++    const f = fixtures[0], order = await checkout(f), before = await state(f);
++    const invalid = [ { merchant_id: 'other' }, { payhere_amount: '0.01' }, { payhere_currency: 'USD' },
++        { payment_id: '' }, { payment_id: '  ' }, { payhere_amount: 'NaN' }, { payhere_amount: '1e3' } ];
++    for (const extra of invalid) { expect((await post(notify(order, extra))).status).toBe(400); expect(await state(f)).toEqual(before); }
++    expect((await post({ ...notify(order), md5sig: 'bad' })).status).toBe(400);
++    expect((await post({ ...notify(order), payhere_amount: '1.00' })).status).toBe(400);
++    try { process.env.PAYHERE_MODE = 'live'; expect((await post(notify(order))).status).toBe(400); }
++    finally { process.env.PAYHERE_MODE = 'sandbox'; }
++    for (const status_code of ['0', '-1', '-2', '-3']) {
++        const response = await post(notify(order, { status_code })); expect(response.status).toBe(200); expect(response.text).toBe('Ignored');
++    }
++    expect(await state(f)).toEqual(before); expect(globalThis.__checkoutReceiptDrain).not.toHaveBeenCalled();
++});
++test('signed success, replay and concurrent callbacks settle atomically once; provider reuse rolls back other order', async () => {
++    const f = fixtures[0], order = await checkout(f), body = notify(order);
++    for (const response of await Promise.all([post(body), post(body), post(body)])) expect(response.status).toBe(200);
++    const paid = await state(f);
++    expect(paid.property[0]).toMatchObject({ payment_status: 'Paid', status: 'pending' });
++    expect(paid.orders).toHaveLength(1); expect(paid.orders[0]).toMatchObject({ status: 'paid', provider_payment_id: body.payment_id });
++    expect(paid.transactions).toHaveLength(1); expect(paid.transactions[0]).toMatchObject({ payment_order_id: order.order_id, property_id: f.id,
++        amount: fee, currency: 'LKR', status: 'SUCCESS', payment_method: 'PayHere', transaction_id: body.payment_id });
++    expect(paid.outbox).toHaveLength(1); expect(paid.outbox[0]).toMatchObject({ order_id: order.order_id, recipient: f.owner.email, amount: fee, status: 'pending', attempts: 0, sent_at: null });
++    expect(globalThis.__checkoutReceiptDrain.mock.calls.every(([id]) => id === order.order_id)).toBe(true);
++    expect(globalThis.__checkoutReceiptDrain).toHaveBeenCalledTimes(3);
++    expect((await post(body)).status).toBe(200); expect(await state(f)).toEqual(paid);
++    expect((await hash(f)).status).toBe(409);
++    const other = fixtures[2], otherOrder = await checkout(other), before = await state(other);
++    expect((await post(notify(otherOrder, { payment_id: body.payment_id }))).status).toBe(409);
++    expect(await state(other)).toEqual(before); expect(await state(f)).toEqual(paid);
++    const advisory = await sessions.get('SELLER').post('/api/payment/confirm-client-success').send({ property_id: f.id, order_id: order.order_id });
++    expect(advisory.body.payment_status).toBe('Paid'); expect(await state(f)).toEqual(paid);
++});
+diff --git a/backend-node/integration/checkout-browser-guard.cjs b/backend-node/integration/checkout-browser-guard.cjs
+new file mode 100644
+index 0000000..5e07036
+--- /dev/null
++++ b/backend-node/integration/checkout-browser-guard.cjs
+@@ -0,0 +1,22 @@
++const ORIGIN = 'https://strep-reenact-rocket.ngrok-free.dev';
++function verifyTunnel(data) {
++    if (!Array.isArray(data?.tunnels) || data.tunnels.length !== 1) throw new Error('Expected existing sandbox tunnel.');
++    const t = data.tunnels[0];
++    if (t.public_url !== ORIGIN || t.proto !== 'https' || t.config?.addr !== 'http://localhost:5000') throw new Error('Sandbox tunnel target refused.');
++    return ORIGIN;
++}
++function allowPrivate(method, path, body, scope) {
++    const read = /^\/api\/properties\/([0-9a-f-]+)$/i.exec(path);
++    const knownPath = path === '/api/payment/config' || path === '/api/payment/generate-hash' || path === '/api/payment/confirm-client-success' || (read && scope.properties.has(read[1]));
++    if (method === 'OPTIONS') return !!knownPath;
++    if (method === 'GET') return path === '/api/payment/config' || !!(read && scope.properties.has(read[1]));
++    if (method !== 'POST' || !scope.properties.has(body?.property_id)) return false;
++    if (path === '/api/payment/generate-hash') return true;
++    return path === '/api/payment/confirm-client-success' && scope.orders.has(body?.order_id);
++}
++function allowPublic(method, path, body, scope) {
++    if (method === 'GET' && path === scope.health) return true;
++    return method === 'POST' && path === scope.callback && typeof body?.order_id === 'string'
++        && scope.orders.has(body.order_id) && body.merchant_id === scope.merchant;
++}
++module.exports = { verifyTunnel, allowPrivate, allowPublic };
+diff --git a/backend-node/integration/run-checkout-browser.cjs b/backend-node/integration/run-checkout-browser.cjs
+new file mode 100644
+index 0000000..cad8ee6
+--- /dev/null
++++ b/backend-node/integration/run-checkout-browser.cjs
+@@ -0,0 +1,46 @@
++// Existing PayHere credentials are selected in memory; hosted DB/SMTP settings are never inherited.
++const fs = require('node:fs');
++const path = require('node:path');
++const net = require('node:net');
++const { spawn } = require('node:child_process');
++const jwt = require('jsonwebtoken');
++const { Client } = require('pg');
++const { inspectLocalStack, validateDatabase, identitySql } = require('./local-stack.cjs');
++const { verifyTunnel } = require('./checkout-browser-guard.cjs');
++async function freePort(port) {
++    await new Promise((resolve, reject) => {
++        const server = net.createServer(); server.once('error', reject);
++        server.listen(port, '127.0.0.1', () => server.close(error => error ? reject(error) : resolve()));
++    });
++}
++(async () => {
++    let stage = 'local identity'; let db;
++    try {
++        const local = inspectLocalStack();
++        db = new Client(local.database); await db.connect(); await db.query('BEGIN READ ONLY');
++        validateDatabase((await db.query(identitySql)).rows[0]);
++        const ids = (await db.query('SELECT id FROM public.users ORDER BY id')).rows.map(r => r.id);
++        const key = jwt.sign({ role: 'service_role', iss: 'supabase' }, local.jwtSecret, { expiresIn: '45m' });
++        const check = await fetch(`${local.apiUrl}/users?select=id&order=id`, { headers: { Authorization: `Bearer ${key}` }, redirect: 'error', signal: AbortSignal.timeout(5000) });
++        if (!check.ok || JSON.stringify((await check.json()).map(r => r.id)) !== JSON.stringify(ids)) throw new Error('API identity mismatch.');
++        await db.query('ROLLBACK'); await db.end(); db = null;
++        stage = 'existing tunnel and free listeners';
++        const tunnel = verifyTunnel(await (await fetch('http://127.0.0.1:4040/api/tunnels', { signal: AbortSignal.timeout(5000) })).json());
++        await freePort(5000); await freePort(5173);
++        stage = 'sandbox credential selection';
++        const source = require('dotenv').parse(fs.readFileSync(path.join(__dirname, '../.env')));
++        if (source.PAYHERE_MERCHANT_ID !== '1236024' || !source.PAYHERE_MERCHANT_SECRET) throw new Error('Observed sandbox merchant credentials unavailable.');
++        const env = Object.fromEntries(['PATH','SystemRoot','WINDIR','TEMP','TMP','COMSPEC','PATHEXT'].filter(k => process.env[k]).map(k => [k, process.env[k]]));
++        Object.assign(env, { NODE_ENV: 'test', JWT_SECRET: 'phase5-browser-fixtures-only', SUPABASE_URL: local.apiUrl,
++            SUPABASE_KEY: key, PHASE5_DATABASE: JSON.stringify(local.database), PHASE5_LOCAL_APPROVED: 'stack-c',
++            PAYHERE_MODE: 'sandbox', PAYHERE_MERCHANT_ID: source.PAYHERE_MERCHANT_ID,
++            PAYHERE_MERCHANT_SECRET: source.PAYHERE_MERCHANT_SECRET, PHASE5_TUNNEL: tunnel, CLIENT_URL: 'http://localhost:5173' });
++        console.log('Verified isolated sandbox browser fixture launching. Commands: status, stop. No hosted DB or SMTP configuration inherited.');
++        const child = spawn(process.execPath, [path.join(__dirname, 'checkout-browser.cjs')], { cwd: path.join(__dirname, '..'), env, stdio: ['pipe','inherit','inherit'] });
++        process.stdin.pipe(child.stdin);
++        child.on('error', () => { console.error('Browser fixture process failed; credentials suppressed.'); process.exitCode = 1; });
++        child.on('exit', code => { process.stdin.unpipe(child.stdin); process.stdin.pause(); process.exitCode = code ?? 1; });
++    } catch {
++        console.error(`Browser fixture refused at ${stage}; credentials suppressed.`); process.exitCode = 1;
++    } finally { if (db) await db.end().catch(() => {}); }
++})();
+diff --git a/backend-node/integration/checkout-browser.cjs b/backend-node/integration/checkout-browser.cjs
+new file mode 100644
+index 0000000..4a60ffb
+--- /dev/null
++++ b/backend-node/integration/checkout-browser.cjs
+@@ -0,0 +1,149 @@
++const fs = require('node:fs');
++const path = require('node:path');
++const net = require('node:net');
++const Module = require('node:module');
++const readline = require('node:readline');
++const { randomUUID } = require('node:crypto');
++const { pathToFileURL } = require('node:url');
++const { Client } = require('pg');
++const jwt = require('jsonwebtoken');
++const { identitySql, validateDatabase } = require('./local-stack.cjs');
++const { snapshotState, assertSameState } = require('./database-state.cjs');
++const { directRestUrl, allowSocket, allowedAppPorts } = require('./network-policy.cjs');
++const { allowPrivate, allowPublic } = require('./checkout-browser-guard.cjs');
++
++if (process.env.PHASE5_LOCAL_APPROVED !== 'stack-c' || process.env.NODE_ENV !== 'test'
++    || process.env.SUPABASE_URL !== 'http://127.0.0.1:58321' || process.env.PAYHERE_MODE !== 'sandbox'
++    || process.env.JWT_SECRET !== 'phase5-browser-fixtures-only') throw new Error('Verified sandbox launcher required.');
++const tables = ['users','properties','saved_searches','transactions','payment_orders','payment_receipt_outbox','leads','conversations','messages','message_receipts','platform_settings'];
++const run = randomUUID(), callbackBase = `/phase5/${randomUUID()}`;
++const users = ['SELLER','AGENT'].map(role => ({ id: randomUUID(), role, name: `Sandbox ${role === 'SELLER' ? 'Seller' : 'Agent'}`, email: `${run}-${role.toLowerCase()}@example.test` }));
++const fixtures = ['Visa','Mastercard','Cancel','Decline'].map((label, i) => ({ label, id: randomUUID(), user: users[i === 1 ? 1 : 0] }));
++const scope = { properties: new Set(fixtures.map(f => f.id)), orders: new Set(), callback: callbackBase + '/api/payment/notify', health: callbackBase + '/health', merchant: process.env.PAYHERE_MERCHANT_ID };
++const callbacks = [], receiptAttempts = [];
++const evidence = path.resolve(__dirname, '../../docs/evidence');
++const db = new Client(JSON.parse(process.env.PHASE5_DATABASE));
++let before, apiServer, bridgeServer, vite, timer, stopping = false, seeded = false;
++
++const originalConnect = net.Socket.prototype.connect;
++net.Socket.prototype.connect = function (...args) {
++    if (!allowSocket(args, allowedAppPorts)) throw new Error('Browser fixture outbound socket refused.');
++    return originalConnect.apply(this, args);
++};
++const originalFetch = globalThis.fetch;
++globalThis.fetch = (input, init) => originalFetch(directRestUrl(input), { ...init, redirect: 'error', signal: AbortSignal.timeout(5000) });
++const load = Module._load;
++Module._load = function (id, parent, main) {
++    if (id === 'dotenv' && parent?.filename.startsWith(path.resolve(__dirname, '..'))) return { config: () => ({ parsed: {} }) };
++    const resolved = Module._resolveFilename(id, parent, main);
++    if (resolved === path.resolve(__dirname, '../utils/paymentReceiptQueue.js')) return {
++        start: () => { throw new Error('Worker forbidden in browser fixture.'); },
++        drain: async id => { if (!scope.orders.has(id)) throw new Error('Unowned receipt boundary refused.'); receiptAttempts.push(id); },
++    };
++    if (resolved === path.resolve(__dirname, '../utils/emailService.js')) return new Proxy({}, { get: () => () => { throw new Error('Email forbidden in browser fixture.'); } });
++    return load.apply(this, arguments);
++};
++const express = require('express');
++const app = require('../server');
++Module._load = load;
++const listen = (server, port) => new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, '127.0.0.1', () => resolve(server)); });
++const close = server => new Promise((resolve, reject) => server?.listening ? server.close(error => error ? reject(error) : resolve()) : resolve());
++
++async function status() {
++    const rows = [];
++    for (const f of fixtures) {
++        const property = (await db.query('SELECT payment_status,status FROM public.properties WHERE id=$1 AND seller_id=$2', [f.id, f.user.id])).rows[0];
++        const orders = (await db.query('SELECT id,status,provider_payment_id FROM public.payment_orders WHERE property_id=$1 AND owner_id=$2 ORDER BY created_at', [f.id, f.user.id])).rows;
++        const tx = (await db.query('SELECT count(*)::int AS n FROM public.transactions WHERE property_id=$1', [f.id])).rows[0].n;
++        const outbox = (await db.query('SELECT r.status FROM public.payment_receipt_outbox r JOIN public.payment_orders o ON o.id=r.order_id WHERE o.property_id=$1 AND o.owner_id=$2', [f.id, f.user.id])).rows;
++        rows.push({ label: f.label, property, orders, transactions: tx, outbox });
++    }
++    const summary = { run, sandbox: true, rows, callbacks, receiptBoundaryCalls: receiptAttempts.length };
++    fs.writeFileSync(path.join(evidence, 'phase5-checkout-browser-status.private.json'), JSON.stringify(summary, null, 2));
++    console.log(JSON.stringify(summary));
++}
++async function cleanup() {
++    if (stopping) return; stopping = true; clearTimeout(timer);
++    try {
++        await close(bridgeServer); await close(apiServer); if (vite) await vite.close();
++        if (seeded) {
++            validateDatabase((await db.query(identitySql)).rows[0]);
++            for (const f of fixtures) {
++                const orders = (await db.query('SELECT id,owner_id FROM public.payment_orders WHERE property_id=$1', [f.id])).rows;
++                if (orders.some(o => o.owner_id !== f.user.id)) throw new Error('Browser cleanup owner mismatch.');
++                const ids = orders.map(o => o.id);
++                await db.query('DELETE FROM public.payment_receipt_outbox WHERE order_id=ANY($1::uuid[])', [ids]);
++                await db.query('DELETE FROM public.transactions WHERE property_id=$1 AND payment_order_id=ANY($2::uuid[])', [f.id, ids]);
++                await db.query('DELETE FROM public.payment_orders WHERE property_id=$1 AND owner_id=$2', [f.id, f.user.id]);
++                await db.query('DELETE FROM public.properties WHERE id=$1 AND seller_id=$2 AND title=$3', [f.id, f.user.id, `${run} ${f.label}`]);
++            }
++            for (const u of users) await db.query('DELETE FROM public.users WHERE id=$1 AND email=$2', [u.id, u.email]);
++        }
++        if (before) { validateDatabase((await db.query(identitySql)).rows[0]); assertSameState(before, await snapshotState(db, tables)); }
++        console.log('PASS: browser listeners closed; eleven complete app snapshots and canonical ledger preserved after exact fixture cleanup.');
++    } catch { console.error('Browser fixture cleanup/preservation failed; investigate exact private fixture IDs.'); process.exitCode = 1; }
++    finally { await db.end().catch(() => {}); process.stdin.pause(); }
++}
++
++(async () => {
++    try {
++        await db.connect(); validateDatabase((await db.query(identitySql)).rows[0]); before = await snapshotState(db, tables); seeded = true;
++        fs.writeFileSync(path.join(evidence, 'phase5-checkout-browser-fixtures.private.json'), JSON.stringify({ run, users, fixtures, callbackBase }, null, 2));
++        for (const u of users) await db.query("INSERT INTO public.users(id,name,email,password_hash,role) VALUES($1,$2,$3,'not-a-login-hash',$4)", [u.id,u.name,u.email,u.role]);
++        for (const f of fixtures) await db.query("INSERT INTO public.properties(id,seller_id,title,description,price,status,payment_status,type,latitude,longitude) VALUES($1,$2,$3,'Isolated sandbox checkout',1000,'pending','Unpaid','House',7,80)", [f.id,f.user.id,`${run} ${f.label}`]);
++        const privateApi = express(); privateApi.use(express.json({ limit: '16kb' }));
++        privateApi.use((req, res, next) => {
++            if (req.headers.origin && req.headers.origin !== 'http://localhost:5173') return res.sendStatus(403);
++            if (!allowPrivate(req.method, req.originalUrl, req.body, scope)) return res.sendStatus(404);
++            const json = res.json.bind(res);
++            res.json = value => { if (req.path === '/api/payment/generate-hash' && res.statusCode === 200 && value?.sandbox === true && scope.properties.has(value.property_id) && typeof value.order_id === 'string') scope.orders.add(value.order_id); return json(value); };
++            next();
++        }); privateApi.use(app);
++        apiServer = await listen(require('node:http').createServer(privateApi), 0); const apiPort = apiServer.address().port; allowedAppPorts.add(apiPort);
++        const bridge = express(); bridge.use(express.urlencoded({ extended: false, limit: '16kb' }));
++        bridge.use((req, res) => {
++            if (!allowPublic(req.method, req.originalUrl, req.body, scope)) return res.sendStatus(404);
++            if (req.method === 'GET') return res.json({ run, sandbox: true, isolated: true });
++            if (!req.is('application/x-www-form-urlencoded')) return res.sendStatus(415);
++            const body = { ...req.body };
++            res.on('finish', () => { callbacks.push({ order_id: body.order_id, payment_id: body.payment_id, status_code: String(body.status_code), http_status: res.statusCode });
++                if (res.statusCode === 200) fs.writeFileSync(path.join(evidence, `phase5-checkout-callback-${body.order_id}.private.json`), JSON.stringify(body)); });
++            req.url = '/api/payment/notify'; req.originalUrl = req.url; app(req, res);
++        });
++        bridgeServer = await listen(require('node:http').createServer(bridge), 5000);
++
++        const frontend = path.resolve(__dirname, '../../frontend-react');
++        const { createServer } = await import(pathToFileURL(require.resolve('vite', { paths: [frontend] })).href);
++        const publicFixtures = fixtures.map(f => ({ label: f.label, id: f.id, user: f.user, token: jwt.sign({ id: f.user.id, role: f.user.role }, process.env.JWT_SECRET, { expiresIn: '30m' }) }));
++        const apiCode = `const cases=${JSON.stringify(publicFixtures)};async function request(method,url,body){const id=body?.property_id||url.split('/').at(-1);const f=cases.find(x=>x.id===id);const r=await fetch('http://127.0.0.1:${apiPort}/api'+url,{method,headers:{'Content-Type':'application/json',...(f?{Authorization:'Bearer '+f.token}:{})},body:body?JSON.stringify(body):undefined});const data=await r.json();if(!r.ok){const e=new Error(data.error||data.message||'Fixture request failed');e.response={status:r.status,data};throw e;}if(url==='/payment/generate-hash'&&(!data.sandbox||data.merchant_id!==${JSON.stringify(scope.merchant)}))throw new Error('Sandbox terms refused');return {data};}export default{get:url=>request('GET',url),post:(url,body)=>request('POST',url,body)};`;
++        const entry = `import React,{useState} from 'react';import{createRoot}from'react-dom/client';import{MemoryRouter}from'react-router-dom';import{TestAuth}from'virtual:phase5-auth';import api from'virtual:phase5-api';import{usePayhere}from'/src/hooks/usePayhere.js';const cases=${JSON.stringify(publicFixtures.map(({token,...f})=>f))};function Case({f}){const[m,setM]=useState(null),[state,S]=useState(null);const{triggerPayment}=usePayhere(setM);return React.createElement('section',null,React.createElement('h2',null,f.label+' — '+f.user.role),React.createElement('button',{onClick:()=>window.payhere?triggerPayment(f.id):setM({text:'SDK unavailable'})},'Start '+f.label),React.createElement('button',{onClick:async()=>S((await api.get('/properties/'+f.id)).data.property)},'Refresh '+f.label),React.createElement('p',{role:'status'},m?.text||'Ready; sandbox only'),React.createElement('pre',null,state?JSON.stringify({payment_status:state.payment_status,status:state.status}):''));}createRoot(document.getElementById('root')).render(React.createElement(MemoryRouter,null,React.createElement('h1',null,'Isolated PayHere sandbox checkout'),React.createElement('p',null,'Test data only. Database is local. Receipt delivery disabled.'),cases.map(f=>React.createElement(TestAuth.Provider,{key:f.id,value:{user:f.user}},React.createElement(Case,{f})))));`;
++        const emptyEnv = path.join(evidence, 'checkout-empty-env'); fs.mkdirSync(emptyEnv, { recursive: true });
++        vite = await createServer({ configFile: false, root: frontend, envDir: emptyEnv, logLevel: 'error',
++            server: { host: '127.0.0.1', port: 5173, strictPort: true },
++            define: { 'import.meta.env.VITE_API_URL': JSON.stringify(process.env.PHASE5_TUNNEL + callbackBase) },
++            optimizeDeps: { include: ['react','react-dom/client','react-router-dom'] },
++            plugins: [{ name: 'phase5-checkout-fixture',
++                resolveId(id, importer) { if (id.startsWith('virtual:phase5-')) return '\0'+id;
++                    if (importer?.replaceAll('\\','/').endsWith('/src/hooks/usePayhere.js')) {
++                        if (id === '../context/api') return '\0virtual:phase5-api';
++                        if (id === '../context/UserAuthContext') return '\0virtual:phase5-auth';
++                    } },
++                load(id) { if (id === '\0virtual:phase5-entry') return entry;
++                    if (id === '\0virtual:phase5-api') return apiCode;
++                    if (id === '\0virtual:phase5-auth') return "import{createContext,useContext}from'react';export const TestAuth=createContext(null);export const useAuth=()=>useContext(TestAuth);"; },
++                configureServer(server) { server.middlewares.use(async (req,res,next) => {
++                    if (!['/__phase5_checkout','/seller-dashboard','/agent-dashboard'].includes(req.url)) return next();
++                    try { const html=await server.transformIndexHtml(req.url,`<!doctype html><html><head><title>Isolated sandbox checkout</title><style>body{font:16px sans-serif;max-width:900px;margin:40px auto}section{border:1px solid #bbb;padding:16px;margin:16px 0}button{padding:10px;margin-right:12px}</style></head><body><div id="root"></div><script src="https://www.payhere.lk/lib/payhere-2.0.js"></script><script type="module">import 'virtual:phase5-entry';</script></body></html>`);res.setHeader('Content-Type','text/html');res.end(html); } catch { res.statusCode=500;res.end('Fixture page failed.'); }
++                }); },
++            }] });
++        await vite.listen();
++        const metadata = { run, url: 'http://localhost:5173/__phase5_checkout', health: process.env.PHASE5_TUNNEL + scope.health, notify: process.env.PHASE5_TUNNEL + scope.callback, apiPort };
++        fs.writeFileSync(path.join(evidence, 'phase5-checkout-browser-session.private.json'), JSON.stringify(metadata, null, 2));
++        console.log('READY: http://localhost:5173/__phase5_checkout ; sandbox-only isolated backend; verify private health sentinel before payment. Commands: status, stop.');
++        const input = readline.createInterface({ input: process.stdin });
++        input.on('line', line => { if (line.trim() === 'status') status().catch(() => console.error('Status failed.')); if (line.trim() === 'stop') { input.close(); cleanup().then(() => process.exit(process.exitCode || 0)); } });
++        timer = setTimeout(() => cleanup().then(() => process.exit(process.exitCode || 0)), 25 * 60 * 1000); timer.unref();
++        process.on('SIGINT', () => cleanup().then(() => process.exit(process.exitCode || 0)));
++        process.on('SIGTERM', () => cleanup().then(() => process.exit(process.exitCode || 0)));
++    } catch { console.error('Sandbox browser fixture startup failed; credentials suppressed.'); process.exitCode = 1; await cleanup(); }
++})();
+diff --git a/backend-node/tests/checkoutBrowserGuard.test.js b/backend-node/tests/checkoutBrowserGuard.test.js
+new file mode 100644
+index 0000000..445825c
+--- /dev/null
++++ b/backend-node/tests/checkoutBrowserGuard.test.js
+@@ -0,0 +1,31 @@
++const { verifyTunnel, allowPrivate, allowPublic } = require('../integration/checkout-browser-guard.cjs');
++const property = '11111111-1111-4111-8111-111111111111';
++const order = '22222222-2222-4222-8222-222222222222';
++const scope = { properties: new Set([property]), orders: new Set([order]), callback: '/phase5/test-token/api/payment/notify', health: '/phase5/test-token/health', merchant: 'sandbox-merchant' };
++test('only the existing HTTPS ngrok forwarding target is accepted', () => {
++    const tunnel = { public_url: 'https://strep-reenact-rocket.ngrok-free.dev', proto: 'https', config: { addr: 'http://localhost:5000' } };
++    expect(verifyTunnel({ tunnels: [tunnel] })).toBe(tunnel.public_url);
++    for (const changed of [{ ...tunnel, public_url: 'https://other.example' }, { ...tunnel, config: { addr: 'http://localhost:5001' } }, { ...tunnel, proto: 'http' }]) {
++        expect(() => verifyTunnel({ tunnels: [changed] })).toThrow();
++    }
++    expect(() => verifyTunnel({ tunnels: [] })).toThrow();
++});
++test('private API exposes only fixture checkout/read operations', () => {
++    expect(allowPrivate('GET', `/api/properties/${property}`, {}, scope)).toBe(true);
++    expect(allowPrivate('POST', '/api/payment/generate-hash', { property_id: property }, scope)).toBe(true);
++    expect(allowPrivate('POST', '/api/payment/confirm-client-success', { property_id: property, order_id: order }, scope)).toBe(true);
++    for (const [method, path, body] of [['POST', '/api/auth/register', {}], ['GET', '/api/admin/users', {}], ['POST', '/api/payment/notify', {}],
++        ['POST', '/api/payment/generate-hash', { property_id: order }], ['POST', '/api/payment/confirm-client-success', { property_id: property, order_id: property }]]) {
++        expect(allowPrivate(method, path, body, scope)).toBe(false);
++    }
++});
++test('public bridge permits only exact health and form callback route/known order/merchant', () => {
++    const body = { order_id: order, merchant_id: scope.merchant };
++    expect(allowPublic('GET', scope.health, {}, scope)).toBe(true);
++    expect(allowPublic('POST', scope.callback, body, scope)).toBe(true);
++    for (const [method, path, changed] of [['GET', scope.callback, body], ['POST', '/api/payment/notify', body],
++        ['POST', scope.callback, { ...body, order_id: property }], ['POST', scope.callback, { ...body, merchant_id: 'other' }],
++        ['POST', scope.callback + '?extra=1', body], ['POST', scope.callback, { ...body, order_id: [order] }]]) {
++        expect(allowPublic(method, path, changed, scope)).toBe(false);
++    }
++});

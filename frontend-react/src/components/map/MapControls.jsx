@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { logClientWarning } from '../../utils/clientLog';
+import React, { useEffect, useRef } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 
@@ -83,7 +84,7 @@ export const MapEvents = ({ onBoundsChange, onMapClick, searchMode }) => {
                     onBoundsChange(initialBounds);
                 }
             } catch (e) {
-                console.warn("Initial map bounds resolution error:", e);
+                logClientWarning('map_bounds_resolution_failed');
             }
         }
     }, [map, searchMode, onBoundsChange]);
@@ -112,10 +113,7 @@ export const MapEvents = ({ onBoundsChange, onMapClick, searchMode }) => {
     return null;
 };
 
-/**
- * 🚀 Freehand Draw Component
- * (Handles freehand drawing logic)
- */
+// Freehand polygon drawing control.
 export const FreehandDrawControl = ({ onPolygonComplete, onDrawDelete, controlRef, children, isDrawMode, setIsDrawMode }) => {
     const map = useMap();
     const drawnItemsRef = useRef(new L.FeatureGroup());
@@ -136,7 +134,7 @@ export const FreehandDrawControl = ({ onPolygonComplete, onDrawDelete, controlRe
         return () => {
             map.removeLayer(drawnItems);
         };
-    }, [map, controlRef, onDrawDelete]);
+    }, [map, controlRef, onDrawDelete, setIsDrawMode]);
 
     useEffect(() => {
         if (!isDrawMode) {
@@ -208,7 +206,7 @@ export const FreehandDrawControl = ({ onPolygonComplete, onDrawDelete, controlRe
             map.off('mousemove', onMouseMove);
             map.off('mouseup', onMouseUp);
         };
-    }, [map, isDrawMode, onPolygonComplete]);
+    }, [map, isDrawMode, onPolygonComplete, setIsDrawMode]);
 
     return (
         <div className="leaflet-draw-control flex flex-col gap-3 z-[1000] select-none">

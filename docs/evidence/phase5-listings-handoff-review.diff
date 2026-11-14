@@ -1,0 +1,266 @@
+Final Listings2A report/plan/design/README consistency
+diff --git a/docs/phase5-listings.md b/docs/phase5-listings.md
+new file mode 100644
+index 0000000..ff0c0de
+--- /dev/null
++++ b/docs/phase5-listings.md
+@@ -0,0 +1,66 @@
++# Phase 5 checkpoint: Listings 2A
++
++Date: 2026-10-30 (Asia/Colombo). Baseline: version-3.0 at 8625cbbbc2c109956cbe7485e6e88ca0bc130da3, with the preceding uncommitted Login/roles batch retained.
++
++## Outcome and scope
++
++Listings 2A is implemented and locally verified, including aggregate regressions, lint/build and code review. This batch verifies the core listing lifecycle, ownership and frontend submission/management boundaries. It does not complete the entire listings flow or Phase 5.
++
++Production code, dependency manifests/locks, migration SQL, CI workflows and application .env are unchanged. No commit, push or staging is performed. The owner retains the one-commit-after-full-phase preference; never stage docs/evidence/.
++
++## Coverage
++
++- Real API integration: 32 cases covering SELLER/AGENT multipart text-only creation, server-owned seller/status/payment fields, actual PostGIS geometry and numeric zeros, anonymous/wrong-role/banned denial, invalid input/MIME failures, own listings, foreign-owner privacy/edit/delete denial, public list/search/detail visibility, rejected/pending owner edits, approved edit refusal, Paid admin approve/retry/reject/correction and exact owner deletion.
++- Frontend integration: 15 cases using the actual usePropertyForm hook and MyProperties with real auth provider/router. API and payment boundaries are controlled. Tests check missing images/boundary points, multipart fields/files/zeros/WKT, returned draft ID, failed create with no payment, retry without duplicate create, list loading/empty/error, effective Draft/Paid status tabs and cancel/success/failed deletion.
++- Shared test launcher: existing Login/roles command is now a fixed-profile wrapper around run-local.cjs; listings has its own command/config. Neither suite is discovered by ordinary npm test. Existing identity/network guards remain active.
++- New state tooling: 10 pure tests cover allowlisted deterministic snapshots, full-row drift detection without exposing contents and refusal to recover cleanup IDs from a foreign owner.
++
++Listings email and saved-search coordination are boundary spies, with call arguments/counts asserted. This is not verification of email delivery or saved-search matching. Receipt delivery remains forbidden; no PayHere endpoint/SDK/webhook executes.
++
++## Verification evidence
++
++Commands use existing dependencies. Local runtime remains Node 24.14.1/npm 11.11.0; CI remains Node 20 and has not run for these uncommitted changes.
++
++| Check | Result |
++| --- | --- |
++| Existing backend listing-focused baseline | 3 suites, 16/16 pass |
++| Existing frontend PropertyDetails baseline | 1 file, 4/4 pass |
++| npm test -- --runInBand tests/integrationState.test.js | 10/10 pass |
++| node integration/run-listings.cjs --preflight | Read-only container/DB/API/marker/checksum/ledger and five-table snapshot pass |
++| node integration/run-listings.cjs, fresh run 1 | 32/32 pass; 16.052s Jest total |
++| Same explicit command, fresh run 2 | 32/32 pass; 4.814s Jest total |
++| Both listings runs | Exact fixture cleanup, all five full table snapshots and two-entry ledger preserved |
++| node integration/run-login-roles.cjs after launcher extraction | 32/32 pass; 4.595s Jest total; complete starting users snapshot/ledger preserved |
++| Backend npm test -- --runInBand | 30 suites, 296/296 pass |
++| New frontend focused integration suites, twice | 15/15 pass each; 38.80s and 6.17s |
++| Focused frontend ESLint | Exit 0 |
++| Frontend npm test -- --maxWorkers=1 | 22 files, 87/87 pass |
++| Frontend npm run lint | Exit 0, no errors/warnings |
++| Frontend npm run build | Exit 0; chunk-size and Lottie direct-eval warnings remain visible |
++| Direct Jest listings config without launcher | Expected exit 1 before tests/writes: Verified integration launcher required |
++
++The snapshot helper test first failed because the helper did not exist, then passed after implementation. Existing behavior assertions were allowed to pass immediately; no artificial production changes were made to obtain a red test.
++
++Early frontend attempts failed before assertions due to Windows memory pressure (Rust allocation failure/worker exit). Read-only diagnostics showed approximately 305 MB available virtual memory. The owner closed apps; the standard focused command then passed twice without test assertion changes. No user process, page-file setting or system configuration was changed by the agent. Resource-heavy verification runs sequentially.
++
++Backend/frontend task reviews approved the code against the design. The initial backend package used partial property-row snapshots; the implemented query was strengthened to p.* before the real DB runs so denied-mutation checks cover all stored columns.
++
++## Fixture and environment safety
++
++Only the retained stack-c DB/REST containers were restarted, after checking exact project/image/configured loopback bindings. Existing DB remains 127.0.0.1:58322 and direct PostgREST 127.0.0.1:58321. The approved REST original backup and all volumes/configuration are preserved. No Storage, auth, mail, worker or other app was opened/started for this batch. After verification both test containers were stopped successfully; docker ps showed no running containers. Restart instructions remain in the integration README.
++
++The launcher reuses exact container/workdir/network/marker/canonical-file/ledger checks and a read-only API-versus-SQL users cross-check before writes. It passes only an allowlisted child environment, local generated credentials and a dummy application JWT secret. Dotenv is disabled. Numeric 127.0.0.1 socket destinations are restricted to verified DB/REST ports and the explicitly bound ephemeral test app listener; port 5000 stays blocked.
++
++Each run creates eight UUID/example.test users and its own synthetic properties. Only authenticated SELLER/AGENT requests create new properties. Paid moderation fixtures are seeded directly, independently of checkout. IDs are allocated before seed inserts; API IDs are recorded and partial-response inserts can be recovered only under the exact run-owned seller IDs. Cleanup deletes only those properties before deleting fixture users, and reports failure if any remain.
++
++The shared launcher snapshots complete users, properties, transactions, payment_orders and payment_receipt_outbox rows in deterministic primary-key order. It checks equality and canonical ledger after both child success and failure, without printing row contents. Normal setup/assertion failures run afterAll cleanup; abrupt process termination can prevent hooks, so preserve the environment for investigation rather than resetting or broadly deleting records.
++
++## Remaining boundaries and next checkpoint
++
++Listings 2A uses the existing API capability to create without files. Frontend tests use synthetic File objects and stop at controlled HTTP/payment boundaries. Therefore successful Storage upload, removal/rollback/orphan cleanup, full image-required AddProperty wizard and browser maps remain for a separately designed listings 2B batch. This is integration coverage, not full browser E2E or an RLS/security audit.
++
++Public listing visibility is tested using the current approved-status rule. Admin moderation uses Paid fixtures only. The code-inspected gap remains: admin listing filters prefer Paid rows, but approval itself has no payment-status condition. Unpaid approval enforcement has not been runtime-tested or changed; resolving that rule requires a separate authorization/payment decision.
++
++Payment-order foreign-key deletion behavior, concurrent mutations, payment settlement, real receipts/delivery and hosted deployment remain outside 2A. PayHere sandbox permission from the owner persists for the later checkout batch, subject to isolated backend/database and webhook identity checks. PayHere/ngrok were not needed or opened here.
++
++The next checkpoint is listings 2B Storage/image-flow scope before implementation, then the original saved searches -> CRM -> receipts -> checkout order. Preserve gradual flow-by-flow review and owner commit/push control.
+diff --git a/docs/superpowers/plans/2026-10-30-phase5-listings.md b/docs/superpowers/plans/2026-10-30-phase5-listings.md
+new file mode 100644
+index 0000000..8371fa3
+--- /dev/null
++++ b/docs/superpowers/plans/2026-10-30-phase5-listings.md
+@@ -0,0 +1,57 @@
++# Phase 5 Listings 2A Implementation Plan
++
++**Goal:** Verify listing lifecycle/ownership through the real isolated database and frontend form/management boundaries.
++
++**Architecture:** Reuse existing stack-c safety/network guards. Extract only the shared launcher needed by explicit Login/roles and listings commands; keep setup specialization test-only. Use actual controllers/repositories and frontend hook/provider/components, with controlled email/saved-search/payment boundaries.
++
++**Tech stack:** Existing Jest, Supertest, pg, Supabase JS, Vitest, Testing Library, PowerShell and Docker. No new dependencies/services.
++
++## Global constraints
++
++- Owner alone commits/pushes, after full phase. No staging, branch creation or production behavior changes.
++- No live data, checkout, delivery, migrations, volume reset/removal or application .env edits.
++- Only checked stack-c DB/REST on 127.0.0.1:58322/58321; deny port 5000. Keep docs/evidence/ untracked.
++- Successful real Storage operations and full browser wizard are separate listings 2B; do not claim complete listings/Phase 5.
++- Run resource-heavy checks sequentially because of the observed Windows paging limit.
++
++## Task 1: Baseline
++
++- [x] backend-node: `npm test -- --runInBand tests/propertyPrivacy.test.js tests/propertyNumericValidation.test.js tests/listingApprovalAlerts.test.js`.
++- [x] frontend-react: `npm test -- --maxWorkers=1 src/pages/PropertyDetails.test.jsx`.
++- [x] Inspect exact retained DB/REST configured bindings/project/image, then restart only those two containers and run the existing read-only preflight. Preserve originals/volumes.
++
++## Task 2: Shared guarded launcher and state checks
++
++Files: `backend-node/integration/run-local.cjs`, existing `run-login-roles.cjs`, new `run-listings.cjs`, `listings.jest.config.cjs`, `listings.setup.cjs`, test-only `database-state.cjs`, guard tests in `backend-node/tests/integrationState.test.js`.
++
++- [x] Write tests for deterministic complete-table snapshots, unchanged-state assertion and mutation refusal for pre-existing records; observe missing helper before implementing.
++- [x] Extract existing container/credential/preflight/child environment steps into shared runLocal({label,config,snapshotTables}); wrappers fix their own config paths/table allowlist, never accept caller URLs/config.
++- [x] Snapshot full contents of users, properties, transactions, payment_orders and payment_receipt_outbox before/after listings, using deterministic SQL JSON aggregation. Check state after child failure as well as success; fail if different.
++- [x] Keep Login/roles command behavior and allowlisted child environment unchanged. Listings setup reuses generic security setup and overrides only listing-status email and saved-search coordination with explicit boundary spies.
++- [x] Verify pure guard tests and launcher-bypass refusal. The inherited security setup executes before every fixture-write path.
++
++## Task 3: Real API listing lifecycle
++
++File: `backend-node/integration/listings.integration.cjs`.
++
++- [x] Allocate run-owned UUID users and seeded Paid moderation rows before writes; use bcrypt + real login for seller/agent/admin. Record API-generated IDs, recover partial inserts only under run-owned seller IDs. Cleanup exact run-owned properties before users in finally/afterAll.
++- [x] Assert create defaults/server-owned fields and real PostGIS/numeric persistence; API no-file multipart creation deliberately excludes successful upload.
++- [x] Assert anonymous writes401, disallowed roles403, banned sessions403, invalid input400 and disallowed MIME400 without additional properties.
++- [x] Assert ownership/visibility/edit/delete matrix and SQL unchanged rows after denied operations; include missing detail404, approved edit400, zeros and rejected->pending correction.
++- [x] Assert Paid admin moderation lifecycle, rejection reason and public visibility/search changes. Assert repeated approval has no duplicate boundary calls. Non-admin mutations403 leave data unchanged. Never approve unpaid fixtures.
++- [x] Run new DB suite twice with fresh fixtures. Verify starting state for all five tables + canonical ledger after each run. Run Login/roles once after shared harness extraction.
++
++## Task 4: Frontend form and management integration
++
++Files: `frontend-react/src/hooks/usePropertyForm.integration.test.jsx`, `frontend-react/src/pages/MyProperties.integration.test.jsx`.
++
++- [x] Hook tests use actual hook with synthetic File, mock HTTP/usePayhere only: missing image and boundary failure, exact FormData contract, correct returned ID passed to payment boundary, create failure no payment, retry no duplicate create.
++- [x] Page tests use actual MyProperties/auth provider/router with controlled HTTP/payment boundaries. Assert loading/empty/load-failure, unpaid Draft versus Paid status filters and deletion cancel/success/failure preserving expected row state.
++- [x] Run focused frontend suites twice and focused ESLint. No production fixes if tests expose unexpected current behavior; report to owner.
++
++## Task 5: Validation, review and handoff
++
++- [x] Review API/frontend task diffs and resolve actionable safety/coverage findings without widening production scope.
++- [x] Run backend full Jest, frontend full Vitest, frontend lint/build sequentially, plus appropriate syntax and pure tooling checks.
++- [x] Document counts, repeatability, cleanup, initial failures and boundaries in `docs/phase5-listings.md`; update integration README with explicit command/prerequisites.
++- [x] Check all new/modified non-evidence files for leaked credentials/whitespace, confirm index empty, stop only this batch's DB/REST services preserving all resources, and finish review. No commit/push.
+diff --git a/docs/superpowers/specs/2026-10-30-phase5-listings-design.md b/docs/superpowers/specs/2026-10-30-phase5-listings-design.md
+new file mode 100644
+index 0000000..789a86b
+--- /dev/null
++++ b/docs/superpowers/specs/2026-10-30-phase5-listings-design.md
+@@ -0,0 +1,54 @@
++# Phase 5 listings: batch 2A
++
++Status: design approved by owner on 2026-10-30; implementation and evidence tracked in the matching plan/report.
++
++## Objective and inventory
++
++Verify the core listing lifecycle and ownership through the real local database, plus frontend submission/management integration with controlled HTTP/payment boundaries. Login/roles is the preceding completed local batch; the overall phase remains incomplete.
++
++Existing propertyPrivacy and propertyNumericValidation tests use mocked database/repository boundaries. listingApprovalAlerts tests mock adminRepository, saved-search coordination and email. PropertyDetails frontend tests cover loading/favorites/navigation with mocked authentication. No tests were found for usePropertyForm, MyProperties or admin ListingsPage.
++
++POST /api/properties permits SELLER/AGENT and creates pending/Unpaid rows using authenticated seller identity. Owner mutation routes use /my-listings/:id. Approved listings cannot be edited through the owner route. Public list/search filter status=approved; detail permits owner/admin access to non-approved rows. Admin moderation calls email and saved-search coordination. The frontend usePropertyForm requires an image and immediately calls triggerPayment after saving, retaining draftPropertyId for retry.
++
++## Approaches
++
++1. Recommended: reuse the existing guarded Jest/Supertest local DB harness and Vitest/Testing Library. First test core lifecycle without successful storage transfers or real payment; cover frontend boundaries with controlled responses. This requires no new dependencies/services.
++2. Include real Storage and complete AddProperty wizard in the first batch. This broadens local service/network/cleanup scope; establish a separate upload design and obtain any required environment permission first.
++3. Mock-only API tests. These are cheap but leave the repository/DB gap open, so they are insufficient for this roadmap batch.
++
++## Real API matrix
++
++- Authenticate synthetic SELLER and AGENT through real login; submit text fields/multipart without files. Assert persisted id, authenticated seller_id, numeric values including zeros, pending and Unpaid. Spoofed seller_id/status/payment_status must not override server-owned fields.
++- Assert anonymous writes are 401; BUYER, PENDING_AGENT, REJECTED_AGENT and ADMIN cannot create/edit/delete through consumer seller routes (403 with valid payloads); BANNED sessions remain rejected.
++- Invalid title/description/price/coordinates/numeric counts return validation 400 and create no rows. Disallowed MIME upload rejects before storage and creates no rows/objects.
++- Owner /my-listings includes own fixtures only; another seller/agent cannot see private detail or edit/delete those rows (404), and SQL snapshots confirm unchanged data after denied mutations.
++- Public list/search excludes pending/rejected fixtures; approved fixtures are public. Owner/admin can inspect private fixtures. Missing detail returns 404. Assert identities/fixture sets rather than ordering-only checks.
++- Owner updates pending/rejected fixture and returns it to pending; approved-owner edit returns 400 with unchanged data. Preserve payment status and seller identity; do not introduce permission rules.
++- Use directly seeded Paid fixtures to exercise admin moderation independently of checkout. ADMIN approve -> public visibility; repeated approval -> unchanged state/no duplicate notification coordination; reject -> stored reason/private public visibility; owner correction -> pending. Non-admin moderation requests return 403 without DB changes.
++- Owner deletes own disposable fixture; row absent and subsequent detail unavailable. Foreign-owner delete leaves the row intact. No payment_orders/receipts are attached to deletion fixtures.
++
++The text-only API fixture deliberately follows the existing API capability; it is not proof that the full image-required browser submission works. Valid WKT may be included to exercise actual PostGIS persistence; malformed geometry error semantics are outside the initial validation contract.
++
++## Frontend matrix
++
++Use the real usePropertyForm hook with synthetic File and controlled API responses; isolate usePayhere. Verify missing-image/boundary validation, multipart field mapping, returned draft ID handed to the payment boundary, create failure with no payment attempt and retry reusing the existing draft instead of creating a duplicate. No PayHere SDK/card/webhook executes.
++
++Use real MyProperties with real auth provider/router as practical and controlled HTTP. Verify loading/empty/error states, Unpaid displayed as Draft, Paid pending/approved/rejected tabs, delete cancellation, successful deletion and failed deletion retaining the row. Payment control is isolated. Map/photo sphere, layout/animation and external assets are not integration targets in 2A.
++
++## Isolation and changes
++
++Reuse exact stack-c guards, loopback ports, canonical checksums/ledger and approved retained DB/REST setup. Add a separate explicit listings command/config; keep the Login/roles command passing. Any shared test-tooling extraction must be small and regression-verified. No production behavior, dependencies, migrations or application .env changes.
++
++Only users/properties created for the run may be mutated or cleaned. Allocate UUIDs for seed rows before writes; for API-generated property IDs, record returned IDs and use the run-owned seller IDs to recover partially completed inserts if a response fails. Snapshot pre-existing users/properties and payment/order/outbox state. Cleanup exact run-owned properties first, then fixture users; verify restored starting state/ledger even after normal setup/assertion failure. Never reset volumes or broadly delete data.
++
++External delivery remains disabled: listing-status email and saved-search coordination are controlled boundary spies, with invocation assertions where relevant. This does not verify email delivery or saved-search matching, which belongs to the later flow. Existing receipt worker refusal, dotenv isolation and strict outbound port guard remain active. No real or sandbox checkout occurs in 2A.
++
++## Discovered rule question, kept outside behavior changes
++
++The admin list defaults/pending filter select Paid rows, but approveListingOnce does not itself check payment_status. Code inspection therefore suggests a direct admin request can approve an unpaid row; this has not been runtime-tested in this inventory. Do not silently turn a desired payment invariant into a production change or characterize it as a verified safe rule. Batch 2A moderation uses Paid synthetic fixtures; deciding/testing enforcement of unpaid approval belongs in a separately approved payment/authorization decision.
++
++Deletion with payment-order foreign keys, real Storage upload/removal and orphan rollback, full AddProperty wizard, browser maps, concurrent mutations and actual checkout remain unverified by 2A. A later listings 2B design must cover image upload success/failure and storage cleanup before declaring the whole listings flow complete.
++
++## Acceptance
++
++Run existing focused listing tests before edits. Run the new real DB suite twice with new fixtures and prove cleanup/state preservation. Run frontend focused integration twice, backend/frontend regressions, frontend lint/build sequentially to avoid the recorded Windows paging limit. Review changes for safety and spec compliance; record counts, failures and exclusions in a listings batch report. Keep all evidence/config/credentials untracked and unstaged. Owner alone performs git commit/push after the full phase.
+diff --git a/backend-node/integration/README.md b/backend-node/integration/README.md
+new file mode 100644
+index 0000000..33f0351
+--- /dev/null
++++ b/backend-node/integration/README.md
+@@ -0,0 +1,64 @@
++# Local critical-flow integration
++
++These are explicit real-database test commands. Ordinary `npm test` includes pure isolation/network/state guard tests and existing mocked API suites. It does not discover `login-roles.integration.cjs` or `listings.integration.cjs`.
++
++From `backend-node`, with existing dependencies and the checked local stack running:
++
++```powershell
++node integration/run-login-roles.cjs --preflight
++node integration/run-login-roles.cjs
++node integration/run-listings.cjs --preflight
++node integration/run-listings.cjs
++```
++
++Preflight is read-only. Login/roles seeds seven synthetic users, runs the actual Express auth endpoints through Supertest and deletes only those run-specific UUID/email pairs. It checks the complete starting users snapshot and canonical migration ledger. Each invocation creates a fresh Jest process and fixture IDs, retaining real auth rate limits.
++
++Listings 2A seeds eight synthetic users and its own moderation properties, then exercises actual creation, ownership, validation, visibility, editing, moderation and deletion. It cleans only properties belonging to those exact run-owned users, before deleting fixture users. This includes recovery of an insert whose API response failed. The shared launcher checks full starting/ending users, properties, transactions, payment_orders and payment_receipt_outbox snapshots plus the ledger, even if the child suite fails. It reports drift without printing table contents. Normal assertion/setup failures run cleanup; abrupt termination may prevent hooks and must be investigated without reset or broad deletion.
++
++The launcher accepts no database URL or credentials from the command line. It derives generated local credentials in memory from exactly `supabase_db_thirasara-phase4-c` and `supabase_rest_thirasara-phase4-c`; it never loads the application `.env`. It refuses missing/wrong container identities, images, networks, bindings, CLI project, remote link, approval marker, file checksums, migration ledger or API/DB read cross-check. An unavailable stack is a failure, not a skipped green test.
++
++## Local prerequisites
++
++See `../../docs/database/setup.md` for the Phase 4 isolated environment. No Docker resources are created, started, reset or removed by the test command. Inspect retained containers before restarting them. Do not use native Supabase CLI start: the documented original default bindings were unsafe on this Docker Desktop setup.
++
++The owner approved publishing the retained stack-c PostgREST service at `127.0.0.1:58321`; DB remains `127.0.0.1:58322`. The original stopped REST container is retained as `supabase_rest_thirasara-phase4-c-before-phase5-port`. Private generated Compose configuration is in `docs/evidence/phase4-local/stack-c-phase5-rest.private.json`; keep it and all generated credentials untracked. This local test setup does not repoint the existing application or ngrok backend.
++
++On the existing prepared machine, inspect the exact two containers and verify their configured loopback bindings before starting those containers:
++
++```powershell
++docker inspect --format '{{.Name}} {{json .HostConfig.PortBindings}}' supabase_db_thirasara-phase4-c supabase_rest_thirasara-phase4-c
++```
++
++Only after confirming DB 5432 -> 127.0.0.1:58322 and REST 3000 -> 127.0.0.1:58321, with no other published addresses, restart those retained containers:
++
++```powershell
++docker start supabase_db_thirasara-phase4-c supabase_rest_thirasara-phase4-c
++```
++
++Then run preflight, which independently checks the remaining identity requirements and readiness before permitting fixture writes. A startup/readiness refusal is not a reason to bypass the guard. Do not start auth, storage, mail, receipt workers or unrelated services. A different/fresh machine first needs its own explicitly authorized isolated setup; copying hosted keys or data is forbidden.
++
++The two test services were stopped after this batch's verification; all containers/volumes/configuration remain available. Stop only these two again when finished:
++
++```powershell
++docker stop --timeout 20 supabase_rest_thirasara-phase4-c supabase_db_thirasara-phase4-c
++```
++
++The retained REST endpoint is direct PostgREST, not Kong. Test-only fetch transport removes Supabase JS's `/rest/v1` prefix and permits only this checked origin; redirects fail. The real application Supabase client, queries, repositories, bcrypt, JWT and middleware remain in use. Login/roles refuses email calls; listings uses controlled listing-status email and saved-search-coordination spies. Receipt delivery is always forbidden. Dotenv is disabled inside the child, and TCP is restricted to `127.0.0.1` on the verified DB/REST ports plus the explicitly registered ephemeral app listener. Port 5000 is always blocked. Expected HTTP 2xx/4xx access logs are filtered narrowly; other warnings/errors remain visible.
++
++## Scope and limits
++
++- Password login/session/role assertions are in the integration suite. Google/Apple/Facebook, browser cookie/CORS rules, password reset delivery and registration are outside this batch.
++- Logout verifies cookie clearing, not revocation of a copied JWT.
++- Frontend provider/router integration uses controlled API responses and is not full browser E2E.
++- Listings 2A API creation uses no successful file transfer; the frontend synthetic File tests stop at the controlled API/payment boundary. Real Storage upload/rollback/removal and the full AddProperty wizard remain listings 2B. No Storage service is started by these commands.
++- Moderation uses directly seeded Paid properties; this is not evidence of checkout settlement or enforcement of payment eligibility by the approval endpoint. Unpaid approval rules require a separate decision.
++- PayHere sandbox checkout and ngrok webhook verification belong to the later checkout batch. No payment endpoints are called here.
++- Failure during normal setup/assertions runs exact fixture cleanup in `afterAll`. Abrupt process termination can prevent hooks; preserve the environment for investigation instead of using reset or broad cleanup.
++- Windows sandbox restrictions may require approval for Docker pipe and loopback access. Resource-heavy verification should run sequentially if Windows paging/commit memory is constrained.
++
++Run pure safety checks without Docker or network:
++
++```powershell
++npm test -- --runInBand tests/localStackGuard.test.js tests/integrationNetworkGuard.test.js
++npm test -- --runInBand tests/integrationState.test.js
++```

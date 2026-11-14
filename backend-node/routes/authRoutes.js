@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const emailVerification = require('../utils/emailVerification');
+const userRepository = require('../repositories/userRepository');
 
 // Import controller functions
 const { protect } = require('../middleware/authMiddleware');
@@ -29,6 +31,33 @@ const {
 // 1. User Registration Route
 router.post('/register', validate(registerSchema), registerUser);
 
+router.post('/verify-email', async (req, res, next) => {
+    try {
+        if (!emailVerification.enabled() || !await emailVerification.confirmChallenge(req.body?.token)) {
+            return res.status(400).json({ message: 'The verification link is invalid or expired.' });
+        }
+        return res.json({ message: 'Email verified.' });
+    } catch (error) {
+        return next(error);
+    }
+});
+
+router.post('/resend-verification', validate(checkEmailSchema), async (req, res, next) => {
+    try {
+        if (emailVerification.enabled()) {
+            const user = await userRepository.findByEmail(req.body.email);
+            if (user?.email_verification_required && !user.email_verified_at) {
+                await emailVerification.sendChallenge(user, 'signup').catch(() => {
+                    console.error('verification_email_failed');
+                });
+            }
+        }
+        return res.json({ message: 'If verification is pending, check your inbox for a link.' });
+    } catch (error) {
+        return next(error);
+    }
+});
+
 // 2. User Login Route
 router.post('/login', validate(loginSchema), loginUser);
 
@@ -57,5 +86,6 @@ router.post('/apple', appleLogin);
 
 // 10. Role Upgrade Request (Buyer → Seller)
 router.post('/request-role-upgrade', protect, requestRoleUpgrade);
+router.get('/request-role-upgrade', protect, require('../controllers/roleUpgradeStatusController').getRoleUpgradeStatus);
 
 module.exports = router;

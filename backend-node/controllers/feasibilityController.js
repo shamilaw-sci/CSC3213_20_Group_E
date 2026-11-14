@@ -129,7 +129,7 @@ const saveCalculation = async (req, res, next) => {
 
         if (error) {
             if (error.message.includes('relation "public.feasibility_history" does not exist')) {
-                return res.status(500).json({ message: "feasibility_history table does not exist. Please run the migration in database/feasibility_history.sql." });
+                return res.status(500).json({ message: "Calculation saving is temporarily unavailable." });
             }
             throw error;
         }
@@ -155,7 +155,7 @@ const getHistory = async (req, res, next) => {
 
         if (error) {
             if (error.message.includes('relation "public.feasibility_history" does not exist')) {
-                return res.status(200).json({ history: [], message: "feasibility_history table not set up yet." });
+                return res.status(200).json({ history: [], message: "Calculation history is temporarily unavailable." });
             }
             throw error;
         }

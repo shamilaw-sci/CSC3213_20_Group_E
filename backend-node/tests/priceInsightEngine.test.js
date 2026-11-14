@@ -12,8 +12,9 @@ describe('getPropertySize / pricePerSqft', () => {
         expect(getPropertySize({ house_size: 1500, land_size: 5000 })).toBe(1500);
     });
 
-    it('falls back to land_size when house_size is missing', () => {
-        expect(getPropertySize({ land_size: 5000 })).toBe(5000);
+    it('converts land perches into square feet when house_size is missing', () => {
+        expect(getPropertySize({ land_size: 10 })).toBe(2722.5);
+        expect(pricePerSqft({ price: 2722500, land_size: 10 })).toBe(1000);
     });
 
     it('returns null when neither size field is usable', () => {
@@ -64,6 +65,16 @@ describe('mean / standardDeviation / zScore', () => {
 });
 
 describe('calculatePriceInsight', () => {
+    it('does not use rent or other property types as sale-house comparables', () => {
+        const target = { price: 10000000, house_size: 1000, type: 'House', listing_type: 'Sale' };
+        const candidates = [
+            { ...target, price: 9000000 },
+            { ...target, price: 11000000 },
+            { ...target, price: 50000, listing_type: 'Rent' },
+            { ...target, price: 3000000, type: 'Land' },
+        ];
+        expect(calculatePriceInsight(target, candidates)).toBeNull();
+    });
     const comparables = [
         { price: 15000000, house_size: 1500 }, // 10,000/sqft
         { price: 14500000, house_size: 1450 }, // 10,000/sqft

@@ -43,6 +43,24 @@ describe('isPointInPolygon', () => {
 });
 
 describe('matchesSavedSearch', () => {
+    const fullSearch = { filters: { version: 1, searchTerm: 'Kandy', listingType: 'Rent', minPrice: 10000, maxPrice: 50000, beds: 0, baths: 1, exactMatch: true, has360Tour: true, propTypes: { House: true, Villa: true, Apartment: false, Land: false } } };
+    const match = { title: 'Kandy studio', city: 'Kandy', type: 'House', listing_type: 'Rent', price: 25000, bedrooms: 0, bathrooms: 1, virtual_tours: [{ url: 'test' }] };
+    it('matches all persisted criteria together', () => expect(matchesSavedSearch(match, fullSearch)).toBe(true));
+    it('preserves the active map search text rather than broadening whitespace criteria', () => {
+        expect(matchesSavedSearch(match, { filters: { ...fullSearch.filters, searchTerm: ' Kandy ' } })).toBe(false);
+    });
+    it.each([
+        { listing_type: 'Sale' }, { price: 60000 }, { price: 5000 }, { bedrooms: 1 }, { bedrooms: null },
+        { bathrooms: 2 }, { virtual_tours: [] }, { type: 'Land' }, { title: 'Galle studio', city: 'Galle' },
+    ])('does not alert when a saved criterion differs: %j', changes => {
+        expect(matchesSavedSearch({ ...match, ...changes }, fullSearch)).toBe(false);
+    });
+    it('supports minimum room counts when exact match is off', () => {
+        expect(matchesSavedSearch({ ...match, bedrooms: 3, bathrooms: 2 }, { filters: { ...fullSearch.filters, exactMatch: false } })).toBe(true);
+    });
+    it('fails closed for malformed or unsupported persisted filter data', () => {
+        expect(matchesSavedSearch(match, { filters: { version: 999 } })).toBe(false);
+    });
     const searchWithArea = {
         property_type: 'House',
         beds: 3,

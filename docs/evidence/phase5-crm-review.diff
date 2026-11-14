@@ -1,0 +1,597 @@
+CRM-only working-tree package against8625cbb; preceding Login/Listings/Saved work omitted. No commits.
+diff --git a/backend-node/repositories/agentRepository.js b/backend-node/repositories/agentRepository.js
+index 8d954f9..ed24787 100644
+--- a/backend-node/repositories/agentRepository.js
++++ b/backend-node/repositories/agentRepository.js
+@@ -226,16 +226,18 @@ const agentRepository = {
+         if (lead_status === 'Contacted') lifecycle_status = 'Attempted Contact';
+         else if (lead_status === 'Showing') lifecycle_status = 'Active';
+         else if (lead_status === 'Offer') lifecycle_status = 'Offer';
+         else if (lead_status === 'Closed') lifecycle_status = 'Closed';
+ 
++        const updates = { updated_at: new Date().toISOString() };
++        if (lead_status !== undefined) updates.lifecycle_status = lifecycle_status;
++        if (timeframe !== undefined) updates.timeframe_to_move = timeframe;
++        if (pre_approved !== undefined) updates.pre_approval_status = pre_approved;
++
+         const { data: lead, error: leadError } = await supabase
+             .from('leads')
+-            .update({ 
+-                lifecycle_status,
+-                updated_at: new Date().toISOString()
+-            })
++            .update(updates)
+             .eq('lead_id', id)
+             .eq('assigned_agent_id', seller_id)
+             .select();
+ 
+         if (leadError) throw leadError;
+diff --git a/backend-node/tests/crmOffer.test.js b/backend-node/tests/crmOffer.test.js
+index 928cdd8..42bb3b8 100644
+--- a/backend-node/tests/crmOffer.test.js
++++ b/backend-node/tests/crmOffer.test.js
+@@ -50,5 +50,20 @@ test('conversation Offer keeps its existing status and ownership path', async ()
+     await repo.updateLeadMetadata('conv1', 'agent1', 'Offer', 'Soon', true);
+     expect(conversations[0]).toMatchObject({ lead_status: 'Offer', timeframe: 'Soon', pre_approved: true });
+     expect(writes.some(w => w.table === 'leads')).toBe(false);
+     expect((await repo.getAgentLeads('agent1')).find(l => l.id === 'conv1').lead_status).toBe('Offer');
+ });
++
++test('direct metadata persists and partial updates preserve omitted lifecycle and metadata', async () => {
++    await repo.updateLeadMetadata('lead1', 'agent1', 'Offer', '1-3 Months', true);
++    expect(direct[0]).toMatchObject({ lifecycle_status: 'Offer', timeframe_to_move: '1-3 Months', pre_approval_status: true });
++    await repo.updateLeadMetadata('lead1', 'agent1', undefined, undefined, false);
++    expect(direct[0]).toMatchObject({ lifecycle_status: 'Offer', timeframe_to_move: '1-3 Months', pre_approval_status: false });
++    const partial = writes.filter(write => write.table === 'leads').at(-1);
++    expect(partial.update).not.toHaveProperty('lifecycle_status');
++    expect(partial.update).not.toHaveProperty('timeframe_to_move');
++    expect(partial.filters).toEqual([['lead_id', 'lead1'], ['assigned_agent_id', 'agent1']]);
++    await repo.updateLeadMetadata('lead1', 'agent1', undefined, 'ASAP');
++    expect(direct[0]).toMatchObject({ lifecycle_status: 'Offer', timeframe_to_move: 'ASAP', pre_approval_status: false });
++    await repo.updateLeadMetadata('lead1', 'agent1', 'Showing');
++    expect(direct[0]).toMatchObject({ lifecycle_status: 'Active', timeframe_to_move: 'ASAP', pre_approval_status: false });
++});
+diff --git a/frontend-react/src/pages/agent/Dashboard.jsx b/frontend-react/src/pages/agent/Dashboard.jsx
+index 6430cde..23d4843 100644
+--- a/frontend-react/src/pages/agent/Dashboard.jsx
++++ b/frontend-react/src/pages/agent/Dashboard.jsx
+@@ -59,10 +59,11 @@ const AgentDashboard = () => {
+                 api.get('/properties/my-listings')
+             ]);
+             
+             setStats(statsRes.data.stats || {});
+             setLeads(leadsRes.data.leads || []);
++            setSelectedLeadDetail(prev => prev ? (leadsRes.data.leads || []).find(lead => lead.id === prev.id) || null : null);
+             setProperties(propsRes.data.properties || []);
+         } catch (error) {
+             toast.error("Failed to load agent hub data");
+             console.error("Dashboard error:", error);
+         } finally {
+@@ -131,17 +132,20 @@ const AgentDashboard = () => {
+         }
+     };
+ 
+     // Update Lead Pipeline Status
+     const handleStatusChange = async (leadId, newStatus) => {
++        const previousStatus = leads.find(lead => lead.id === leadId)?.lead_status;
+         try {
+             setLeads(prev => prev.map(l => l.id === leadId ? { ...l, lead_status: newStatus } : l));
+             await api.put(`/agents/leads/${leadId}`, { lead_status: newStatus });
+             toast.success(`Lead moved to ${newStatus}`);
+             // Silently refresh stats
+             fetchDashboardData(true);
+         } catch (error) {
++            setLeads(prev => prev.map(lead => lead.id === leadId ? { ...lead, lead_status: previousStatus } : lead));
++            setSelectedLeadDetail(prev => prev?.id === leadId ? { ...prev, lead_status: previousStatus } : prev);
+             toast.error("Failed to update lead status");
+             fetchDashboardData(true);
+         }
+     };
+ 
+diff --git a/backend-node/integration/run-local.cjs b/backend-node/integration/run-local.cjs
+new file mode 100644
+index 0000000..0dd830e
+--- /dev/null
++++ b/backend-node/integration/run-local.cjs
+@@ -0,0 +1,100 @@
++const { spawnSync } = require('node:child_process');
++const path = require('node:path');
++const jwt = require('jsonwebtoken');
++const { Client } = require('pg');
++const { inspectLocalStack, validateDatabase, identitySql } = require('./local-stack.cjs');
++const { snapshotState, assertSameState } = require('./database-state.cjs');
++
++const profiles = Object.freeze({
++    crm: { label: 'CRM', config: 'crm.jest.config.cjs', tables: ['users', 'properties', 'saved_searches',
++        'transactions', 'payment_orders', 'payment_receipt_outbox', 'leads', 'conversations', 'messages', 'message_receipts'] },
++    'login-roles': { label: 'Login/roles', config: 'jest.config.cjs', tables: ['users'] },
++    listings: { label: 'Listings', config: 'listings.jest.config.cjs',
++        tables: ['users', 'properties', 'transactions', 'payment_orders', 'payment_receipt_outbox'] },
++    'saved-searches': { label: 'Saved searches', config: 'saved-searches.jest.config.cjs',
++        tables: ['users', 'properties', 'saved_searches', 'transactions', 'payment_orders', 'payment_receipt_outbox'] },
++    storage: { label: 'Listings Storage', config: 'storage.jest.config.cjs',
++        tables: ['users', 'properties', 'transactions', 'payment_orders', 'payment_receipt_outbox'] },
++});
++
++async function runLocal(profileName) {
++    let stage = 'container/workdir/checksum identity';
++    let client;
++    try {
++        if (!Object.hasOwn(profiles, profileName)) throw new Error('Unknown test profile.');
++        const profile = profiles[profileName];
++        const local = inspectLocalStack();
++        client = new Client(local.database);
++        stage = 'read-only database connection';
++        await client.connect();
++        await client.query('BEGIN READ ONLY');
++        stage = 'database marker and ledger identity';
++        validateDatabase((await client.query(identitySql)).rows[0]);
++        const before = await snapshotState(client, profile.tables);
++        let storage, storageBefore;
++        if (profileName === 'storage') {
++            storage = require('./storage-local.cjs').inspectStorageStack();
++            storageBefore = { database: await require('./storage-state.cjs').storageDatabaseState(client),
++                files: require('./storage-state.cjs').fileManifest(storage.containerId) };
++        }
++        const ids = (await client.query('SELECT id FROM public.users ORDER BY id')).rows.map(row => row.id);
++        const key = jwt.sign({ role: 'service_role', iss: 'supabase' }, local.jwtSecret, { expiresIn: '10m' });
++        stage = 'PostgREST read-only identity cross-check';
++        const response = await fetch(`${local.apiUrl}/users?select=id&order=id`, {
++            headers: { Authorization: `Bearer ${key}` }, redirect: 'error', signal: AbortSignal.timeout(5000),
++        });
++        if (!response.ok || JSON.stringify((await response.json()).map(row => row.id)) !== JSON.stringify(ids)) {
++            throw new Error('Local API and database identity cross-check failed.');
++        }
++        if (storage) {
++            const bucket = await fetch(`${storage.apiUrl}/bucket/properties`, { headers: { Authorization: `Bearer ${key}` },
++                redirect: 'error', signal: AbortSignal.timeout(5000) });
++            if (!bucket.ok || (await bucket.json()).id !== 'properties') throw new Error('Checked Storage bucket unavailable.');
++            require('./storage-state.cjs').assertStorageState(storageBefore.database,
++                await require('./storage-state.cjs').storageDatabaseState(client));
++        }
++        await client.query('ROLLBACK');
++        if (process.argv.includes('--preflight')) {
++            console.log(`PASS: ${profile.label} stack-c container/DB/API/marker/checksums/ledger; read-only state snapshot. No fixture writes.`);
++            return;
++        }
++        const env = Object.fromEntries(['PATH', 'SystemRoot', 'WINDIR', 'TEMP', 'TMP', 'COMSPEC', 'PATHEXT']
++            .filter(name => process.env[name]).map(name => [name, process.env[name]]));
++        Object.assign(env, {
++            NODE_ENV: 'test', JWT_SECRET: 'phase5-isolated-auth-tests-only',
++            SUPABASE_URL: local.apiUrl, SUPABASE_KEY: key,
++            PHASE5_DATABASE: JSON.stringify(local.database), PHASE5_LOCAL_APPROVED: 'stack-c',
++        });
++        if (storage) env.PHASE5_STORAGE_APPROVED = 'stack-c';
++        console.log(`Running real ${profile.label} integration against verified stack-c; external delivery disabled.`);
++        stage = 'integration assertions and fixture cleanup';
++        const result = spawnSync(process.execPath, [require.resolve('jest/bin/jest'), '--config',
++            path.join(__dirname, profile.config), '--runInBand', '--no-cache'], {
++            cwd: path.resolve(__dirname, '..'), env, stdio: 'inherit', timeout: 120000,
++        });
++        // Check preservation after child failure/timeout as well as success.
++        stage = 'post-run state preservation';
++        validateDatabase((await client.query(identitySql)).rows[0]);
++        assertSameState(before, await snapshotState(client, profile.tables));
++        if (storage) {
++            require('./storage-state.cjs').assertStorageState(storageBefore, {
++                database: await require('./storage-state.cjs').storageDatabaseState(client),
++                files: require('./storage-state.cjs').fileManifest(storage.containerId),
++            });
++            console.log('PASS: full native Storage schema/metadata and persisted file manifest preserved.');
++        }
++        console.log(`PASS: ${profile.tables.length} full table snapshot(s) and canonical ledger preserved after cleanup.`);
++        if (result.status !== 0) {
++            stage = 'integration assertions or fixture cleanup';
++            throw new Error('Integration assertions or cleanup failed.');
++        }
++    } catch {
++        // Docker/pg errors can include generated credentials or private configuration.
++        console.error(`FAIL: local ${profileName} integration at ${stage}; credentials suppressed.`);
++        process.exitCode = 1;
++    } finally {
++        if (client) await client.end().catch(() => { process.exitCode = 1; });
++    }
++}
++
++module.exports = { runLocal };
+diff --git a/backend-node/integration/database-state.cjs b/backend-node/integration/database-state.cjs
+new file mode 100644
+index 0000000..d16926e
+--- /dev/null
++++ b/backend-node/integration/database-state.cjs
+@@ -0,0 +1,32 @@
++const tables = Object.freeze({ users: 'id', properties: 'id', saved_searches: 'id', transactions: 'id',
++    payment_orders: 'id', payment_receipt_outbox: 'order_id', leads: 'lead_id', conversations: 'id',
++    messages: 'id', message_receipts: 'message_id,user_id' });
++
++async function snapshotState(client, names) {
++    if (!names.length || names.some(name => !Object.hasOwn(tables, name))) throw new Error('Unsupported snapshot table.');
++    const result = {};
++    for (const name of names) {
++        const response = await client.query(`SELECT coalesce(jsonb_agg(to_jsonb(t) ORDER BY ${tables[name]}), '[]'::jsonb) AS snapshot FROM public.${name} t`);
++        result[name] = response.rows[0].snapshot;
++    }
++    return result;
++}
++
++function assertSameState(before, after) {
++    if (JSON.stringify(Object.keys(before).sort()) !== JSON.stringify(Object.keys(after).sort())) {
++        throw new Error('Starting state not preserved: snapshot table set differs.');
++    }
++    for (const name of Object.keys(before)) {
++        if (JSON.stringify(before[name]) !== JSON.stringify(after[name])) {
++            throw new Error(`Starting state not preserved for ${name}.`);
++        }
++    }
++}
++
++function assertOwnedListings(rows, sellerIds) {
++    const owned = new Set(sellerIds);
++    if (rows.some(row => !row.id || !owned.has(row.seller_id))) throw new Error('Cleanup requires run-owned listing rows.');
++    return rows.map(row => row.id);
++}
++
++module.exports = { snapshotState, assertSameState, assertOwnedListings };
+diff --git a/backend-node/tests/integrationState.test.js b/backend-node/tests/integrationState.test.js
+new file mode 100644
+index 0000000..e27cf56
+--- /dev/null
++++ b/backend-node/tests/integrationState.test.js
+@@ -0,0 +1,52 @@
++const { snapshotState, assertSameState, assertOwnedListings } = require('../integration/database-state.cjs');
++
++describe('Local integration state preservation (no database connections)', () => {
++    test('snapshots complete CRM rows with deterministic primary and composite keys', async () => {
++        const client = { query: jest.fn().mockResolvedValue({ rows: [{ snapshot: [] }] }) };
++        expect(await snapshotState(client, ['leads', 'conversations', 'messages', 'message_receipts']))
++            .toEqual({ leads: [], conversations: [], messages: [], message_receipts: [] });
++        expect(client.query.mock.calls.map(([sql]) => sql)).toEqual([
++            expect.stringContaining('ORDER BY lead_id'), expect.stringContaining('ORDER BY id'),
++            expect.stringContaining('ORDER BY id'), expect.stringContaining('ORDER BY message_id,user_id'),
++        ]);
++    });
++    test('snapshots complete saved searches in deterministic id order', async () => {
++        const client = { query: jest.fn().mockResolvedValue({ rows: [{ snapshot: [{ id: 'search', filters: { version: 1 } }] }] }) };
++        expect((await snapshotState(client, ['saved_searches'])).saved_searches).toEqual([{ id: 'search', filters: { version: 1 } }]);
++        expect(client.query).toHaveBeenCalledWith(expect.stringContaining('to_jsonb(t) ORDER BY id'));
++        expect(client.query).toHaveBeenCalledWith(expect.stringContaining('FROM public.saved_searches t'));
++    });
++    test('snapshots complete rows in deterministic id order for allowlisted tables', async () => {
++        const client = { query: jest.fn().mockResolvedValue({ rows: [{ snapshot: [{ id: 'original', title: 'Preserve me' }] }] }) };
++        const result = await snapshotState(client, ['users', 'properties']);
++        expect(client.query.mock.calls.map(([sql]) => sql)).toEqual([
++            expect.stringContaining('to_jsonb(t) ORDER BY id'), expect.stringContaining('to_jsonb(t) ORDER BY id'),
++        ]);
++        expect(result.properties).toEqual([{ id: 'original', title: 'Preserve me' }]);
++    });
++    test.each(['settings', 'users;DROP TABLE users', 'properties WHERE true'])('refuses table %s before querying', async table => {
++        const client = { query: jest.fn() };
++        await expect(snapshotState(client, [table])).rejects.toThrow(/snapshot table/);
++        expect(client.query).not.toHaveBeenCalled();
++    });
++    test('accepts identical full snapshots', () => {
++        expect(() => assertSameState({ users: [], properties: [{ id: 'p', price: 5 }] },
++            { users: [], properties: [{ id: 'p', price: 5 }] })).not.toThrow();
++    });
++    test.each([
++        { users: [{ id: 'unremoved-fixture' }], properties: [] },
++        { users: [], properties: [{ id: 'original', title: 'Changed' }] },
++        { users: [] },
++    ])('rejects drift without exposing row contents', after => {
++        expect(() => assertSameState({ users: [], properties: [{ id: 'original', title: 'Private original' }] }, after))
++            .toThrow(/^Starting state not preserved/);
++        try { assertSameState({ users: [{ id: 'secret-identity' }] }, after); }
++        catch (error) { expect(error.message).not.toContain('secret-identity'); }
++    });
++    test('allows cleanup recovery only for run-owned listing rows', () => {
++        expect(assertOwnedListings([{ id: 'p1', seller_id: 'own-seller' }], ['own-seller'])).toEqual(['p1']);
++    });
++    test('refuses a pre-existing or foreign-owner listing before cleanup', () => {
++        expect(() => assertOwnedListings([{ id: 'p1', seller_id: 'other' }], ['own-seller'])).toThrow(/run-owned/);
++    });
++});
+diff --git a/backend-node/integration/run-crm.cjs b/backend-node/integration/run-crm.cjs
+new file mode 100644
+index 0000000..a6960ff
+--- /dev/null
++++ b/backend-node/integration/run-crm.cjs
+@@ -0,0 +1 @@
++require('./run-local.cjs').runLocal('crm');
+diff --git a/backend-node/integration/crm.jest.config.cjs b/backend-node/integration/crm.jest.config.cjs
+new file mode 100644
+index 0000000..e5bb197
+--- /dev/null
++++ b/backend-node/integration/crm.jest.config.cjs
+@@ -0,0 +1,2 @@
++module.exports = { rootDir: '..', testMatch: ['<rootDir>/integration/crm.integration.cjs'],
++    setupFiles: ['<rootDir>/integration/setup.cjs'], testTimeout: 15000, verbose: true };
+diff --git a/backend-node/integration/crm.integration.cjs b/backend-node/integration/crm.integration.cjs
+new file mode 100644
+index 0000000..c673e5e
+--- /dev/null
++++ b/backend-node/integration/crm.integration.cjs
+@@ -0,0 +1,159 @@
++const { randomUUID } = require('node:crypto');
++const request = require('supertest');
++const bcrypt = require('bcryptjs');
++const { Client } = require('pg');
++const { identitySql, validateDatabase } = require('./local-stack.cjs');
++const { allowedAppPorts } = require('./network-policy.cjs');
++const app = require('../server');
++const run = randomUUID();
++const users = Object.fromEntries(['AGENT', 'OTHER', 'BUYER', 'SELLER', 'ADMIN', 'PENDING_AGENT', 'REJECTED_AGENT', 'BANNED']
++    .map(key => [key, { id: randomUUID(), role: key === 'OTHER' ? 'AGENT' : key,
++        name: `CRM ${key}`, email: `${run}-${key.toLowerCase()}@example.test` }]));
++const ids = Object.values(users).map(user => user.id);
++const agents = [users.AGENT.id, users.OTHER.id];
++const property = randomUUID();
++const conversation = randomUUID(), support = randomUUID(), foreign = randomUUID();
++const older = randomUUID(), latest = randomUUID();
++const cookies = {};
++const db = new Client(JSON.parse(process.env.PHASE5_DATABASE));
++let connected = false, server, port;
++const call = (role, method, path = '/api/agents/leads') => {
++    const req = request(server)[method](path);
++    return role ? req.set('Cookie', cookies[role]) : req;
++};
++const put = (id, payload, role = 'AGENT') => call(role, 'put', `/api/agents/leads/${id}`).send(payload);
++const list = async (role = 'AGENT') => { const res = await call(role, 'get'); expect(res.status).toBe(200); return res.body.leads; };
++const ownedState = async () => ({
++    leads: (await db.query('SELECT * FROM public.leads WHERE assigned_agent_id=ANY($1::uuid[]) ORDER BY lead_id', [agents])).rows,
++    conversations: (await db.query('SELECT * FROM public.conversations WHERE seller_id=ANY($1::uuid[]) ORDER BY id', [agents])).rows,
++});
++async function booking(agent = 'AGENT') {
++    const res = await call(null, 'post', `/api/agents/${users[agent].id}/book-viewing`).send({
++        client_name: 'CRM Guest', client_email: `${run}-guest@example.test`, client_phone: '0771234567',
++        property_id: property, viewing_type: 'Tour', preferred_date: '2026-11-01', notes: 'CRM note',
++    });
++    expect(res.status).toBe(201);
++    const rows = (await db.query('SELECT * FROM public.leads WHERE assigned_agent_id=$1 AND client_email=$2 ORDER BY created_at DESC',
++        [users[agent].id, `${run}-guest@example.test`])).rows;
++    expect(rows.length).toBeGreaterThan(0);
++    return rows[0].lead_id;
++}
++beforeAll(async () => {
++    server = await new Promise((resolve, reject) => { const listener = app.listen(0, '127.0.0.1', () => resolve(listener)); listener.once('error', reject); });
++    port = server.address().port; allowedAppPorts.add(port);
++    await db.connect(); connected = true;
++    validateDatabase((await db.query(identitySql)).rows[0]);
++    const password = 'CRM-fixture-only-123!', hash = await bcrypt.hash(password, 10);
++    for (const user of Object.values(users)) {
++        // Banned cookie is obtained by real login before changing this exact fixture's role.
++        await db.query('INSERT INTO public.users(id,name,email,password_hash,role) VALUES($1,$2,$3,$4,$5)',
++            [user.id, user.name, user.email, hash, user.role === 'BANNED' ? 'BUYER' : user.role]);
++        const res = await request(server).post(user.role === 'ADMIN' ? '/api/admin/login' : '/api/auth/login').send({ email: user.email, password });
++        expect(res.status).toBe(200); cookies[Object.keys(users).find(key => users[key] === user)] = res.headers['set-cookie'][0].split(';')[0];
++    }
++    await db.query("UPDATE public.users SET role='BANNED' WHERE id=$1 AND email=$2", [users.BANNED.id, users.BANNED.email]);
++    await db.query(`INSERT INTO public.properties(id,seller_id,title,description,price,status,payment_status,type,latitude,longitude,bedrooms,bathrooms,listing_type)
++        VALUES($1,$2,$3,'CRM fixture',1000,'approved','Paid','House',7,80,1,1,'Sale')`, [property, users.AGENT.id, `${run} house`]);
++    for (const [id, type, seller] of [[conversation, 'property', users.AGENT.id], [support, 'support', users.AGENT.id], [foreign, 'property', users.OTHER.id]]) {
++        await db.query(`INSERT INTO public.conversations(id,type,property_id,buyer_id,seller_id,updated_at)
++            VALUES($1,$2,$3,$4,$5,'2026-01-01')`, [id, type, type === 'property' ? property : null, users.BUYER.id, seller]);
++    }
++    for (const [id, body, date] of [[older, 'Older inquiry', '2026-01-01'], [latest, 'Latest inquiry', '2026-01-02']]) {
++        await db.query('INSERT INTO public.messages(id,conversation_id,sender_id,sender_role,body,created_at) VALUES($1,$2,$3,$4,$5,$6)',
++            [id, conversation, users.BUYER.id, 'BUYER', body, date]);
++        for (const userId of [users.BUYER.id, users.AGENT.id]) await db.query('INSERT INTO public.message_receipts(message_id,user_id) VALUES($1,$2)', [id, userId]);
++    }
++});
++afterAll(async () => {
++    try {
++        if (connected) {
++            validateDatabase((await db.query(identitySql)).rows[0]);
++            const convs = (await db.query('SELECT id,seller_id FROM public.conversations WHERE seller_id=ANY($1::uuid[])', [agents])).rows;
++            if (convs.some(row => !agents.includes(row.seller_id) || !row.id)) throw new Error('Unowned CRM cleanup refused.');
++            const convIds = convs.map(row => row.id);
++            const messages = (await db.query('SELECT id FROM public.messages WHERE conversation_id=ANY($1::uuid[])', [convIds])).rows.map(row => row.id);
++            // Inspect cross-owner references before cascade deletion, even after a failed setup/assertion.
++            const unexpected = await db.query('SELECT user_id FROM public.message_receipts WHERE message_id=ANY($1::uuid[]) AND NOT(user_id=ANY($2::uuid[]))', [messages, ids]);
++            expect(unexpected.rows).toEqual([]);
++            await db.query('DELETE FROM public.message_receipts WHERE message_id=ANY($1::uuid[]) AND user_id=ANY($2::uuid[])', [messages, ids]);
++            await db.query('DELETE FROM public.messages WHERE id=ANY($1::uuid[]) AND conversation_id=ANY($2::uuid[])', [messages, convIds]);
++            await db.query('DELETE FROM public.conversations WHERE id=ANY($1::uuid[]) AND seller_id=ANY($2::uuid[])', [convIds, agents]);
++            await db.query('DELETE FROM public.leads WHERE assigned_agent_id=ANY($1::uuid[])', [agents]);
++            expect(await ownedState()).toEqual({ leads: [], conversations: [] });
++            await db.query('DELETE FROM public.properties WHERE id=$1 AND seller_id=$2', [property, users.AGENT.id]);
++            for (const user of Object.values(users)) await db.query('DELETE FROM public.users WHERE id=$1 AND email=$2', [user.id, user.email]);
++            expect((await db.query('SELECT id FROM public.users WHERE id=ANY($1::uuid[])', [ids])).rows).toEqual([]);
++        }
++    } finally {
++        try { await db.end(); } finally {
++            try { if (server?.listening) await new Promise((resolve, reject) => server.close(err => err ? reject(err) : resolve())); }
++            finally { allowedAppPorts.delete(port); }
++        }
++    }
++});
++test('guest booking, normalized joins/latest notes/order, support exclusion and empty agent', async () => {
++    const direct = await booking();
++    const rows = await list();
++    expect(rows.map(row => row.id).sort()).toEqual([direct, conversation].sort());
++    expect(rows.find(row => row.id === direct)).toMatchObject({ is_direct_booking: true, lead_status: 'New', notes: 'CRM note',
++        buyer: { name: 'CRM Guest' }, properties: { id: property } });
++    expect(rows.find(row => row.id === conversation)).toMatchObject({ notes: 'Latest inquiry', last_message: 'Latest inquiry',
++        buyer: { id: users.BUYER.id }, properties: { id: property } });
++    const dates = rows.map(row => Date.parse(row.updated_at || row.created_at));
++    expect(dates).toEqual([...dates].sort((a, b) => b - a));
++    expect(await list('OTHER')).toEqual([expect.objectContaining({ id: foreign, notes: null,
++        last_message: 'Inquiry conversation opened', buyer: expect.objectContaining({ id: users.BUYER.id }) })]);
++    await db.query('DELETE FROM public.conversations WHERE id=$1 AND seller_id=$2', [foreign, users.OTHER.id]);
++    expect(await list('OTHER')).toEqual([]);
++});
++test.each(['New', 'Contacted', 'Showing', 'Offer', 'Closed'])('both sources persist and reload %s', async stage => {
++    const direct = await booking();
++    for (const id of [direct, conversation]) {
++        expect((await put(id, { lead_status: stage })).status).toBe(200);
++        expect((await list()).find(row => row.id === id).lead_status).toBe(stage);
++    }
++    expect((await db.query('SELECT lifecycle_status FROM public.leads WHERE lead_id=$1', [direct])).rows[0].lifecycle_status)
++        .toBe({ New: 'New', Contacted: 'Attempted Contact', Showing: 'Active', Offer: 'Offer', Closed: 'Closed' }[stage]);
++});
++test.each(['direct', 'conversation'])('%s metadata and partial updates preserve omitted values', async source => {
++    const id = source === 'direct' ? await booking() : conversation;
++    expect((await put(id, { lead_status: 'Offer', timeframe: '1-3 Months', pre_approved: true })).status).toBe(200);
++    expect((await list()).find(row => row.id === id)).toMatchObject({ lead_status: 'Offer', timeframe: '1-3 Months', pre_approved: true });
++    expect((await put(id, { pre_approved: false })).status).toBe(200);
++    expect((await list()).find(row => row.id === id)).toMatchObject({ lead_status: 'Offer', timeframe: '1-3 Months', pre_approved: false });
++    expect((await put(id, { timeframe: 'ASAP' })).status).toBe(200);
++    expect((await put(id, { lead_status: 'Showing' })).status).toBe(200);
++    expect((await list()).find(row => row.id === id)).toMatchObject({ lead_status: 'Showing', timeframe: 'ASAP', pre_approved: false });
++});
++test('roles, auth, foreign ownership, malformed updates and invalid enum preserve rows', async () => {
++    const direct = await booking(), before = await ownedState();
++    for (const role of [null, 'BUYER', 'SELLER', 'ADMIN', 'PENDING_AGENT', 'REJECTED_AGENT', 'BANNED']) {
++        for (const [method, path] of [['get', '/api/agents/leads'], ['put', `/api/agents/leads/${direct}`], ['delete', `/api/agents/leads/${direct}`]]) {
++            expect((await call(role, method, path).send(method === 'put' ? { lead_status: 'Closed' } : undefined)).status).toBe(role ? 403 : 401);
++        }
++    }
++    for (const id of [direct, conversation, randomUUID()]) {
++        const res = await put(id, { lead_status: 'Closed' }, 'OTHER');
++        expect(res.status).toBe(200); expect(res.body.lead ?? null).toBeNull();
++        expect((await call('OTHER', 'delete', `/api/agents/leads/${id}`)).status).toBe(404);
++    }
++    for (const payload of [{ lead_status: 'Bad' }, { pre_approved: 'true' }, { timeframe: 'x'.repeat(101) }, { notes: 'x'.repeat(2001) }])
++        expect((await put(direct, payload)).status).toBe(400);
++    expect((await put('bad-id', { lead_status: 'Closed' })).status).toBe(400);
++    expect(await ownedState()).toEqual(before);
++    const invalid = await put(direct, { timeframe: 'Invalid enum' });
++    expect(invalid.status).toBeGreaterThanOrEqual(400);
++    expect(await ownedState()).toEqual(before);
++});
++test('owned deletion, repeat/missing/foreign refusal and conversation cascades', async () => {
++    const direct = await booking();
++    for (const id of [direct, conversation]) {
++        expect((await call('OTHER', 'delete', `/api/agents/leads/${id}`)).status).toBe(404);
++        expect((await call('AGENT', 'delete', `/api/agents/leads/${id}`)).status).toBe(200);
++        expect((await call('AGENT', 'delete', `/api/agents/leads/${id}`)).status).toBe(404);
++        expect((await list()).some(row => row.id === id)).toBe(false);
++    }
++    expect((await call('AGENT', 'delete', `/api/agents/leads/${randomUUID()}`)).status).toBe(404);
++    expect((await db.query('SELECT id FROM public.messages WHERE id=ANY($1::uuid[])', [[older, latest]])).rows).toEqual([]);
++    expect((await db.query('SELECT message_id FROM public.message_receipts WHERE message_id=ANY($1::uuid[])', [[older, latest]])).rows).toEqual([]);
++});
+diff --git a/frontend-react/src/pages/agent/Dashboard.integration.test.jsx b/frontend-react/src/pages/agent/Dashboard.integration.test.jsx
+new file mode 100644
+index 0000000..327076e
+--- /dev/null
++++ b/frontend-react/src/pages/agent/Dashboard.integration.test.jsx
+@@ -0,0 +1,119 @@
++import React from 'react';
++import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
++import { MemoryRouter, Route, Routes } from 'react-router-dom';
++import { afterEach, beforeEach, expect, test, vi } from 'vitest';
++import Dashboard from './Dashboard';
++
++const mocks = vi.hoisted(() => ({ api: { get: vi.fn(), put: vi.fn(), delete: vi.fn() },
++  auth: { user: { id: 'agent', name: 'CRM Agent', role: 'AGENT' } }, toast: { success: vi.fn(), error: vi.fn() } }));
++vi.mock('../../context/api', () => ({ default: mocks.api }));
++vi.mock('../../context/UserAuthContext', () => ({ useAuth: () => mocks.auth }));
++vi.mock('../../components/layout/Navbar', () => ({ default: () => null }));
++vi.mock('../../components/layout/Footer', () => ({ default: () => null }));
++vi.mock('react-hot-toast', () => ({ default: mocks.toast }));
++const lead = (id, direct = false) => ({ id, is_direct_booking: direct, lead_status: 'New',
++  buyer: { name: direct ? 'Guest Buyer' : 'Conversation Buyer', email: `${id}@example.test`, phone: '0771234567' },
++  properties: { id: 'house', title: 'CRM House', images: [], price: 1000 },
++  notes: direct ? 'Guest note' : 'Latest inquiry', timeframe: 'ASAP', pre_approved: false,
++  created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z' });
++let rows;
++beforeEach(() => {
++  vi.resetAllMocks();
++  mocks.auth.user = { id: 'agent', name: 'CRM Agent', role: 'AGENT' };
++  rows = [lead('direct', true), lead('conversation')];
++  mocks.api.get.mockImplementation(async path => {
++    if (path === '/agents/leads') return { data: { leads: structuredClone(rows) } };
++    if (path === '/agents/dashboard-stats') return { data: { stats: { totalLeads: rows.length } } };
++    if (path === '/properties/my-listings') return { data: { properties: [] } };
++    throw new Error(`Unexpected API request: ${path}`);
++  });
++  mocks.api.put.mockImplementation(async (path, payload) => {
++    rows = rows.map(row => path.endsWith(`/${row.id}`) ? { ...row, ...payload } : row);
++    return { data: {} };
++  });
++  mocks.api.delete.mockImplementation(async path => { rows = rows.filter(row => !path.endsWith(`/${row.id}`)); return { data: {} }; });
++  vi.spyOn(window, 'confirm').mockReturnValue(false);
++});
++afterEach(() => { cleanup(); vi.restoreAllMocks(); });
++function show() {
++  return render(<MemoryRouter initialEntries={['/agent-dashboard']}><Routes>
++    <Route path="/agent-dashboard" element={<Dashboard />} />
++    <Route path="/profile" element={<p>Profile destination</p>} />
++  </Routes></MemoryRouter>);
++}
++async function pipeline() {
++  show(); fireEvent.click(await screen.findByRole('button', { name: /Client Pipeline & CRM/ }));
++  await screen.findByText('Guest Buyer');
++}
++const stages = () => screen.getAllByRole('combobox');
++const card = name => screen.getByRole('heading', { name }).closest('[class~="group/card"]');
++test('renders both source notes, contact/property details and successful stages after reload', async () => {
++  await pipeline();
++  expect(screen.getByText('Conversation Buyer')).toBeInTheDocument();
++  expect(screen.getAllByText('CRM House')).toHaveLength(2);
++  for (const [index, id] of [[0, 'direct'], [1, 'conversation']]) {
++    fireEvent.change(card(id === 'direct' ? 'Guest Buyer' : 'Conversation Buyer').querySelector('select'), { target: { value: 'Offer' } });
++    await waitFor(() => expect(mocks.api.put).toHaveBeenCalledWith(`/agents/leads/${id}`, { lead_status: 'Offer' }));
++    await waitFor(() => expect(stages().filter(select => select.value === 'Offer')).toHaveLength(index + 1));
++    await waitFor(() => expect(mocks.api.get.mock.calls.filter(([path]) => path === '/agents/leads').length).toBeGreaterThan(index + 1));
++  }
++  fireEvent.click(card('Guest Buyer').querySelector('[title="View Details"]'));
++  expect(screen.getByText('Appointment & Lead Details')).toBeInTheDocument();
++  expect(screen.getByText('Guest note')).toBeInTheDocument();
++  expect(stages().at(-1)).toHaveValue('Offer');
++});
++test('failed card stage reload restores authoritative stage', async () => {
++  mocks.api.put.mockRejectedValue(new Error('Controlled rejection'));
++  await pipeline();
++  fireEvent.change(stages()[0], { target: { value: 'Closed' } });
++  await waitFor(() => expect(mocks.toast.error).toHaveBeenCalledWith('Failed to update lead status'));
++  await waitFor(() => expect(stages().every(select => select.value === 'New')).toBe(true));
++});
++test('failed stage change while detail stays open restores authoritative modal and card', async () => {
++  mocks.api.put.mockRejectedValue(new Error('Controlled rejection'));
++  await pipeline(); fireEvent.click(screen.getAllByTitle('View Details')[0]);
++  fireEvent.change(stages().at(-1), { target: { value: 'Closed' } });
++  await waitFor(() => expect(mocks.toast.error).toHaveBeenCalledWith('Failed to update lead status'));
++  await waitFor(() => expect(mocks.api.get.mock.calls.filter(([path]) => path === '/agents/leads')).toHaveLength(2));
++  await waitFor(() => expect(stages().every(select => select.value === 'New')).toBe(true));
++  expect(screen.getByText('Appointment & Lead Details')).toBeInTheDocument();
++});
++test('rejected mutation and refresh restore the previous modal and card stages', async () => {
++  vi.spyOn(console, 'error').mockImplementation(() => {});
++  await pipeline(); fireEvent.click(screen.getAllByTitle('View Details')[0]);
++  mocks.api.put.mockRejectedValue(new Error('Controlled mutation rejection'));
++  mocks.api.get.mockRejectedValue(new Error('Controlled refresh rejection'));
++  fireEvent.change(stages().at(-1), { target: { value: 'Closed' } });
++  await waitFor(() => expect(mocks.toast.error).toHaveBeenCalledWith('Failed to load agent hub data'));
++  await waitFor(() => expect(stages().every(select => select.value === 'New')).toBe(true));
++});
++const modalDelete = () => screen.getAllByRole('button', { name: 'Delete Lead' }).find(button => button.textContent.includes('Delete Lead'));
++test('delete cancellation, failure recovery and successful removal close open detail', async () => {
++  await pipeline(); fireEvent.click(screen.getAllByTitle('View Details')[0]);
++  fireEvent.click(modalDelete());
++  expect(mocks.api.delete).not.toHaveBeenCalled();
++  window.confirm.mockReturnValue(true);
++  mocks.api.delete.mockRejectedValueOnce({ response: { data: { message: 'Controlled delete failure' } } });
++  fireEvent.click(modalDelete());
++  await waitFor(() => expect(mocks.toast.error).toHaveBeenCalledWith('Controlled delete failure'));
++  expect(screen.getByText('Appointment & Lead Details')).toBeInTheDocument();
++  expect(screen.getAllByText('Guest Buyer')).toHaveLength(2);
++  fireEvent.click(modalDelete());
++  await waitFor(() => expect(screen.queryByText('Guest Buyer')).not.toBeInTheDocument());
++  expect(screen.queryByText('Appointment & Lead Details')).not.toBeInTheDocument();
++  expect(screen.getByText('Conversation Buyer')).toBeInTheDocument();
++});
++test.each([null, 'BUYER', 'PENDING_AGENT', 'REJECTED_AGENT', 'BANNED'])('unauthorized %s redirects without API calls', async role => {
++  mocks.auth.user = role ? { id: 'consumer', role } : null;
++  show(); expect(await screen.findByText('Profile destination')).toBeInTheDocument();
++  expect(mocks.api.get).not.toHaveBeenCalled();
++});
++test('initial load error remains recoverable with refresh', async () => {
++  vi.spyOn(console, 'error').mockImplementation(() => {});
++  mocks.api.get.mockRejectedValueOnce(new Error('Controlled load failure'));
++  show();
++  await waitFor(() => expect(mocks.toast.error).toHaveBeenCalledWith('Failed to load agent hub data'));
++  fireEvent.click(await screen.findByTitle('Refresh Analytics'));
++  fireEvent.click(screen.getByRole('button', { name: /Client Pipeline & CRM/ }));
++  expect(await screen.findByText('Guest Buyer')).toBeInTheDocument();
++});

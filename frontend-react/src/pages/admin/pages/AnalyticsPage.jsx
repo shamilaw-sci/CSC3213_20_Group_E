@@ -1,14 +1,16 @@
+import SearchDemandPanel from '../components/SearchDemandPanel';
+import { logClientError } from '../../../utils/clientLog';
 import React, { useCallback, useEffect, useState } from "react";
 import { fetchDashboardStats, fetchRevenueData, fetchUserGrowth } from "../api/adminApi";
 import "../styles/admin-global.css";
-import toast from 'react-hot-toast';
 
 // Simple SVG Donut Chart
 const DonutChart = ({ segments, size = 120 }) => {
-  if (!segments || segments.length === 0) return null;
+  if (!segments || segments.length === 0) return <p>No data (0).</p>;
   const r = 46; const cx = 60; const cy = 60;
   const circ = 2 * Math.PI * r;
-  const total = segments.reduce((s, g) => s + (g.value || 0), 0) || 1;
+  const total = segments.reduce((s, g) => s + (g.value || 0), 0);
+  if (total === 0) return <p>No data (0).</p>;
   const arcs = segments.reduce((items, seg, i) => {
     if (!seg.value) return items;
     const dash = (seg.value / total) * circ;
@@ -47,9 +49,11 @@ const AnalyticsPage = () => {
   const [revenue, setRevenue] = useState([]);
   const [userGrowth, setUserGrowth] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   const loadAnalytics = useCallback(async (p) => {
     setLoading(true);
+    setLoadError(false);
     try {
       const [s, r, u] = await Promise.all([
         fetchDashboardStats(),
@@ -60,7 +64,8 @@ const AnalyticsPage = () => {
       if (r?.data) setRevenue(r.data);
       if (u?.data) setUserGrowth(u.data);
     } catch (err) {
-      console.error("Failed to load analytics:", err);
+      setLoadError(true);
+      logClientError('admin_analytics_load_failed');
     } finally {
       setLoading(false);
     }
@@ -89,7 +94,7 @@ const AnalyticsPage = () => {
       <div className="admin-page-header">
         <div>
           <h1>Analytics & Reports</h1>
-          <p>Real-time platform statistics from your database</p>
+          <p>Recorded platform statistics, loaded from your database</p>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           {["monthly"].map((p) => (
@@ -109,10 +114,11 @@ const AnalyticsPage = () => {
 
       {loading ? (
         <div className="text-slate-500 dark:text-slate-400" style={{ padding: "40px 0", textAlign: "center",  }}>
-          Loading real-time analytics...
+          Loading recorded analytics...
         </div>
-      ) : (
+      ) : loadError ? <p role="alert">Analytics unavailable. Refresh to retry.</p> : (
         <>
+          <SearchDemandPanel />
           <div className="admin-grid admin-grid-4" style={{ marginBottom: 28 }}>
             {[
               { label: "Total Properties", value: stats?.totalProperties || 0, icon: "🏠", color: "var(--admin-gold)" },

@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { logClientError } from '../utils/clientLog';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { newSearchEventId } from '../utils/searchDemand';
 import { m } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import api from '../context/api';
@@ -48,6 +50,7 @@ const BuyPage = () => {
     const navigate = useNavigate();
     const [mapStyle, setMapStyle] = useState('streets'); // 'streets' | 'satellite' | 'dark'
     const [properties, setProperties] = useState([]);
+    const pendingDemandRef = useRef(null);
     const [loading, setLoading] = useState(true);
     const [activeMarkerId, setActiveMarkerId] = useState(null);
     const [hoveredPropId, setHoveredPropId] = useState(null);
@@ -77,49 +80,53 @@ const BuyPage = () => {
     });
 
     useEffect(() => {
-        fetchProperties();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [filters]);
+        const fetchProperties = async () => {
+            setLoading(true);
+            try {
+                // Build query params
+                const params = new URLSearchParams();
+                const demand = pendingDemandRef.current;
+                if (demand) {
+                    params.set('search_event_id', demand.id);
+                    params.set('search_district', demand.district);
+                }
 
-    const fetchProperties = async () => {
-        setLoading(true);
-        try {
-            // Build query params
-            const params = new URLSearchParams();
-            
-            // Check property types (if only one is selected, pass it, else don't strictly filter or handle multiple in backend)
-            // For now, if exactly one is true, pass it. If multiple are true, we might need a different API approach, 
-            // but we'll stick to basic filtering or handle it mostly on the frontend if the backend doesn't support array.
-            const activeTypes = Object.keys(filters.propTypes).filter(k => filters.propTypes[k]);
-            if (activeTypes.length === 1) {
-                params.append('type', activeTypes[0]);
+                // Send a server-side type filter only for a single selection.
+                const activeTypes = Object.keys(filters.propTypes).filter(k => filters.propTypes[k]);
+                if (activeTypes.length === 1) {
+                    params.append('type', activeTypes[0]);
+                }
+
+                if (filters.beds !== 'Any') params.append('beds', filters.beds.replace('+', ''));
+                if (filters.baths !== 'Any') params.append('baths', filters.baths.replace('+', ''));
+                params.append('listing_type', filters.listingType);
+
+                const res = await api.get(`/properties?${params.toString()}`);
+                if (pendingDemandRef.current === demand) pendingDemandRef.current = null;
+                const fetchedProps = Array.isArray(res.data)
+                    ? res.data
+                    : (res.data?.properties || res.data?.data || []);
+                setProperties(fetchedProps);
+            } catch (error) {
+                (toast.error('Error fetching properties:'), logClientError('properties_load_failed'));
+            } finally {
+                setLoading(false);
             }
-
-            if (filters.beds !== 'Any') params.append('beds', filters.beds.replace('+', ''));
-            if (filters.baths !== 'Any') params.append('baths', filters.baths.replace('+', ''));
-            params.append('listing_type', filters.listingType);
-
-            const res = await api.get(`/properties?${params.toString()}`);
-            const fetchedProps = Array.isArray(res.data) 
-                ? res.data 
-                : (res.data?.properties || res.data?.data || []);
-            setProperties(fetchedProps);
-        } catch (error) {
-            (toast.error('Error fetching properties:'), console.error('Error fetching properties:', error));
-        } finally {
-            setLoading(false);
-        }
-    };
+        };
+        fetchProperties();
+    }, [filters]);
 
     const handleMessageSeller = (propertyId) => {
         navigate(`/property/${propertyId}`);
     };
 
     const handleSearch = (newFilters) => {
+        const id = newSearchEventId();
+        pendingDemandRef.current = id ? { id, district: newFilters.searchTerm.trim() } : null;
         setFilters(newFilters);
     };
 
-    // Filter by search term locally (since it's usually faster if we don't have a full text search endpoint)
+    // Apply the remaining search filters to the fetched properties.
     const filteredProperties = useMemo(() => {
         return properties.filter(prop => {
             // Search Term

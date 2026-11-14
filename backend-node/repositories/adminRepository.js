@@ -1,4 +1,29 @@
 const supabase = require('../config/supabase');
+const { publicError } = require('../utils/publicError');
+const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const sameId = (value, expected) => typeof value === 'string' && uuid.test(value) && value.toLowerCase() === expected.toLowerCase();
+const confirmedRequest = (row, userId, role) => row && !Array.isArray(row) && typeof row.id === 'string' && uuid.test(row.id)
+    && sameId(row.user_id, userId) && row.requested_role === role && row.status === 'pending';
+
+// Read complete datasets in bounded PostgREST pages instead of truncating totals.
+const readAll = async build => {
+    const rows = [];
+    for (let offset = 0; ; offset += 500) {
+        const { data, error } = await build().range(offset, offset + 499);
+        if (error) throw error;
+        rows.push(...(data || []));
+        if (!data || data.length < 500) return rows;
+    }
+};
+const lookupIds = async (table, columns, ids) => {
+    const rows = [];
+    for (let index = 0; index < ids.length; index += 100) {
+        const { data, error } = await supabase.from(table).select(columns).in('id', ids.slice(index, index + 100));
+        if (error) throw error;
+        rows.push(...(data || []));
+    }
+    return { data: rows };
+};
 
 const adminRepository = {
     // 1. Admin Login
@@ -14,39 +39,26 @@ const adminRepository = {
 
     // 2. Dashboard Stats (Excludes unpaid listings)
     getDashboardStats: async () => {
-        return await Promise.all([
+        const results = await Promise.all([
             supabase.from('users').select('*', { count: 'exact', head: true }),
-            supabase.from('properties').select('*', { count: 'exact', head: true }).eq('payment_status', 'Paid'),
-            supabase.from('properties').select('*', { count: 'exact', head: true }).eq('status', 'approved').eq('payment_status', 'Paid'),
-            supabase.from('properties').select('*', { count: 'exact', head: true }).eq('status', 'pending').eq('payment_status', 'Paid'),
-            supabase.from('properties').select('*', { count: 'exact', head: true }).eq('status', 'rejected'),
+            supabase.from('properties').select('*', { count: 'exact', head: true }).is('deleted_at', null).eq('payment_status', 'Paid'),
+            supabase.from('properties').select('*', { count: 'exact', head: true }).is('deleted_at', null).eq('status', 'approved').eq('payment_status', 'Paid'),
+            supabase.from('properties').select('*', { count: 'exact', head: true }).is('deleted_at', null).eq('status', 'pending').eq('payment_status', 'Paid'),
+            supabase.from('properties').select('*', { count: 'exact', head: true }).is('deleted_at', null).eq('status', 'rejected'),
             supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'BUYER'),
             supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'SELLER'),
-            supabase.from('transactions').select('amount').eq('status', 'SUCCESS'),
-            supabase.from('properties').select('type').eq('payment_status', 'Paid')
+            readAll(() => supabase.from('transactions').select('amount').eq('status', 'SUCCESS').eq('currency', 'LKR').order('id')).then(data => ({ data })),
+            readAll(() => supabase.from('properties').select('type').is('deleted_at', null).eq('payment_status', 'Paid').order('id')).then(data => ({ data }))
         ]);
+        for (const result of results) if (result.error) throw result.error;
+        return results;
     },
 
     // 3. Revenue Data
-    getSuccessfulTransactions: async () => {
-        const { data, error } = await supabase
-            .from('transactions')
-            .select('amount, created_at')
-            .eq('status', 'SUCCESS')
-            .order('created_at', { ascending: true });
-        if (error) throw error;
-        return data;
-    },
+    getSuccessfulTransactions: async () => readAll(() => supabase.from('transactions')
+        .select('amount, created_at').eq('status', 'SUCCESS').eq('currency', 'LKR').order('created_at').order('id')),
 
-    // 4. User Growth
-    getAllUsersCreatedAt: async () => {
-        const { data, error } = await supabase
-            .from('users')
-            .select('created_at')
-            .order('created_at', { ascending: true });
-        if (error) throw error;
-        return data;
-    },
+    getAllUsersCreatedAt: async () => readAll(() => supabase.from('users').select('created_at').order('created_at').order('id')),
 
     // 5. Get Listings (Only returns paid listings to admins with seller info)
     getListings: async (statusFilter) => {
@@ -55,7 +67,7 @@ const adminRepository = {
             .select(`
                 *,
                 seller:users!properties_seller_id_fkey(id, name, email, role, phone)
-            `)
+            `).is('deleted_at', null)
             .order('created_at', { ascending: false })
             .limit(50);
         
@@ -80,9 +92,10 @@ const adminRepository = {
             .select(`
                 *,
                 seller:users!properties_seller_id_fkey(id, name, email, role, phone)
-            `)
+            `).is('deleted_at', null)
             .eq('id', id)
             .single();
+        if (listingError?.code === 'PGRST116') return null;
         if (listingError) throw listingError;
 
         const { data: txData } = await supabase
@@ -95,11 +108,21 @@ const adminRepository = {
         return listing;
     },
 
+    // Only the request that changes moderation state should send match alerts.
+    approveListingOnce: async (id) => {
+        const { data, error } = await supabase.from('properties')
+            .update({ status: 'approved', rejection_reason: null }).is('deleted_at', null)
+            .eq('id', id).neq('status', 'approved')
+            .select('*, seller:users!properties_seller_id_fkey(name, email)').maybeSingle();
+        if (error) throw error;
+        return data;
+    },
+
     // 7. Update Listing Status
     updateListingStatus: async (id, updates) => {
         const { data, error } = await supabase
             .from('properties')
-            .update(updates)
+            .update(updates).is('deleted_at', null)
             .eq('id', id)
             .select(`
                 *,
@@ -112,10 +135,11 @@ const adminRepository = {
 
     // 8. Delete Listing
     deleteListing: async (id) => {
-        const { error } = await supabase
+        const { data, error } = await supabase
             .from('properties')
-            .delete()
-            .eq('id', id);
+            .update({ deleted_at: new Date().toISOString() }).is('deleted_at', null)
+            .eq('id', id)
+            .select('id');
         if (error) throw error;
     },
 
@@ -139,7 +163,7 @@ const adminRepository = {
         const { data, error } = await supabase
             .from('users')
             .select(`
-                id, name, email, role, created_at,
+                id, name, email, role, phone, avatar_url, created_at,
                 agent_profiles(agency_name, license_number, bio)
             `)
             .eq('role', 'PENDING_AGENT')
@@ -159,62 +183,90 @@ const adminRepository = {
         return data;
     },
 
+    restoreBannedUserRole: async (id) => {
+        const { data, error } = await supabase.rpc('restore_banned_user_role', { target_id: id });
+        if (error) throw error;
+        const roles = ['BUYER', 'SELLER', 'AGENT', 'PENDING_AGENT', 'REJECTED_AGENT', 'ADMIN'];
+        if (!data || !sameId(data.id, id) || !roles.includes(data.role)) {
+            throw new Error('Restored role could not be confirmed.');
+        }
+        return data;
+    },
+
     // 12. Update User Role
     updateUserRole: async (id, role, reason) => {
-        const { error } = await supabase
+        const { data, error } = await supabase
             .from('users')
             .update({ role })
-            .eq('id', id);
+            .eq('id', id)
+            .select('id, role')
+            .maybeSingle();
         if (error) throw error;
-
-        if (role === 'REJECTED_AGENT' && reason) {
-            await supabase.from('agent_profiles').update({ rejection_reason: reason }).eq('agent_id', id);
-        } else if (role === 'AGENT') {
-            await supabase.from('agent_profiles').update({ rejection_reason: null }).eq('agent_id', id);
+        if (data === null) throw publicError('ADMIN_USER_NOT_FOUND');
+        if (!data || Array.isArray(data) || !sameId(data.id, id) || data.role !== role) {
+            throw new Error('Admin role write unconfirmed.');
         }
+
+        if (role === 'AGENT' || (role === 'REJECTED_AGENT' && reason)) {
+            const rejectionReason = role === 'AGENT' ? null : reason;
+            try {
+                const result = await supabase.from('agent_profiles')
+                    .update({ rejection_reason: rejectionReason }).eq('agent_id', id)
+                    .select('agent_id, rejection_reason').maybeSingle();
+                if (result.error || !result.data || Array.isArray(result.data)
+                    || !sameId(result.data.agent_id, id) || result.data.rejection_reason !== rejectionReason) {
+                    throw new Error('Agent profile write unconfirmed.');
+                }
+            } catch {
+                console.error('admin_role_profile_recovery', { userId: id.toLowerCase(), stage: 'profile_confirmation' });
+                throw publicError('ADMIN_ROLE_PARTIAL');
+            }
+        }
+        return data;
     },
 
     // 13. Get Analytics Counts
     getAnalyticsCounts: async () => {
-        const { count: userCount } = await supabase.from('users').select('*', { count: 'exact', head: true });
-        const { count: propertyCount } = await supabase.from('properties').select('*', { count: 'exact', head: true });
+        const userResult = await supabase.from('users').select('*', { count: 'exact', head: true });
+        if (userResult.error) throw userResult.error;
+        const userCount = userResult.count;
+        const propertyResult = await supabase.from('properties').select('*', { count: 'exact', head: true }).is('deleted_at', null);
+        if (propertyResult.error) throw propertyResult.error;
+        const propertyCount = propertyResult.count;
         return { userCount, propertyCount };
     },
 
     // 14. Get Transactions Detailed
     getTransactionsDetailed: async () => {
-        const { data, error } = await supabase
-            .from('transactions')
-            .select(`
-                id, amount, currency, status, created_at, transaction_id, payment_method, property_id
-            `)
-            .order('created_at', { ascending: false });
-        if (error) throw error;
-        return data;
+        const rows = await readAll(() => supabase.from('transactions')
+            .select('id, amount, currency, status, created_at, transaction_id, payment_method, property_id, buyer_id')
+            .order('created_at', { ascending: false }).order('id'));
+        const propertyIds = [...new Set(rows.map(row => row.property_id).filter(Boolean))];
+        const payerIds = [...new Set(rows.map(row => row.buyer_id).filter(Boolean))];
+        const [properties, payers] = await Promise.all([
+            propertyIds.length ? lookupIds('properties', 'id, title', propertyIds) : { data: [] },
+            payerIds.length ? lookupIds('users', 'id, name', payerIds) : { data: [] }
+        ]);
+        if (properties.error) throw properties.error;
+        if (payers.error) throw payers.error;
+        const propertyMap = new Map((properties.data || []).map(row => [row.id, row]));
+        const payerMap = new Map((payers.data || []).map(row => [row.id, row]));
+        return rows.map(row => ({ ...row, properties: propertyMap.get(row.property_id) || null, payer: payerMap.get(row.buyer_id) || null }));
     },
 
     // 15. Export Data
     getExportData: async (type) => {
-        let dataToExport = [];
-        let headers = [];
-
-        if (type === 'transactions') {
-            const { data, error } = await supabase.from('transactions').select('*');
-            if (error) throw error;
-            dataToExport = data || [];
-            headers = ['id', 'property_id', 'amount', 'currency', 'status', 'payment_method', 'created_at'];
-        } else if (type === 'users') {
-            const { data, error } = await supabase.from('users').select('id, name, email, role, created_at');
-            if (error) throw error;
-            dataToExport = data || [];
-            headers = ['id', 'name', 'email', 'role', 'created_at'];
-        } else if (type === 'listings') {
-            const { data, error } = await supabase.from('properties').select('id, title, price, type, status, created_at');
-            if (error) throw error;
-            dataToExport = data || [];
-            headers = ['id', 'title', 'price', 'type', 'status', 'created_at'];
-        }
-
+        const specs = {
+            transactions: ['transactions', ['id', 'property_id', 'amount', 'currency', 'status', 'payment_method', 'created_at']],
+            users: ['users', ['id', 'name', 'email', 'role', 'created_at']],
+            listings: ['properties', ['id', 'title', 'price', 'type', 'status', 'created_at']]
+        };
+        const [table, headers] = specs[type];
+        const dataToExport = await readAll(() => {
+            let query = supabase.from(table).select(headers.join(',')).order('id');
+            if (type === 'listings') query = query.is('deleted_at', null);
+            return query;
+        });
         return { dataToExport, headers };
     },
 
@@ -222,20 +274,27 @@ const adminRepository = {
     getPlatformSettings: async () => {
         const { data, error } = await supabase
             .from('platform_settings')
-            .select('*');
+            .select('setting_key, setting_value')
+            .eq('setting_key', 'listing_fee').maybeSingle();
         if (error) throw error;
+        if (data !== null && (!data || Array.isArray(data) || data.setting_key !== 'listing_fee'
+            || typeof data.setting_value !== 'string')) throw new Error('Setting read unconfirmed.');
         return data;
     },
 
     // 17. Update Setting
     updatePlatformSetting: async (key, value) => {
-        const { error } = await supabase
+        const { data, error } = await supabase
             .from('platform_settings')
             .upsert(
                 { setting_key: key, setting_value: String(value) },
                 { onConflict: 'setting_key' }
-            );
+            ).select('setting_key, setting_value').maybeSingle();
         if (error) throw error;
+        if (!data || Array.isArray(data) || data.setting_key !== key || data.setting_value !== String(value)) {
+            throw new Error('Setting write unconfirmed.');
+        }
+        return data;
     },
 
     // 18. Get Role Upgrade Requests (with user info)
@@ -255,18 +314,32 @@ const adminRepository = {
 
     // 19. Create Role Request (called from user-side auth controller)
     createRoleRequest: async (userId, requestedRole) => {
-        // Delete any previous pending request for this user before inserting
-        await supabase.from('role_requests').delete().eq('user_id', userId).eq('status', 'pending');
         const { data, error } = await supabase
             .from('role_requests')
             .insert({ user_id: userId, requested_role: requestedRole, status: 'pending' })
-            .select()
-            .single();
-        if (error) throw error;
-        return data;
+            .select('id, user_id, requested_role, status')
+            .maybeSingle();
+        if (!error) {
+            if (!confirmedRequest(data, userId, requestedRole)) throw new Error('Seller request write unconfirmed.');
+            return { created: true, request: data };
+        }
+        if (error.code !== '23505') throw error;
+        const existing = await supabase.from('role_requests')
+            .select('id, user_id, requested_role, status')
+            .eq('user_id', userId).eq('status', 'pending').maybeSingle();
+        if (existing.error) throw existing.error;
+        if (!confirmedRequest(existing.data, userId, requestedRole)) throw publicError('SELLER_REQUEST_CONFLICT');
+        return { created: false, request: existing.data };
     },
 
-    // 20. Resolve Role Request (approve or reject)
+    // Atomic resolution requires the separately adopted database function.
+    // Never fall back to sequential user/request writes.
+    resolveSellerRoleRequest: async (requestId, decision) => supabase.rpc('resolve_seller_role_request', {
+        p_request_id: requestId,
+        p_decision: decision
+    }),
+
+    // Legacy primitive; not used by Admin role-request resolution.
     resolveRoleRequest: async (requestId, status) => {
         const { error } = await supabase
             .from('role_requests')

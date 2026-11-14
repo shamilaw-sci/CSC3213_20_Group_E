@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../src/internal/database/migrations/transformers/transformer.ts"],
+  "sourcesContent": ["import { Migration } from 'postgres-migrations/dist/types'\n\nexport interface MigrationTransformer {\n  transform(input: Migration): Migration\n}\n"],
+  "mappings": ";;;;;;;;;;;;;;AAAA;AAAA;",
+  "names": []
+}

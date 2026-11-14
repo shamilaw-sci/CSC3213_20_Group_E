@@ -1,7 +1,15 @@
 const bcrypt = require('bcryptjs');
+const { validNewPassword, newPasswordMessage } = require('../validators/newPassword');
+const { randomUUID } = require('node:crypto');
+const { parseProfileInput } = require('../validators/profileInput');
 const jwt = require('jsonwebtoken');
+const { createHmac } = require('node:crypto');
 const { sendWelcomeEmail, sendPasswordResetEmail } = require('../utils/emailService');
 const userRepository = require('../repositories/userRepository');
+const { issueSessionToken } = require('../utils/sessionToken');
+const emailVerification = require('../utils/emailVerification');
+const passwordResetVersion = (passwordHash) => createHmac('sha256', process.env.JWT_SECRET)
+    .update(passwordHash || '').digest('hex');
 
 const setTokenCookie = (res, token) => {
     res.cookie('token', token, {
@@ -10,6 +18,16 @@ const setTokenCookie = (res, token) => {
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: 24 * 60 * 60 * 1000 // 1 day
     });
+};
+
+const clearTokenCookie = res => res.clearCookie('token', {
+    httpOnly: true, secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', path: '/'
+});
+
+const applicationFeedback = async user => {
+    if (!['PENDING_AGENT', 'REJECTED_AGENT'].includes(user.role)) return {};
+    return { agent_application: await userRepository.getAgentApplication(user.id) };
 };
 
 // 1. User Registration - Create new user account
@@ -37,11 +55,16 @@ const registerUser = async(req, res, next) => {
         if (role === 'AGENT') safeRole = 'PENDING_AGENT';
 
         // Insert new user into database
-        const newUser = await userRepository.createUser({ name, email, password_hash, role: safeRole });
+        const requiresVerification = emailVerification.enabled();
+        const newUser = await userRepository.createUser({
+            name, email, password_hash, role: safeRole,
+            ...(requiresVerification ? { email_verification_required: true } : {})
+        });
 
         // If registering as an agent, create an initial agent_profiles record
         if (safeRole === 'PENDING_AGENT' && newUser && newUser[0]) {
-            const { agency_name, license_number } = req.body;
+            const agency_name = req.body.agencyName ?? req.body.agency_name;
+            const license_number = req.body.licenseNumber ?? req.body.license_number;
             await userRepository.createAgentProfile({
                 agent_id: newUser[0].id,
                 agency_name: agency_name || 'Independent Agent',
@@ -51,16 +74,21 @@ const registerUser = async(req, res, next) => {
         }
 
         const registeredUser = newUser[0];
-        const token = jwt.sign({ id: registeredUser.id, role: registeredUser.role },
-            process.env.JWT_SECRET, { expiresIn: '1d' }
-        );
+        sendWelcomeEmail(email, name).catch(() => {
+            console.error('welcome_email_failed');
+        });
+        if (requiresVerification) {
+            await emailVerification.sendChallenge(registeredUser, 'signup').catch(() => {
+                console.error('verification_email_failed');
+            });
+            return res.status(201).json({
+                verificationRequired: true,
+                message: 'Check your inbox to verify your email before signing in.'
+            });
+        }
+        const token = issueSessionToken({ ...registeredUser, password_hash });
 
         setTokenCookie(res, token);
-
-        // Send welcome email asynchronously (non-blocking)
-        sendWelcomeEmail(email, name).catch((e) => {
-            console.error("Welcome email failed:", e.message || e);
-        });
 
         res.status(201).json({
             message: "User registered successfully.",
@@ -109,10 +137,14 @@ const loginUser = async(req, res, next) => {
             });
         }
 
+        if (user.email_verification_required && !user.email_verified_at) {
+            return res.status(403).json({ message: 'Verify your email before signing in.' });
+        }
+
+        const agentFeedback = await applicationFeedback(user);
+
         // Generate JWT token
-        const token = jwt.sign({ id: user.id, role: user.role },
-            process.env.JWT_SECRET, { expiresIn: '1d' }
-        );
+        const token = issueSessionToken(user);
 
         setTokenCookie(res, token);
 
@@ -126,7 +158,8 @@ const loginUser = async(req, res, next) => {
                 phone: user.phone,
                 avatar_url: user.avatar_url,
                 theme_preference: user.theme_preference,
-                email_notifications: user.email_notifications
+                email_notifications: user.email_notifications,
+                ...agentFeedback
             }
         });
 
@@ -168,13 +201,13 @@ const forgotPassword = async(req, res, next) => {
 
         // Security best practice: Always return same message regardless of whether email exists
         if (user && user.role !== 'BANNED') {
-            const resetToken = jwt.sign({ id: user.id, type: 'password_reset' },
+            const resetToken = jwt.sign({ id: user.id, type: 'password_reset', version: passwordResetVersion(user.password_hash) },
                 process.env.JWT_SECRET, { expiresIn: '15m' }
             );
             const resetLink = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}`;
 
             sendPasswordResetEmail(email, user.name, resetLink).catch((e) => {
-                console.error("Password reset email failed:", e.message || e);
+                console.error('password_reset_email_failed');
             });
         }
 
@@ -193,8 +226,8 @@ const resetPassword = async(req, res, next) => {
             return res.status(400).json({ message: "Reset token and new password are required." });
         }
 
-        if (newPassword.length < 6) {
-            return res.status(400).json({ message: "Password must be at least 6 characters." });
+        if (!validNewPassword(newPassword)) {
+            return res.status(400).json({ message: newPasswordMessage });
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -206,12 +239,19 @@ const resetPassword = async(req, res, next) => {
         if (!user) {
             return res.status(404).json({ message: "User account not found." });
         }
+        if (user.role === 'BANNED' || !user.password_hash || decoded.version !== passwordResetVersion(user.password_hash)) {
+            return res.status(400).json({ message: "Invalid or expired password reset token. Please request a new link." });
+        }
 
         const salt = await bcrypt.genSalt(10);
         const password_hash = await bcrypt.hash(newPassword, salt);
 
-        await userRepository.updateProfile(user.id, { password_hash });
+        const updated = await userRepository.resetPasswordOnce(user.id, user.password_hash, password_hash);
+        if (!updated) {
+            return res.status(400).json({ message: "This reset link has already been used. Please request a new link." });
+        }
 
+        clearTokenCookie(res);
         res.status(200).json({ message: "Password reset successful. You can now log in with your new password." });
     } catch (error) {
         if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
@@ -223,29 +263,20 @@ const resetPassword = async(req, res, next) => {
 
 // 6. User Logout (M8 Fix - clear cookies with matching attributes)
 const logoutUser = (req, res) => {
-    res.clearCookie('token', {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-        path: '/'
-    });
+    clearTokenCookie(res);
     res.status(200).json({ message: "Logged out successfully" });
 };
 
 // 7. Get Current User Profile
 const getMe = async(req, res, next) => {
     try {
-        let token = req.cookies?.token;
-        if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-            token = req.headers.authorization.split(' ')[1];
-        }
-
-        if (!token) return res.status(401).json({ message: "Not authenticated" });
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await userRepository.findById(decoded.id);
+        if (!req.user) return res.status(401).json({ message: "Not authenticated" });
+        const user = await userRepository.findById(req.user.id);
 
         if (!user) return res.status(404).json({ message: "User not found" });
+
+        // Application feedback belongs only to the authenticated applicant.
+        Object.assign(user, await applicationFeedback(user));
 
         res.status(200).json({ user });
     } catch (error) {
@@ -255,8 +286,12 @@ const getMe = async(req, res, next) => {
 
 // 8. Update User Profile
 const updateProfile = async(req, res, next) => {
+    let uploadedKey;
     try {
-        const { name, email, phone, password, avatar_url, theme_preference, email_notifications } = req.body;
+        let parsed;
+        try { parsed = parseProfileInput(req.body); }
+        catch { return res.status(400).json({ message: 'Invalid profile input.' }); }
+        const { name, email, phone, password, avatar_url, theme_preference, email_notifications, currentPassword } = parsed.fields;
 
         const user = await userRepository.findFullUserById(req.user.id);
         if (!user) {
@@ -277,35 +312,33 @@ const updateProfile = async(req, res, next) => {
             if (existingUser && existingUser.id !== user.id) {
                 return res.status(409).json({ message: "This email address is already in use by another account." });
             }
+            if (emailVerification.enabled()) {
+                if (user.role === 'ADMIN' || !user.password_hash) {
+                    return res.status(403).json({ message: 'This account requires a separate email change process.' });
+                }
+                if (!currentPassword) {
+                    return res.status(400).json({ message: 'Enter your current password to change your email.' });
+                }
+                if (!await bcrypt.compare(currentPassword, user.password_hash)) {
+                    return res.status(400).json({ message: 'Incorrect current password.' });
+                }
+                if (!await emailVerification.sendChallenge(user, 'email_change', cleanEmail)) {
+                    return res.status(429).json({ message: 'Wait one minute before requesting another link.' });
+                }
+                return res.json({
+                    emailChangePending: true,
+                    message: 'Check your new inbox. Your sign-in email stays the same until you confirm the link.'
+                });
+            }
             updates.email = cleanEmail;
         }
 
         if (phone !== undefined) updates.phone = phone;
-        if (avatar_url !== undefined) {
-            if (avatar_url.startsWith('data:image')) {
-                try {
-                    const parts = avatar_url.split(',');
-                    if (parts.length === 2) {
-                        const mimeType = parts[0].split(':')[1].split(';')[0];
-                        const base64Data = parts[1];
-                        const buffer = Buffer.from(base64Data, 'base64');
-                        const ext = mimeType.split('/')[1] || 'png';
-                        const fileName = `${req.user.id}_${Date.now()}.${ext}`;
-
-                        updates.avatar_url = await userRepository.uploadAvatar(fileName, buffer, mimeType);
-                    }
-                } catch (err) {
-                    console.error("Avatar upload error:", err);
-                }
-            } else {
-                updates.avatar_url = avatar_url;
-            }
-        }
+        if (avatar_url !== undefined) updates.avatar_url = avatar_url;
         if (theme_preference !== undefined) updates.theme_preference = theme_preference;
         if (email_notifications !== undefined) updates.email_notifications = email_notifications;
 
         if (password) {
-            const { currentPassword } = req.body;
             if (!currentPassword) {
                 return res.status(400).json({ message: "Current password is required to change your password." });
             }
@@ -317,18 +350,50 @@ const updateProfile = async(req, res, next) => {
                 }
             }
 
-            if (password.length < 6) {
-                return res.status(400).json({ message: "New password must be at least 6 characters long." });
+            if (!validNewPassword(password)) {
+                return res.status(400).json({ message: newPasswordMessage });
             }
 
             const salt = await bcrypt.genSalt(10);
             updates.password_hash = await bcrypt.hash(password, salt);
         }
 
+        // Resolve read-only feedback before writes, so its failure cannot disguise
+        // an otherwise successful personal-details save.
+        const feedback = await applicationFeedback(user);
+
+        if (parsed.avatar) {
+            const key = `${req.user.id}_${randomUUID()}.${parsed.avatar.extension}`;
+            try {
+                const url = await userRepository.uploadAvatar(key, parsed.avatar.bytes, parsed.avatar.mime);
+                uploadedKey = key;
+                const confirmed = parseProfileInput({ avatar_url: url });
+                if (!confirmed.fields.avatar_url || confirmed.avatar) throw new Error('Unconfirmed avatar upload');
+                updates.avatar_url = url;
+            } catch {
+                console.error('profile_avatar_recovery', { userId: req.user.id, objectKey: key });
+                return res.status(503).json({ message: 'Avatar upload unavailable.' });
+            }
+        }
+        let omittedFields = [];
+        const completeUpdate = (updated, message) => {
+            if (updated?.id !== req.user.id) throw new Error('Profile update could not be confirmed.');
+            const { password_hash, ...publicUser } = updated;
+            if (['PENDING_AGENT', 'REJECTED_AGENT'].includes(publicUser.role)) Object.assign(publicUser, feedback);
+            const result = { message, user: publicUser, ...(omittedFields.length ? { partial: true, omittedFields } : {}) };
+            if (updates.password_hash) {
+                const token = issueSessionToken({ ...user, ...updated, password_hash: updates.password_hash });
+                setTokenCookie(res, token);
+                if (req.user.role === 'ADMIN' || req.headers.authorization?.startsWith('Bearer ')) result.token = token;
+            }
+            return res.status(200).json(result);
+        };
         const { data: updatedUser, error: updateError } = await userRepository.updateProfile(req.user.id, updates);
 
         if (updateError) {
-            if (updateError.message.includes('column') && updateError.message.includes('does not exist')) {
+            if (typeof updateError.message === 'string' && updateError.message.includes('column') && updateError.message.includes('does not exist')) {
+                omittedFields = ['phone','avatar_url','theme_preference','email_notifications'].filter(field => Object.hasOwn(updates,field));
+                if (uploadedKey) { console.error('profile_avatar_recovery', { userId: req.user.id, objectKey: uploadedKey }); uploadedKey = undefined; }
                 delete updates.phone;
                 delete updates.avatar_url;
                 delete updates.theme_preference;
@@ -336,15 +401,16 @@ const updateProfile = async(req, res, next) => {
 
                 const { data: fallbackUser, error: fallbackError } = await userRepository.updateProfile(req.user.id, updates);
                 if (fallbackError) throw fallbackError;
-                return res.status(200).json({ message: "Profile updated", user: fallbackUser });
+                return completeUpdate(fallbackUser, omittedFields.length ? 'Profile updated; some fields could not be saved.' : 'Profile updated');
             }
             throw updateError;
         }
 
-        res.status(200).json({ message: "Profile updated successfully", user: updatedUser });
+        return completeUpdate(updatedUser, 'Profile updated successfully');
 
     } catch (error) {
-        next(error);
+        if (uploadedKey) console.error('profile_avatar_recovery', { userId: req.user.id, objectKey: uploadedKey });
+        next(new Error('Profile update unavailable.'));
     }
 };
 
@@ -359,9 +425,11 @@ const requestRoleUpgrade = async(req, res, next) => {
         }
 
         const adminRepository = require('../repositories/adminRepository');
-        await adminRepository.createRoleRequest(user.id, 'SELLER');
+        const result = await adminRepository.createRoleRequest(user.id, 'SELLER');
 
-        res.status(201).json({ message: 'Your request to become a Seller has been submitted. An admin will review it shortly.' });
+        res.status(result.created ? 201 : 200).json({ message: result.created
+            ? 'Your request to become a Seller has been submitted. An admin will review it shortly.'
+            : 'Your request to become a Seller is already pending review.' });
     } catch (error) {
         next(error);
     }

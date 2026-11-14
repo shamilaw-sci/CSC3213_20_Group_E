@@ -39,7 +39,7 @@ const Footer = () => {
                         <h4 className="text-white font-bold mb-6 text-lg tracking-tight">Quick Links</h4>
                         <ul className="space-y-3 text-sm">
                             <li><Link to="/map" className="hover:text-blue-400 transition-colors">Search Map</Link></li>
-                            <li><Link to="/feasibility" className="hover:text-blue-400 transition-colors">Feasibility Engine</Link></li>
+                            <li><Link to="/map?feasibility=1" className="hover:text-blue-400 transition-colors">Feasibility Engine</Link></li>
                             <li><Link to="/favorites" className="hover:text-blue-400 transition-colors">Saved Homes</Link></li>
                             <li><Link to="/login" className="hover:text-blue-400 transition-colors">Sign In</Link></li>
                         </ul>

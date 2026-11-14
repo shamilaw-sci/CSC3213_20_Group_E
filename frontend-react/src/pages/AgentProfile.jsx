@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../context/api';
 import { useAuth } from '../context/UserAuthContext';
@@ -70,7 +70,7 @@ const AgentProfile = () => {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showStudioModal, setShowStudioModal] = useState(false);
 
-  const fetchAgent = async () => {
+  const fetchAgent = useCallback(async () => {
     try {
       const response = await api.get(`/agents/${id}`);
       setAgentData(response.data.agent);
@@ -81,11 +81,11 @@ const AgentProfile = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     fetchAgent();
-  }, [id]);
+  }, [fetchAgent]);
 
   // Quick In-Situ Avatar Upload
   const handleQuickAvatarUpload = (e) => {
@@ -112,7 +112,7 @@ const AgentProfile = () => {
       const reader = new FileReader();
       reader.onloadend = async () => {
         try {
-          await api.put('/agents/profile', { cover_image_url: reader.result });
+          await api.put('/agents/profile', { cover_image_url: reader.result, cover_position_x: 50, cover_position_y: 50 });
           toast.success("Cover banner updated!");
           fetchAgent();
         } catch (err) {
@@ -306,6 +306,7 @@ const AgentProfile = () => {
                 <img 
                   src={coverImageUrl} 
                   alt="Agent Cover Banner" 
+                  style={{ objectPosition: `${profile.cover_position_x ?? 50}% ${profile.cover_position_y ?? 50}%` }}
                   className="absolute inset-0 w-full h-full object-cover" 
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/40"></div>

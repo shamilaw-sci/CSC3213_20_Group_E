@@ -1,0 +1,4 @@
+project_id = "thirasara-phase7-acceptance"
+[db]
+port = 59322
+major_version = 17

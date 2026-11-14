@@ -1,56 +1,52 @@
+const { publicError, publicErrorDetails } = require('../utils/publicError');
 const axios = require('axios');
-const jwt = require('jsonwebtoken');
-const appleSignin = require('apple-signin-auth');
+const { issueSessionToken } = require('../utils/sessionToken');
+const appleSignin = require('../utils/appleTokenVerifier');
 const supabase = require('../config/supabase');
 const { setTokenCookie } = require('./authController');
 const { sendWelcomeEmail } = require('../utils/emailService');
 
 /**
- * Finds an existing user by email, or creates a new one for a social login.
- * If a user already registered with email/password and then signs in with
- * a social provider using the same email, we link the provider onto
- * the existing account, unless the account is banned.
+ * Provider subject identifies an account. Email is checked only for signup
+ * collisions; linking requires a separately authenticated ownership flow.
  */
 const findOrCreateSocialUser = async ({ email, name, provider, provider_id, avatar_url }) => {
-    // 1. Check if user already exists
+    if (typeof provider_id !== 'string' || !provider_id.trim()
+        || typeof email !== 'string' || !email.trim()) {
+        throw new Error('Missing social identity.');
+    }
+
     const { data: existingUser, error: findError } = await supabase
         .from('users')
         .select('*')
-        .eq('email', email)
-        .single();
+        .eq('provider', provider)
+        .eq('provider_id', provider_id)
+        .maybeSingle();
+    if (findError) throw findError;
 
     if (existingUser) {
         // Enforce account ban check (H7 fix)
         if (existingUser.role === 'BANNED') {
-            const err = new Error("Your account has been banned. Please contact support.");
-            err.statusCode = 403;
-            throw err;
-        }
-
-        const updates = {};
-        let needsUpdate = false;
-
-        // Link provider info if not already set
-        if (!existingUser.provider) {
-            updates.provider = provider;
-            updates.provider_id = provider_id;
-            needsUpdate = true;
+            throw publicError('ACCOUNT_BANNED');
         }
 
         // Update avatar_url if provided by social login and different
         if (avatar_url && existingUser.avatar_url !== avatar_url) {
-            updates.avatar_url = avatar_url;
-            needsUpdate = true;
+            const { error: updateError } = await supabase
+                .from('users')
+                .update({ avatar_url })
+                .eq('id', existingUser.id);
+            if (updateError) throw updateError;
             existingUser.avatar_url = avatar_url;
         }
-
-        if (needsUpdate) {
-            await supabase
-                .from('users')
-                .update(updates)
-                .eq('id', existingUser.id);
-        }
         return existingUser;
+    }
+
+    const { data: emailOwner, error: emailError } = await supabase
+        .from('users').select('id').eq('email', email).maybeSingle();
+    if (emailError) throw emailError;
+    if (emailOwner) {
+        throw publicError('SOCIAL_LINK_CONFLICT');
     }
 
     // 2. Create a new user (no password_hash needed for social accounts)
@@ -64,7 +60,7 @@ const findOrCreateSocialUser = async ({ email, name, provider, provider_id, avat
             provider_id,
             avatar_url: avatar_url || null
         }])
-        .select('id, name, email, role, phone, avatar_url, theme_preference, email_notifications, created_at');
+        .select('id, name, email, role, phone, avatar_url, theme_preference, email_notifications, created_at, password_hash');
 
     if (insertError) {
         throw new Error(insertError.message);
@@ -72,7 +68,7 @@ const findOrCreateSocialUser = async ({ email, name, provider, provider_id, avat
 
     // Send welcome email asynchronously for new social signups
     sendWelcomeEmail(email, name || email.split('@')[0]).catch((e) => {
-        console.error("Welcome email failed:", e.message || e);
+        console.error('welcome_email_failed');
     });
 
     return newUser[0];
@@ -90,11 +86,7 @@ const sendAuthResponse = (res, user) => {
         });
     }
 
-    const token = jwt.sign(
-        { id: user.id, role: user.role },
-        process.env.JWT_SECRET,
-        { expiresIn: '1d' }
-    );
+    const token = issueSessionToken(user);
 
     setTokenCookie(res, token);
 
@@ -116,24 +108,35 @@ const sendAuthResponse = (res, user) => {
 // --- Google Login ---
 const googleLogin = async (req, res, next) => {
     try {
-        const { credential } = req.body;
-        if (!credential) {
-            return res.status(400).json({ message: "Missing Google credential." });
+        const { credential } = req.body || {};
+        if (typeof credential !== 'string' || !credential.trim() || credential.length > 8192) {
+            return res.status(400).json({ message: "Invalid Google credential." });
         }
 
-        // Verify the ID token with Google
+        // A missing audience configuration must never accept tokens for arbitrary apps.
+        const expectedClientId = process.env.GOOGLE_CLIENT_ID?.trim()
+            || process.env.VITE_GOOGLE_CLIENT_ID?.trim();
+        if (!expectedClientId) {
+            return res.status(503).json({ message: "Google login is temporarily unavailable." });
+        }
+
+        // Keep verification server-side; bound the external request and encode its parameter.
         const { data: payload } = await axios.get(
-            `https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`
+            'https://oauth2.googleapis.com/tokeninfo',
+            { params: { id_token: credential }, timeout: 5000 }
         );
 
-        // Verify token audience against Google Client ID (C5 fix)
-        const expectedClientId = process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID;
-        if (expectedClientId && payload.aud !== expectedClientId) {
-            return res.status(401).json({ message: "Invalid Google token audience." });
-        }
-
-        if (!payload.email) {
-            return res.status(400).json({ message: "Google account has no verified email." });
+        // tokeninfo may return exp/email_verified as strings. Reject malformed claims
+        // before an account lookup, write or session can occur.
+        const expiry = payload && (typeof payload.exp === 'string' || typeof payload.exp === 'number')
+            ? Number(payload.exp) : NaN;
+        if (!payload || payload.aud !== expectedClientId
+            || !['accounts.google.com', 'https://accounts.google.com'].includes(payload.iss)
+            || !Number.isFinite(expiry) || expiry <= Date.now() / 1000
+            || typeof payload.sub !== 'string' || !payload.sub.trim()
+            || typeof payload.email !== 'string' || !payload.email.trim()
+            || (payload.email_verified !== true && payload.email_verified !== 'true')) {
+            return res.status(401).json({ message: "Invalid Google identity token." });
         }
 
         const user = await findOrCreateSocialUser({
@@ -146,10 +149,12 @@ const googleLogin = async (req, res, next) => {
 
         sendAuthResponse(res, user);
     } catch (error) {
-        if (error.statusCode === 403) {
-            return res.status(403).json({ message: error.message });
+        const owned = publicErrorDetails(error);
+        if (owned && ['ACCOUNT_BANNED','SOCIAL_LINK_CONFLICT'].includes(owned.code)) {
+            return res.status(403).json({ message: owned.message });
         }
-        console.error("Google login error:", error.response?.data || error.message);
+        // Provider errors can contain request URLs/tokens or identity claims.
+        console.error("Google login verification failed.");
         res.status(401).json({ message: "Google login failed. Please try again." });
     }
 };
@@ -157,21 +162,39 @@ const googleLogin = async (req, res, next) => {
 // --- Facebook Login ---
 const facebookLogin = async (req, res, next) => {
     try {
-        const { accessToken } = req.body;
-        if (!accessToken) {
-            return res.status(400).json({ message: "Missing Facebook access token." });
+        const { accessToken } = req.body || {};
+        if (typeof accessToken !== 'string' || !accessToken.trim() || accessToken.length > 8192) {
+            return res.status(400).json({ message: "Invalid Facebook access token." });
         }
 
-        // Verify token and fetch profile from Facebook Graph API
+        const appId = process.env.FACEBOOK_APP_ID?.trim();
+        const appSecret = process.env.FACEBOOK_APP_SECRET?.trim();
+        if (!appId || !/^\d{1,32}$/.test(appId) || !appSecret || appSecret.length > 1024) {
+            return res.status(503).json({ message: 'Facebook login is temporarily unavailable.' });
+        }
+        const { data: inspection } = await axios.get('https://graph.facebook.com/debug_token', {
+            params: { input_token: accessToken, access_token: `${appId}|${appSecret}` },
+            timeout: 5000, maxRedirects: 0
+        });
+        const metadata = inspection?.data;
+        const future = value => typeof value === 'number' && Number.isFinite(value) && value > Date.now() / 1000;
+        if (!metadata || Array.isArray(metadata) || metadata.is_valid !== true || metadata.app_id !== appId
+            || metadata.type !== 'USER' || typeof metadata.user_id !== 'string' || !metadata.user_id.trim()
+            || !future(metadata.expires_at)
+            || (metadata.data_access_expires_at !== undefined && !future(metadata.data_access_expires_at))) {
+            return res.status(401).json({ message: 'Facebook login failed. Please try again.' });
+        }
+        // Profile identity must belong to the inspected app-scoped subject.
         const { data: profile } = await axios.get('https://graph.facebook.com/me', {
             params: {
                 fields: 'id,name,email,picture',
                 access_token: accessToken
-            }
+            },
+            timeout: 5000, maxRedirects: 0
         });
 
-        if (!profile.email) {
-            return res.status(400).json({ message: "Facebook account has no email associated. Please use another login method." });
+        if (!profile || profile.id !== metadata.user_id || typeof profile.email !== 'string' || !profile.email.trim()) {
+            return res.status(401).json({ message: 'Facebook login failed. Please try again.' });
         }
 
         const user = await findOrCreateSocialUser({
@@ -184,10 +207,11 @@ const facebookLogin = async (req, res, next) => {
 
         sendAuthResponse(res, user);
     } catch (error) {
-        if (error.statusCode === 403) {
-            return res.status(403).json({ message: error.message });
+        const owned = publicErrorDetails(error);
+        if (owned && ['ACCOUNT_BANNED','SOCIAL_LINK_CONFLICT'].includes(owned.code)) {
+            return res.status(403).json({ message: owned.message });
         }
-        console.error("Facebook login error:", error.response?.data || error.message);
+        console.error("Facebook login verification failed.");
         res.status(401).json({ message: "Facebook login failed. Please try again." });
     }
 };
@@ -195,15 +219,28 @@ const facebookLogin = async (req, res, next) => {
 // --- Apple Login ---
 const appleLogin = async (req, res, next) => {
     try {
-        const { id_token, name } = req.body;
-        if (!id_token) {
-            return res.status(400).json({ message: "Missing Apple id_token." });
+        const { id_token, name } = req.body || {};
+        if (typeof id_token !== 'string' || !id_token.trim() || id_token.length > 8192) {
+            return res.status(400).json({ message: "Invalid Apple id_token." });
         }
 
+        const audience = process.env.APPLE_SERVICES_ID?.trim();
+        if (!audience) return res.status(503).json({ message: "Apple login is temporarily unavailable." });
+
         const payload = await appleSignin.verifyIdToken(id_token, {
-            audience: process.env.APPLE_SERVICES_ID,
+            audience,
             ignoreExpiration: false
         });
+
+        const expiry = payload && (typeof payload.exp === 'string' || typeof payload.exp === 'number')
+            ? Number(payload.exp) : NaN;
+        if (!payload || payload.aud !== audience || payload.iss !== 'https://appleid.apple.com'
+            || !Number.isFinite(expiry) || expiry <= Date.now() / 1000
+            || typeof payload.sub !== 'string' || !payload.sub.trim()
+            || typeof payload.email !== 'string' || !payload.email.trim()
+            || (payload.email_verified !== true && payload.email_verified !== 'true')) {
+            return res.status(401).json({ message: "Invalid Apple identity token." });
+        }
 
         const user = await findOrCreateSocialUser({
             email: payload.email,
@@ -214,10 +251,11 @@ const appleLogin = async (req, res, next) => {
 
         sendAuthResponse(res, user);
     } catch (error) {
-        if (error.statusCode === 403) {
-            return res.status(403).json({ message: error.message });
+        const owned = publicErrorDetails(error);
+        if (owned && ['ACCOUNT_BANNED','SOCIAL_LINK_CONFLICT'].includes(owned.code)) {
+            return res.status(403).json({ message: owned.message });
         }
-        console.error("Apple login error:", error.message);
+        console.error("Apple login verification failed.");
         res.status(401).json({ message: "Apple login failed. Please try again." });
     }
 };

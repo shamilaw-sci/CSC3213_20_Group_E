@@ -1,12 +1,12 @@
+import { logClientError } from '../utils/clientLog';
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/UserAuthContext';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import toast from 'react-hot-toast';
 import { Player } from '@lottiefiles/react-lottie-player';
-import { m, LazyMotion, domAnimation } from 'framer-motion';
 import api from '../context/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +16,7 @@ const registerSchema = z.object({
   role: z.enum(['BUYER', 'SELLER', 'AGENT']),
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string().refine(value => [...value].length >= 15 && new TextEncoder().encode(value).length <= 72, 'Use at least 15 characters and at most 72 UTF-8 bytes'),
   agencyName: z.string().optional(),
   licenseNumber: z.string().optional(),
 });
@@ -31,7 +31,7 @@ const Register = () => {
     const {
         register,
         handleSubmit,
-        watch,
+        control,
         setValue,
         formState: { errors, isValid }
     } = useForm({
@@ -47,12 +47,16 @@ const Register = () => {
         mode: 'onChange' // Validates on every keystroke
     });
 
-    const selectedRole = watch('role');
+    const selectedRole = useWatch({ control, name: 'role' });
 
     const onSubmit = async (data) => {
         setLoading(true);
         try {
             const response = await api.post('/auth/register', data);
+            if (response.data.verificationRequired) {
+                navigate('/verify-email', { state: { email: data.email } });
+                return;
+            }
             toast.success(response.data.message || 'Registration successful!');
             
             // Auto login after registration
@@ -65,7 +69,7 @@ const Register = () => {
             }
         } catch (err) {
             toast.error(err.response?.data?.message || err.message || 'Failed to register');
-            console.error("Registration error:", err.response?.data?.message || err.message);
+            logClientError('registration_failed');
         } finally {
             setLoading(false);
         }
@@ -76,6 +80,9 @@ const Register = () => {
             {/* --- Form Container (Height-Fitted & Scroll-Safe) --- */}
             <div className="w-full md:w-[480px] lg:w-[500px] xl:w-[520px] flex-shrink-0 flex flex-col justify-center px-6 sm:px-10 lg:px-12 py-6 bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 relative z-10 shadow-lg md:shadow-none h-full overflow-y-auto">
                 <div className="mx-auto w-full max-w-sm sm:max-w-md my-auto py-2">
+                    <Link to="/login" className="mb-4 inline-flex text-sm font-semibold text-blue-600 hover:underline dark:text-blue-400">
+                        <span aria-hidden="true" className="mr-2">←</span> Back to Sign In
+                    </Link>
                     <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-1 tracking-tight">Create an account</h2>
                     <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm mb-4">Join us to buy or sell properties easily.</p>
 
@@ -160,7 +167,7 @@ const Register = () => {
                                     type={showPassword ? "text" : "password"}
                                     {...register('password')}
                                     className={`pr-12 ${errors.password ? 'border-red-500' : ''}`}
-                                    placeholder="At least 6 characters"
+                                    placeholder="At least 15 characters"
                                 />
                                 <button type="button"
                                     onClick={() => setShowPassword(!showPassword)}
@@ -195,17 +202,25 @@ const Register = () => {
                 </div>
             </div>
 
-            {/* --- Left Side: Background Image --- */}
-            <div
-                className="hidden md:block flex-1 bg-cover bg-center relative"
-                style={{ backgroundImage: "url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')" }}
-            >
+            <div className="relative hidden flex-1 items-center justify-center overflow-hidden bg-gradient-to-br from-blue-950 via-slate-950 to-violet-950 md:flex">
                 {/* Logo wrapper pinned to top-left corner */}
                 <div className="absolute top-6 left-8 flex items-center cursor-pointer z-10" onClick={() => navigate('/')}>
                     <img src="/logo.jpeg" alt="Thirasara Logo" className="logo mr-2 w-10 h-10 rounded" />
                     <h1 className="text-xl font-extrabold text-white tracking-tight drop-shadow-md">Thirasara Property</h1>
                 </div>
-                <div className="absolute inset-0 bg-black/30"></div>
+                <div className="flex w-full max-w-4xl flex-col items-center px-6 pb-8 text-center lg:px-10">
+                    <div aria-hidden="true" className="aspect-square w-full max-w-[min(720px,72vh)] drop-shadow-2xl">
+                        <Player autoplay loop src="/images/real-estate-animation.json" style={{ height: '100%', width: '100%' }} />
+                    </div>
+                    <div className="relative -mt-6 max-w-lg text-white">
+                        <h2 className="mb-2 text-2xl font-extrabold leading-snug lg:text-3xl xl:text-4xl">
+                            Your Next Move Starts Here
+                        </h2>
+                        <p className="mx-auto max-w-md text-sm leading-relaxed text-blue-100/75 lg:text-base">
+                            Create an account to find your next home, list a property, or connect with buyers as an agent.
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     );

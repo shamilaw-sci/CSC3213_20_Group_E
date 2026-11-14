@@ -1,6 +1,9 @@
+import { logClientError } from '../utils/clientLog';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getWKTFromBounds } from '../components/map/MapControls';
+import { restoreSavedSearchFilters } from '../utils/savedSearchFilters';
+import { newSearchEventId } from '../utils/searchDemand';
 
 const DEFAULT_SRI_LANKA_BOUNDS_WKT = 'POLYGON((79.2 10.1, 82.3 10.1, 82.3 5.5, 79.2 5.5, 79.2 10.1))';
 
@@ -9,14 +12,23 @@ export const useMapSearch = () => {
     const savedSearch = location.state?.savedSearch;
 
     const [properties, setProperties] = useState([]);
+    const [resultSearchTerm, setResultSearchTerm] = useState(null);
+    const routeSearchRef = useRef(location.search);
+    const pendingDemandRef = useRef(location.state?.searchSubmission?.id ? location.state.searchSubmission : null);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
     const [activeMarkerId, setActiveMarkerId] = useState(null);
     const [hoveredPropId, setHoveredPropId] = useState(null);
-    const [searchMode, setSearchMode] = useState(savedSearch ? 'polygon' : 'bounds');
+    const [searchMode, setSearchMode] = useState(savedSearch?.polygon ? 'polygon' : 'bounds');
     const [isDrawMode, setIsDrawMode] = useState(false); 
-    const [isFeasibilityOpen, setIsFeasibilityOpen] = useState(false);
+    const [isFeasibilityOpen, setIsFeasibilityOpen] = useState(new URLSearchParams(location.search).get('feasibility') === '1');
     const [maxPriceFilter, setMaxPriceFilter] = useState(null);
-    const [selectedDistrict, setSelectedDistrict] = useState(null);
+    const [selectedDistrict, setSelectedDistrictState] = useState(null);
+    const setSelectedDistrict = useCallback(district => {
+        setSelectedDistrictState(district);
+        const id = newSearchEventId();
+        pendingDemandRef.current = id ? { id, district: district?.replace(/ District$/i, '') || '' } : null;
+    }, []);
     
     // Pre-populate with default boundary to trigger instant load on initial render
     const [currentPolygon, setCurrentPolygon] = useState(savedSearch?.polygon || DEFAULT_SRI_LANKA_BOUNDS_WKT);
@@ -24,45 +36,28 @@ export const useMapSearch = () => {
     // Disaster Risk Map State
     const [showFloodZones, setShowFloodZones] = useState(false);
     const [showLandslideZones, setShowLandslideZones] = useState(false);
-    const [floodData, setFloodData] = useState(null);
-    const [landslideData, setLandslideData] = useState(null);
-
-    useEffect(() => {
-        if (showFloodZones && !floodData) {
-            fetch('/data/flood_zones.json')
-                .then(res => res.json())
-                .then(data => setFloodData(data))
-                .catch(err => console.error("Error loading flood data", err));
-        }
-    }, [showFloodZones, floodData]);
-
-    useEffect(() => {
-        if (showLandslideZones && !landslideData) {
-            fetch('/data/landslide_zones.json')
-                .then(res => res.json())
-                .then(data => setLandslideData(data))
-                .catch(err => console.error("Error loading landslide data", err));
-        }
-    }, [showLandslideZones, landslideData]);
-    
-    const [filters, setFilters] = useState({
-        searchTerm: '',
-        listingType: location.pathname === '/rent' ? 'Rent' : 'Sale',
-        minPrice: '',
-        maxPrice: '',
-        beds: savedSearch?.beds ? String(savedSearch.beds) : 'Any',
-        baths: savedSearch?.baths ? String(savedSearch.baths) : 'Any',
-        exactMatch: false,
-        has360Tour: false,
-        propTypes: { 
-            House: savedSearch?.property_type === 'House' || !savedSearch?.property_type, 
-            Land: savedSearch?.property_type === 'Land' || !savedSearch?.property_type, 
-            Apartment: savedSearch?.property_type === 'Apartment' || !savedSearch?.property_type, 
-            Villa: savedSearch?.property_type === 'Villa' || !savedSearch?.property_type
-        }
-    });
+    const [filters, setFilters] = useState(() => restoreSavedSearchFilters(savedSearch, location.pathname, location.search));
 
     const drawControlRef = useRef(null);
+
+    useEffect(() => {
+        if (savedSearch) {
+            setFilters(restoreSavedSearchFilters(savedSearch, location.pathname, location.search));
+            setCurrentPolygon(savedSearch.polygon || DEFAULT_SRI_LANKA_BOUNDS_WKT);
+            setSearchMode(savedSearch.polygon ? 'polygon' : 'bounds');
+            setMaxPriceFilter(null);
+            return;
+        }
+        const searchTerm = new URLSearchParams(location.search).get('search') || '';
+        if (routeSearchRef.current !== location.search) {
+            routeSearchRef.current = location.search;
+            setProperties([]);
+            setResultSearchTerm(null);
+            setCurrentPolygon(DEFAULT_SRI_LANKA_BOUNDS_WKT);
+            setSearchMode('bounds');
+        }
+        setFilters(previous => previous.searchTerm === searchTerm ? previous : { ...previous, searchTerm });
+    }, [savedSearch, location.search, location.pathname]);
 
     // Fetch properties whenever polygon or filters change
     useEffect(() => {
@@ -71,15 +66,29 @@ export const useMapSearch = () => {
         const controller = new AbortController();
         const fetchProps = async () => {
             setLoading(true);
+            setError(null);
             try {
-                const apiUrl = import.meta.env.VITE_MAP_API_URL || 'http://localhost:8080/api/map/search';
+                const apiUrl = import.meta.env.VITE_MAP_API_URL || 'http://localhost:9090/api/map/search';
                 
                 const payload = { polygon: currentPolygon };
+                const demand = pendingDemandRef.current;
+                if (demand) {
+                    payload.search_event_id = demand.id;
+                    payload.search_district = demand.district;
+                }
                 if (filters.beds !== 'Any') payload.beds = parseInt(filters.beds.replace('+', ''));
                 if (filters.baths !== 'Any') payload.baths = parseInt(filters.baths.replace('+', ''));
                 
                 const activeTypes = Object.keys(filters.propTypes).filter(k => filters.propTypes[k]);
                 if (activeTypes.length === 1) payload.type = activeTypes[0];
+                if (activeTypes.length > 0) payload.types = activeTypes;
+                if (filters.searchTerm) payload.search_term = filters.searchTerm;
+                if (filters.minPrice !== '') payload.min_price = Number(filters.minPrice);
+                const priceCaps = [filters.maxPrice === '' ? null : Number(filters.maxPrice), maxPriceFilter]
+                    .filter(value => value !== null && Number.isFinite(value));
+                if (priceCaps.length) payload.max_price = Math.min(...priceCaps);
+                payload.exact_match = Boolean(filters.exactMatch);
+                payload.has_360_tour = Boolean(filters.has360Tour);
                 
                 if (filters.listingType) payload.listing_type = filters.listingType;
 
@@ -91,13 +100,19 @@ export const useMapSearch = () => {
                 });
                 if (!res.ok) throw new Error('Map service failed');
                 const data = await res.json();
-                setProperties(data.properties || []);
+                if (pendingDemandRef.current === demand) pendingDemandRef.current = null;
+                if (!controller.signal.aborted) {
+                    setProperties(data.properties || []);
+                    setResultSearchTerm(filters.searchTerm);
+                }
             } catch (error) {
-                if (error.name !== 'AbortError') {
-                    console.error("🔥 Search error:", error.message);
+                if (!controller.signal.aborted && error.name !== 'AbortError') {
+                    setProperties([]);
+                    setError('Unable to load properties. Please try your search again.');
+                    logClientError('map_search_failed');
                 }
             } finally {
-                setLoading(false);
+                if (!controller.signal.aborted) setLoading(false);
             }
         };
         
@@ -109,12 +124,15 @@ export const useMapSearch = () => {
             clearTimeout(timeoutId);
             controller.abort();
         };
-    }, [currentPolygon, filters]);
+    }, [currentPolygon, filters, maxPriceFilter]);
 
     const handleBoundsChange = useCallback((bounds) => {
+        // Resolve a new place against the country before viewport movements
+        // can restrict it to the previous area's visible map bounds.
+        if (filters.searchTerm && resultSearchTerm !== filters.searchTerm) return;
         const boundsWKT = getWKTFromBounds(bounds);
         setCurrentPolygon(boundsWKT);
-    }, []);
+    }, [filters.searchTerm, resultSearchTerm]);
 
     const handleMapClick = useCallback(() => {
         setActiveMarkerId(null);
@@ -133,6 +151,14 @@ export const useMapSearch = () => {
     }, []);
 
     const handleSearch = (newFilters) => {
+        const eventId = newSearchEventId();
+        pendingDemandRef.current = eventId ? { id: eventId, district: newFilters.searchTerm?.trim() || '' } : null;
+        if (newFilters.searchTerm !== filters.searchTerm) {
+            setProperties([]);
+            setResultSearchTerm(null);
+            setCurrentPolygon(DEFAULT_SRI_LANKA_BOUNDS_WKT);
+            setSearchMode('bounds');
+        }
         setFilters(newFilters);
     };
 
@@ -178,6 +204,8 @@ export const useMapSearch = () => {
 
     return {
         properties,
+        resultSearchTerm,
+        error,
         isDrawMode,
         setIsDrawMode,
         loading,
@@ -197,8 +225,6 @@ export const useMapSearch = () => {
         setShowFloodZones,
         showLandslideZones,
         setShowLandslideZones,
-        floodData,
-        landslideData,
         filters,
         drawControlRef,
         handleBoundsChange,

@@ -1,3 +1,4 @@
+import { logClientError } from '../../utils/clientLog';
 import React, { useState, useEffect } from 'react';
 import { Bed, Bath, Maximize, Heart, MessageCircle, Compass } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -41,7 +42,7 @@ const PropertyCard = ({ prop, handleMessageSeller, isActive, onMouseEnter, onMou
                 setTimeout(() => setShowAnimation(false), 1000);
             }
         } catch (err) {
-            (toast.error('Error toggling favorite:'), console.error('Error toggling favorite:', err));
+            (toast.error('Error toggling favorite:'), logClientError('favorite_update_failed'));
         }
     };
 

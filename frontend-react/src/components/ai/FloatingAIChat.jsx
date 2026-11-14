@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { AnimatePresence, m } from "framer-motion";
 import { Bot, X, Send, Loader } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -15,6 +15,18 @@ const FloatingAIChat = () => {
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const messagesEndRef = useRef(null);
+    const clampPosition = (x, y) => ({
+        x: Math.max(8, Math.min(x, window.innerWidth - 64)),
+        y: Math.max(8, Math.min(y, window.innerHeight - 64)),
+    });
+    const [position, setPosition] = useState(() => clampPosition(window.innerWidth - 80, window.innerHeight - 80));
+    const dragRef = useRef(null);
+    const suppressClickRef = useRef(false);
+    useEffect(() => {
+        const resize = () => setPosition(previous => clampPosition(previous.x, previous.y));
+        window.addEventListener('resize', resize);
+        return () => window.removeEventListener('resize', resize);
+    }, []);
 
 
     const scrollToBottom = () => {
@@ -89,7 +101,7 @@ const FloatingAIChat = () => {
     if (!user) return null;
 
     return (
-        <div className="fixed bottom-6 right-6 z-[9999] font-outfit">
+        <div className="fixed z-[9999] font-outfit" style={{ left: position.x, top: position.y }}>
             <AnimatePresence>
                 {isOpen && (
                     <m.div
@@ -97,8 +109,8 @@ const FloatingAIChat = () => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.9 }}
                         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                        className="absolute bottom-20 right-0 w-[350px] sm:w-[400px] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col"
-                        style={{ height: '500px', maxHeight: 'calc(100vh - 120px)' }}
+                        className="fixed bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col"
+                        style={{ right: 16, bottom: 88, width: 'min(400px, calc(100vw - 32px))', height: '500px', maxHeight: 'calc(100vh - 112px)' }}
                     >
                         {/* Header */}
                         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 flex justify-between items-center text-white">
@@ -170,9 +182,40 @@ const FloatingAIChat = () => {
 
             {/* Floating Bubble */}
             <m.button
+                type="button"
+                aria-label={isOpen ? 'Close AI assistant' : 'Open AI assistant'}
+                aria-expanded={isOpen}
+                title="Drag to move. Enter or Space to open. Arrow keys to move."
+                style={{ touchAction: 'none' }}
+                onPointerDown={(event) => {
+                    if (event.button !== 0) return;
+                    suppressClickRef.current = false;
+                    dragRef.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, position };
+                    event.currentTarget.setPointerCapture?.(event.pointerId);
+                }}
+                onPointerMove={(event) => {
+                    const drag = dragRef.current;
+                    if (!drag || drag.pointerId !== event.pointerId) return;
+                    const dx = event.clientX - drag.x;
+                    const dy = event.clientY - drag.y;
+                    if (Math.hypot(dx, dy) > 5) suppressClickRef.current = true;
+                    if (suppressClickRef.current) setPosition(clampPosition(drag.position.x + dx, drag.position.y + dy));
+                }}
+                onPointerUp={() => { dragRef.current = null; }}
+                onPointerCancel={() => { dragRef.current = null; suppressClickRef.current = true; }}
+                onKeyDown={(event) => {
+                    suppressClickRef.current = false;
+                    const offsets = { ArrowLeft: [-16, 0], ArrowRight: [16, 0], ArrowUp: [0, -16], ArrowDown: [0, 16] };
+                    if (offsets[event.key]) {
+                        event.preventDefault();
+                        const [dx, dy] = offsets[event.key];
+                        setPosition(previous => clampPosition(previous.x + dx, previous.y + dy));
+                    }
+                }}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => {
+                    if (suppressClickRef.current) { suppressClickRef.current = false; return; }
                     setIsOpen(!isOpen);
                     if (!isOpen) setTimeout(scrollToBottom, 200);
                 }}

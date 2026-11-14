@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useRef, useState } from 'react';
 import api from '../../../context/api';
 import { useAuth } from '../../../context/UserAuthContext';
 import { 
@@ -50,7 +49,7 @@ import toast from 'react-hot-toast';
 
 const BookViewingModal = ({ agent, listings, onClose, onSuccess }) => {
   const { user } = useAuth();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState(() => ({
     client_name: user?.name || '',
     client_email: user?.email || '',
     client_phone: user?.phone || '',
@@ -59,15 +58,18 @@ const BookViewingModal = ({ agent, listings, onClose, onSuccess }) => {
     preferred_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
     preferred_time: 'Morning (9:00 AM - 12:00 PM)',
     notes: ''
-  });
+  }));
   const [loading, setLoading] = useState(false);
+  const submitting = useRef(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitting.current) return;
     if (!formData.client_name || !formData.client_email || !formData.client_phone) {
       toast.error("Please fill in your contact details.");
       return;
     }
+    submitting.current = true;
     setLoading(true);
     try {
       await api.post(`/agents/${agent.id}/book-viewing`, formData);
@@ -77,6 +79,7 @@ const BookViewingModal = ({ agent, listings, onClose, onSuccess }) => {
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to submit viewing request.");
     } finally {
+      submitting.current = false;
       setLoading(false);
     }
   };

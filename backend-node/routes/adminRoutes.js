@@ -16,9 +16,11 @@ router.post("/login", adminLoginLimiter, adminController.login);
 
 // All routes below require admin auth
 router.use(protect, adminController.requireAdmin);
+router.use(require("../middleware/adminAudit"));
 
 // Verify admin session validity with database
 router.get("/verify", adminController.verifyAdmin);
+router.get('/inquiries', require('../middleware/validate')(require('../validators/inquiryValidator').listInquiriesSchema), require('../controllers/inquiryController').listInquiries);
 
 // ─── Dashboard Stats ────────────────────────────────────────
 router.get("/dashboard/stats", adminController.getDashboardStats);

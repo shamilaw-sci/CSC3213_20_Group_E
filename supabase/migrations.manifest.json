@@ -1,0 +1,17 @@
+{
+  "formatVersion": 1,
+  "runner": "Supabase CLI 2.122.0",
+  "target": "fresh isolated Supabase PostgreSQL17/PostGIS3.3.7",
+  "files": [
+    {
+      "name": "20261030045356_phase4_isolated_prerequisites.sql",
+      "version": "20261030045356",
+      "sha256": "e04cf7223da920daf45f4568fc28ff2d488986f26acebad9edebcb495ebc2949"
+    },
+    {
+      "name": "20261030045416_phase4_current_schema_baseline.sql",
+      "version": "20261030045416",
+      "sha256": "e9f639f3758058b7a32066bb5413afe216a7d148ad93e691b2523d5ba0003497"
+    }
+  ]
+}

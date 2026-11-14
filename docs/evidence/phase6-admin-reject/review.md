@@ -1,0 +1,9 @@
+# Admin RejectModal independent review
+
+2026-11-02. **PASS; no actionable findings.** Reviewed the original ListingsPage snapshot, current parent, extracted RejectModal and actual-page rejection tests. No product files were edited and no tests, live actions or git operations were run by this reviewer.
+
+An independent Python comparison passed: the child equals the complete original named component declaration exactly (including its local useState, JSX, text, classes, trim gating, raw reason callback and cancel events), surrounded only by React/useState and AlertTriangle/X imports and the default export. The parent equals the original source exactly after removing that declaration plus its following two newline separators and adding the single RejectModal import. This proves the original imports, Leaflet initialization, other modals, normalization, queries, mutation handlers, conditional mount and all call-site props remain unchanged. Text reads normalize platform newline encoding; no whitespace normalization within source lines was used.
+
+The two characterization cases import the real ListingsPage and mock the API and map rendering. They verify empty/whitespace confirmation gating, forwarding the original untrimmed reason with the correct listing ID, cancel closure without mutation, and blank local state on reopening. They do not replace the extracted modal. Root reports original and extracted runs passing 2/2; this review did not rerun them. The previously local component was already declared at module scope, so moving it to an imported module retains stable component identity and conditional-unmount reset behavior.
+
+Limits: no browser appearance/focus or additional error-path acceptance performed. Existing modal accessibility and copy behavior are preserved, not independently redesigned or expanded in this relocation review.

@@ -1,0 +1,18 @@
+:root {
+  --profile-solid-action-bg: var(--color-blue-600);
+  --profile-solid-action-hover-bg: var(--color-blue-700);
+  --profile-solid-action-fg: var(--color-white);
+}
+
+@layer components {
+  .profile-solid-action {
+    background-color: var(--profile-solid-action-bg);
+    color: var(--profile-solid-action-fg);
+  }
+
+  @media (hover: hover) {
+    .profile-solid-action:hover {
+      background-color: var(--profile-solid-action-hover-bg);
+    }
+  }
+}

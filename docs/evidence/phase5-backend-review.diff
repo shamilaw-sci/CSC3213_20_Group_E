@@ -1,0 +1,645 @@
+Phase 5 uncommitted backend test-only changes against 8625cbb
+diff --git "a/D:\\CSC3213_20_Group_E\\backend-node\\integration\\jest.config.cjs" "b/D:\\CSC3213_20_Group_E\\backend-node\\integration\\jest.config.cjs"
+new file mode 100644
+index 0000000..639870e
+--- /dev/null
++++ "b/D:\\CSC3213_20_Group_E\\backend-node\\integration\\jest.config.cjs"
+@@ -0,0 +1,7 @@
++module.exports = {
++    rootDir: '..',
++    testMatch: ['<rootDir>/integration/login-roles.integration.cjs'],
++    setupFiles: ['<rootDir>/integration/setup.cjs'],
++    testTimeout: 15000,
++    verbose: true,
++};
+diff --git "a/D:\\CSC3213_20_Group_E\\backend-node\\integration\\local-stack.cjs" "b/D:\\CSC3213_20_Group_E\\backend-node\\integration\\local-stack.cjs"
+new file mode 100644
+index 0000000..57c1644
+--- /dev/null
++++ "b/D:\\CSC3213_20_Group_E\\backend-node\\integration\\local-stack.cjs"
+@@ -0,0 +1,85 @@
++// Test tooling only. Never reads application .env or accepts caller URLs.
++const assert = require('node:assert/strict');
++const fs = require('node:fs');
++const path = require('node:path');
++const { execFileSync } = require('node:child_process');
++
++const root = path.resolve(__dirname, '../..');
++const project = 'thirasara-phase4-c';
++const network = 'thirasara-phase4-local';
++const versions = ['20261030045356', '20261030045416'];
++const refuse = condition => assert.ok(condition, 'Isolated test environment refused; check local prerequisites.');
++const environment = item => Object.fromEntries(item.Config.Env.map(entry => {
++    const index = entry.indexOf('=');
++    return [entry.slice(0, index), entry.slice(index + 1)];
++}));
++
++function acceptsLocalSigningSecret(configured, secret) {
++    if (configured === secret) return true;
++    try {
++        const jwks = JSON.parse(configured);
++        return jwks.keys?.some(key => key.kty === 'oct' && typeof key.k === 'string'
++            && Buffer.from(key.k, 'base64url').equals(Buffer.from(secret))) === true;
++    } catch { return false; }
++}
++
++function validateWorkdir(config, linked) {
++    refuse(!linked && /^project_id = "thirasara-phase4-c"\r?$/m.test(config));
++}
++
++function validateContainers(items) {
++    refuse(Array.isArray(items) && items.length === 2);
++    for (const [index, kind, target, published, image] of [
++        [0, 'db', '5432/tcp', '58322', /^public\.ecr\.aws\/supabase\/postgres:17\.11\.0\.006$/],
++        [1, 'rest', '3000/tcp', '58321', /^public\.ecr\.aws\/supabase\/postgrest:v16\.5$/],
++    ]) {
++        const item = items[index];
++        refuse(item?.Name === `/supabase_${kind}_${project}` && item.State?.Running === true);
++        refuse(image.test(item.Config?.Image) && item.Config.Labels?.['com.supabase.cli.project'] === project);
++        const networks = item.NetworkSettings?.Networks || {};
++        refuse(Object.keys(networks).length === 1 && !!networks[network]?.NetworkID);
++        for (const bindings of [item.HostConfig?.PortBindings, item.NetworkSettings?.Ports]) {
++            refuse(bindings && bindings[target]?.length === 1);
++            refuse(bindings[target][0].HostIp === '127.0.0.1' && bindings[target][0].HostPort === published);
++            for (const entries of Object.values(bindings)) {
++                for (const binding of entries || []) refuse(binding.HostIp === '127.0.0.1');
++            }
++        }
++    }
++    refuse(items[0].NetworkSettings.Networks[network].NetworkID === items[1].NetworkSettings.Networks[network].NetworkID);
++    const db = environment(items[0]);
++    const rest = environment(items[1]);
++    refuse(!!db.POSTGRES_PASSWORD && !!db.JWT_SECRET && acceptsLocalSigningSecret(rest.PGRST_JWT_SECRET, db.JWT_SECRET));
++    let uri;
++    try { uri = new URL(rest.PGRST_DB_URI); } catch { refuse(false); }
++    refuse(['postgres:', 'postgresql:'].includes(uri.protocol) && uri.hostname === `supabase_db_${project}`
++        && uri.port === '5432' && uri.pathname === '/postgres' && uri.username === 'authenticator'
++        && decodeURIComponent(uri.password) === db.POSTGRES_PASSWORD && !uri.search && !uri.hash);
++    return {
++        apiUrl: 'http://127.0.0.1:58321', jwtSecret: db.JWT_SECRET,
++        database: { host: '127.0.0.1', port: 58322, database: 'postgres', user: 'postgres',
++            password: db.POSTGRES_PASSWORD, ssl: false, connectionTimeoutMillis: 5000 },
++    };
++}
++
++function validateDatabase(identity) {
++    refuse(identity.database === 'postgres' && identity.user === 'postgres' && identity.major === 17 && identity.marker === true);
++    refuse(JSON.stringify(identity.versions) === JSON.stringify(versions));
++}
++
++const identitySql = `SELECT current_database() AS database, current_user AS user,
++    current_setting('server_version_num')::integer / 10000 AS major,
++    EXISTS (SELECT 1 FROM pg_namespace WHERE nspname='phase4_isolated_test_guard'
++        AND pg_get_userbyid(nspowner)='postgres') AS marker,
++    (SELECT json_agg(version ORDER BY version) FROM supabase_migrations.schema_migrations) AS versions`;
++
++function inspectLocalStack() {
++    const workdir = path.join(root, 'docs/evidence/phase4-local/stack-c/supabase');
++    validateWorkdir(fs.readFileSync(path.join(workdir, 'config.toml'), 'utf8'), fs.existsSync(path.join(workdir, '.temp/project-ref')));
++    execFileSync(process.execPath, [path.join(root, 'tools/database/verify-migrations.cjs')], { stdio: 'pipe' });
++    const items = JSON.parse(execFileSync('docker', ['inspect', `supabase_db_${project}`, `supabase_rest_${project}`],
++        { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 10000 }));
++    return validateContainers(items);
++}
++
++module.exports = { validateContainers, validateDatabase, validateWorkdir, inspectLocalStack, identitySql };
+diff --git "a/D:\\CSC3213_20_Group_E\\backend-node\\integration\\login-roles.integration.cjs" "b/D:\\CSC3213_20_Group_E\\backend-node\\integration\\login-roles.integration.cjs"
+new file mode 100644
+index 0000000..bfd7f17
+--- /dev/null
++++ "b/D:\\CSC3213_20_Group_E\\backend-node\\integration\\login-roles.integration.cjs"
+@@ -0,0 +1,192 @@
++const { randomUUID } = require('node:crypto');
++const request = require('supertest');
++const bcrypt = require('bcryptjs');
++const jwt = require('jsonwebtoken');
++const { Client } = require('pg');
++const { validateDatabase, identitySql } = require('./local-stack.cjs');
++const { allowedAppPorts } = require('./network-policy.cjs');
++if (process.env.NODE_ENV !== 'test') throw new Error('Test environment required before loading app.');
++const app = require('../server');
++
++const roles = ['BUYER', 'SELLER', 'AGENT', 'ADMIN', 'BANNED', 'PENDING_AGENT', 'REJECTED_AGENT'];
++const run = randomUUID();
++const password = 'Phase5-fixture-only-123!';
++const fixtures = Object.fromEntries(roles.map(role => [role, {
++    id: randomUUID(), role, name: `Phase5 ${role}`, email: `${run}-${role.toLowerCase()}@example.test`,
++}]));
++const ids = Object.values(fixtures).map(user => user.id);
++const db = new Client(JSON.parse(process.env.PHASE5_DATABASE));
++let connected = false;
++let server;
++let appPort;
++const login = (role, agent = request(server)) => agent.post('/api/auth/login')
++    .send({ email: fixtures[role].email, password });
++const adminLogin = () => request(server).post('/api/admin/login').send({ email: fixtures.ADMIN.email, password });
++const tokenFor = (role, claims = {}, options = {}) => jwt.sign({ id: fixtures[role].id, role, ...claims },
++    process.env.JWT_SECRET, { expiresIn: '5m', ...options });
++const credential = (req, token, transport) => req.set(transport === 'cookie' ? 'Cookie' : 'Authorization',
++    transport === 'cookie' ? `token=${token}` : `Bearer ${token}`);
++const expectNoSession = response => {
++    expect(response.headers['set-cookie']).toBeUndefined();
++    expect(response.body.user).toBeUndefined();
++    expect(response.body.token).toBeUndefined();
++};
++const expectIdentity = (response, role) => {
++    expect(response.status).toBe(200);
++    expect(response.body.user).toMatchObject({ id: fixtures[role].id, role, email: fixtures[role].email });
++    expect(response.body.user).not.toHaveProperty('password_hash');
++};
++
++beforeAll(async () => {
++    await new Promise((resolve, reject) => {
++        server = app.listen(0, '127.0.0.1', resolve);
++        server.once('error', reject);
++    });
++    appPort = server.address().port;
++    allowedAppPorts.add(appPort);
++    await db.connect();
++    connected = true;
++    validateDatabase((await db.query(identitySql)).rows[0]);
++    const hash = await bcrypt.hash(password, 10);
++    // IDs/emails are allocated before insert, so partial setup is also cleaned safely.
++    for (const user of Object.values(fixtures)) {
++        await db.query('INSERT INTO public.users (id,name,email,password_hash,role) VALUES ($1,$2,$3,$4,$5)',
++            [user.id, user.name, user.email, hash, user.role]);
++    }
++    const result = await db.query('SELECT id,role FROM public.users WHERE id=ANY($1::uuid[]) ORDER BY role', [ids]);
++    expect(result.rows).toHaveLength(roles.length);
++    expect(result.rows.map(user => user.role).sort()).toEqual([...roles].sort());
++});
++
++afterAll(async () => {
++    try {
++        if (connected) {
++            validateDatabase((await db.query(identitySql)).rows[0]);
++            await db.query('DELETE FROM public.users WHERE id=ANY($1::uuid[]) AND email=ANY($2::text[])',
++                [ids, Object.values(fixtures).map(user => user.email)]);
++            const remaining = await db.query('SELECT id FROM public.users WHERE id=ANY($1::uuid[])', [ids]);
++            expect(remaining.rows).toEqual([]);
++            console.log('Fixture cleanup verified: seven run-specific users absent; no bulk cleanup.');
++        }
++    } finally {
++        try { await db.end(); }
++        finally {
++            try {
++                if (server?.listening) await new Promise((resolve, reject) =>
++                    server.close(error => error ? reject(error) : resolve()));
++            } finally { allowedAppPorts.delete(appPort); }
++        }
++    }
++});
++
++describe('Real local database Login/roles chain', () => {
++    test.each(['BUYER', 'SELLER', 'AGENT'])('%s password -> cookie -> current identity', async role => {
++        const agent = request.agent(server);
++        const response = await login(role, agent);
++        expectIdentity(response, role);
++        expect(response.headers['set-cookie']).toEqual(expect.arrayContaining([
++            expect.stringMatching(/^token=.+;.*Path=\/;.*HttpOnly;.*SameSite=Lax/i),
++        ]));
++        expectIdentity(await agent.get('/api/auth/me'), role);
++    });
++
++    test('ADMIN dedicated login validates both cookie and bearer sessions', async () => {
++        const agent = request.agent(server);
++        const response = await agent.post('/api/admin/login').send({ email: fixtures.ADMIN.email, password });
++        expect(response.status).toBe(200);
++        expect(response.headers['set-cookie'][0]).toMatch(/HttpOnly/);
++        expect(response.body.admin).not.toHaveProperty('password_hash');
++        for (const verification of [await agent.get('/api/admin/verify'),
++            await request(server).get('/api/admin/verify').set('Authorization', `Bearer ${response.body.token}`)]) {
++            expect(verification.status).toBe(200);
++            expect(verification.body).toMatchObject({ valid: true, admin: { id: fixtures.ADMIN.id, role: 'ADMIN' } });
++            expect(verification.body.admin).not.toHaveProperty('password_hash');
++        }
++    });
++
++    test.each([
++        ['wrong password', () => ({ email: fixtures.BUYER.email, password: 'Incorrect-password' }), 400],
++        ['unknown email', () => ({ email: `${run}-unknown@example.test`, password }), 400],
++        ['malformed input', () => ({ email: 'invalid-email', password: '' }), 400],
++        ['banned account', () => ({ email: fixtures.BANNED.email, password }), 403],
++        ['ADMIN in consumer portal', () => ({ email: fixtures.ADMIN.email, password }), 403],
++    ])('%s cannot create a public session', async (label, body, status) => {
++        const agent = request.agent(server);
++        const response = await agent.post('/api/auth/login').send(body());
++        expect(response.status).toBe(status);
++        if (label === 'malformed input') {
++            expect(response.body.message).toBe('Validation Error');
++            expect(response.body.errors.map(error => error.path).sort()).toEqual(['body.email', 'body.password']);
++        }
++        if (label === 'ADMIN in consumer portal') {
++            expect(response.body).toMatchObject({ is_admin: true, admin_login_url: '/admin/login' });
++        }
++        expectNoSession(response);
++        expect((await agent.get('/api/auth/me')).status).toBe(401);
++    });
++
++    test.each(['BUYER', 'SELLER', 'AGENT', 'PENDING_AGENT', 'REJECTED_AGENT'])(
++        '%s cannot use admin login or its own consumer session at admin verify', async role => {
++            const denied = await request(server).post('/api/admin/login').send({ email: fixtures[role].email, password });
++            expect(denied.status).toBe(401);
++            expectNoSession(denied);
++            const agent = request.agent(server);
++            expect((await login(role, agent)).status).toBe(200);
++            expect((await agent.get('/api/admin/verify')).status).toBe(403);
++        });
++
++    test('bad admin password cannot create a session', async () => {
++        const response = await request(server).post('/api/admin/login')
++            .send({ email: fixtures.ADMIN.email, password: 'Incorrect-password' });
++        expect(response.status).toBe(401);
++        expectNoSession(response);
++    });
++
++    test.each(['/api/auth/me', '/api/admin/verify'])('anonymous %s is unauthorized', async route => {
++        expect((await request(server).get(route)).status).toBe(401);
++    });
++
++    const invalidCases = ['cookie', 'bearer'].flatMap(transport =>
++        ['expired', 'tampered', 'password_reset'].flatMap(kind =>
++            ['/api/auth/me', '/api/admin/verify'].map(route => [transport, kind, route])));
++    test.each(invalidCases)('%s %s credential rejected by %s', async (transport, kind, route) => {
++        let token;
++        if (kind === 'expired') token = tokenFor('ADMIN', {}, { expiresIn: -1 });
++        else if (kind === 'password_reset') token = tokenFor('ADMIN', { type: 'password_reset' });
++        else token = jwt.sign({ id: fixtures.ADMIN.id, role: 'ADMIN' }, 'incorrect-signing-key');
++        const response = await credential(request(server).get(route), token, transport);
++        expect(response.status).toBe(401);
++        expectNoSession(response);
++    });
++
++    test('current DB demotion overrides an already-issued ADMIN token', async () => {
++        const response = await adminLogin();
++        expect(response.status).toBe(200);
++        await db.query('UPDATE public.users SET role=$1 WHERE id=$2', ['BUYER', fixtures.ADMIN.id]);
++        try {
++            const denied = await request(server).get('/api/admin/verify').set('Authorization', `Bearer ${response.body.token}`);
++            expect(denied.status).toBe(403);
++        } finally { await db.query('UPDATE public.users SET role=$1 WHERE id=$2', ['ADMIN', fixtures.ADMIN.id]); }
++    });
++
++    test('current DB ban blocks an already-issued consumer cookie', async () => {
++        const agent = request.agent(server);
++        expect((await login('BUYER', agent)).status).toBe(200);
++        await db.query('UPDATE public.users SET role=$1 WHERE id=$2', ['BANNED', fixtures.BUYER.id]);
++        try { expect((await agent.get('/api/auth/me')).status).toBe(403); }
++        finally { await db.query('UPDATE public.users SET role=$1 WHERE id=$2', ['BUYER', fixtures.BUYER.id]); }
++    });
++
++    test('logout clears the cookie jar and subsequent protected access fails', async () => {
++        const agent = request.agent(server);
++        expect((await login('SELLER', agent)).status).toBe(200);
++        expectIdentity(await agent.get('/api/auth/me'), 'SELLER');
++        const response = await agent.post('/api/auth/logout');
++        expect(response.status).toBe(200);
++        expect(response.headers['set-cookie']).toEqual(expect.arrayContaining([
++            expect.stringMatching(/^token=;.*Path=\/;.*Expires=Thu, 01 Jan 1970.*HttpOnly;.*SameSite=Lax/i),
++        ]));
++        expect((await agent.get('/api/auth/me')).status).toBe(401);
++    });
++});
++
+diff --git "a/D:\\CSC3213_20_Group_E\\backend-node\\integration\\network-policy.cjs" "b/D:\\CSC3213_20_Group_E\\backend-node\\integration\\network-policy.cjs"
+new file mode 100644
+index 0000000..4a1b884
+--- /dev/null
++++ "b/D:\\CSC3213_20_Group_E\\backend-node\\integration\\network-policy.cjs"
+@@ -0,0 +1,24 @@
++// Only the suite's explicitly bound listener may supplement the verified stack ports.
++const allowedAppPorts = new Set();
++function allowSocket(args, appPorts = allowedAppPorts) {
++    // Node HTTP passes the normalized [options, callback] as one array argument.
++    const values = Array.isArray(args[0]) ? args[0] : args;
++    const options = typeof values[0] === 'object' && values[0] !== null ? values[0] : {
++        port: values[0], host: typeof values[1] === 'string' ? values[1] : 'localhost',
++    };
++    const port = Number(options.port);
++    return Number.isInteger(port) && port > 0 && port <= 65535
++        && options.host === '127.0.0.1'
++        && port !== 5000 && (port === 58321 || port === 58322 || appPorts.has(port));
++}
++
++function directRestUrl(input) {
++    const url = new URL(typeof input === 'string' || input instanceof URL ? input : input.url);
++    if (url.origin !== 'http://127.0.0.1:58321' || url.username || url.password
++        || !url.pathname.startsWith('/rest/v1/')) {
++        throw new Error('Unexpected outbound fetch refused by integration harness.');
++    }
++    url.pathname = url.pathname.slice('/rest/v1'.length);
++    return url;
++}
++module.exports = { allowSocket, directRestUrl, allowedAppPorts };
+diff --git "a/D:\\CSC3213_20_Group_E\\backend-node\\integration\\README.md" "b/D:\\CSC3213_20_Group_E\\backend-node\\integration\\README.md"
+new file mode 100644
+index 0000000..d88aa11
+--- /dev/null
++++ "b/D:\\CSC3213_20_Group_E\\backend-node\\integration\\README.md"
+@@ -0,0 +1,39 @@
++# Local Login/roles integration
++
++This is an explicit real-database test command. Ordinary `npm test` includes only the pure isolation/network guard tests and existing mocked API suites. It does not discover `login-roles.integration.cjs`.
++
++From `backend-node`, with existing dependencies and the checked local stack running:
++
++```powershell
++node integration/run-login-roles.cjs --preflight
++node integration/run-login-roles.cjs
++```
++
++Preflight is read-only. The full command seeds seven synthetic users, runs the actual Express auth endpoints through Supertest and deletes only those run-specific UUID/email pairs. It checks that the original user-ID set and canonical migration ledger remain unchanged. Each invocation creates a fresh Jest process and new fixture IDs, retaining the real auth rate limits.
++
++The launcher accepts no database URL or credentials from the command line. It derives generated local credentials in memory from exactly `supabase_db_thirasara-phase4-c` and `supabase_rest_thirasara-phase4-c`; it never loads the application `.env`. It refuses missing/wrong container identities, images, networks, bindings, CLI project, remote link, approval marker, file checksums, migration ledger or API/DB read cross-check. An unavailable stack is a failure, not a skipped green test.
++
++## Local prerequisites
++
++See `../../docs/database/setup.md` for the Phase 4 isolated environment. No Docker resources are created, started, reset or removed by the test command. Inspect retained containers before restarting them. Do not use native Supabase CLI start: the documented original default bindings were unsafe on this Docker Desktop setup.
++
++The owner approved publishing the retained stack-c PostgREST service at `127.0.0.1:58321`; DB remains `127.0.0.1:58322`. The original stopped REST container is retained as `supabase_rest_thirasara-phase4-c-before-phase5-port`. Private generated Compose configuration is in `docs/evidence/phase4-local/stack-c-phase5-rest.private.json`; keep it and all generated credentials untracked. This local test setup does not repoint the existing application or ngrok backend.
++
++On the existing prepared machine, inspect the exact two containers and verify their configured loopback bindings before starting those containers. Do not start auth, storage, mail, receipt workers or unrelated services. A different/fresh machine first needs its own explicitly authorized isolated setup; copying hosted keys or data is forbidden.
++
++The retained REST endpoint is direct PostgREST, not Kong. Test-only fetch transport removes Supabase JS's `/rest/v1` prefix and permits only this checked origin; redirects fail. The real application Supabase client, queries, repositories, bcrypt, JWT and middleware remain in use. SMTP and receipt delivery throw if called, dotenv is disabled inside the child, and non-numeric-loopback TCP destinations are refused. Expected HTTP 2xx/4xx access logs are filtered narrowly; other warnings/errors remain visible.
++
++## Scope and limits
++
++- Password login/session/role assertions are in the integration suite. Google/Apple/Facebook, browser cookie/CORS rules, password reset delivery and registration are outside this batch.
++- Logout verifies cookie clearing, not revocation of a copied JWT.
++- Frontend provider/router integration uses controlled API responses and is not full browser E2E.
++- PayHere sandbox checkout and ngrok webhook verification belong to the later checkout batch. No payment endpoints are called here.
++- Failure during normal setup/assertions runs exact fixture cleanup in `afterAll`. Abrupt process termination can prevent hooks; preserve the environment for investigation instead of using reset or broad cleanup.
++- Windows sandbox restrictions may require approval for Docker pipe and loopback access. Resource-heavy verification should run sequentially if Windows paging/commit memory is constrained.
++
++Run pure safety checks without Docker or network:
++
++```powershell
++npm test -- --runInBand tests/localStackGuard.test.js tests/integrationNetworkGuard.test.js
++```
+diff --git "a/D:\\CSC3213_20_Group_E\\backend-node\\integration\\run-login-roles.cjs" "b/D:\\CSC3213_20_Group_E\\backend-node\\integration\\run-login-roles.cjs"
+new file mode 100644
+index 0000000..acca802
+--- /dev/null
++++ "b/D:\\CSC3213_20_Group_E\\backend-node\\integration\\run-login-roles.cjs"
+@@ -0,0 +1,59 @@
++const { spawnSync } = require('node:child_process');
++const path = require('node:path');
++const jwt = require('jsonwebtoken');
++const { Client } = require('pg');
++const { inspectLocalStack, validateDatabase, identitySql } = require('./local-stack.cjs');
++
++let stage = 'container/workdir/checksum identity';
++async function main() {
++    const local = inspectLocalStack();
++    const client = new Client(local.database);
++    try {
++        stage = 'read-only database connection';
++        await client.connect();
++        await client.query('BEGIN READ ONLY');
++        stage = 'database marker and ledger identity';
++        validateDatabase((await client.query(identitySql)).rows[0]);
++        const ids = (await client.query('SELECT id FROM public.users ORDER BY id')).rows.map(row => row.id);
++        const key = jwt.sign({ role: 'service_role', iss: 'supabase' }, local.jwtSecret, { expiresIn: '10m' });
++        // Direct PostgREST transport, not Kong. API container routing/secret and DB identity were checked first.
++        stage = 'PostgREST read-only identity cross-check';
++        const response = await fetch(`${local.apiUrl}/users?select=id&order=id`, {
++            headers: { Authorization: `Bearer ${key}` }, redirect: 'error', signal: AbortSignal.timeout(5000),
++        });
++        if (!response.ok || JSON.stringify((await response.json()).map(row => row.id)) !== JSON.stringify(ids)) {
++            throw new Error('Local API and database identity cross-check failed.');
++        }
++        await client.query('ROLLBACK');
++        if (process.argv.includes('--preflight')) {
++            console.log('PASS: stack-c identity, loopback DB/API, marker, canonical files/ledger and API read cross-check. No fixture writes.');
++            return;
++        }
++        const env = Object.fromEntries(['PATH', 'SystemRoot', 'WINDIR', 'TEMP', 'TMP', 'COMSPEC', 'PATHEXT'].filter(name => process.env[name])
++            .map(name => [name, process.env[name]]));
++        Object.assign(env, {
++            NODE_ENV: 'test', JWT_SECRET: 'phase5-isolated-auth-tests-only',
++            SUPABASE_URL: local.apiUrl, SUPABASE_KEY: key,
++            PHASE5_DATABASE: JSON.stringify(local.database), PHASE5_LOCAL_APPROVED: 'stack-c',
++        });
++        console.log('Running real API integration against verified stack-c; external delivery disabled.');
++        stage = 'integration assertions and fixture cleanup';
++        const result = spawnSync(process.execPath, [require.resolve('jest/bin/jest'), '--config',
++            path.join(__dirname, 'jest.config.cjs'), '--runInBand', '--no-cache'], {
++            cwd: path.resolve(__dirname, '..'), env, stdio: 'inherit', timeout: 120000,
++        });
++        if (result.status !== 0) throw new Error('Integration assertions or fixture cleanup failed.');
++        validateDatabase((await client.query(identitySql)).rows[0]);
++        const after = (await client.query('SELECT id FROM public.users ORDER BY id')).rows.map(row => row.id);
++        if (JSON.stringify(after) !== JSON.stringify(ids)) throw new Error('Fixture cleanup changed the starting users set.');
++        console.log('PASS: starting users set and canonical ledger preserved after cleanup.');
++    } finally {
++        await client.end();
++    }
++}
++
++main().catch(() => {
++    // Errors from Docker/pg may contain private generated configuration; never echo them.
++    console.error(`FAIL: local Login/roles integration at ${stage}; credentials suppressed.`);
++    process.exitCode = 1;
++});
+diff --git "a/D:\\CSC3213_20_Group_E\\backend-node\\integration\\setup.cjs" "b/D:\\CSC3213_20_Group_E\\backend-node\\integration\\setup.cjs"
+new file mode 100644
+index 0000000..8347936
+--- /dev/null
++++ "b/D:\\CSC3213_20_Group_E\\backend-node\\integration\\setup.cjs"
+@@ -0,0 +1,60 @@
++const net = require('node:net');
++const { validateDatabase, identitySql } = require('./local-stack.cjs');
++const { Client } = require('pg');
++const { allowSocket, directRestUrl, allowedAppPorts } = require('./network-policy.cjs');
++
++if (process.env.PHASE5_LOCAL_APPROVED !== 'stack-c' || process.env.NODE_ENV !== 'test'
++    || process.env.SUPABASE_URL !== 'http://127.0.0.1:58321'
++    || process.env.JWT_SECRET !== 'phase5-isolated-auth-tests-only') {
++    throw new Error('Verified integration launcher required.');
++}
++
++// Keep all dotenv calls from loading hosted credentials from the checkout.
++jest.mock('dotenv', () => ({ config: () => ({ parsed: {} }) }));
++jest.mock('../utils/emailService', () => new Proxy({}, {
++    get: (_target, name) => {
++        if (name === '__esModule') return false;
++        return () => { throw new Error('External email is forbidden in Login/roles integration.'); };
++    },
++}));
++jest.mock('../utils/paymentReceiptQueue', () => ({
++    start: () => { throw new Error('Receipt worker must not start in integration.'); },
++    drain: () => { throw new Error('Receipt delivery is forbidden in Login/roles integration.'); },
++}));
++
++// Defense in depth for axios, SMTP, Google and arbitrary TCP clients.
++const originalConnect = net.Socket.prototype.connect;
++net.Socket.prototype.connect = function (...args) {
++    if (!allowSocket(args, allowedAppPorts)) {
++        throw new Error('Unexpected outbound socket refused by integration harness.');
++    }
++    return originalConnect.apply(this, args);
++};
++
++const originalFetch = globalThis.fetch;
++globalThis.fetch = (input, init) => {
++    // Supabase JS normally uses Kong's /rest/v1 prefix. The retained local stack exposes PostgREST directly.
++    const url = directRestUrl(input);
++    return originalFetch(url, { ...init, redirect: 'error', signal: AbortSignal.timeout(5000) });
++};
++
++// Expected 4xx security scenarios produce normal HTTP logger warnings. Keep other output visible.
++for (const method of ['log', 'warn']) {
++    const original = console[method].bind(console);
++    console[method] = (...args) => {
++        if (args.length === 1 && typeof args[0] === 'string'
++            && /^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/.test(args[0])) return;
++        original(...args);
++    };
++}
++
++// Revalidate DB identity inside the child before any test setup can seed users.
++module.exports = async () => {
++    const client = new Client(JSON.parse(process.env.PHASE5_DATABASE));
++    try {
++        await client.connect();
++        await client.query('BEGIN READ ONLY');
++        validateDatabase((await client.query(identitySql)).rows[0]);
++        await client.query('ROLLBACK');
++    } finally { await client.end(); }
++};
+diff --git "a/D:\\CSC3213_20_Group_E\\backend-node\\tests\\localStackGuard.test.js" "b/D:\\CSC3213_20_Group_E\\backend-node\\tests\\localStackGuard.test.js"
+new file mode 100644
+index 0000000..2c1bc28
+--- /dev/null
++++ "b/D:\\CSC3213_20_Group_E\\backend-node\\tests\\localStackGuard.test.js"
+@@ -0,0 +1,81 @@
++const { validateContainers, validateDatabase, validateWorkdir } = require('../integration/local-stack.cjs');
++
++const container = (kind, port) => ({
++    Name: `/supabase_${kind}_thirasara-phase4-c`,
++    State: { Running: true },
++    Config: {
++        Image: `public.ecr.aws/supabase/${kind === 'db' ? 'postgres:17.11.0.006' : 'postgrest:v16.5'}`,
++        Labels: { 'com.supabase.cli.project': 'thirasara-phase4-c' },
++        Env: kind === 'db' ? ['POSTGRES_PASSWORD=local-only', 'JWT_SECRET=local-test-secret'] : [
++            'PGRST_DB_URI=postgres://authenticator:local-only@supabase_db_thirasara-phase4-c:5432/postgres',
++            'PGRST_JWT_SECRET=local-test-secret',
++        ],
++    },
++    HostConfig: { PortBindings: { [`${kind === 'db' ? 5432 : 3000}/tcp`]: [{ HostIp: '127.0.0.1', HostPort: port }] } },
++    NetworkSettings: {
++        Networks: { 'thirasara-phase4-local': { NetworkID: 'isolated-network' } },
++        Ports: { [`${kind === 'db' ? 5432 : 3000}/tcp`]: [{ HostIp: '127.0.0.1', HostPort: port }] },
++    },
++});
++const pair = () => [container('db', '58322'), container('rest', '58321')];
++const identity = () => ({ database: 'postgres', user: 'postgres', major: 17, marker: true,
++    versions: ['20261030045356', '20261030045416'] });
++
++describe('Phase 5 isolated stack guards (no Docker or database access)', () => {
++    test('accepts only the recorded isolated stack-c endpoints', () => {
++        const result = validateContainers(pair());
++        expect(result.apiUrl).toBe('http://127.0.0.1:58321');
++        expect(result.database.port).toBe(58322);
++    });
++    test('accepts the local signing secret represented by the retained PostgREST JWKS', () => {
++        const snapshots = pair();
++        snapshots[1].Config.Env[1] = 'PGRST_JWT_SECRET=' + JSON.stringify({ keys: [
++            { kty: 'EC', alg: 'ES256', kid: 'public-key' },
++            { kty: 'oct', k: Buffer.from('local-test-secret').toString('base64url') },
++        ] });
++        expect(() => validateContainers(snapshots)).not.toThrow();
++    });
++
++    test.each([
++        ['unexpected name', p => { p[0].Name = '/production'; }],
++        ['unexpected project', p => { p[1].Config.Labels['com.supabase.cli.project'] = 'other'; }],
++        ['unexpected image', p => { p[0].Config.Image = 'unknown/postgres:latest'; }],
++        ['stopped container', p => { p[0].State.Running = false; }],
++        ['public port binding', p => { p[1].HostConfig.PortBindings['3000/tcp'][0].HostIp = '0.0.0.0'; }],
++        ['runtime public binding', p => { p[0].NetworkSettings.Ports['5432/tcp'][0].HostIp = '::'; }],
++        ['wrong port', p => { p[1].HostConfig.PortBindings['3000/tcp'][0].HostPort = '5000'; }],
++        ['missing REST port', p => { p[1].NetworkSettings.Ports = {}; }],
++        ['extra public binding', p => { p[0].HostConfig.PortBindings['9999/tcp'] = [{ HostIp: '0.0.0.0', HostPort: '9999' }]; }],
++        ['different network', p => { p[1].NetworkSettings.Networks['thirasara-phase4-local'].NetworkID = 'other'; }],
++        ['extra network', p => { p[1].NetworkSettings.Networks.bridge = {}; }],
++        ['hosted database routing', p => { p[1].Config.Env[0] = 'PGRST_DB_URI=postgres://authenticator:p@hosted.example/postgres'; }],
++        ['wrong database name', p => { p[1].Config.Env[0] = p[1].Config.Env[0].replace('/postgres', '/other'); }],
++        ['mismatched JWT secret', p => { p[1].Config.Env[1] = 'PGRST_JWT_SECRET=other'; }],
++        ['mismatched JWKS', p => { p[1].Config.Env[1] = 'PGRST_JWT_SECRET={"keys":[{"kty":"oct","k":"b3RoZXI"}]}'; }],
++        ['invalid JWKS', p => { p[1].Config.Env[1] = 'PGRST_JWT_SECRET={"keys":null}'; }],
++        ['missing credential', p => { p[0].Config.Env = ['JWT_SECRET=local-test-secret']; }],
++    ])('rejects %s before connections or fixture writes', (_label, mutate) => {
++        const snapshots = pair();
++        mutate(snapshots);
++        expect(() => validateContainers(snapshots)).toThrow(/isolated/i);
++    });
++
++    test('accepts exact unlinked CLI project configuration', () => {
++        expect(() => validateWorkdir('project_id = "thirasara-phase4-c"\n', false)).not.toThrow();
++    });
++    test.each([
++        ['project_id = "live"', false],
++        ['project_id = "thirasara-phase4-c"', true],
++    ])('rejects wrong or remote-linked workdir', (config, linked) => {
++        expect(() => validateWorkdir(config, linked)).toThrow(/isolated/i);
++    });
++    test('accepts exact marker and two-version ledger', () => {
++        expect(() => validateDatabase(identity())).not.toThrow();
++    });
++    test.each([
++        { marker: false }, { database: 'live' }, { user: 'authenticator' }, { major: 16 },
++        { versions: [] }, { versions: ['20261030045356', '20261030045416', 'extra'] },
++    ])('rejects unexpected database identity %j', change => {
++        expect(() => validateDatabase({ ...identity(), ...change })).toThrow(/isolated/i);
++    });
++});
+diff --git "a/D:\\CSC3213_20_Group_E\\backend-node\\tests\\integrationNetworkGuard.test.js" "b/D:\\CSC3213_20_Group_E\\backend-node\\tests\\integrationNetworkGuard.test.js"
+new file mode 100644
+index 0000000..a900882
+--- /dev/null
++++ "b/D:\\CSC3213_20_Group_E\\backend-node\\tests\\integrationNetworkGuard.test.js"
+@@ -0,0 +1,43 @@
++const { allowSocket, directRestUrl } = require('../integration/network-policy.cjs');
++
++describe('Integration outbound policy without network calls', () => {
++    test.each([
++        [{ host: '127.0.0.1', port: 58322 }],
++        [[{ host: '127.0.0.1', port: 12345, path: '/api/auth/login' }, () => {}]],
++        [58321, '127.0.0.1'],
++    ])('accepts only verified stack ports or the registered app listener %j', (...args) => {
++        expect(allowSocket(args, new Set([12345]))).toBe(true);
++    });
++    test.each([
++        [{ host: 'example.com', port: 443 }], [{ host: 'localhost', port: 5000 }],
++        [{ path: '/tmp/socket' }], [{ host: '127.0.0.1', port: 0 }],
++        [{ host: '127.0.0.1', port: 99999 }], [{ port: 80 }], [null],
++        [{ host: '127.0.0.1', port: 5000 }], [{ host: '::1', port: 5000 }],
++        [{ host: '::1', port: 12345 }], [{ host: '::1', port: 58322 }],
++        [[{ host: '127.0.0.1', port: 5000, path: '/api/auth/login' }, () => {}]],
++        [{ host: '127.0.0.1', port: 12346 }], ['/tmp/socket'],
++        [[{ host: 'example.com', port: 58321 }, () => {}]],
++    ])('refuses non-loopback/implicit/IPC sockets %j', (...args) => {
++        expect(allowSocket(args, new Set([12345, 5000]))).toBe(false);
++    });
++    test('a listener port is allowed only while explicitly registered', () => {
++        const ports = new Set();
++        const args = [{ host: '127.0.0.1', port: 12345 }];
++        expect(allowSocket(args, ports)).toBe(false);
++        ports.add(12345);
++        expect(allowSocket(args, ports)).toBe(true);
++        ports.delete(12345);
++        expect(allowSocket(args, ports)).toBe(false);
++    });
++    test('maps only the verified direct PostgREST route, preserving query', () => {
++        expect(directRestUrl('http://127.0.0.1:58321/rest/v1/users?select=id').href)
++            .toBe('http://127.0.0.1:58321/users?select=id');
++    });
++    test.each([
++        'https://hosted.example/rest/v1/users', 'http://127.0.0.1:5000/rest/v1/users',
++        'http://127.0.0.1:58321/auth/v1/users', 'http://127.0.0.1:58321/rest/v1/../../users',
++        'http://credential@127.0.0.1:58321/rest/v1/users',
++    ])('rejects unexpected fetch URL %s', url => {
++        expect(() => directRestUrl(url)).toThrow(/refused/);
++    });
++});

@@ -1,16 +1,16 @@
-# React + Vite
+# Thirasara frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React/Vite client including the Admin panel. Requires Node.js 24 and npm.
 
-Currently, two official plugins are available:
+Follow the [repository setup guide](../README.md#evaluation-quick-start-windows-powershell) for the hosted database, Node backend, Go map service and private evaluation configuration. This client requires those services.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+From this directory, copy `.env.example` to `.env`, fill the public configuration, then run:
 
-## React Compiler
+```powershell
+npm ci
+npm run dev -- --port 5173 --strictPort
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Open http://localhost:5173; Admin login is /admin/login. Example API: http://localhost:5000; map search: http://localhost:9090/api/map/search. Restart Vite after environment changes. Never place server secrets in VITE_* variables.
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Checks: `npm test`, `npm run lint`, `npm run build`. `npm run preview` serves the built frontend locally; backend services are still required and the browser origin must match backend configuration for authenticated writes.

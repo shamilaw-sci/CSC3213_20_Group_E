@@ -1,0 +1,28 @@
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, expect, test, vi } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
+import FloatingAIChat from './FloatingAIChat';
+vi.mock('../../context/UserAuthContext', () => ({ useAuth: () => ({ user: { id: 'buyer' } }) }));
+afterEach(cleanup);
+test('drag stays within viewport, suppresses click, and ordinary activation opens chat', () => {
+ window.PointerEvent = MouseEvent;
+ render(<MemoryRouter><FloatingAIChat /></MemoryRouter>);
+ const launcher = screen.getByRole('button', { name: 'Open AI assistant' });
+ fireEvent.pointerDown(launcher, { clientX: 900, clientY: 700, button: 0 });
+ fireEvent.pointerMove(launcher, { clientX: -500, clientY: -500 });
+ fireEvent.pointerUp(launcher, { clientX: -500, clientY: -500 });
+ fireEvent.click(launcher);
+ expect(screen.queryByText('Thirasara AI')).not.toBeInTheDocument();
+ expect(launcher.parentElement.style.left).toBe('8px');
+ expect(launcher.parentElement.style.top).toBe('8px');
+ fireEvent.click(launcher);
+ expect(screen.getByText('Thirasara AI')).toBeInTheDocument();
+ expect(launcher).toHaveAttribute('aria-expanded', 'true');
+ fireEvent.keyDown(launcher, { key: 'ArrowRight' });
+ expect(launcher.parentElement.style.left).toBe('24px');
+ fireEvent.pointerDown(launcher, { clientX: 24, clientY: 8, button: 0 });
+ fireEvent.pointerMove(launcher, { clientX: 5000, clientY: 5000 });
+ fireEvent.pointerUp(launcher);
+ expect(launcher.parentElement.style.left).toBe(`${window.innerWidth - 64}px`);
+ expect(launcher.parentElement.style.top).toBe(`${window.innerHeight - 64}px`);
+});

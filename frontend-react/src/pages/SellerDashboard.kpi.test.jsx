@@ -1,0 +1,13 @@
+import React from 'react';
+import { cleanup, render, screen, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import Dashboard from './SellerDashboard';
+const mocks = vi.hoisted(() => ({ get: vi.fn(), user: { id: 's', role: 'SELLER', name: 'Seller' } }));
+vi.mock('../context/api', () => ({ default: { get: mocks.get } }));
+vi.mock('../context/UserAuthContext', () => ({ useAuth: () => ({ user: mocks.user }) }));
+vi.mock('../components/layout/Navbar', () => ({ default: () => null }));
+beforeEach(() => vi.resetAllMocks()); afterEach(cleanup);
+const show = () => render(<MemoryRouter><Dashboard /></MemoryRouter>);
+test('KPI loading placeholders preserve five-card layout', () => { mocks.get.mockImplementation(() => new Promise(() => {})); show(); expect(within(screen.getByRole('region', { name: 'Key Performance Indicators' })).getAllByText('...')).toHaveLength(5); });
+test('KPI uses parent paid-status counts and portfolio/view/save totals', async () => { mocks.get.mockImplementation(async path => ({ data: path === '/conversations' ? { conversations: [] } : { properties: [{ id: '1', status: 'approved', payment_status: 'Paid', price: 2000000, views_count: 120, favorites: [{ count: 3 }] }, { id: '2', status: 'approved', payment_status: 'Unpaid', price: 1000000, views_count: 5 }] } })); show(); const region = within(screen.getByRole('region', { name: 'Key Performance Indicators' })); await region.findByText('Rs. 3.0M'); expect(region.getByText('Across 2 listings')).toBeInTheDocument(); expect(region.getByText('125')).toBeInTheDocument(); expect(region.getByText('3')).toBeInTheDocument(); expect(mocks.get.mock.calls.map(([path]) => path)).toEqual(['/properties/my-listings/activity', '/properties/my-listings', '/conversations']); });

@@ -1,9 +1,13 @@
 # ==========================================
 # Build Stage
 # ==========================================
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 
 WORKDIR /app
+
+# Keep dependency/build work within the project's verification resource limits.
+ARG NODE_OPTIONS="--max-old-space-size=512 --max-semi-space-size=4"
+ARG RAYON_NUM_THREADS=1
 
 # Accept build arguments for Vite environment variables
 ARG VITE_API_URL

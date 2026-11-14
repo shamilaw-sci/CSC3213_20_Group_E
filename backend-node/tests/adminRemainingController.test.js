@@ -1,0 +1,22 @@
+jest.mock('../config/supabase', () => ({}));
+jest.mock('../utils/emailService', () => ({}));
+jest.mock('../controllers/savedSearchController', () => ({}));
+jest.mock('../repositories/adminRepository', () => ({ getExportData: jest.fn(), getPlatformSettings: jest.fn(), updatePlatformSetting: jest.fn(), getRoleRequests: jest.fn(), getRoleRequestById: jest.fn(), updateUserRole: jest.fn(), resolveRoleRequest: jest.fn(), resolveSellerRoleRequest: jest.fn() }));
+const repo = require('../repositories/adminRepository'); const h = require('../controllers/adminController');
+const response = () => ({ status: jest.fn().mockReturnThis(), json: jest.fn(), send: jest.fn(), setHeader: jest.fn() });
+beforeEach(() => jest.resetAllMocks());
+test('CSV preserves header order, formula prefix, quoting and newlines', async () => { repo.getExportData.mockResolvedValue({ headers: ['name', 'value'], dataToExport: [{ name: '=SUM(A1)', value: 'a"b' }, { name: null, value: 0 }] }); const res = response(); await h.exportReport({ params: { type: 'users' } }, res, jest.fn()); expect(res.send).toHaveBeenCalledWith('name,value\n"\t=SUM(A1)","a""b"\n"","0"\n'); expect(res.setHeader).toHaveBeenCalledWith('Content-Disposition', 'attachment; filename=thirasara-users-report.csv'); });
+test('invalid export stops before repository', async () => { const res = response(); await h.exportReport({ params: { type: 'other' } }, res, jest.fn()); expect(res.status).toHaveBeenCalledWith(400); expect(repo.getExportData).not.toHaveBeenCalled(); });
+test('settings defaults only for confirmed missing row', async () => { repo.getPlatformSettings.mockResolvedValue(null); const res = response(); await h.getSettings({}, res, jest.fn()); expect(res.json).toHaveBeenCalledWith({ settings: { listing_fee: '500.00' }, source: 'configured_default' }); });
+test.each([[], { setting_key: 'listing_fee', setting_value: 0 }])('malformed setting is not silently defaulted %p', async data => { repo.getPlatformSettings.mockResolvedValue(data); const res = response(), next = jest.fn(); await h.getSettings({}, res, next); expect(next).toHaveBeenCalled(); expect(res.json).not.toHaveBeenCalled(); });
+test.each([0, '', undefined])('update rejects invalid fee %s', async fee => { const res = response(); await h.updateSettings({ body: { listing_fee: fee } }, res, jest.fn()); expect(repo.updatePlatformSetting).not.toHaveBeenCalled(); expect(res.status).toHaveBeenCalledWith(400); });
+test('role approval waits for confirmed atomic result', async () => {
+ const id = '00000000-0000-4000-8000-000000000001';
+ let finish; repo.resolveSellerRoleRequest.mockImplementation(() => new Promise(done => { finish = done; }));
+ const res = response(); const pending = h.approveRoleRequest({ params: { id } }, res, jest.fn());
+ expect(repo.resolveSellerRoleRequest).toHaveBeenCalledWith(id, 'approved'); expect(res.json).not.toHaveBeenCalled();
+ finish({ data: [{ request_id: id, decision: 'approved', user_id: id }], error: null }); await pending;
+ expect(res.status).toHaveBeenCalledWith(200); expect(repo.updateUserRole).not.toHaveBeenCalled(); expect(repo.resolveRoleRequest).not.toHaveBeenCalled();
+});
+test.each(['approveRoleRequest', 'rejectRoleRequest'])('%s rejects resolved request', async name => { repo.resolveSellerRoleRequest.mockResolvedValue({ data: null, error: { code: 'P7002' } }); const res = response(); await h[name]({ params: { id: '00000000-0000-4000-8000-000000000001' } }, res, jest.fn()); expect(res.status).toHaveBeenCalledWith(400); expect(repo.resolveRoleRequest).not.toHaveBeenCalled(); });
+test('role list defaults pending', async () => { repo.getRoleRequests.mockResolvedValue([]); await h.getRoleRequests({ query: {} }, response(), jest.fn()); expect(repo.getRoleRequests).toHaveBeenCalledWith('pending'); });

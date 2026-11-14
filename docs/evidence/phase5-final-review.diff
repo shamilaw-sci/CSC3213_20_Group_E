@@ -1,0 +1,1134 @@
+All uncommitted Phase5 batch changes against8625cbb; no tracked application edits.
+diff --git a/backend-node/integration/README.md b/backend-node/integration/README.md
+new file mode 100644
+index 0000000..5b72d96
+--- /dev/null
++++ b/backend-node/integration/README.md
+@@ -0,0 +1,39 @@
++# Local Login/roles integration
++
++This is an explicit real-database test command. Ordinary `npm test` includes only the pure isolation/network guard tests and existing mocked API suites. It does not discover `login-roles.integration.cjs`.
++
++From `backend-node`, with existing dependencies and the checked local stack running:
++
++```powershell
++node integration/run-login-roles.cjs --preflight
++node integration/run-login-roles.cjs
++```
++
++Preflight is read-only. The full command seeds seven synthetic users, runs the actual Express auth endpoints through Supertest and deletes only those run-specific UUID/email pairs. It checks that the original user-ID set and canonical migration ledger remain unchanged. Each invocation creates a fresh Jest process and new fixture IDs, retaining the real auth rate limits.
++
++The launcher accepts no database URL or credentials from the command line. It derives generated local credentials in memory from exactly `supabase_db_thirasara-phase4-c` and `supabase_rest_thirasara-phase4-c`; it never loads the application `.env`. It refuses missing/wrong container identities, images, networks, bindings, CLI project, remote link, approval marker, file checksums, migration ledger or API/DB read cross-check. An unavailable stack is a failure, not a skipped green test.
++
++## Local prerequisites
++
++See `../../docs/database/setup.md` for the Phase 4 isolated environment. No Docker resources are created, started, reset or removed by the test command. Inspect retained containers before restarting them. Do not use native Supabase CLI start: the documented original default bindings were unsafe on this Docker Desktop setup.
++
++The owner approved publishing the retained stack-c PostgREST service at `127.0.0.1:58321`; DB remains `127.0.0.1:58322`. The original stopped REST container is retained as `supabase_rest_thirasara-phase4-c-before-phase5-port`. Private generated Compose configuration is in `docs/evidence/phase4-local/stack-c-phase5-rest.private.json`; keep it and all generated credentials untracked. This local test setup does not repoint the existing application or ngrok backend.
++
++On the existing prepared machine, inspect the exact two containers and verify their configured loopback bindings before starting those containers. Do not start auth, storage, mail, receipt workers or unrelated services. A different/fresh machine first needs its own explicitly authorized isolated setup; copying hosted keys or data is forbidden.
++
++The retained REST endpoint is direct PostgREST, not Kong. Test-only fetch transport removes Supabase JS's `/rest/v1` prefix and permits only this checked origin; redirects fail. The real application Supabase client, queries, repositories, bcrypt, JWT and middleware remain in use. SMTP and receipt delivery throw if called, dotenv is disabled inside the child, and TCP is restricted to `127.0.0.1` on the verified DB/REST ports plus the explicitly registered ephemeral app listener. Port 5000 is always blocked. Expected HTTP 2xx/4xx access logs are filtered narrowly; other warnings/errors remain visible.
++
++## Scope and limits
++
++- Password login/session/role assertions are in the integration suite. Google/Apple/Facebook, browser cookie/CORS rules, password reset delivery and registration are outside this batch.
++- Logout verifies cookie clearing, not revocation of a copied JWT.
++- Frontend provider/router integration uses controlled API responses and is not full browser E2E.
++- PayHere sandbox checkout and ngrok webhook verification belong to the later checkout batch. No payment endpoints are called here.
++- Failure during normal setup/assertions runs exact fixture cleanup in `afterAll`. Abrupt process termination can prevent hooks; preserve the environment for investigation instead of using reset or broad cleanup.
++- Windows sandbox restrictions may require approval for Docker pipe and loopback access. Resource-heavy verification should run sequentially if Windows paging/commit memory is constrained.
++
++Run pure safety checks without Docker or network:
++
++```powershell
++npm test -- --runInBand tests/localStackGuard.test.js tests/integrationNetworkGuard.test.js
++```
+diff --git a/backend-node/integration/jest.config.cjs b/backend-node/integration/jest.config.cjs
+new file mode 100644
+index 0000000..639870e
+--- /dev/null
++++ b/backend-node/integration/jest.config.cjs
+@@ -0,0 +1,7 @@
++module.exports = {
++    rootDir: '..',
++    testMatch: ['<rootDir>/integration/login-roles.integration.cjs'],
++    setupFiles: ['<rootDir>/integration/setup.cjs'],
++    testTimeout: 15000,
++    verbose: true,
++};
+diff --git a/backend-node/integration/local-stack.cjs b/backend-node/integration/local-stack.cjs
+new file mode 100644
+index 0000000..57c1644
+--- /dev/null
++++ b/backend-node/integration/local-stack.cjs
+@@ -0,0 +1,85 @@
++// Test tooling only. Never reads application .env or accepts caller URLs.
++const assert = require('node:assert/strict');
++const fs = require('node:fs');
++const path = require('node:path');
++const { execFileSync } = require('node:child_process');
++
++const root = path.resolve(__dirname, '../..');
++const project = 'thirasara-phase4-c';
++const network = 'thirasara-phase4-local';
++const versions = ['20261030045356', '20261030045416'];
++const refuse = condition => assert.ok(condition, 'Isolated test environment refused; check local prerequisites.');
++const environment = item => Object.fromEntries(item.Config.Env.map(entry => {
++    const index = entry.indexOf('=');
++    return [entry.slice(0, index), entry.slice(index + 1)];
++}));
++
++function acceptsLocalSigningSecret(configured, secret) {
++    if (configured === secret) return true;
++    try {
++        const jwks = JSON.parse(configured);
++        return jwks.keys?.some(key => key.kty === 'oct' && typeof key.k === 'string'
++            && Buffer.from(key.k, 'base64url').equals(Buffer.from(secret))) === true;
++    } catch { return false; }
++}
++
++function validateWorkdir(config, linked) {
++    refuse(!linked && /^project_id = "thirasara-phase4-c"\r?$/m.test(config));
++}
++
++function validateContainers(items) {
++    refuse(Array.isArray(items) && items.length === 2);
++    for (const [index, kind, target, published, image] of [
++        [0, 'db', '5432/tcp', '58322', /^public\.ecr\.aws\/supabase\/postgres:17\.11\.0\.006$/],
++        [1, 'rest', '3000/tcp', '58321', /^public\.ecr\.aws\/supabase\/postgrest:v16\.5$/],
++    ]) {
++        const item = items[index];
++        refuse(item?.Name === `/supabase_${kind}_${project}` && item.State?.Running === true);
++        refuse(image.test(item.Config?.Image) && item.Config.Labels?.['com.supabase.cli.project'] === project);
++        const networks = item.NetworkSettings?.Networks || {};
++        refuse(Object.keys(networks).length === 1 && !!networks[network]?.NetworkID);
++        for (const bindings of [item.HostConfig?.PortBindings, item.NetworkSettings?.Ports]) {
++            refuse(bindings && bindings[target]?.length === 1);
++            refuse(bindings[target][0].HostIp === '127.0.0.1' && bindings[target][0].HostPort === published);
++            for (const entries of Object.values(bindings)) {
++                for (const binding of entries || []) refuse(binding.HostIp === '127.0.0.1');
++            }
++        }
++    }
++    refuse(items[0].NetworkSettings.Networks[network].NetworkID === items[1].NetworkSettings.Networks[network].NetworkID);
++    const db = environment(items[0]);
++    const rest = environment(items[1]);
++    refuse(!!db.POSTGRES_PASSWORD && !!db.JWT_SECRET && acceptsLocalSigningSecret(rest.PGRST_JWT_SECRET, db.JWT_SECRET));
++    let uri;
++    try { uri = new URL(rest.PGRST_DB_URI); } catch { refuse(false); }
++    refuse(['postgres:', 'postgresql:'].includes(uri.protocol) && uri.hostname === `supabase_db_${project}`
++        && uri.port === '5432' && uri.pathname === '/postgres' && uri.username === 'authenticator'
++        && decodeURIComponent(uri.password) === db.POSTGRES_PASSWORD && !uri.search && !uri.hash);
++    return {
++        apiUrl: 'http://127.0.0.1:58321', jwtSecret: db.JWT_SECRET,
++        database: { host: '127.0.0.1', port: 58322, database: 'postgres', user: 'postgres',
++            password: db.POSTGRES_PASSWORD, ssl: false, connectionTimeoutMillis: 5000 },
++    };
++}
++
++function validateDatabase(identity) {
++    refuse(identity.database === 'postgres' && identity.user === 'postgres' && identity.major === 17 && identity.marker === true);
++    refuse(JSON.stringify(identity.versions) === JSON.stringify(versions));
++}
++
++const identitySql = `SELECT current_database() AS database, current_user AS user,
++    current_setting('server_version_num')::integer / 10000 AS major,
++    EXISTS (SELECT 1 FROM pg_namespace WHERE nspname='phase4_isolated_test_guard'
++        AND pg_get_userbyid(nspowner)='postgres') AS marker,
++    (SELECT json_agg(version ORDER BY version) FROM supabase_migrations.schema_migrations) AS versions`;
++
++function inspectLocalStack() {
++    const workdir = path.join(root, 'docs/evidence/phase4-local/stack-c/supabase');
++    validateWorkdir(fs.readFileSync(path.join(workdir, 'config.toml'), 'utf8'), fs.existsSync(path.join(workdir, '.temp/project-ref')));
++    execFileSync(process.execPath, [path.join(root, 'tools/database/verify-migrations.cjs')], { stdio: 'pipe' });
++    const items = JSON.parse(execFileSync('docker', ['inspect', `supabase_db_${project}`, `supabase_rest_${project}`],
++        { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 10000 }));
++    return validateContainers(items);
++}
++
++module.exports = { validateContainers, validateDatabase, validateWorkdir, inspectLocalStack, identitySql };
+diff --git a/backend-node/integration/login-roles.integration.cjs b/backend-node/integration/login-roles.integration.cjs
+new file mode 100644
+index 0000000..8faedd6
+--- /dev/null
++++ b/backend-node/integration/login-roles.integration.cjs
+@@ -0,0 +1,191 @@
++const { randomUUID } = require('node:crypto');
++const request = require('supertest');
++const bcrypt = require('bcryptjs');
++const jwt = require('jsonwebtoken');
++const { Client } = require('pg');
++const { validateDatabase, identitySql } = require('./local-stack.cjs');
++const { allowedAppPorts } = require('./network-policy.cjs');
++if (process.env.NODE_ENV !== 'test') throw new Error('Test environment required before loading app.');
++const app = require('../server');
++
++const roles = ['BUYER', 'SELLER', 'AGENT', 'ADMIN', 'BANNED', 'PENDING_AGENT', 'REJECTED_AGENT'];
++const run = randomUUID();
++const password = 'Phase5-fixture-only-123!';
++const fixtures = Object.fromEntries(roles.map(role => [role, {
++    id: randomUUID(), role, name: `Phase5 ${role}`, email: `${run}-${role.toLowerCase()}@example.test`,
++}]));
++const ids = Object.values(fixtures).map(user => user.id);
++const db = new Client(JSON.parse(process.env.PHASE5_DATABASE));
++let connected = false;
++let server;
++let appPort;
++const login = (role, agent = request(server)) => agent.post('/api/auth/login')
++    .send({ email: fixtures[role].email, password });
++const adminLogin = () => request(server).post('/api/admin/login').send({ email: fixtures.ADMIN.email, password });
++const tokenFor = (role, claims = {}, options = {}) => jwt.sign({ id: fixtures[role].id, role, ...claims },
++    process.env.JWT_SECRET, { expiresIn: '5m', ...options });
++const credential = (req, token, transport) => req.set(transport === 'cookie' ? 'Cookie' : 'Authorization',
++    transport === 'cookie' ? `token=${token}` : `Bearer ${token}`);
++const expectNoSession = response => {
++    expect(response.headers['set-cookie']).toBeUndefined();
++    expect(response.body.user).toBeUndefined();
++    expect(response.body.token).toBeUndefined();
++};
++const expectIdentity = (response, role) => {
++    expect(response.status).toBe(200);
++    expect(response.body.user).toMatchObject({ id: fixtures[role].id, role, email: fixtures[role].email });
++    expect(response.body.user).not.toHaveProperty('password_hash');
++};
++
++beforeAll(async () => {
++    await new Promise((resolve, reject) => {
++        server = app.listen(0, '127.0.0.1', resolve);
++        server.once('error', reject);
++    });
++    appPort = server.address().port;
++    allowedAppPorts.add(appPort);
++    await db.connect();
++    connected = true;
++    validateDatabase((await db.query(identitySql)).rows[0]);
++    const hash = await bcrypt.hash(password, 10);
++    // IDs/emails are allocated before insert, so partial setup is also cleaned safely.
++    for (const user of Object.values(fixtures)) {
++        await db.query('INSERT INTO public.users (id,name,email,password_hash,role) VALUES ($1,$2,$3,$4,$5)',
++            [user.id, user.name, user.email, hash, user.role]);
++    }
++    const result = await db.query('SELECT id,role FROM public.users WHERE id=ANY($1::uuid[]) ORDER BY role', [ids]);
++    expect(result.rows).toHaveLength(roles.length);
++    expect(result.rows.map(user => user.role).sort()).toEqual([...roles].sort());
++});
++
++afterAll(async () => {
++    try {
++        if (connected) {
++            validateDatabase((await db.query(identitySql)).rows[0]);
++            await db.query('DELETE FROM public.users WHERE id=ANY($1::uuid[]) AND email=ANY($2::text[])',
++                [ids, Object.values(fixtures).map(user => user.email)]);
++            const remaining = await db.query('SELECT id FROM public.users WHERE id=ANY($1::uuid[])', [ids]);
++            expect(remaining.rows).toEqual([]);
++            console.log('Fixture cleanup verified: seven run-specific users absent; no bulk cleanup.');
++        }
++    } finally {
++        try { await db.end(); }
++        finally {
++            try {
++                if (server?.listening) await new Promise((resolve, reject) =>
++                    server.close(error => error ? reject(error) : resolve()));
++            } finally { allowedAppPorts.delete(appPort); }
++        }
++    }
++});
++
++describe('Real local database Login/roles chain', () => {
++    test.each(['BUYER', 'SELLER', 'AGENT'])('%s password -> cookie -> current identity', async role => {
++        const agent = request.agent(server);
++        const response = await login(role, agent);
++        expectIdentity(response, role);
++        expect(response.headers['set-cookie']).toEqual(expect.arrayContaining([
++            expect.stringMatching(/^token=.+;.*Path=\/;.*HttpOnly;.*SameSite=Lax/i),
++        ]));
++        expectIdentity(await agent.get('/api/auth/me'), role);
++    });
++
++    test('ADMIN dedicated login validates both cookie and bearer sessions', async () => {
++        const agent = request.agent(server);
++        const response = await agent.post('/api/admin/login').send({ email: fixtures.ADMIN.email, password });
++        expect(response.status).toBe(200);
++        expect(response.headers['set-cookie'][0]).toMatch(/HttpOnly/);
++        expect(response.body.admin).not.toHaveProperty('password_hash');
++        for (const verification of [await agent.get('/api/admin/verify'),
++            await request(server).get('/api/admin/verify').set('Authorization', `Bearer ${response.body.token}`)]) {
++            expect(verification.status).toBe(200);
++            expect(verification.body).toMatchObject({ valid: true, admin: { id: fixtures.ADMIN.id, role: 'ADMIN' } });
++            expect(verification.body.admin).not.toHaveProperty('password_hash');
++        }
++    });
++
++    test.each([
++        ['wrong password', () => ({ email: fixtures.BUYER.email, password: 'Incorrect-password' }), 400],
++        ['unknown email', () => ({ email: `${run}-unknown@example.test`, password }), 400],
++        ['malformed input', () => ({ email: 'invalid-email', password: '' }), 400],
++        ['banned account', () => ({ email: fixtures.BANNED.email, password }), 403],
++        ['ADMIN in consumer portal', () => ({ email: fixtures.ADMIN.email, password }), 403],
++    ])('%s cannot create a public session', async (label, body, status) => {
++        const agent = request.agent(server);
++        const response = await agent.post('/api/auth/login').send(body());
++        expect(response.status).toBe(status);
++        if (label === 'malformed input') {
++            expect(response.body.message).toBe('Validation Error');
++            expect(response.body.errors.map(error => error.path).sort()).toEqual(['body.email', 'body.password']);
++        }
++        if (label === 'ADMIN in consumer portal') {
++            expect(response.body).toMatchObject({ is_admin: true, admin_login_url: '/admin/login' });
++        }
++        expectNoSession(response);
++        expect((await agent.get('/api/auth/me')).status).toBe(401);
++    });
++
++    test.each(['BUYER', 'SELLER', 'AGENT', 'PENDING_AGENT', 'REJECTED_AGENT'])(
++        '%s cannot use admin login or its own consumer session at admin verify', async role => {
++            const denied = await request(server).post('/api/admin/login').send({ email: fixtures[role].email, password });
++            expect(denied.status).toBe(401);
++            expectNoSession(denied);
++            const agent = request.agent(server);
++            expect((await login(role, agent)).status).toBe(200);
++            expect((await agent.get('/api/admin/verify')).status).toBe(403);
++        });
++
++    test('bad admin password cannot create a session', async () => {
++        const response = await request(server).post('/api/admin/login')
++            .send({ email: fixtures.ADMIN.email, password: 'Incorrect-password' });
++        expect(response.status).toBe(401);
++        expectNoSession(response);
++    });
++
++    test.each(['/api/auth/me', '/api/admin/verify'])('anonymous %s is unauthorized', async route => {
++        expect((await request(server).get(route)).status).toBe(401);
++    });
++
++    const invalidCases = ['cookie', 'bearer'].flatMap(transport =>
++        ['expired', 'tampered', 'password_reset'].flatMap(kind =>
++            ['/api/auth/me', '/api/admin/verify'].map(route => [transport, kind, route])));
++    test.each(invalidCases)('%s %s credential rejected by %s', async (transport, kind, route) => {
++        let token;
++        if (kind === 'expired') token = tokenFor('ADMIN', {}, { expiresIn: -1 });
++        else if (kind === 'password_reset') token = tokenFor('ADMIN', { type: 'password_reset' });
++        else token = jwt.sign({ id: fixtures.ADMIN.id, role: 'ADMIN' }, 'incorrect-signing-key');
++        const response = await credential(request(server).get(route), token, transport);
++        expect(response.status).toBe(401);
++        expectNoSession(response);
++    });
++
++    test('current DB demotion overrides an already-issued ADMIN token', async () => {
++        const response = await adminLogin();
++        expect(response.status).toBe(200);
++        await db.query('UPDATE public.users SET role=$1 WHERE id=$2', ['BUYER', fixtures.ADMIN.id]);
++        try {
++            const denied = await request(server).get('/api/admin/verify').set('Authorization', `Bearer ${response.body.token}`);
++            expect(denied.status).toBe(403);
++        } finally { await db.query('UPDATE public.users SET role=$1 WHERE id=$2', ['ADMIN', fixtures.ADMIN.id]); }
++    });
++
++    test('current DB ban blocks an already-issued consumer cookie', async () => {
++        const agent = request.agent(server);
++        expect((await login('BUYER', agent)).status).toBe(200);
++        await db.query('UPDATE public.users SET role=$1 WHERE id=$2', ['BANNED', fixtures.BUYER.id]);
++        try { expect((await agent.get('/api/auth/me')).status).toBe(403); }
++        finally { await db.query('UPDATE public.users SET role=$1 WHERE id=$2', ['BUYER', fixtures.BUYER.id]); }
++    });
++
++    test('logout clears the cookie jar and subsequent protected access fails', async () => {
++        const agent = request.agent(server);
++        expect((await login('SELLER', agent)).status).toBe(200);
++        expectIdentity(await agent.get('/api/auth/me'), 'SELLER');
++        const response = await agent.post('/api/auth/logout');
++        expect(response.status).toBe(200);
++        expect(response.headers['set-cookie']).toEqual(expect.arrayContaining([
++            expect.stringMatching(/^token=;.*Path=\/;.*Expires=Thu, 01 Jan 1970.*HttpOnly;.*SameSite=Lax/i),
++        ]));
++        expect((await agent.get('/api/auth/me')).status).toBe(401);
++    });
++});
+diff --git a/backend-node/integration/network-policy.cjs b/backend-node/integration/network-policy.cjs
+new file mode 100644
+index 0000000..4a1b884
+--- /dev/null
++++ b/backend-node/integration/network-policy.cjs
+@@ -0,0 +1,24 @@
++// Only the suite's explicitly bound listener may supplement the verified stack ports.
++const allowedAppPorts = new Set();
++function allowSocket(args, appPorts = allowedAppPorts) {
++    // Node HTTP passes the normalized [options, callback] as one array argument.
++    const values = Array.isArray(args[0]) ? args[0] : args;
++    const options = typeof values[0] === 'object' && values[0] !== null ? values[0] : {
++        port: values[0], host: typeof values[1] === 'string' ? values[1] : 'localhost',
++    };
++    const port = Number(options.port);
++    return Number.isInteger(port) && port > 0 && port <= 65535
++        && options.host === '127.0.0.1'
++        && port !== 5000 && (port === 58321 || port === 58322 || appPorts.has(port));
++}
++
++function directRestUrl(input) {
++    const url = new URL(typeof input === 'string' || input instanceof URL ? input : input.url);
++    if (url.origin !== 'http://127.0.0.1:58321' || url.username || url.password
++        || !url.pathname.startsWith('/rest/v1/')) {
++        throw new Error('Unexpected outbound fetch refused by integration harness.');
++    }
++    url.pathname = url.pathname.slice('/rest/v1'.length);
++    return url;
++}
++module.exports = { allowSocket, directRestUrl, allowedAppPorts };
+diff --git a/backend-node/integration/run-login-roles.cjs b/backend-node/integration/run-login-roles.cjs
+new file mode 100644
+index 0000000..acca802
+--- /dev/null
++++ b/backend-node/integration/run-login-roles.cjs
+@@ -0,0 +1,59 @@
++const { spawnSync } = require('node:child_process');
++const path = require('node:path');
++const jwt = require('jsonwebtoken');
++const { Client } = require('pg');
++const { inspectLocalStack, validateDatabase, identitySql } = require('./local-stack.cjs');
++
++let stage = 'container/workdir/checksum identity';
++async function main() {
++    const local = inspectLocalStack();
++    const client = new Client(local.database);
++    try {
++        stage = 'read-only database connection';
++        await client.connect();
++        await client.query('BEGIN READ ONLY');
++        stage = 'database marker and ledger identity';
++        validateDatabase((await client.query(identitySql)).rows[0]);
++        const ids = (await client.query('SELECT id FROM public.users ORDER BY id')).rows.map(row => row.id);
++        const key = jwt.sign({ role: 'service_role', iss: 'supabase' }, local.jwtSecret, { expiresIn: '10m' });
++        // Direct PostgREST transport, not Kong. API container routing/secret and DB identity were checked first.
++        stage = 'PostgREST read-only identity cross-check';
++        const response = await fetch(`${local.apiUrl}/users?select=id&order=id`, {
++            headers: { Authorization: `Bearer ${key}` }, redirect: 'error', signal: AbortSignal.timeout(5000),
++        });
++        if (!response.ok || JSON.stringify((await response.json()).map(row => row.id)) !== JSON.stringify(ids)) {
++            throw new Error('Local API and database identity cross-check failed.');
++        }
++        await client.query('ROLLBACK');
++        if (process.argv.includes('--preflight')) {
++            console.log('PASS: stack-c identity, loopback DB/API, marker, canonical files/ledger and API read cross-check. No fixture writes.');
++            return;
++        }
++        const env = Object.fromEntries(['PATH', 'SystemRoot', 'WINDIR', 'TEMP', 'TMP', 'COMSPEC', 'PATHEXT'].filter(name => process.env[name])
++            .map(name => [name, process.env[name]]));
++        Object.assign(env, {
++            NODE_ENV: 'test', JWT_SECRET: 'phase5-isolated-auth-tests-only',
++            SUPABASE_URL: local.apiUrl, SUPABASE_KEY: key,
++            PHASE5_DATABASE: JSON.stringify(local.database), PHASE5_LOCAL_APPROVED: 'stack-c',
++        });
++        console.log('Running real API integration against verified stack-c; external delivery disabled.');
++        stage = 'integration assertions and fixture cleanup';
++        const result = spawnSync(process.execPath, [require.resolve('jest/bin/jest'), '--config',
++            path.join(__dirname, 'jest.config.cjs'), '--runInBand', '--no-cache'], {
++            cwd: path.resolve(__dirname, '..'), env, stdio: 'inherit', timeout: 120000,
++        });
++        if (result.status !== 0) throw new Error('Integration assertions or fixture cleanup failed.');
++        validateDatabase((await client.query(identitySql)).rows[0]);
++        const after = (await client.query('SELECT id FROM public.users ORDER BY id')).rows.map(row => row.id);
++        if (JSON.stringify(after) !== JSON.stringify(ids)) throw new Error('Fixture cleanup changed the starting users set.');
++        console.log('PASS: starting users set and canonical ledger preserved after cleanup.');
++    } finally {
++        await client.end();
++    }
++}
++
++main().catch(() => {
++    // Errors from Docker/pg may contain private generated configuration; never echo them.
++    console.error(`FAIL: local Login/roles integration at ${stage}; credentials suppressed.`);
++    process.exitCode = 1;
++});
+diff --git a/backend-node/integration/setup.cjs b/backend-node/integration/setup.cjs
+new file mode 100644
+index 0000000..8347936
+--- /dev/null
++++ b/backend-node/integration/setup.cjs
+@@ -0,0 +1,60 @@
++const net = require('node:net');
++const { validateDatabase, identitySql } = require('./local-stack.cjs');
++const { Client } = require('pg');
++const { allowSocket, directRestUrl, allowedAppPorts } = require('./network-policy.cjs');
++
++if (process.env.PHASE5_LOCAL_APPROVED !== 'stack-c' || process.env.NODE_ENV !== 'test'
++    || process.env.SUPABASE_URL !== 'http://127.0.0.1:58321'
++    || process.env.JWT_SECRET !== 'phase5-isolated-auth-tests-only') {
++    throw new Error('Verified integration launcher required.');
++}
++
++// Keep all dotenv calls from loading hosted credentials from the checkout.
++jest.mock('dotenv', () => ({ config: () => ({ parsed: {} }) }));
++jest.mock('../utils/emailService', () => new Proxy({}, {
++    get: (_target, name) => {
++        if (name === '__esModule') return false;
++        return () => { throw new Error('External email is forbidden in Login/roles integration.'); };
++    },
++}));
++jest.mock('../utils/paymentReceiptQueue', () => ({
++    start: () => { throw new Error('Receipt worker must not start in integration.'); },
++    drain: () => { throw new Error('Receipt delivery is forbidden in Login/roles integration.'); },
++}));
++
++// Defense in depth for axios, SMTP, Google and arbitrary TCP clients.
++const originalConnect = net.Socket.prototype.connect;
++net.Socket.prototype.connect = function (...args) {
++    if (!allowSocket(args, allowedAppPorts)) {
++        throw new Error('Unexpected outbound socket refused by integration harness.');
++    }
++    return originalConnect.apply(this, args);
++};
++
++const originalFetch = globalThis.fetch;
++globalThis.fetch = (input, init) => {
++    // Supabase JS normally uses Kong's /rest/v1 prefix. The retained local stack exposes PostgREST directly.
++    const url = directRestUrl(input);
++    return originalFetch(url, { ...init, redirect: 'error', signal: AbortSignal.timeout(5000) });
++};
++
++// Expected 4xx security scenarios produce normal HTTP logger warnings. Keep other output visible.
++for (const method of ['log', 'warn']) {
++    const original = console[method].bind(console);
++    console[method] = (...args) => {
++        if (args.length === 1 && typeof args[0] === 'string'
++            && /^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/.test(args[0])) return;
++        original(...args);
++    };
++}
++
++// Revalidate DB identity inside the child before any test setup can seed users.
++module.exports = async () => {
++    const client = new Client(JSON.parse(process.env.PHASE5_DATABASE));
++    try {
++        await client.connect();
++        await client.query('BEGIN READ ONLY');
++        validateDatabase((await client.query(identitySql)).rows[0]);
++        await client.query('ROLLBACK');
++    } finally { await client.end(); }
++};
+diff --git a/backend-node/tests/integrationNetworkGuard.test.js b/backend-node/tests/integrationNetworkGuard.test.js
+new file mode 100644
+index 0000000..a900882
+--- /dev/null
++++ b/backend-node/tests/integrationNetworkGuard.test.js
+@@ -0,0 +1,43 @@
++const { allowSocket, directRestUrl } = require('../integration/network-policy.cjs');
++
++describe('Integration outbound policy without network calls', () => {
++    test.each([
++        [{ host: '127.0.0.1', port: 58322 }],
++        [[{ host: '127.0.0.1', port: 12345, path: '/api/auth/login' }, () => {}]],
++        [58321, '127.0.0.1'],
++    ])('accepts only verified stack ports or the registered app listener %j', (...args) => {
++        expect(allowSocket(args, new Set([12345]))).toBe(true);
++    });
++    test.each([
++        [{ host: 'example.com', port: 443 }], [{ host: 'localhost', port: 5000 }],
++        [{ path: '/tmp/socket' }], [{ host: '127.0.0.1', port: 0 }],
++        [{ host: '127.0.0.1', port: 99999 }], [{ port: 80 }], [null],
++        [{ host: '127.0.0.1', port: 5000 }], [{ host: '::1', port: 5000 }],
++        [{ host: '::1', port: 12345 }], [{ host: '::1', port: 58322 }],
++        [[{ host: '127.0.0.1', port: 5000, path: '/api/auth/login' }, () => {}]],
++        [{ host: '127.0.0.1', port: 12346 }], ['/tmp/socket'],
++        [[{ host: 'example.com', port: 58321 }, () => {}]],
++    ])('refuses non-loopback/implicit/IPC sockets %j', (...args) => {
++        expect(allowSocket(args, new Set([12345, 5000]))).toBe(false);
++    });
++    test('a listener port is allowed only while explicitly registered', () => {
++        const ports = new Set();
++        const args = [{ host: '127.0.0.1', port: 12345 }];
++        expect(allowSocket(args, ports)).toBe(false);
++        ports.add(12345);
++        expect(allowSocket(args, ports)).toBe(true);
++        ports.delete(12345);
++        expect(allowSocket(args, ports)).toBe(false);
++    });
++    test('maps only the verified direct PostgREST route, preserving query', () => {
++        expect(directRestUrl('http://127.0.0.1:58321/rest/v1/users?select=id').href)
++            .toBe('http://127.0.0.1:58321/users?select=id');
++    });
++    test.each([
++        'https://hosted.example/rest/v1/users', 'http://127.0.0.1:5000/rest/v1/users',
++        'http://127.0.0.1:58321/auth/v1/users', 'http://127.0.0.1:58321/rest/v1/../../users',
++        'http://credential@127.0.0.1:58321/rest/v1/users',
++    ])('rejects unexpected fetch URL %s', url => {
++        expect(() => directRestUrl(url)).toThrow(/refused/);
++    });
++});
+diff --git a/backend-node/tests/localStackGuard.test.js b/backend-node/tests/localStackGuard.test.js
+new file mode 100644
+index 0000000..2c1bc28
+--- /dev/null
++++ b/backend-node/tests/localStackGuard.test.js
+@@ -0,0 +1,81 @@
++const { validateContainers, validateDatabase, validateWorkdir } = require('../integration/local-stack.cjs');
++
++const container = (kind, port) => ({
++    Name: `/supabase_${kind}_thirasara-phase4-c`,
++    State: { Running: true },
++    Config: {
++        Image: `public.ecr.aws/supabase/${kind === 'db' ? 'postgres:17.11.0.006' : 'postgrest:v16.5'}`,
++        Labels: { 'com.supabase.cli.project': 'thirasara-phase4-c' },
++        Env: kind === 'db' ? ['POSTGRES_PASSWORD=local-only', 'JWT_SECRET=local-test-secret'] : [
++            'PGRST_DB_URI=postgres://authenticator:local-only@supabase_db_thirasara-phase4-c:5432/postgres',
++            'PGRST_JWT_SECRET=local-test-secret',
++        ],
++    },
++    HostConfig: { PortBindings: { [`${kind === 'db' ? 5432 : 3000}/tcp`]: [{ HostIp: '127.0.0.1', HostPort: port }] } },
++    NetworkSettings: {
++        Networks: { 'thirasara-phase4-local': { NetworkID: 'isolated-network' } },
++        Ports: { [`${kind === 'db' ? 5432 : 3000}/tcp`]: [{ HostIp: '127.0.0.1', HostPort: port }] },
++    },
++});
++const pair = () => [container('db', '58322'), container('rest', '58321')];
++const identity = () => ({ database: 'postgres', user: 'postgres', major: 17, marker: true,
++    versions: ['20261030045356', '20261030045416'] });
++
++describe('Phase 5 isolated stack guards (no Docker or database access)', () => {
++    test('accepts only the recorded isolated stack-c endpoints', () => {
++        const result = validateContainers(pair());
++        expect(result.apiUrl).toBe('http://127.0.0.1:58321');
++        expect(result.database.port).toBe(58322);
++    });
++    test('accepts the local signing secret represented by the retained PostgREST JWKS', () => {
++        const snapshots = pair();
++        snapshots[1].Config.Env[1] = 'PGRST_JWT_SECRET=' + JSON.stringify({ keys: [
++            { kty: 'EC', alg: 'ES256', kid: 'public-key' },
++            { kty: 'oct', k: Buffer.from('local-test-secret').toString('base64url') },
++        ] });
++        expect(() => validateContainers(snapshots)).not.toThrow();
++    });
++
++    test.each([
++        ['unexpected name', p => { p[0].Name = '/production'; }],
++        ['unexpected project', p => { p[1].Config.Labels['com.supabase.cli.project'] = 'other'; }],
++        ['unexpected image', p => { p[0].Config.Image = 'unknown/postgres:latest'; }],
++        ['stopped container', p => { p[0].State.Running = false; }],
++        ['public port binding', p => { p[1].HostConfig.PortBindings['3000/tcp'][0].HostIp = '0.0.0.0'; }],
++        ['runtime public binding', p => { p[0].NetworkSettings.Ports['5432/tcp'][0].HostIp = '::'; }],
++        ['wrong port', p => { p[1].HostConfig.PortBindings['3000/tcp'][0].HostPort = '5000'; }],
++        ['missing REST port', p => { p[1].NetworkSettings.Ports = {}; }],
++        ['extra public binding', p => { p[0].HostConfig.PortBindings['9999/tcp'] = [{ HostIp: '0.0.0.0', HostPort: '9999' }]; }],
++        ['different network', p => { p[1].NetworkSettings.Networks['thirasara-phase4-local'].NetworkID = 'other'; }],
++        ['extra network', p => { p[1].NetworkSettings.Networks.bridge = {}; }],
++        ['hosted database routing', p => { p[1].Config.Env[0] = 'PGRST_DB_URI=postgres://authenticator:p@hosted.example/postgres'; }],
++        ['wrong database name', p => { p[1].Config.Env[0] = p[1].Config.Env[0].replace('/postgres', '/other'); }],
++        ['mismatched JWT secret', p => { p[1].Config.Env[1] = 'PGRST_JWT_SECRET=other'; }],
++        ['mismatched JWKS', p => { p[1].Config.Env[1] = 'PGRST_JWT_SECRET={"keys":[{"kty":"oct","k":"b3RoZXI"}]}'; }],
++        ['invalid JWKS', p => { p[1].Config.Env[1] = 'PGRST_JWT_SECRET={"keys":null}'; }],
++        ['missing credential', p => { p[0].Config.Env = ['JWT_SECRET=local-test-secret']; }],
++    ])('rejects %s before connections or fixture writes', (_label, mutate) => {
++        const snapshots = pair();
++        mutate(snapshots);
++        expect(() => validateContainers(snapshots)).toThrow(/isolated/i);
++    });
++
++    test('accepts exact unlinked CLI project configuration', () => {
++        expect(() => validateWorkdir('project_id = "thirasara-phase4-c"\n', false)).not.toThrow();
++    });
++    test.each([
++        ['project_id = "live"', false],
++        ['project_id = "thirasara-phase4-c"', true],
++    ])('rejects wrong or remote-linked workdir', (config, linked) => {
++        expect(() => validateWorkdir(config, linked)).toThrow(/isolated/i);
++    });
++    test('accepts exact marker and two-version ledger', () => {
++        expect(() => validateDatabase(identity())).not.toThrow();
++    });
++    test.each([
++        { marker: false }, { database: 'live' }, { user: 'authenticator' }, { major: 16 },
++        { versions: [] }, { versions: ['20261030045356', '20261030045416', 'extra'] },
++    ])('rejects unexpected database identity %j', change => {
++        expect(() => validateDatabase({ ...identity(), ...change })).toThrow(/isolated/i);
++    });
++});
+diff --git a/docs/phase5-login-roles.md b/docs/phase5-login-roles.md
+new file mode 100644
+index 0000000..88f1f56
+--- /dev/null
++++ b/docs/phase5-login-roles.md
+@@ -0,0 +1,62 @@
++# Phase 5 checkpoint: Login/roles automation
++
++Date: 2026-10-30 (Asia/Colombo). Baseline: version-3.0, 8625cbbbc2c109956cbe7485e6e88ca0bc130da3.
++
++## Outcome
++
++The first approved Login/roles batch is implemented and locally verified. Production code, dependencies, application .env, migration SQL and CI workflows are unchanged. All changes are uncommitted/unstaged; the owner performs commit/push after the full phase. Do not stage docs/evidence/.
++
++Phase 5 is still in progress. The remaining original flow order is listings -> saved searches -> CRM -> receipts -> checkout. This report does not claim full frontend/API browser E2E, payment E2E, a security audit or Phase 5 completion.
++
++## Coverage
++
++- Real Express API -> controller -> repository -> Supabase JS -> local PostgREST -> PostgreSQL integration: 32 cases. Covers cookie login/current identity for BUYER/SELLER/AGENT, dedicated ADMIN cookie/bearer login, malformed/invalid/banned/wrong-portal failure responses, consumer-family admin denial, invalid-token transport matrix, fresh DB demotion/ban enforcement and cookie-agent logout.
++- Frontend integration: 27 new cases, using actual auth providers, Login and route guards with MemoryRouter and controlled API responses. Covers password navigation, explicit return route, anonymous failed login, session restoration/loading, existing role matrix, consumer logout current semantics, forged admin storage and server verification. Existing admin logout tests remain intact.
++- Pure safety guards: 54 cases (29 container/workdir/DB identity and 25 outbound policy cases). These run in ordinary Jest without Docker/network.
++
++The real DB suite is explicitly opt-in and excluded from default test discovery. It fails when prerequisites are unavailable rather than reporting a skipped success. See ../backend-node/integration/README.md for commands and boundaries.
++
++## Verification evidence
++
++Commands were run from the named package directories using existing dependencies, local Node 24.14.1 and npm 11.11.0. CI remains Node 20 and was not run for these uncommitted changes.
++
++| Check | Final result |
++| --- | --- |
++| backend-node: npm test -- --runInBand | 29 suites, 286/286 tests pass |
++| backend-node: node integration/run-login-roles.cjs --preflight | Read-only container/DB/API/marker/checksum/ledger cross-check passes |
++| backend-node: node integration/run-login-roles.cjs, final run 1 | 32/32 pass; 6.183s Jest total |
++| Same explicit command, fresh final run 2 | 32/32 pass; 7.362s Jest total |
++| Both final DB runs | Seven own fixture users removed; starting users set and canonical two-entry ledger preserved |
++| frontend-react: npm test -- --maxWorkers=1 | 20 files, 72/72 tests pass |
++| New frontend focused suites | 27/27 pass repeatedly, including after review fixes |
++| frontend-react: npm run lint | Exit 0, no errors/warnings |
++| frontend-react: npm run build | Exit 0; chunk-size, Lottie direct-eval and plugin-timing warnings remain visible |
++| Direct Jest invocation bypassing the integration launcher | Expected exit 1: Verified integration launcher required, zero tests/fixture writes |
++
++Focused existing auth baseline before adding tests passed 30/30 backend and 4/4 frontend tests. The first sandboxed backend attempt failed with local socket EACCES; the approved rerun passed. No application change was made to address that sandbox restriction.
++
++Parallel full verification initially exceeded Windows paging/commit memory (process creation failure, Vitest EPIPE and Vite allocation failures; ESLint also failed during this resource pressure). Sequential reruns of the full backend/frontend tests, lint and build passed. No memory settings, dependencies or system processes were changed.
++
++Early harness failures were investigated before changing test tooling: the retained PostgREST secret is a JWKS containing an oct key, and Node HTTP passes normalized socket options as an array. Guards now recognize those actual local formats. Failed API attempts still ran fixture cleanup. No production auth defect was found or fixed.
++
++Task reviews identified and resolved three coverage/safety gaps: observe real provider identity outside Routes for failed login; restrict TCP to verified endpoints/registered listener; assert validation/admin-portal payload semantics. Frontend and backend task reviews subsequently approved spec compliance and code quality.
++
++## Local environment and data isolation
++
++The owner approved publishing the existing stack-c PostgREST service on 127.0.0.1:58321. DB remains 127.0.0.1:58322. The original stopped REST container was retained as supabase_rest_thirasara-phase4-c-before-phase5-port. Existing private configuration and DB volumes were preserved. Only DB and REST were started; auth, storage, mail and delivery workers were not started.
++
++The runner checks exact container names/project labels/images/network, configured and actual bindings, unlinked CLI workdir, isolated approval namespace, PostgreSQL major, canonical migration checksums and exact ledger. It cross-checks a read-only users lookup through local PostgREST against SQL before any fixture writes. Local credentials are derived in memory and never printed. The child receives an allowlisted environment and dummy application JWT secret, with dotenv loading disabled.
++
++Each run seeds seven run-specific UUID/example.test accounts with bcrypt hashes. Setup failures and assertion failures trigger exact UUID/email cleanup in afterAll; cleanup failures fail the run. The launcher separately compares the starting and ending users set and ledger. Abrupt process termination can prevent hooks; investigate preserved local data rather than resetting or deleting broadly.
++
++The direct-PostgREST test transport strips only the Kong path prefix. This verifies the actual auth/repository/DB chain but does not verify Kong, a deployed reverse proxy, browser cookies/CORS or an external identity provider. Logout proves cookie clearing, not copied-JWT revocation.
++
++## PayHere sandbox follow-up
++
++The owner authorized sandbox Visa/Mastercard payments using official PayHere test details and the running ngrok webhook for the later checkout batch. Read-only browser inspection confirmed sandbox.payhere.lk/merchant/payments displays Sandbox Mode. No payment was submitted, webhook invoked, receipt sent or live DB changed.
++
++The existing backend .env points to a non-loopback Supabase target. Payment sandbox mode alone does not make application DB writes isolated. Before checkout execution, verify the actual sandbox request mode, official current test card details, ngrok forwarding/backend identity, isolated order/receipt data and suppressed external delivery. The existing live/application/ngrok configuration was not repointed by this batch.
++
++## Next checkpoint
++
++Inventory and propose the listings batch before implementing it. Keep registration/social sign-in, password reset delivery, runtime migration and auth behavior changes outside this approved batch. Preserve owner commit/push control and the one-commit-after-full-phase preference.
+diff --git a/docs/superpowers/plans/2026-10-30-phase5-login-roles.md b/docs/superpowers/plans/2026-10-30-phase5-login-roles.md
+new file mode 100644
+index 0000000..c713f79
+--- /dev/null
++++ b/docs/superpowers/plans/2026-10-30-phase5-login-roles.md
+@@ -0,0 +1,60 @@
++# Phase 5 Login/roles Implementation Plan
++
++> Execute inline against the owner-approved design, with safety checks before fixture writes and a batch report before moving to listings. Owner retains all commit/push actions.
++
++**Goal:** Repeatable real-database API and provider/router UI integration coverage for password login, sessions and role access.
++
++**Architecture:** Keep production auth code unchanged. Use Jest/Supertest against the real app and a verified retained local Supabase stack. Use Vitest/Testing Library with real providers/routes and controlled API-boundary responses. A dedicated launcher owns local identity, credentials and outbound network restrictions.
++
++**Tech Stack:** Existing Node, Jest, Supertest, pg, Supabase JS, Vitest, Testing Library and PowerShell/Docker tooling. No new dependencies.
++
++## Global constraints
++
++- Only synthetic data in checked loopback isolated containers; no hosted writes, reset, volume removal, payment execution or delivery.
++- Retain docs/evidence/ untracked; never print credentials. No application .env edits or credential copies.
++- No auth/payment behavior fixes without owner permission. Regression tests may pass immediately for existing behavior.
++- Existing version-3.0 checkout is the owner-designated workspace; no branch/commit/push/PR actions.
++- Current local Node 24 and CI Node 20 are recorded separately.
++
++## Task 1: Baseline and environment readiness
++
++- [x] Run `npm test -- --runInBand tests/auth.test.js tests/authMiddleware.test.js tests/authorization.test.js` in backend-node and focused Login/AdminAuthContext Vitest tests in frontend-react.
++- [x] Inspect retained Docker resource identity before starting only the needed existing containers. Validate private Compose metadata in memory without displaying its values. If engine readiness remains unavailable, continue frontend/guard work and mark DB scenarios unverified.
++
++## Task 2: Guarded API launcher
++
++Files: `backend-node/integration/local-stack.cjs`, `backend-node/integration/run-login-roles.cjs`, `backend-node/tests/localStackGuard.test.js`, `backend-node/integration/jest.config.cjs`, `backend-node/integration/setup.cjs`.
++
++- [x] First write guard tests: reject non-loopback ports, unexpected container/project/network/image, linked workdir, missing marker/ledger and API/DB stack mismatch. Assert refusal before writes or app imports.
++- [x] Run focused guard tests; observe missing-module failure before implementing the test tooling.
++- [x] Implement exact stack-c identity discovery from Docker inspect, canonical manifest verification and read-only SQL identity checks. Derive local API port/credentials only from verified running containers. Use only existing tooling and no caller-provided URLs.
++- [x] Verify API identity using a read-only users lookup cross-checked with SQL, service role JWT provenance and PostgREST target configuration. Reject redirects/unexpected outbound destinations. Avoid fallback to application .env.
++- [x] Launch a fresh explicit Jest process with an allowlisted environment, NODE_ENV=test, dummy JWT secret and verified local credentials. Exclude integration suite from default discovery by using `.integration.cjs` with explicit separate config.
++- [x] Mock dotenv/email/receipt queue before real app import, block outbound network except checked local PostgREST and Supertest loopback traffic. Unexpected email/worker calls fail.
++- [x] Verify all guard failures with no live connections and run explicit launcher preflight. Missing prerequisites must fail, not skip.
++
++## Task 3: Real API flows
++
++File: `backend-node/integration/login-roles.integration.cjs`.
++
++- [x] Seed seven run-specific roles with UUIDs, example.test emails and bcrypt hashes via verified local pg connection. Keep inserted IDs before attempting writes; read back all fixtures.
++- [x] Assert BUYER/SELLER/AGENT login cookie -> /auth/me ID, role and absence of password_hash.
++- [x] Assert ADMIN login -> /admin/verify through cookie and bearer independently. Assert wrong/unknown/malformed/BANNED/public ADMIN/consumer-admin failures and absence of issued cookies.
++- [x] Assert anonymous 401, consumer-family admin 403, invalid token matrix (expired/tampered/reset-purpose x cookie/bearer), current DB demotion/ban behavior and cookie-agent logout -> 401.
++- [x] In afterAll delete only seeded IDs, verify none remain and surface cleanup failures. Run the explicit launcher twice in separate processes; verify no fixture growth and migration ledger unchanged.
++
++## Task 4: Real frontend provider/router flows
++
++Files: `frontend-react/src/pages/Login.integration.test.jsx`, `frontend-react/src/pages/admin/context/AdminAuth.integration.test.jsx`.
++
++- [x] Use real UserAuthProvider/Login/ProtectedRoute with MemoryRouter destination probes; mock only API and Google/animation boundaries.
++- [x] Assert BUYER/SELLER/AGENT navigation, explicit return location, failed password feedback with no authenticated state, restoring valid/missing sessions, anonymous/wrong-role redirects, allowed agent-family dashboard roles and blocked pending/rejected listing access.
++- [x] Assert consumer logout current success/failure semantics through the real provider.
++- [x] Use real AdminAuthProvider/AdminProtectedRoute with controlled admin API responses: missing token, forged localStorage with rejected verification, valid session, rejected/invalid verification and loading state.
++- [x] Run focused suites twice; if any production defect appears, report it without changing behavior.
++
++## Task 5: Validation and report
++
++- [x] Run backend `npm test -- --runInBand` and frontend `npm test -- --maxWorkers=1`, `npm run lint`, `npm run build`.
++- [x] Check diff for secrets, unintended application changes and whitespace; retain private artifacts untracked.
++- [x] Write `docs/phase5-login-roles.md` with commands/counts, fixture lifecycle, isolation proof, failures and unverified boundaries. No Phase 5 completion claim until later flows pass.
+diff --git a/docs/superpowers/specs/2026-10-30-phase5-login-roles-design.md b/docs/superpowers/specs/2026-10-30-phase5-login-roles-design.md
+new file mode 100644
+index 0000000..46392e7
+--- /dev/null
++++ b/docs/superpowers/specs/2026-10-30-phase5-login-roles-design.md
+@@ -0,0 +1,76 @@
++# Phase 5, batch 1: Login and roles
++
++Status: scope and written design approved by owner on 2026-10-30. Execution is tracked in the matching implementation plan and batch report.
++
++## Objective
++
++Add repeatable happy-path and failure-path integration coverage of password login, session identity and role access. This is the first batch of Phase 5, not completion of the phase. Remaining flow order: listings, saved searches, CRM, receipts, checkout.
++
++## Inventory and decisions
++
++Baseline: version-3.0 at 8625cbbbc2c109956cbe7485e6e88ca0bc130da3. Existing backend has 27 Jest test files; frontend has 18 Vitest files. Existing auth API tests mock Supabase, middleware tests use a small Express harness, and Login UI tests cover Google SDK lifecycle. They do not establish a real database login/session/role chain.
++
++Use existing Jest, Supertest, bcrypt, JWT, Supabase client and Vitest/Testing Library. No new dependency, service, migration, application auth behavior change or runtime upgrade is part of this batch. Mock-only coverage is insufficient for repository integration; a new browser E2E framework is unnecessary for this batch and would need permission. Frontend integration is explicitly not browser E2E or proof of browser cookie/CORS behavior.
++
++Local inventory: Node 24.14.1, npm 11.11.0; CI uses Node 20. Both application node_modules directories exist. Docker engine was unavailable during inventory. No listener on 5000 or 4040 was returned by the local listener check. These observations do not prove the user's ngrok process has stopped elsewhere.
++
++No AGENTS.md was found in the repository inventory. docs/evidence/ remains untracked and must never be staged. Owner alone performs commit/push, once the full phase is ready.
++
++## API architecture and data safety
++
++Run an explicit opt-in database integration suite outside the default unit-test discovery. Import the real Express app under NODE_ENV=test, preserving validators, controllers, repositories, JWT verification and database role lookups. Use a Supertest cookie agent for the login/session/logout chain. Do not mock the users repository or Supabase in this suite. Mock external email and delivery boundaries before importing the app; refuse unexpected outbound application requests. Do not call payment endpoints in batch 1.
++
++A dedicated runner must validate the retained Phase 4 isolated project/container identity, database marker, canonical migration state and all published loopback bindings before allowing test data writes. Reuse the established identity guards; do not repurpose their SQL-only guarantees as proof that an API target is safe. Also verify that the local API/PostgREST endpoint belongs to the checked stack. Reject remote URLs, linked projects, missing credentials and unexpected endpoints. Explicitly configure a dummy test JWT secret before app import and prevent dotenv from selecting hosted credentials. Never print credentials or raw private Compose/status output.
++
++Inspect retained resources before restarting them. Preserve all volumes and existing records; do not use reset, native CLI start or migration replay to prepare a proved stack. No installation/download is authorized by this design.
++
++Fixtures: run-specific UUIDs and example.test emails for BUYER, SELLER, AGENT, ADMIN, BANNED, PENDING_AGENT and REJECTED_AGENT. Seed bcrypt hashes using direct local fixture setup rather than public registration so no welcome email is triggered. Read back fixtures before assertions. Record inserted IDs in memory and clean up only those IDs in finally/afterAll, including partial setup failures. Never bulk-delete by role/email prefix. Report cleanup failures as test failures. No hosted users or keys are copied.
++
++## API assertion matrix
++
++| Scenario | Expected observable result |
++| --- | --- |
++| BUYER, SELLER, AGENT password login | 200, HttpOnly token cookie; cookie agent GET /api/auth/me returns matching fixture ID/current role |
++| ADMIN dedicated login | POST /api/admin/login returns 200; cookie and returned bearer credential independently pass /api/admin/verify |
++| Wrong password or unknown public email | 400; no session cookie or authenticated identity |
++| Malformed public login input | 400 validation response; no cookie |
++| BANNED public login | 403; no cookie |
++| ADMIN at public login | 403 with admin portal indication; no cookie |
++| Consumer credentials at admin login | 401; no admin session |
++| Anonymous protected identity/admin request | 401 |
++| Consumer role at /api/admin/verify | 403 for BUYER, SELLER, AGENT, PENDING_AGENT and REJECTED_AGENT |
++| Expired, tampered or password-reset-purpose token | 401 on protected routes, for cookie and bearer transports |
++| Existing ADMIN session after local DB demotion | /api/admin/verify becomes 403 despite stale JWT ADMIN claim |
++| Existing session after local ban | protected identity request becomes 403 |
++| Logout through cookie agent | clear-cookie attributes asserted; next agent /api/auth/me is 401 |
++
++Inspect public identity payloads to ensure password_hash is absent. Logout clears the browser cookie; it does not promise revocation of a copied JWT. Do not assert or introduce token revocation behavior.
++
++Keep admin login tests below the real 10-attempt limit; use fresh app instances/test processes for repeat runs rather than disabling production rate limiting. Failure cases must not accidentally authenticate using cookies retained from another scenario.
++
++## Frontend integration
++
++Use actual UserAuthProvider, AdminAuthProvider, Login, ProtectedRoute and AdminProtectedRoute with MemoryRouter and controlled API-boundary responses. Avoid importing the entire dashboard tree: use observable route destination probes. Isolate Google SDK/animation boundaries without making provider or route authorization mocks.
++
++Cover password submit success and invalid-credentials feedback, SELLER and AGENT dashboard navigation, default BUYER navigation, explicit return destination, session restoration success/401, anonymous redirect to /login, wrong-role redirect to /, approved agent-family dashboard access and prevention of privileged listing access for pending/rejected agents. Preserve the exact allowedRoles matrix in App.jsx, including its existing buyer-dashboard allowances; do not redesign permissions.
++
++For admin UI, cover missing credential, forged admin_data with failed server verification, valid verification and failed verification redirects. Preserve existing logout success/failure tests. Cover consumer logout clearing local state as current behavior, without silently changing its network-failure behavior. Such changes require a separate auth behavior decision.
++
++## Acceptance and execution order
++
++1. Review this written design; write the implementation plan against its exact scope.
++2. Establish focused existing auth test baseline with no external calls; record actual results.
++3. Implement and negative-test the local runner guards before fixture writes. A guard refusal must fail the explicit integration command rather than produce a misleading green skip.
++4. Add API integration and frontend integration assertions. Existing behavior may pass immediately; do not change production code merely to force a red test. Any discovered auth behavior defect is reported separately before a fix.
++5. Run new suites twice with fresh test state; prove fixture cleanup. Run relevant backend/frontend regression suites and frontend lint/build after changes. CI runtime results remain distinct from local Node 24 results.
++6. Record commands, counts, failures, cleanup and limitations in a batch report. Phase 5 remains incomplete until each later flow is similarly validated.
++
++If Docker/local endpoint readiness prevents database execution, frontend work and safe runner guard tests can proceed, but mark real DB scenarios unverified. Do not substitute mocks and claim the DB batch passed.
++
++## PayHere sandbox authorization and later checkout scope
++
++Owner explicitly authorized PayHere sandbox payments using official sandbox Visa/Mastercard test details and the existing ngrok webhook. Browser read-only inspection confirmed https://sandbox.payhere.lk/merchant/payments displays Sandbox Mode. No payment was submitted.
++
++Reported tunnel: https://strep-reenact-rocket.ngrok-free.dev forwards to localhost:5000. Recheck tunnel reachability and its actual backend identity before use. Backend .env currently has a non-loopback Supabase URL; do not run sandbox checkout against that configuration. PayHere sandbox mode does not isolate database writes or receipt delivery.
++
++Checkout batch must first prove sandbox mode in the actual frontend/backend request, route the webhook to a checked isolated local backend/database, suppress email/delivery workers and use synthetic fixture orders. The user-authorized sandbox transaction scope permits sandbox submission after these checks; it does not authorize live payments, live DB writes, new dependencies/services or changing auth/payment behavior. Verify actual webhook acceptance and stored payment state, including duplicate/cancel/failure handling, in the later dedicated design. No deployment, real card details, messages or receipt delivery are authorized.
+diff --git a/frontend-react/src/pages/Login.integration.test.jsx b/frontend-react/src/pages/Login.integration.test.jsx
+new file mode 100644
+index 0000000..64469e2
+--- /dev/null
++++ b/frontend-react/src/pages/Login.integration.test.jsx
+@@ -0,0 +1,183 @@
++import React from 'react';
++import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
++import { MemoryRouter, Route, Routes } from 'react-router-dom';
++import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
++import { Toaster, toast } from 'react-hot-toast';
++import Login from './Login';
++import { UserAuthProvider, useAuth } from '../context/UserAuthContext';
++import ProtectedRoute from '../components/auth/ProtectedRoute';
++
++// Only the HTTP boundary is controlled: Login, provider and route guards are real.
++const api = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
++vi.mock('../context/api', () => ({ default: api }));
++vi.mock('@lottiefiles/react-lottie-player', () => ({ Player: () => null }));
++vi.mock('framer-motion', () => ({ m: { div: ({ children }) => <div>{children}</div> } }));
++
++const account = (role) => ({ id: `fixture-${role}`, name: 'Fixture user', email: 'login@example.test', role });
++const unauthorized = () => Object.assign(new Error('Not authenticated'), { response: { status: 401 } });
++
++function IdentityObserver() {
++  const { user } = useAuth();
++  return <output aria-label="Current identity">{user ? `${user.id}:${user.role}` : 'anonymous'}</output>;
++}
++
++function Destination({ name }) {
++  const { logout } = useAuth();
++  return <>
++    <h1>{name}</h1>
++    <button onClick={logout}>Sign out</button>
++  </>;
++}
++
++function show(entry = '/login') {
++  return render(<MemoryRouter initialEntries={[entry]}>
++    <UserAuthProvider>
++      <Toaster />
++      <IdentityObserver />
++      <Routes>
++        <Route path="/login" element={<Login />} />
++        <Route path="/" element={<Destination name="Home destination" />} />
++        <Route path="/seller-dashboard" element={<ProtectedRoute allowedRoles={['SELLER']}><Destination name="Seller destination" /></ProtectedRoute>} />
++        <Route path="/agent-dashboard" element={<ProtectedRoute allowedRoles={['AGENT', 'PENDING_AGENT', 'REJECTED_AGENT']}><Destination name="Agent destination" /></ProtectedRoute>} />
++        <Route path="/buyer-dashboard" element={<ProtectedRoute allowedRoles={['BUYER', 'USER', 'ADMIN', 'AGENT', 'SELLER']}><Destination name="Buyer destination" /></ProtectedRoute>} />
++        <Route path="/add-property" element={<ProtectedRoute allowedRoles={['SELLER', 'AGENT']}><Destination name="Listing destination" /></ProtectedRoute>} />
++        <Route path="/messages" element={<ProtectedRoute><Destination name="Messages destination" /></ProtectedRoute>} />
++      </Routes>
++    </UserAuthProvider>
++  </MemoryRouter>);
++}
++
++async function submitPassword() {
++  fireEvent.change(await screen.findByLabelText(/Email Address/), { target: { value: 'login@example.test' } });
++  fireEvent.change(screen.getByLabelText(/^Password/), { target: { value: 'FixturePassword123!' } });
++  const submit = screen.getByRole('button', { name: 'Sign In', exact: true });
++  await waitFor(() => expect(submit).toBeEnabled());
++  fireEvent.click(submit);
++}
++
++beforeEach(() => {
++  vi.resetAllMocks();
++  // jsdom lacks this browser API used by the real toast's reduced-motion check.
++  vi.stubGlobal('matchMedia', vi.fn((media) => ({
++    matches: false, media, onchange: null,
++    addEventListener: vi.fn(), removeEventListener: vi.fn(),
++    addListener: vi.fn(), removeListener: vi.fn(), dispatchEvent: vi.fn(),
++  })));
++  api.get.mockRejectedValue(unauthorized());
++  api.post.mockImplementation(async (path) => {
++    if (path === '/auth/logout') return { data: { message: 'Logged out successfully' } };
++    throw new Error(`Unexpected API request: ${path}`);
++  });
++  // Prevent Login from loading an external SDK; SDK behavior has its own tests.
++  window.google = { accounts: { id: { initialize: vi.fn(), renderButton: vi.fn() } } };
++});
++
++afterEach(() => {
++  cleanup();
++  toast.remove();
++  delete window.google;
++  vi.restoreAllMocks();
++  vi.unstubAllGlobals();
++});
++
++describe('Password login through the real auth provider and router', () => {
++  test.each([
++    ['BUYER', 'Home destination'],
++    ['SELLER', 'Seller destination'],
++    ['AGENT', 'Agent destination'],
++  ])('%s login exposes the authenticated identity at its destination', async (role, destination) => {
++    api.post.mockResolvedValueOnce({ data: { message: 'Login successful.', user: account(role) } });
++    show();
++    await submitPassword();
++    expect(await screen.findByRole('heading', { name: destination })).toBeInTheDocument();
++    expect(screen.getByLabelText('Current identity')).toHaveTextContent(`fixture-${role}:${role}`);
++    expect(api.post).toHaveBeenCalledWith('/auth/login', { email: 'login@example.test', password: 'FixturePassword123!' });
++  });
++
++  test('an explicit allowed return destination takes precedence over the default dashboard', async () => {
++    api.post.mockResolvedValueOnce({ data: { user: account('SELLER') } });
++    show({ pathname: '/login', state: { from: { pathname: '/messages' } } });
++    await submitPassword();
++    expect(await screen.findByRole('heading', { name: 'Messages destination' })).toBeInTheDocument();
++    expect(screen.getByLabelText('Current identity')).toHaveTextContent('fixture-SELLER:SELLER');
++  });
++
++  test('invalid credentials keep the login form visible and show server feedback', async () => {
++    const error = Object.assign(new Error('Invalid credentials'), { response: { status: 400, data: { message: 'Invalid email or password.' } } });
++    api.post.mockRejectedValueOnce(error);
++    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
++    show();
++    await submitPassword();
++    expect(await screen.findByText('Invalid email or password.')).toBeInTheDocument();
++    await waitFor(() => expect(screen.getByRole('button', { name: 'Sign In', exact: true })).toBeEnabled());
++    expect(screen.getByLabelText('Current identity')).toHaveTextContent('anonymous');
++    expect(consoleError).toHaveBeenCalledWith('Sign-in failed:', 'Invalid email or password.');
++  });
++});
++
++describe('Session restoration and actual role guard decisions', () => {
++  test('does not expose protected content while session restoration is pending', async () => {
++    let finish;
++    api.get.mockReturnValueOnce(new Promise(resolve => { finish = resolve; }));
++    show('/seller-dashboard');
++    expect(screen.queryByRole('heading', { name: 'Seller destination' })).not.toBeInTheDocument();
++    expect(screen.queryByLabelText(/Email Address/)).not.toBeInTheDocument();
++    await act(async () => finish({ data: { user: account('SELLER') } }));
++    expect(await screen.findByRole('heading', { name: 'Seller destination' })).toBeInTheDocument();
++    expect(api.get).toHaveBeenCalledWith('/auth/me');
++  });
++
++  test('an expired or absent session redirects a protected page to login', async () => {
++    show('/messages');
++    expect(await screen.findByLabelText(/Email Address/)).toBeInTheDocument();
++    expect(screen.queryByRole('heading', { name: 'Messages destination' })).not.toBeInTheDocument();
++  });
++
++  test('a restored buyer cannot enter the seller dashboard', async () => {
++    api.get.mockResolvedValueOnce({ data: { user: account('BUYER') } });
++    show('/seller-dashboard');
++    expect(await screen.findByRole('heading', { name: 'Home destination' })).toBeInTheDocument();
++    expect(screen.getByLabelText('Current identity')).toHaveTextContent('fixture-BUYER:BUYER');
++    expect(screen.queryByRole('heading', { name: 'Seller destination' })).not.toBeInTheDocument();
++  });
++
++  test.each(['AGENT', 'PENDING_AGENT', 'REJECTED_AGENT'])('%s can restore the agent dashboard', async (role) => {
++    api.get.mockResolvedValueOnce({ data: { user: account(role) } });
++    show('/agent-dashboard');
++    expect(await screen.findByRole('heading', { name: 'Agent destination' })).toBeInTheDocument();
++    expect(screen.getByLabelText('Current identity')).toHaveTextContent(`fixture-${role}:${role}`);
++  });
++
++  test.each(['PENDING_AGENT', 'REJECTED_AGENT', 'BUYER'])('%s cannot enter the listing form', async (role) => {
++    api.get.mockResolvedValueOnce({ data: { user: account(role) } });
++    show('/add-property');
++    expect(await screen.findByRole('heading', { name: 'Home destination' })).toBeInTheDocument();
++    expect(screen.queryByRole('heading', { name: 'Listing destination' })).not.toBeInTheDocument();
++  });
++
++  test.each(['SELLER', 'AGENT'])('%s can enter the listing form', async (role) => {
++    api.get.mockResolvedValueOnce({ data: { user: account(role) } });
++    show('/add-property');
++    expect(await screen.findByRole('heading', { name: 'Listing destination' })).toBeInTheDocument();
++  });
++
++  test.each(['BUYER', 'USER', 'ADMIN', 'AGENT', 'SELLER'])('preserves current buyer-dashboard allowance for %s', async (role) => {
++    api.get.mockResolvedValueOnce({ data: { user: account(role) } });
++    show('/buyer-dashboard');
++    expect(await screen.findByRole('heading', { name: 'Buyer destination' })).toBeInTheDocument();
++  });
++
++  test.each(['success', 'network failure'])('consumer logout clears local auth and guards the page after %s', async (outcome) => {
++    api.get.mockResolvedValueOnce({ data: { user: account('BUYER') } });
++    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
++    if (outcome === 'network failure') api.post.mockRejectedValueOnce(new Error('Network unavailable'));
++    show('/messages');
++    await screen.findByRole('heading', { name: 'Messages destination' });
++    fireEvent.click(screen.getByRole('button', { name: 'Sign out' }));
++    expect(await screen.findByLabelText(/Email Address/)).toBeInTheDocument();
++    expect(screen.getByLabelText('Current identity')).toHaveTextContent('anonymous');
++    expect(screen.queryByRole('heading', { name: 'Messages destination' })).not.toBeInTheDocument();
++    expect(api.post).toHaveBeenCalledWith('/auth/logout');
++    if (outcome === 'network failure') expect(consoleError).toHaveBeenCalledWith('Logout error:', 'Network unavailable');
++  });
++});
+diff --git a/frontend-react/src/pages/admin/context/AdminAuth.integration.test.jsx b/frontend-react/src/pages/admin/context/AdminAuth.integration.test.jsx
+new file mode 100644
+index 0000000..2596f4e
+--- /dev/null
++++ b/frontend-react/src/pages/admin/context/AdminAuth.integration.test.jsx
+@@ -0,0 +1,79 @@
++import React from 'react';
++import { act, cleanup, render, screen } from '@testing-library/react';
++import { MemoryRouter, Route, Routes } from 'react-router-dom';
++import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
++import { AdminAuthProvider, useAdminAuth } from './AdminAuthContext';
++import AdminProtectedRoute from '../components/AdminProtectedRoute';
++
++const api = vi.hoisted(() => ({ verifyAdminSession: vi.fn(), adminLogout: vi.fn() }));
++vi.mock('../api/adminApi', () => api);
++
++function AdminDestination() {
++  const { admin } = useAdminAuth();
++  return <><h1>Admin destination</h1><output aria-label="Verified admin">{admin.id}:{admin.role}</output></>;
++}
++
++function show() {
++  return render(<MemoryRouter initialEntries={['/admin/dashboard']}><Routes>
++    <Route element={<AdminAuthProvider />}>
++      <Route path="/admin/login" element={<h1>Admin login destination</h1>} />
++      <Route element={<AdminProtectedRoute />}>
++        <Route path="/admin/dashboard" element={<AdminDestination />} />
++      </Route>
++    </Route>
++  </Routes></MemoryRouter>);
++}
++
++beforeEach(() => {
++  vi.resetAllMocks();
++  localStorage.clear();
++  api.verifyAdminSession.mockRejectedValue(new Error('Invalid session'));
++});
++
++afterEach(() => { cleanup(); localStorage.clear(); vi.restoreAllMocks(); });
++
++describe('Admin provider and route guard integration', () => {
++  test('stored admin profile alone cannot grant access without a token', async () => {
++    localStorage.setItem('admin_data', JSON.stringify({ id: 'forged-admin', role: 'ADMIN' }));
++    show();
++    expect(await screen.findByRole('heading', { name: 'Admin login destination' })).toBeInTheDocument();
++    expect(screen.queryByRole('heading', { name: 'Admin destination' })).not.toBeInTheDocument();
++    expect(api.verifyAdminSession).not.toHaveBeenCalled();
++  });
++
++  test('forged token and profile are rejected when server verification fails', async () => {
++    localStorage.setItem('admin_token', 'forged-token');
++    localStorage.setItem('admin_data', JSON.stringify({ id: 'forged-admin', role: 'ADMIN' }));
++    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
++    show();
++    expect(await screen.findByRole('heading', { name: 'Admin login destination' })).toBeInTheDocument();
++    expect(localStorage.getItem('admin_token')).toBeNull();
++    expect(localStorage.getItem('admin_data')).toBeNull();
++    expect(screen.queryByLabelText('Verified admin')).not.toBeInTheDocument();
++    expect(consoleError).toHaveBeenCalledWith('Admin session verification failed:', 'Invalid session');
++  });
++
++  test('protected content waits for server verification and uses verified identity', async () => {
++    localStorage.setItem('admin_token', 'fixture-session');
++    localStorage.setItem('admin_data', JSON.stringify({ id: 'forged-admin', role: 'ADMIN' }));
++    let finish;
++    api.verifyAdminSession.mockReturnValueOnce(new Promise(resolve => { finish = resolve; }));
++    show();
++    expect(screen.getByText('Loading...')).toBeInTheDocument();
++    expect(screen.queryByLabelText('Verified admin')).not.toBeInTheDocument();
++    const verified = { id: 'server-admin', name: 'Verified admin', role: 'ADMIN' };
++    await act(async () => finish({ valid: true, admin: verified }));
++    expect(await screen.findByRole('heading', { name: 'Admin destination' })).toBeInTheDocument();
++    expect(screen.getByLabelText('Verified admin')).toHaveTextContent('server-admin:ADMIN');
++    expect(JSON.parse(localStorage.getItem('admin_data'))).toEqual(verified);
++  });
++
++  test('a negative verification response denies access even with saved admin data', async () => {
++    localStorage.setItem('admin_token', 'fixture-invalid-session');
++    localStorage.setItem('admin_data', JSON.stringify({ id: 'forged-admin', role: 'ADMIN' }));
++    api.verifyAdminSession.mockResolvedValueOnce({ valid: false });
++    show();
++    expect(await screen.findByRole('heading', { name: 'Admin login destination' })).toBeInTheDocument();
++    expect(screen.queryByLabelText('Verified admin')).not.toBeInTheDocument();
++  });
++});

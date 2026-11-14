@@ -20,6 +20,14 @@ const findById = async (id) => {
     return data;
 };
 
+const getAgentApplication = async (id) => {
+    const { data, error } = await supabase.from('agent_profiles')
+        .select('agency_name, license_number, rejection_reason')
+        .eq('agent_id', id).maybeSingle();
+    if (error) throw error;
+    return data;
+};
+
 const findFullUserById = async (id) => {
     const { data, error } = await supabase
         .from('users')
@@ -61,7 +69,7 @@ const uploadAvatar = async (fileName, buffer, mimeType) => {
         .from('avatars')
         .upload(fileName, buffer, {
             contentType: mimeType,
-            upsert: true
+            upsert: false
         });
     if (error) throw error;
     
@@ -69,6 +77,16 @@ const uploadAvatar = async (fileName, buffer, mimeType) => {
         .from('avatars')
         .getPublicUrl(fileName);
     return data.publicUrl;
+};
+
+// Compare-and-set prevents two simultaneous uses of the same reset link.
+const resetPasswordOnce = async (id, previousHash, passwordHash) => {
+    const { data, error } = await supabase.from('users')
+        .update({ password_hash: passwordHash })
+        .eq('id', id).eq('password_hash', previousHash)
+        .select('id').maybeSingle();
+    if (error) throw error;
+    return data;
 };
 
 const getAgentsForAI = async () => {
@@ -83,9 +101,11 @@ module.exports = {
     getAgentsForAI,
     findByEmail,
     findById,
+    getAgentApplication,
     findFullUserById,
     createUser,
     createAgentProfile,
     updateProfile,
+    resetPasswordOnce,
     uploadAvatar
 };

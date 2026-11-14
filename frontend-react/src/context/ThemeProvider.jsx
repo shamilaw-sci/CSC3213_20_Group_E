@@ -1,3 +1,4 @@
+import { logClientError } from '../utils/clientLog';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from './UserAuthContext';
 import api from './api';
@@ -57,7 +58,7 @@ export const ThemeProvider = ({ children }) => {
             try {
                 await api.put('/auth/profile', { theme_preference: newTheme }); // baseURL already includes /api
             } catch (error) {
-                (toast.error("Failed to save theme preference:"), console.error("Failed to save theme preference:", error));
+                (toast.error("Failed to save theme preference:"), logClientError('theme_preference_save_failed'));
             }
         }
     };

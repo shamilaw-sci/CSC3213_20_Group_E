@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../src/internal/database/migrations/transformers/index.ts"],
+  "sourcesContent": ["export * from './disable-concurrent-index-transformer'\nexport * from './transformer'\n"],
+  "mappings": ";;;;;;;;;;;;;;;AAAA;AAAA;AAAA,iCAAc,mDAAd;AACA,iCAAc,0BADd;",
+  "names": []
+}

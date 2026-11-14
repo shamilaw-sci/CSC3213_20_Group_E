@@ -1,0 +1,826 @@
+diff --git a/backend-node/repositories/adminRepository.js b/backend-node/repositories/adminRepository.js
+index a9c1eb5..bc4c140 100644
+--- a/backend-node/repositories/adminRepository.js
++++ b/backend-node/repositories/adminRepository.js
+@@ -1,4 +1,5 @@
+ const supabase = require('../config/supabase');
++const { cleanupPropertyImages } = require('../utils/propertyImageCleanup');
+ 
+ const adminRepository = {
+     // 1. Admin Login
+@@ -122,11 +123,13 @@ const adminRepository = {
+ 
+     // 8. Delete Listing
+     deleteListing: async (id) => {
+-        const { error } = await supabase
++        const { data, error } = await supabase
+             .from('properties')
+             .delete()
+-            .eq('id', id);
++            .eq('id', id)
++            .select('id,seller_id,images,virtual_tours');
+         if (error) throw error;
++        if (data?.length) await cleanupPropertyImages(supabase, data[0]);
+     },
+ 
+     // 9. Get Users
+diff --git a/backend-node/repositories/propertyRepository.js b/backend-node/repositories/propertyRepository.js
+index ca7aece..2b6ebd0 100644
+--- a/backend-node/repositories/propertyRepository.js
++++ b/backend-node/repositories/propertyRepository.js
+@@ -1,4 +1,5 @@
+ const supabase = require('../config/supabase');
++const { cleanupPropertyImages } = require('../utils/propertyImageCleanup');
+ 
+ const propertyRepository = {
+     // Shared: Get property by ID
+@@ -118,16 +119,15 @@ const propertyRepository = {
+ 
+     // 5. Delete My Property
+     deleteMyProperty: async (id, sellerId) => {
+-        const { data: prop, error: checkError } = await supabase
++        const { data, error } = await supabase
+             .from('properties')
+-            .select('id')
++            .delete()
+             .eq('id', id)
+             .eq('seller_id', sellerId)
+-            .single();
+-        if (checkError || !prop) return false; // Not found or unauthorized
+-
+-        const { error } = await supabase.from('properties').delete().eq('id', id);
++            .select('id,seller_id,images,virtual_tours');
+         if (error) throw error;
++        if (!data?.length) return false; // Not found or unauthorized
++        await cleanupPropertyImages(supabase, data[0]);
+         return true;
+     },
+ 
+diff --git a/backend-node/utils/propertyImageCleanup.js b/backend-node/utils/propertyImageCleanup.js
+new file mode 100644
+index 0000000..e2f1f58
+--- /dev/null
++++ b/backend-node/utils/propertyImageCleanup.js
+@@ -0,0 +1,84 @@
++const defaultLogger = require('./logger');
++const PUBLIC_PROPERTIES_PREFIX = '/storage/v1/object/public/properties/';
++const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
++
++function configuredOrigin(value) {
++    const url = new URL(value);
++    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.search || url.hash
++        || !['', '/'].includes(url.pathname)) throw new Error('Invalid configured Storage origin.');
++    return url.origin;
++}
++
++// Validate the original spelling before URL can normalize dot segments or backslashes.
++function managedPropertyPath(value, sellerId, supabaseUrl) {
++    if (typeof value !== 'string' || !UUID.test(sellerId) || /[\\\x00-\x20\x7f]/.test(value)) return null;
++    try {
++        const origin = configuredOrigin(supabaseUrl);
++        const rawPath = /^https?:\/\/[^/?#]+(\/[^?#]*)$/.exec(value)?.[1];
++        if (!rawPath?.startsWith(PUBLIC_PROPERTIES_PREFIX)) return null;
++        const url = new URL(value);
++        if (url.origin !== origin || url.username || url.password || url.search || url.hash) return null;
++        const parts = rawPath.slice(PUBLIC_PROPERTIES_PREFIX.length).split('/').map(part => decodeURIComponent(part));
++        if (parts.length < 2 || parts[0] !== sellerId || parts.some(part => !part || part === '.' || part === '..'
++            || /[\\/%\x00-\x1f\x7f]/.test(part))) return null;
++        return parts.join('/');
++    } catch { return null; }
++}
++
++function references(row) {
++    const values = [];
++    if (Array.isArray(row.images)) values.push(...row.images);
++    else if (row.images != null) values.push(row.images);
++    if (Array.isArray(row.virtual_tours)) values.push(...row.virtual_tours.map(tour => tour?.url));
++    else if (row.virtual_tours != null) values.push(undefined);
++    return values;
++}
++
++async function cleanupPropertyImages(client, listing, { supabaseUrl = process.env.SUPABASE_URL,
++    logger = defaultLogger, pageSize = 500 } = {}) {
++    const candidates = new Set();
++    let skippedReferenceCount = 0;
++    for (const value of references(listing)) {
++        const path = managedPropertyPath(value, listing.seller_id, supabaseUrl);
++        if (path) candidates.add(path);
++        else skippedReferenceCount++;
++    }
++    if (skippedReferenceCount) logger.warn('Property image cleanup skipped unmanaged references.', { event: 'property_image_cleanup_skipped_references',
++        listingId: listing.id, sellerId: listing.seller_id, skippedReferenceCount });
++    if (!candidates.size) return;
++
++    let stage = 'reference_lookup';
++    let managedPaths = [...candidates];
++    try {
++        if (!Number.isInteger(pageSize) || pageSize < 1) throw new Error('Invalid reference page size.');
++        const referenced = new Set();
++        let offset = 0;
++        // Continue until an empty page, including when the server caps pages below our requested size.
++        for (;;) {
++            const { data, error } = await client.from('properties').select('id,images,virtual_tours')
++                .order('id', { ascending: true }).range(offset, offset + pageSize - 1);
++            if (error || !Array.isArray(data)) throw new Error('Reference lookup failed.');
++            if (!data.length) break;
++            for (const row of data) {
++                for (const value of references(row)) {
++                    const path = managedPropertyPath(value, listing.seller_id, supabaseUrl);
++                    if (path && candidates.has(path)) referenced.add(path);
++                }
++            }
++            offset += data.length;
++        }
++        managedPaths = managedPaths.filter(path => !referenced.has(path));
++        if (!managedPaths.length) return;
++        stage = 'storage_remove';
++        const { error } = await client.storage.from('properties').remove(managedPaths);
++        if (error) throw new Error('Storage removal failed.');
++    } catch {
++        // DB deletion has committed. These exact managed paths support manual recovery; this is not a durable job.
++        logger.error('Property image cleanup requires recovery after database deletion.', { event: 'property_image_cleanup_recovery_required', stage,
++            listingId: listing.id, sellerId: listing.seller_id, managedPaths });
++        throw new Error('Listing image cleanup failed after database deletion.');
++    }
++}
++
++module.exports = { cleanupPropertyImages, managedPropertyPath };
++
+diff --git a/backend-node/tests/propertyImageCleanup.test.js b/backend-node/tests/propertyImageCleanup.test.js
+new file mode 100644
+index 0000000..96b3191
+--- /dev/null
++++ b/backend-node/tests/propertyImageCleanup.test.js
+@@ -0,0 +1,97 @@
++const { cleanupPropertyImages, managedPropertyPath } = require('../utils/propertyImageCleanup');
++const origin = 'https://local-project.supabase.co';
++const owner = '11111111-1111-4111-8111-111111111111';
++const other = '22222222-2222-4222-8222-222222222222';
++const path = `${owner}/photo.png`;
++const url = name => `${origin}/storage/v1/object/public/properties/${owner}/${name}`;
++const listing = extra => ({ id: '33333333-3333-4333-8333-333333333333', seller_id: owner, images: [url('photo.png')], virtual_tours: [], ...extra });
++function harness(pages = [[]]) {
++    const remove = jest.fn().mockResolvedValue({ data: [], error: null });
++    const range = jest.fn();
++    pages.forEach(data => range.mockResolvedValueOnce({ data, error: null }));
++    const order = jest.fn(() => ({ range }));
++    const select = jest.fn(() => ({ order }));
++    const storageFrom = jest.fn(() => ({ remove }));
++    const client = { from: jest.fn(() => ({ select })), storage: { from: storageFrom } };
++    const logger = { warn: jest.fn(), error: jest.fn() };
++    const clean = row => cleanupPropertyImages(client, row, { supabaseUrl: origin, logger, pageSize: 2 });
++    return { client, remove, range, order, select, logger, clean };
++}
++
++test('accepts only exact configured public properties owner paths', () => {
++    expect(managedPropertyPath(url('photo.png'), owner, origin)).toBe(path);
++    expect(managedPropertyPath(url('room%20one.png'), owner, origin)).toBe(`${owner}/room one.png`);
++});
++test.each([
++    'https://foreign.example/storage/v1/object/public/properties/OWNER/photo.png',
++    `${origin}/storage/v1/object/public/properties/${other}/photo.png`,
++    `${origin}/storage/v1/object/sign/properties/OWNER/photo.png?token=credential`,
++    `${origin}/storage/v1/object/public/other/OWNER/photo.png`,
++    `https://credential@local-project.supabase.co/storage/v1/object/public/properties/OWNER/photo.png`,
++    `${origin}/storage/v1/object/public/properties/OWNER/../photo.png`,
++    `${origin}/storage/v1/object/public/properties/OWNER/%2e%2e/photo.png`,
++    `${origin}/storage/v1/object/public/properties/OWNER/%252e%252e/photo.png`,
++    `${origin}/storage/v1/object/public/properties/OWNER/a%2f..%2fphoto.png`,
++    `${origin}/storage/v1/object/public/properties/OWNER/a%5cphoto.png`,
++    `${origin}/storage/v1/object/public/properties/OWNER/%zz.png`,
++    `${origin}/storage/v1/object/public/properties/OWNER/%00.png`,
++    `${origin}/storage/v1/object/public/properties/OWNER/photo.png?token=secret`,
++    `${origin}/storage/v1/object/public/properties/OWNER/photo.png#fragment`,
++    'not-a-url', null, {},
++])('rejects unmanaged or malformed path %j', value => {
++    expect(managedPropertyPath(typeof value === 'string' ? value.replaceAll('OWNER', owner) : value, owner, origin)).toBeNull();
++});
++test('rejects malformed owner and configured credentials', () => {
++    expect(managedPropertyPath(url('photo.png'), 'wrong', origin)).toBeNull();
++    expect(managedPropertyPath(url('photo.png'), owner, 'https://user@local-project.supabase.co')).toBeNull();
++});
++test('empty and unmanaged-only records do not query or remove', async () => {
++    const h = harness();
++    await h.clean(listing({ images: [], virtual_tours: null }));
++    await h.clean(listing({ images: ['https://foreign.example/private?secret=x'], virtual_tours: [{ url: 42 }] }));
++    expect(h.client.from).not.toHaveBeenCalled(); expect(h.remove).not.toHaveBeenCalled();
++    expect(h.logger.warn).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ skippedReferenceCount: 2 }));
++    expect(JSON.stringify(h.logger.warn.mock.calls)).not.toContain('secret');
++});
++test('deduplicates photos and tours and awaits removal', async () => {
++    const h = harness();
++    let finish;
++    h.remove.mockImplementation(() => new Promise(resolve => { finish = resolve; }));
++    let completed = false;
++    const pending = h.clean(listing({ images: [url('photo.png'), url('photo.png')], virtual_tours: [{ url: url('tour.png') }, { url: url('photo.png') }] })).then(() => { completed = true; });
++    await new Promise(resolve => setImmediate(resolve));
++    expect(completed).toBe(false);
++    expect(h.remove).toHaveBeenCalledWith([path, `${owner}/tour.png`]);
++    finish({ error: null }); await pending; expect(completed).toBe(true);
++});
++test('scans every deterministic page even when a server returns fewer rows than requested', async () => {
++    const h = harness([[{ id: 'a', images: [], virtual_tours: [] }],
++        [{ id: 'b', images: [], virtual_tours: [{ url: url('photo.png') }] }], []]);
++    await h.clean(listing({ images: [url('photo.png'), url('unshared.png')] }));
++    expect(h.range.mock.calls).toEqual([[0, 1], [1, 2], [2, 3]]);
++    expect(h.order).toHaveBeenCalledWith('id', { ascending: true });
++    expect(h.remove).toHaveBeenCalledWith([`${owner}/unshared.png`]);
++});
++test('preserves all paths when a remaining listing still references them', async () => {
++    const h = harness([[{ images: [url('photo.png')] }], []]);
++    await h.clean(listing()); expect(h.remove).not.toHaveBeenCalled();
++});
++test.each(['lookup', 'remove', 'throw'])('fails with safe structured recovery after %s failure', async stage => {
++    const h = harness();
++    const error = { message: 'upstream credential must not be logged' };
++    if (stage === 'lookup') h.range.mockReset().mockResolvedValue({ error });
++    else if (stage === 'remove') h.remove.mockResolvedValue({ error });
++    else h.remove.mockRejectedValue(error);
++    await expect(h.clean(listing())).rejects.toThrow(/image cleanup failed/i);
++    if (stage === 'lookup') expect(h.remove).not.toHaveBeenCalled();
++    expect(h.logger.error).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({
++        event: 'property_image_cleanup_recovery_required', listingId: listing().id, sellerId: owner, managedPaths: [path],
++    }));
++    expect(JSON.stringify(h.logger.error.mock.calls)).not.toContain('credential');
++});
++test.each([null, {}, 'not rows'])('fails closed on nonarray reference success %j', async data => {
++    const h = harness();
++    h.range.mockReset().mockResolvedValue({ data, error: null });
++    await expect(h.clean(listing())).rejects.toThrow(/image cleanup failed/i);
++    expect(h.remove).not.toHaveBeenCalled();
++});
+diff --git a/backend-node/tests/listingDeletionCleanup.test.js b/backend-node/tests/listingDeletionCleanup.test.js
+new file mode 100644
+index 0000000..6df57e2
+--- /dev/null
++++ b/backend-node/tests/listingDeletionCleanup.test.js
+@@ -0,0 +1,49 @@
++jest.mock('../config/supabase', () => ({ from: jest.fn() }));
++jest.mock('../utils/propertyImageCleanup', () => ({ cleanupPropertyImages: jest.fn() }), { virtual: true });
++const supabase = require('../config/supabase');
++const { cleanupPropertyImages } = require('../utils/propertyImageCleanup');
++const seller = require('../repositories/propertyRepository');
++const admin = require('../repositories/adminRepository');
++const row = { id: 'listing', seller_id: 'owner', images: ['managed-photo'], virtual_tours: [{ url: 'managed-tour' }] };
++let query;
++beforeEach(() => {
++    jest.clearAllMocks();
++    query = { delete: jest.fn().mockReturnThis(), eq: jest.fn().mockReturnThis(),
++        select: jest.fn().mockResolvedValue({ data: [row], error: null }) };
++    supabase.from.mockReturnValue(query);
++    cleanupPropertyImages.mockResolvedValue(undefined);
++});
++const cases = [
++    ['seller', () => seller.deleteMyProperty('listing', 'owner'), true],
++    ['admin', () => admin.deleteListing('listing'), undefined],
++];
++test.each(cases)('%s atomically deletes then awaits cleanup with deleted metadata', async (kind, remove, result) => {
++    let finish;
++    cleanupPropertyImages.mockImplementation(() => new Promise(resolve => { finish = resolve; }));
++    let completed = false;
++    const pending = remove().then(value => { completed = true; return value; });
++    await new Promise(resolve => setImmediate(resolve));
++    expect(query.delete).toHaveBeenCalledTimes(1);
++    expect(query.select).toHaveBeenCalledWith('id,seller_id,images,virtual_tours');
++    expect(query.eq.mock.calls).toEqual(kind === 'seller' ? [['id', 'listing'], ['seller_id', 'owner']] : [['id', 'listing']]);
++    expect(cleanupPropertyImages).toHaveBeenCalledWith(supabase, row);
++    expect(query.select.mock.invocationCallOrder[0]).toBeLessThan(cleanupPropertyImages.mock.invocationCallOrder[0]);
++    expect(completed).toBe(false);
++    finish(); expect(await pending).toBe(result);
++});
++test.each(cases)('%s missing row retains its existing result and never cleans files', async (kind, remove) => {
++    query.select.mockResolvedValue({ data: [], error: null });
++    expect(await remove()).toBe(kind === 'seller' ? false : undefined);
++    expect(cleanupPropertyImages).not.toHaveBeenCalled();
++});
++test.each(cases)('%s DB failure never removes files', async (_kind, remove) => {
++    const failure = new Error('foreign key failure');
++    query.select.mockResolvedValue({ data: null, error: failure });
++    await expect(remove()).rejects.toBe(failure);
++    expect(cleanupPropertyImages).not.toHaveBeenCalled();
++});
++test.each(cases)('%s cleanup failure cannot return success', async (_kind, remove) => {
++    const failure = new Error('Storage unavailable after DB deletion');
++    cleanupPropertyImages.mockRejectedValue(failure);
++    await expect(remove()).rejects.toBe(failure);
++});
+diff --git a/backend-node/integration/storage.integration.cjs b/backend-node/integration/storage.integration.cjs
+new file mode 100644
+index 0000000..c8d91fc
+--- /dev/null
++++ b/backend-node/integration/storage.integration.cjs
+@@ -0,0 +1,257 @@
++const { randomUUID, createHash } = require('node:crypto');
++const { setTimeout: delay } = require('node:timers/promises');
++const request = require('supertest');
++const bcrypt = require('bcryptjs');
++const { Client } = require('pg');
++const { identitySql, validateDatabase } = require('./local-stack.cjs');
++const { allowedAppPorts } = require('./network-policy.cjs');
++const { fileManifest } = require('./storage-state.cjs');
++const { injectSecondUploadFailure, clearStorageFault, observeSuccessfulUploads,
++    clearUploadObserver, storageFaultEvidence } = require('./storage-network.cjs');
++const storage = require('../config/supabase').storage.from('properties');
++const app = require('../server');
++const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a6CkAAAAASUVORK5CYII=', 'base64');
++const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
++const run = randomUUID(), password = 'Storage-fixture-only-123!';
++const roles = ['SELLER', 'AGENT', 'BUYER', 'ADMIN', 'OTHER_SELLER'];
++const users = Object.fromEntries(roles.map(key => [key, { id: randomUUID(), role: key === 'OTHER_SELLER' ? 'SELLER' : key,
++    email: `${run}-${key.toLowerCase()}@example.test` }]));
++const ids = Object.values(users).map(user => user.id), sessions = {};
++const db = new Client(JSON.parse(process.env.PHASE5_DATABASE));
++let connected = false, server, port;
++const call = (role, method, path) => {
++    const req = request(server)[method](path);
++    return role ? req.set('Cookie', sessions[role]) : req;
++};
++const payload = extra => ({ type: 'House', title: `Storage ${run}`, description: 'Isolated synthetic image test property.',
++    price: '1000000', latitude: '7', longitude: '80', ...extra });
++const upload = (role, { fields = {}, photos = 1, tour = false } = {}) => {
++    let req = call(role, 'post', '/api/properties');
++    for (const [key, value] of Object.entries(payload(fields))) req = req.field(key, value);
++    for (let n = 0; n < photos; n++) req = req.attach('images', png, { filename: `fixture-${n}.png`, contentType: 'image/png' });
++    if (tour) req = req.field('virtualTourMetadata', JSON.stringify([{ room: 'Bedroom' }]))
++        .attach('virtualTours', png, { filename: 'panorama.png', contentType: 'image/png' });
++    return req;
++};
++const objects = async () => (await db.query("SELECT name,metadata FROM storage.objects WHERE bucket_id='properties' AND split_part(name,'/',1)=ANY($1::text[]) ORDER BY name", [ids])).rows;
++const names = async () => (await objects()).map(object => object.name);
++const rows = async () => (await db.query('SELECT id FROM public.properties WHERE seller_id=ANY($1::uuid[]) ORDER BY id', [ids])).rows.map(row => row.id);
++const files = () => fileManifest(process.env.PHASE5_STORAGE_CONTAINER).filter(file => file.path.split('/').some(part => ids.includes(part)));
++async function eventually(check, timeout = 8000) {
++    const deadline = Date.now() + timeout;
++    do { if (await check()) return true; await delay(150); } while (Date.now() < deadline);
++    return false;
++}
++const pathFromUrl = value => {
++    const url = new URL(value);
++    expect(url.origin).toBe('http://127.0.0.1:58321');
++    const prefix = '/storage/v1/object/public/properties/';
++    expect(url.pathname.startsWith(prefix)).toBe(true);
++    const path = decodeURIComponent(url.pathname.slice(prefix.length));
++    expect(ids).toContain(path.split('/')[0]);
++    return path;
++};
++async function verifyImage(url, owner) {
++    const path = pathFromUrl(url);
++    expect(path.split('/')[0]).toBe(users[owner].id);
++    const metadata = (await objects()).find(object => object.name === path)?.metadata;
++    expect(metadata).toMatchObject({ mimetype: 'image/png', size: png.length });
++    // Public bucket: prove bytes via unauthenticated public transport, not a private-file rule.
++    const response = await fetch(url);
++    expect(response.status).toBe(200);
++    expect(response.headers.get('content-type')).toMatch(/^image\/png/);
++    expect(sha256(Buffer.from(await response.arrayBuffer()))).toBe(sha256(png));
++    expect(files().some(file => file.path.split('/').includes(users[owner].id) && file.sha256 === sha256(png))).toBe(true);
++    return path;
++}
++function proveSuccessfulUpload(role, evidence) {
++    observeSuccessfulUploads(users[role].id, async transfer => {
++        expect(transfer.owner).toBe(users[role].id);
++        expect(transfer.path.startsWith(`${users[role].id}/`)).toBe(true);
++        const stored = await db.query("SELECT name,metadata FROM storage.objects WHERE bucket_id='properties' AND name=$1", [transfer.path]);
++        expect(stored.rows).toHaveLength(1);
++        expect(stored.rows[0].metadata).toMatchObject({ mimetype: 'image/png', size: png.length });
++        const physical = files().filter(file => file.path.includes(`/properties/${transfer.path}/`)
++            || file.path.endsWith(`/properties/${transfer.path}`));
++        expect(physical.some(file => file.sha256 === sha256(png) && file.size === png.length)).toBe(true);
++        evidence.push(transfer);
++    });
++}
++
++beforeAll(async () => {
++    server = await new Promise((resolve, reject) => { const listener = app.listen(0, '127.0.0.1', () => resolve(listener)); listener.once('error', reject); });
++    port = server.address().port;
++    allowedAppPorts.add(port);
++    await db.connect(); connected = true;
++    validateDatabase((await db.query(identitySql)).rows[0]);
++    const hash = await bcrypt.hash(password, 10);
++    for (const [key, user] of Object.entries(users)) {
++        await db.query('INSERT INTO public.users(id,name,email,password_hash,role) VALUES($1,$2,$3,$4,$5)',
++            [user.id, `Storage ${key}`, user.email, hash, user.role]);
++        const response = await request(server).post(key === 'ADMIN' ? '/api/admin/login' : '/api/auth/login').send({ email: user.email, password });
++        expect(response.status).toBe(200);
++        sessions[key] = response.headers['set-cookie'][0].split(';')[0];
++    }
++});
++
++afterAll(async () => {
++    clearStorageFault();
++    clearUploadObserver();
++    try {
++        if (connected) {
++            validateDatabase((await db.query(identitySql)).rows[0]);
++            const paths = await names();
++            if (paths.length) { const removed = await storage.remove(paths); if (removed.error) throw new Error('Exact Storage fixture cleanup failed.'); }
++            expect(await eventually(async () => (await names()).length === 0 && files().length === 0)).toBe(true);
++            await db.query('DELETE FROM public.properties WHERE seller_id=ANY($1::uuid[])', [ids]);
++            expect(await rows()).toEqual([]);
++            await db.query('DELETE FROM public.users WHERE id=ANY($1::uuid[]) AND email=ANY($2::text[])', [ids, Object.values(users).map(user => user.email)]);
++            expect((await db.query('SELECT id FROM public.users WHERE id=ANY($1::uuid[])', [ids])).rows).toEqual([]);
++            console.log('Storage fixture cleanup verified: actual Storage API removed exact owned objects/files before own properties/users.');
++        }
++    } finally {
++        try { await db.end(); }
++        finally { try { if (server?.listening) await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve())); }
++            finally { allowedAppPorts.delete(port); } }
++    }
++});
++
++describe('Real local image/Storage integration', () => {
++    test.each(['SELLER', 'AGENT'])('%s image creation persists URL, metadata and exact public bytes', async role => {
++        const response = await upload(role);
++        expect(response.status).toBe(201);
++        expect(response.body.property).toMatchObject({ seller_id: users[role].id, status: 'pending', payment_status: 'Unpaid' });
++        expect(response.body.property.images).toHaveLength(1);
++        await verifyImage(response.body.property.images[0], role);
++    });
++
++    test('multiple real photos and tour preserve URL/room associations', async () => {
++        const response = await upload('SELLER', { photos: 2, tour: true });
++        expect(response.status).toBe(201);
++        expect(response.body.property.images).toHaveLength(2);
++        expect(response.body.property.virtual_tours).toHaveLength(1);
++        expect(response.body.property.virtual_tours[0].room).toBe('Bedroom');
++        const urls = [...response.body.property.images, response.body.property.virtual_tours[0].url];
++        expect(new Set(urls).size).toBe(3);
++        for (const url of urls) await verifyImage(url, 'SELLER');
++        const persisted = (await db.query('SELECT images,virtual_tours FROM public.properties WHERE id=$1', [response.body.property.id])).rows[0];
++        expect(persisted).toMatchObject({ images: response.body.property.images, virtual_tours: response.body.property.virtual_tours });
++    });
++
++    test.each(['MIME', 'size', 'field', 'count'])('%s rejection leaves no new listing/object/file', async kind => {
++        const beforeNames = await names(), beforeRows = await rows(), beforeFiles = files();
++        let req = call('SELLER', 'post', '/api/properties');
++        for (const [key, value] of Object.entries(payload())) req = req.field(key, value);
++        if (kind === 'MIME') req = req.attach('images', Buffer.from('reject'), { filename: 'bad.pdf', contentType: 'application/pdf' });
++        else if (kind === 'size') req = req.attach('images', Buffer.alloc(5 * 1024 * 1024 + 1), { filename: 'large.png', contentType: 'image/png' });
++        else if (kind === 'field') req = req.attach('unexpected', png, { filename: 'wrong.png', contentType: 'image/png' });
++        else { for (let n = 0; n < 8; n++) req = req.attach('images', png, { filename: `${n}.png`, contentType: 'image/png' });
++            for (let n = 0; n < 3; n++) req = req.attach('virtualTours', png, { filename: `tour-${n}.png`, contentType: 'image/png' }); }
++        const response = await req;
++        expect(response.status).toBe(400);
++        expect(response.body.message).toMatch(kind === 'MIME' ? /Invalid file type/ : kind === 'size' ? /too large/ : kind === 'field' ? /Unexpected upload field/ : /Too many files/);
++        expect(await names()).toEqual(beforeNames); expect(await rows()).toEqual(beforeRows); expect(files()).toEqual(beforeFiles);
++    });
++
++    test('actual DB failure after upload rolls back stored objects and persisted bytes', async () => {
++        const beforeNames = await names(), beforeRows = await rows(), beforeFiles = files();
++        const evidence = [];
++        const errors = jest.spyOn(console, 'error');
++        proveSuccessfulUpload('SELLER', evidence);
++        try {
++            const response = await upload('SELLER', { fields: { houseSize: 'invalid-numeric-fixture' } });
++            expect(response.status).toBe(500);
++            expect(evidence).toHaveLength(1);
++            expect(errors.mock.calls.some(args => args.some(value => typeof value === 'string'
++                && /invalid input syntax for type numeric/.test(value) && value.includes('invalid-numeric-fixture')))).toBe(true);
++            expect(await rows()).toEqual(beforeRows);
++            expect(await eventually(async () => JSON.stringify(await names()) === JSON.stringify(beforeNames) && JSON.stringify(files()) === JSON.stringify(beforeFiles))).toBe(true);
++        } finally { clearUploadObserver(); clearStorageFault(); errors.mockRestore(); }
++    });
++
++    test('controlled second transfer failure rolls back the completed first real transfer', async () => {
++        const beforeNames = await names(), beforeRows = await rows(), beforeFiles = files();
++        const evidence = [];
++        proveSuccessfulUpload('AGENT', evidence);
++        injectSecondUploadFailure(users.AGENT.id);
++        try {
++            const response = await upload('AGENT', { photos: 2 });
++            expect(response.status).toBe(500);
++            expect(evidence).toHaveLength(1);
++            const fault = storageFaultEvidence();
++            expect(fault).toMatchObject({ owner: users.AGENT.id, attempts: 2, firstSucceeded: true, firstPath: evidence[0].path });
++            expect(fault.injectedPaths).toHaveLength(1);
++            expect(fault.injectedPaths[0].startsWith(`${users.AGENT.id}/`)).toBe(true);
++            expect(fault.injectedPaths[0]).not.toBe(evidence[0].path);
++            expect(await rows()).toEqual(beforeRows);
++            expect(await eventually(async () => JSON.stringify(await names()) === JSON.stringify(beforeNames) && JSON.stringify(files()) === JSON.stringify(beforeFiles))).toBe(true);
++        } finally { clearStorageFault(); clearUploadObserver(); }
++    });
++
++    test('anonymous/wrong-role uploads and foreign-owner delete preserve other objects', async () => {
++        const response = await upload('SELLER'); expect(response.status).toBe(201);
++        const id = response.body.property.id, beforeNames = await names(), beforeFiles = files();
++        for (const role of [null, 'BUYER', 'ADMIN']) expect((await upload(role)).status).toBe(role ? 403 : 401);
++        expect((await call('OTHER_SELLER', 'delete', `/api/properties/my-listings/${id}`)).status).toBe(404);
++        expect(await names()).toEqual(beforeNames); expect(files()).toEqual(beforeFiles);
++        expect((await db.query('SELECT id FROM public.properties WHERE id=$1', [id])).rows).toHaveLength(1);
++    });
++
++    test.each(['SELLER', 'ADMIN'])('%s listing deletion also removes its image objects and bytes', async role => {
++        const response = await upload('SELLER', { photos: 2, tour: true }); expect(response.status).toBe(201);
++        const urls = [...response.body.property.images, ...response.body.property.virtual_tours.map(tour => tour.url)];
++        const id = response.body.property.id, targets = urls.map(pathFromUrl);
++        const deleted = await call(role, 'delete', role === 'ADMIN' ? `/api/admin/listings/${id}` : `/api/properties/my-listings/${id}`);
++        expect(deleted.status).toBe(200);
++        expect((await db.query('SELECT id FROM public.properties WHERE id=$1', [id])).rows).toEqual([]);
++        const removed = await eventually(async () => !(await names()).some(name => targets.includes(name)), 3000);
++        const remainingFiles = files().filter(file => targets.some(path => file.path.includes(`/properties/${path}/`) || file.path.endsWith(`/properties/${path}`)));
++        const publicStatuses = [];
++        for (const url of urls) publicStatuses.push((await fetch(url)).status);
++        console.log(`Observed ${role} delete: remaining target objects=${(await names()).filter(name => targets.includes(name)).length}, files=${remainingFiles.length}, public GET=${publicStatuses.join(',')}.`);
++        expect(removed).toBe(true);
++        expect(publicStatuses.every(status => [400, 404].includes(status))).toBe(true);
++        expect(files().filter(file => targets.some(path => file.path.includes(`/properties/${path}/`) || file.path.endsWith(`/properties/${path}`)))).toEqual([]);
++    });
++
++    test('shared managed files remain until the last same-owner listing reference is deleted', async () => {
++        const response = await upload('SELLER', { tour: true }); expect(response.status).toBe(201);
++        const original = response.body.property, sharedId = randomUUID();
++        const urls = [...original.images, ...original.virtual_tours.map(tour => tour.url)], targets = urls.map(pathFromUrl);
++        await db.query(`INSERT INTO public.properties(id,seller_id,title,description,price,status,payment_status,images,virtual_tours)
++            VALUES($1,$2,$3,$4,1000000,'pending','Unpaid',$5,$6::jsonb)`,
++        [sharedId, users.SELLER.id, `Shared ${run}`, 'Synthetic legacy shared-reference fixture.', original.images, JSON.stringify(original.virtual_tours)]);
++        const beforeFiles = files();
++        expect((await call('SELLER', 'delete', `/api/properties/my-listings/${original.id}`)).status).toBe(200);
++        expect((await db.query('SELECT id FROM public.properties WHERE id=$1', [original.id])).rows).toEqual([]);
++        for (const target of targets) expect(await names()).toContain(target);
++        expect(files()).toEqual(beforeFiles);
++        for (const url of urls) expect((await fetch(url)).status).toBe(200);
++        expect((await call('SELLER', 'delete', `/api/properties/my-listings/${sharedId}`)).status).toBe(200);
++        expect(await eventually(async () => !(await names()).some(name => targets.includes(name)))).toBe(true);
++        for (const url of urls) expect([400, 404]).toContain((await fetch(url)).status);
++        expect(files().filter(file => targets.some(path => file.path.includes(`/properties/${path}/`) || file.path.endsWith(`/properties/${path}`)))).toEqual([]);
++    });
++
++    test.each(['SELLER', 'ADMIN'])('%s DB foreign-key delete failure preserves the listing and its real images', async role => {
++        const response = await upload('SELLER', { tour: true }); expect(response.status).toBe(201);
++        const property = response.body.property, orderId = randomUUID();
++        const beforeFiles = files(), beforeNames = await names();
++        const errors = jest.spyOn(console, 'error');
++        try {
++            // Disposable database constraint fixture only: no payment/hash/webhook endpoint is invoked.
++            await db.query(`INSERT INTO public.payment_orders(id,property_id,owner_id,amount,currency,mode,merchant_id,status)
++                VALUES($1,$2,$3,1,'LKR','sandbox','isolated-fixture-only','pending')`, [orderId, property.id, users.SELLER.id]);
++            const denied = await call(role, 'delete', role === 'ADMIN' ? `/api/admin/listings/${property.id}` : `/api/properties/my-listings/${property.id}`);
++            expect(denied.status).toBe(500);
++            expect(errors.mock.calls.some(args => args.some(value => typeof value === 'string' && value.includes('payment_orders_property_id_fkey')))).toBe(true);
++            const stored = (await db.query('SELECT id,images,virtual_tours FROM public.properties WHERE id=$1', [property.id])).rows;
++            expect(stored).toEqual([{ id: property.id, images: property.images, virtual_tours: property.virtual_tours }]);
++            expect(await names()).toEqual(beforeNames); expect(files()).toEqual(beforeFiles);
++            for (const url of [...property.images, ...property.virtual_tours.map(tour => tour.url)]) expect((await fetch(url)).status).toBe(200);
++        } finally {
++            errors.mockRestore();
++            await db.query('DELETE FROM public.payment_orders WHERE id=$1 AND owner_id=$2 AND property_id=$3', [orderId, users.SELLER.id, property.id]);
++        }
++    });
++});
+diff --git a/docs/phase5-listings-storage.md b/docs/phase5-listings-storage.md
+new file mode 100644
+index 0000000..47a7495
+--- /dev/null
++++ b/docs/phase5-listings-storage.md
+@@ -0,0 +1,91 @@
++# Phase 5 checkpoint: Listings 2B — real Storage and deletion cleanup
++
++Date: 2026-10-30 (Asia/Colombo). Baseline: version-3.0, 8625cbbbc2c109956cbe7485e6e88ca0bc130da3, with preceding uncommitted Phase5 test batches retained.
++
++## Status
++
++The original diagnostic checkpoint reproduced a defect: SELLER and ADMIN listing deletion each returned HTTP200 and removed the property row, but retained its image object/physical file and public GET200. The owner subsequently approved the bounded Option A production fix. The original failing assertions were preserved, extended to photos/tours, and now pass in two fresh real Storage runs. Accepted crash/recovery/concurrency limits remain explicit below; overall Phase5 is not complete.
++
++Only the two delete repositories and new shared propertyImageCleanup helper changed in production, after separate owner approval. Dependencies, application .env, schema migrations, workers, live data and payments are unchanged. No commit/push/staging. The approved bounded design is `superpowers/specs/2026-10-30-listing-image-cleanup-fix-design.md`.
++
++## Approved fix and green real runs
++
++Seller DELETE retains both listing and seller predicates and returns deleted metadata in that same DB operation. Admin DELETE also returns metadata, retaining its missing-row contract. Both await the shared helper after DB success. The helper validates configured-origin properties-bucket paths owned by the deleted seller, deduplicates photos/tours, scans all remaining-reference pages until empty and preserves still-referenced files. Unmanaged URLs are skipped/count-logged; lookup/nonarray or Storage errors fail closed, log validated recovery paths and throw rather than report clean success. DB errors never initiate file cleanup.
++
++New focused tests first went red on the missing helper/old repository behavior, then 37/37 passed after implementation. Task review approved the production/helper/reference/path/error-handling changes. Real acceptance adds a legacy same-owner shared-reference case and seller/admin synthetic payment_order FK-restriction cases; those local DB records do not invoke any payment endpoint.
++
++| Option A real verification | Result |
++| --- | --- |
++| Fresh green run1 | 15/15 pass;17.057s Jest total |
++| Fresh green run2 | 15/15 pass;17.024s Jest total |
++| Seller/admin photos+tours deletion, each | Target objects0/files0;all three public image/tour URLs return400 (no bytes) |
++| Shared reference | Files/public bytes preserved after first row deletion;removed only after last same-owner reference deletion |
++| DB foreign-key refusal, seller/admin | Existing500 error;row/images/tours/object names/physical bytes unchanged |
++| Both green runs | Full native Storage schema/metadata/file manifest,five app tables and canonical ledger preserved |
++| Focused helper/repository tests | 2 suites,37/37 pass after observed red tests |
++| Login/roles after production fix | 32/32 pass;4.688s;users/ledger preserved |
++| Listings2A after production fix | 32/32 pass;4.924s;five app tables/ledger preserved |
++| Full backend after production fix | 35 suites,396/396 pass |
++
++Storage removal/reference lookup can still fail after the DB row is committed, and a crash in that gap can retain an orphan. Structured recovery logs are not a durable outbox; client retry may find the row already removed. The paginated shared-reference scan is not a transactional concurrency guarantee. No live historical orphans were cleaned. These are accepted limits of Option A, not solved resilience claims.
++
++## Evidence
++
++Run from backend-node: `node integration/run-storage.cjs`. The historical diagnostic results below preceded the owner-approved production fix. Three diagnostic runs reproduced the same failures; the final diagnostic run includes strengthened rollback proof and physical/public-file evidence. The green results above supersede the two failing cases without erasing that red evidence.
++
++| Check | Result |
++| --- | --- |
++| Storage readiness/preflight | Exact local identity and read-only bucket/schema/metadata/file state pass |
++| Initial real Storage run | 10 pass,2 deletion failures;18.448s Jest total |
++| Repeat with physical/public-byte observations | 10 pass,2 same failures;18.704s |
++| Final run with strengthened rollback proof | 10 pass,2 same failures;20.102s |
++| Seller/admin deletion observation, each | DB row absent;target object1,physical file1,public GET200 |
++| Each run's independent fixture cleanup | Actual Storage API removed exact owned objects/files; app and Storage full-state preservation pass |
++| Pure new Storage guard/state/transport tests | 63 pass (44 identity,6 state,13 transport), also included in full backend run |
++| Rendered AddProperty wizard | 8/8 twice;5.54s,4.44s;focused ESLint0 |
++| Login/roles after shared setup change | 32/32 pass;4.670s;users/ledger preserved |
++| Listings2A after shared setup change | 32/32 pass;5.169s;five app tables/ledger preserved |
++| Full default backend | 33 suites,359/359 pass |
++| Full frontend | 23 files,95/95 pass |
++| Frontend lint/build | Both exit0;build chunk-size/Lottie direct-eval warnings remain visible |
++| Direct Storage Jest config without launcher | Expected exit1 before tests/writes: Verified integration launcher required |
++
++Default backend tests intentionally exclude explicit `.integration.cjs` suites; default359/359 is not a green result for Storage2B. No CI was run for these uncommitted changes. Local runtime remains Node24.14.1/npm11.11.0; CI remains Node20.
++
++Ten passing real cases cover SELLER/AGENT upload with persisted URLs, PNG MIME/size/downloaded SHA256 and actual volume bytes; multiple photos/tour label mapping; invalid MIME/oversize/unexpected-field/combined-count rejection without residues; actual PostgreSQL insert failure after upload; controlled second-transfer failure after completed first upload; anonymous/wrong-role/foreign-owner preservation.
++
++The real suite deliberately observes numeric/transfer500 failures and, after Option A, FK-refusal500 failures, keeping corresponding logs visible. Known synthetic validation errors are narrowly filtered. Unknown errors are not suppressed.
++
++## Review and rollback proof
++
++Frontend task review approved coverage and code quality. Backend review identified a false-positive risk in the first rollback assertions: any upload failure could satisfy generic500/no-residue. The tests were strengthened before the final diagnostic run:
++
++- A run-owner-scoped observer waits for a real successful transfer, then proves its exact SQL metadata and physical PNG SHA before returning to the controller.
++- The insert-failure case requires one proven upload and the actual `invalid-numeric-fixture` PostgreSQL numeric error.
++- The partial-upload case requires two targeted attempts, proven first success and exactly one distinct injected second-path rejection. A non2xx/throw/failed observer cannot qualify as that scenario.
++
++The final run passed both strengthened rollback cases. The reviewed P2 assertion gap is resolved. General late-upload concurrency races remain unverified and are not claimed fixed.
++
++## Local environment and preserved state
++
++Only the retained DB/REST/Storage services were used. Storage was republished, with owner approval, at127.0.0.1:58323 using its existing file volume and cached image public.ecr.aws/supabase/storage-api:v1.84.19. DB/REST remain127.0.0.1:58322/58321. Originals, volumes and private configurations are retained; no downloads or native CLI start.
++
++The original Storage freeze value was empty. The cached image's own loader/migration code was inspected without running it. All74 tenant migration hashes (SHA1 of filename+SQL, matching that loader) matched the existing native ledger; its additional id0 row is the native migration-table bootstrap. Freeze was set only in the private corrected local container configuration to the existing latest name unlock-object-versioning. Full pre/post startup pg_dump schema including owners/ACLs and all10 native table contents matched. No platform/app migration was applied. The initial physical-file manifest was empty.
++
++The Storage guard validates exact name/image/project/network/volume/file backend/DB routing/local key provenance/freeze and configured+actual loopback port. The child revalidates Storage; only its explicit profile permits port58323. Earlier profiles still reject Storage requests and port5000 remains forbidden. Dotenv remains disabled and only generated isolated credentials are held in memory.
++
++At the decision checkpoint all three test services were stopped successfully; docker ps then showed no running containers. Both retained originals and all volumes/configurations remain available. Restart only after inspecting recorded loopback bindings and running preflight; no app is required open while the owner reviews the proposed fix.
++
++Each run uses five UUID/example.test users and their unique object prefixes. Cleanup discovers only exact owned-prefix paths, removes them through the real Storage API, proves metadata and physical bytes absent, then removes owned property/user rows. The parent verifies full app tables, complete native Storage schema/table rows, file manifest and canonical two-entry app ledger even when assertions fail. All three diagnostic runs preserved their starting state. Native Storage SQL rows or volume files were never directly deleted.
++
++## Root cause and approved decision
++
++Before the fix, both repositories deleted only public.properties and never removed images/virtual_tours objects. The defect was independent of upload rollback, which passed with actual transfer proof. The separately approved Option A now shares validated managed-path cleanup after successful DB DELETE, with awaited Storage removal and explicit failure/recovery paths. It preserves images when a DB deletion fails. A crash-safe durable cleanup outbox remains a larger, unapproved alternative.
++
++Do not clean live orphan files, activate workers or deploy this local patch under the testing authorization. Desired deletion assertions were not weakened. Listings2A/2B close the agreed listing automation scope after final regressions; Phase5 still has saved searches,CRM,receipts and checkout remaining.
++
++## Sources and limits
++
++Implementation facts were verified against the installed client/pinned cached service code and actual local tests. Current official references consulted: [Storage removal API](https://supabase.com/docs/reference/javascript/storage-from-remove), [self-hosted Storage configuration](https://supabase.com/docs/guides/self-hosting/storage/config), [Supabase changelog](https://supabase.com/changelog). No SDK/service upgrade was performed.
++
++This is direct local integration rather than a deployed gateway/browser E2E or complete RLS audit. The bucket is public by existing design. UI photo/tour versus backend combined-file limits remain unchanged. Stepper-skip behavior and tour-preview URL lifecycle are inspection-only follow-ups, not verified safe/fixed behavior. PayHere/ngrok/real maps/location/delivery were not used.
+diff --git a/docs/superpowers/specs/2026-10-30-listing-image-cleanup-fix-design.md b/docs/superpowers/specs/2026-10-30-listing-image-cleanup-fix-design.md
+new file mode 100644
+index 0000000..4e50f45
+--- /dev/null
++++ b/docs/superpowers/specs/2026-10-30-listing-image-cleanup-fix-design.md
+@@ -0,0 +1,35 @@
++# Bounded fix: image cleanup after listing deletion
++
++Status: owner approved Option A on 2026-10-30; implemented and real Storage checks passed15/15 twice. Final aggregate verification is recorded in the matching plan/report. Option B remains unapproved. The original defect was reproduced before production changes.
++
++## Reproduction and root cause
++
++Run `node integration/run-storage.cjs` from backend-node with the checked local DB/REST/Storage services running. The SELLER and ADMIN deletion cases return 200 and remove their property row, but each retains one Storage object and one physical file. A public GET of each deleted listing's image still returns 200. The test cleanup subsequently removes these exact synthetic objects through the real Storage API, and full app/Storage state checks pass.
++
++Both delete repositories call only properties DELETE. Neither collects images/virtual_tours nor calls the existing Storage removal API. Upload/database-failure rollback is a separate path and is not the cause of this deletion defect.
++
++## Option A: bounded delete-path cleanup (recommended first increment)
++
++Scope: new shared testable helper `backend-node/utils/propertyImageCleanup.js`, and the delete methods in `backend-node/repositories/propertyRepository.js` and `backend-node/repositories/adminRepository.js`. Keep controllers, roles, checkout, migration schema and dependencies unchanged.
++
++1. Perform the authorized DB deletion and select the deleted row's id, seller_id, images and virtual_tours in the same database operation. The seller DELETE retains both id and seller_id predicates. Return the existing false/not-found result when appropriate; preserve the current admin missing-row contract.
++2. Only after a successful DB deletion, pass returned row metadata to the shared helper. Do not remove files first: a foreign-key/database deletion failure must preserve both the property and its images.
++3. Extract and deduplicate managed properties-bucket paths from images and virtual_tours[].url. Require configured Supabase origin, exact public properties URL prefix and deleted seller's UUID prefix; reject traversal, malformed encodings and credentials. Never send external URLs or another user's paths to Storage removal. Clearly record skipped/unmanaged legacy references for review; do not broaden ownership assumptions to clean them.
++4. Await the real Storage API removal of the validated exact paths. An empty images/tours set remains a no-op, preserving the existing image-free 2A API behavior. This uses the same removal boundary already exercised by rollback/fixture cleanup; no direct storage.objects deletion or filesystem deletion.
++5. Emit HTTP 200 only after managed-file removal succeeds. If Storage fails after DB deletion, throw through the existing error handler (500), and log a structured internal recovery event with listing ID, seller ID and exact managed paths, without credentials or signed URLs. Preserve that distinction in tests and documentation rather than claiming atomic deletion.
++
++Tests: existing two real deletion failures must turn green, including public URL no longer returning bytes and physical files absent. Add pure path-validation cases (foreign host/user, malformed/traversal, duplicate URLs, photos+tours, empty arrays), seller/admin repository deletion cases and a Storage removal failure case. Prove DB delete failure never calls file removal, and Storage failure never reports clean success. Repeat real 2B twice, Login/2A regressions and existing full checks after the fix.
++
++Compatibility limits: legacy external/unmanaged URLs are not deleted. The current API creates unique uploaded paths; legacy shared references require caution and must not be removed while another remaining listing references them. Establish the reference-safety rule/test before applying path removal rather than assume historical uniqueness.
++
++This option has no durable retry reference after the row is gone. If the process crashes between DB deletion and Storage cleanup, or Storage is unavailable, an orphan can still remain and requires operational recovery from the recorded paths. Logs are not a transactional outbox. A failed client request may find the property already removed on retry. These are explicit limits of the small increment, not solved guarantees.
++
++## Option B: durable cleanup jobs
++
++Record validated cleanup paths in a database outbox in the same transaction as listing deletion, then remove files idempotently with retries and completion/error state. This retains recovery information across crashes and service outages. It requires a schema migration, transactional deletion boundary, worker activation/recovery policy and API/UI behavior decisions, so it is a separate architectural scope requiring explicit approval.
++
++## Approval boundary
++
++Owner approval permits only the bounded Option A files/behavior/tests described above, with its explicit failure/recovery limitations and reference-safety guard. It does not authorize a live deployment, live data cleanup, worker/outbox/schema changes or a commit/push. Existing orphan cleanup in a live environment remains a separate action.
++
++Any later Option B work must design its transaction/retry/API contract before implementation. Required Option A cleanup assertions now pass; broader Phase 5 remains in progress after the listings checkpoint.
+diff --git a/docs/superpowers/plans/2026-10-30-listing-image-cleanup-fix.md b/docs/superpowers/plans/2026-10-30-listing-image-cleanup-fix.md
+new file mode 100644
+index 0000000..15b4642
+--- /dev/null
++++ b/docs/superpowers/plans/2026-10-30-listing-image-cleanup-fix.md
+@@ -0,0 +1,25 @@
++# Listing deletion image cleanup — Option A plan
++
++**Goal:** Fix the reproduced seller/admin deletion orphans within the owner-approved bounded design. No durable outbox, schema, auth, payment, dependency, deployment or live-data changes. Owner retains all commit/push actions and evidence stays untracked.
++
++## 1. Test-first helper and repository changes
++
++- [ ] Add path tests before new helper code; observe missing helper failure. Actual real Storage delete assertions already fail on the existing production code.
++- [ ] Implement `utils/propertyImageCleanup.js`: trusted configured origin/properties prefix/deleted owner path; deduplicate images/tour URLs; reject malformed/traversal/foreign paths and log skipped-reference counts without raw untrusted URLs.
++- [ ] Scan remaining property image/tour references in deterministic complete pages before removal. Preserve still-referenced paths. A failed reference lookup must not remove files; surface recovery paths and fail instead of silently treating the lookup as empty.
++- [ ] Seller/admin repositories perform DB DELETE with returned id/seller_id/images/virtual_tours, retaining seller owner predicate and existing missing-row contracts; await shared helper afterward. DB failure must never touch files.
++- [ ] Test photos/tours, dedup, empty/malformed/unmanaged fields, shared references across pages, lookup failure, Storage failure with structured recovery paths, DB failure, absent rows and both repository integrations. No credential/signed URL logging.
++
++## 2. Real isolated Storage proof
++
++- [ ] Inspect/restart only retained DB/REST/Storage after exact loopback/image/project checks; never open other apps without owner request.
++- [ ] Strengthen deletion scenarios to include photos+tours, public URL no longer returning bytes, physical files absent, and a remaining fixture reference protecting a shared image until the last reference is deleted.
++- [ ] Add actual DB foreign-key delete-failure scenario: preserve row/files when payment_orders restricts deletion, using synthetic local records only and exact cleanup. Do not invoke checkout/payment/worker.
++- [ ] Run Storage profile twice; require green assertions and complete native/app/schema/ledger/file preservation. Keep fault-injection rollback evidence intact.
++
++## 3. Review and regression
++
++- [ ] Review production/test diff for safety, path/reference guards and recovery limits; resolve actionable findings.
++- [ ] Run Login/roles and Listings2A integration, backend full Jest, frontend full Vitest, frontend lint/build sequentially. Update affected mock expectations rather than weakening real behavior assertions.
++- [ ] Update 2B report/README/design status with fresh results and persistent DB/Storage crash-window/manual-recovery limitation; do not claim full atomicity or fix live orphans.
++- [ ] Scan credentials/whitespace including tracked edits; confirm index empty; stop only the test services and preserve all resources; finish review. No commit/push.
+diff --git a/backend-node/integration/README.md b/backend-node/integration/README.md
+new file mode 100644
+index 0000000..2da4fb4
+--- /dev/null
++++ b/backend-node/integration/README.md
+@@ -0,0 +1,82 @@
++# Local critical-flow integration
++
++These are explicit real-database test commands. Ordinary `npm test` includes pure isolation/network/state guard tests and existing mocked API suites. It does not discover `login-roles.integration.cjs` or `listings.integration.cjs`.
++
++From `backend-node`, with existing dependencies and the checked local stack running:
++
++```powershell
++node integration/run-login-roles.cjs --preflight
++node integration/run-login-roles.cjs
++node integration/run-listings.cjs --preflight
++node integration/run-listings.cjs
++```
++
++Preflight is read-only. Login/roles seeds seven synthetic users, runs the actual Express auth endpoints through Supertest and deletes only those run-specific UUID/email pairs. It checks the complete starting users snapshot and canonical migration ledger. Each invocation creates a fresh Jest process and fixture IDs, retaining real auth rate limits.
++
++Listings 2A seeds eight synthetic users and its own moderation properties, then exercises actual creation, ownership, validation, visibility, editing, moderation and deletion. It cleans only properties belonging to those exact run-owned users, before deleting fixture users. This includes recovery of an insert whose API response failed. The shared launcher checks full starting/ending users, properties, transactions, payment_orders and payment_receipt_outbox snapshots plus the ledger, even if the child suite fails. It reports drift without printing table contents. Normal assertion/setup failures run cleanup; abrupt termination may prevent hooks and must be investigated without reset or broad deletion.
++
++The launcher accepts no database URL or credentials from the command line. It derives generated local credentials in memory from exactly `supabase_db_thirasara-phase4-c` and `supabase_rest_thirasara-phase4-c`; it never loads the application `.env`. It refuses missing/wrong container identities, images, networks, bindings, CLI project, remote link, approval marker, file checksums, migration ledger or API/DB read cross-check. An unavailable stack is a failure, not a skipped green test.
++
++## Local prerequisites
++
++See `../../docs/database/setup.md` for the Phase 4 isolated environment. No Docker resources are created, started, reset or removed by the test command. Inspect retained containers before restarting them. Do not use native Supabase CLI start: the documented original default bindings were unsafe on this Docker Desktop setup.
++
++The owner approved publishing the retained stack-c PostgREST service at `127.0.0.1:58321`; DB remains `127.0.0.1:58322`. The original stopped REST container is retained as `supabase_rest_thirasara-phase4-c-before-phase5-port`. Private generated Compose configuration is in `docs/evidence/phase4-local/stack-c-phase5-rest.private.json`; keep it and all generated credentials untracked. This local test setup does not repoint the existing application or ngrok backend.
++
++On the existing prepared machine, inspect the exact two containers and verify their configured loopback bindings before starting those containers:
++
++```powershell
++docker inspect --format '{{.Name}} {{json .HostConfig.PortBindings}}' supabase_db_thirasara-phase4-c supabase_rest_thirasara-phase4-c
++```
++
++Only after confirming DB 5432 -> 127.0.0.1:58322 and REST 3000 -> 127.0.0.1:58321, with no other published addresses, restart those retained containers:
++
++```powershell
++docker start supabase_db_thirasara-phase4-c supabase_rest_thirasara-phase4-c
++```
++
++Then run preflight, which independently checks the remaining identity requirements and readiness before permitting fixture writes. A startup/readiness refusal is not a reason to bypass the guard. Do not start auth, storage, mail, receipt workers or unrelated services. A different/fresh machine first needs its own explicitly authorized isolated setup; copying hosted keys or data is forbidden.
++
++The two test services were stopped after this batch's verification; all containers/volumes/configuration remain available. Stop only these two again when finished:
++
++```powershell
++docker stop --timeout 20 supabase_rest_thirasara-phase4-c supabase_db_thirasara-phase4-c
++```
++
++The retained REST endpoint is direct PostgREST, not Kong. Test-only fetch transport removes Supabase JS's `/rest/v1` prefix and permits only this checked origin; redirects fail. The real application Supabase client, queries, repositories, bcrypt, JWT and middleware remain in use. Login/roles refuses email calls; listings uses controlled listing-status email and saved-search-coordination spies. Receipt delivery is always forbidden. Dotenv is disabled inside the child, and TCP is restricted to `127.0.0.1` on the verified DB/REST ports plus the explicitly registered ephemeral app listener. Port 5000 is always blocked. Expected HTTP 2xx/4xx access logs are filtered narrowly; other warnings/errors remain visible.
++
++## Scope and limits
++
++- Password login/session/role assertions are in the integration suite. Google/Apple/Facebook, browser cookie/CORS rules, password reset delivery and registration are outside this batch.
++- Logout verifies cookie clearing, not revocation of a copied JWT.
++- Frontend provider/router integration uses controlled API responses and is not full browser E2E.
++- Listings 2A API creation uses no successful file transfer; the frontend synthetic File tests stop at the controlled API/payment boundary. Real Storage upload/rollback/removal and the full AddProperty wizard remain listings 2B. No Storage service is started by these commands.
++- Moderation uses directly seeded Paid properties; this is not evidence of checkout settlement or enforcement of payment eligibility by the approval endpoint. Unpaid approval rules require a separate decision.
++- PayHere sandbox checkout and ngrok webhook verification belong to the later checkout batch. No payment endpoints are called here.
++- Failure during normal setup/assertions runs exact fixture cleanup in `afterAll`. Abrupt process termination can prevent hooks; preserve the environment for investigation instead of using reset or broad cleanup.
++- Windows sandbox restrictions may require approval for Docker pipe and loopback access. Resource-heavy verification should run sequentially if Windows paging/commit memory is constrained.
++
++Run pure safety checks without Docker or network:
++
++```powershell
++npm test -- --runInBand tests/localStackGuard.test.js tests/integrationNetworkGuard.test.js
++npm test -- --runInBand tests/integrationState.test.js
++```
++
++## Listings 2B Storage profile
++
++`node integration/run-storage.cjs --preflight` is read-only. `node integration/run-storage.cjs` verifies real uploads/bytes/rollback, seller/admin photos-and-tours deletion, shared-reference retention and DB foreign-key failure preservation. The two initially failing deletion assertions were kept and turned green after the owner-approved Option A fix. It deletes the DB row first, then awaits validated, unshared managed-file removal; it is not a DB/Storage transaction or durable retry mechanism. Logs contain validated recovery paths if a lookup/removal fails after DB deletion. Legacy unmanaged URLs are skipped, and concurrent reference changes/crashes remain separate resilience limits.
++
++The owner approved reusing the cached Storage image v1.84.19 and existing volume with only `127.0.0.1:58323 -> 5000` published. The stopped original is `supabase_storage_thirasara-phase4-c-before-phase5-port`; original private configuration remains retained. Private corrected configuration is `docs/evidence/phase4-local/stack-c-phase5-storage.private.json`, with `DB_MIGRATIONS_FREEZE_AT=unlock-object-versioning`. Before startup, the 74 tenant migration filename+SQL hashes matched the cached image's loader algorithm and current native ledger; startup preserved full native schema/ACL/owners and metadata. Do not run a different image or native CLI start.
++
++For the existing prepared workspace, inspect the exact DB/REST/Storage configured bindings before restarting. Only the recorded `127.0.0.1:58322/58321/58323` bindings are acceptable. Then restart the three retained normal container names and run Storage preflight, which verifies image/project/network/volume/DB/key/freeze provenance before fixture writes. No mail/auth/worker/other services are needed.
++
++The Storage profile alone permits port58323 and maps the SDK's `/storage/v1` prefix to direct Storage. Earlier profiles retain their narrower transports. It snapshots all native Storage tables, full native schema including ACL/owners, persisted file paths/bytes, five app tables and app migration ledger. Exact-prefix fixture cleanup uses the actual Storage removal API, verifies file/metadata absence, then removes fixture properties/users. No direct Storage SQL/file deletion is used. A failing product assertion still fails the explicit command after fixture cleanup/state checks.
++
++The rendered wizard uses controlled HTTP/payment/browser boundaries; it is not full browser-to-Storage E2E. Real PNG bytes/metadata/download/hash and rollback are verified independently by the backend suite. Partial-upload fault injection requires proof of the first real successful upload before rejecting the second targeted request.
++
++When finished, stop only the started test containers, preserving originals and volumes:
++
++```powershell
++docker stop --timeout 20 supabase_storage_thirasara-phase4-c supabase_rest_thirasara-phase4-c supabase_db_thirasara-phase4-c
++```

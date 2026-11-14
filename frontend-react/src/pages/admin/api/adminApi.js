@@ -34,11 +34,14 @@ adminApi.interceptors.request.use((config) => {
 const unwrap = (promise) => promise.then((res) => res.data);
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
-export const adminLogin = (email, password) =>
-  unwrap(adminApi.post('/admin/login', { email, password }));
+export const adminLogin = (email, password, mfa = {}) =>
+  unwrap(adminApi.post('/admin/login', { email, password, ...mfa }));
 
 export const verifyAdminSession = () =>
   unwrap(adminApi.get('/admin/verify'));
+
+export const adminLogout = () =>
+  unwrap(adminApi.post('/auth/logout'));
 
 // ─── Dashboard Stats ──────────────────────────────────────────────────────────
 export const fetchDashboardStats = () =>
@@ -49,6 +52,9 @@ export const fetchRevenueData = (period = 'monthly') =>
 
 export const fetchUserGrowth = () =>
   unwrap(adminApi.get('/admin/dashboard/user-growth'));
+
+export const fetchInquiries = (page = 1) =>
+  unwrap(adminApi.get('/admin/inquiries', { params: { page } }));
 
 // ─── Listings Management ──────────────────────────────────────────────────────
 export const fetchListings = (params = {}) =>
@@ -106,24 +112,32 @@ export const updateUserRole = (userId, role, reason = null) =>
 export const fetchAnalytics = (params = {}) =>
   unwrap(adminApi.get('/admin/analytics', { params }));
 
-export const fetchSearchHeatmap = () =>
-  unwrap(adminApi.get('/admin/analytics/heatmap'));
+export const fetchSearchHeatmap = (params = {}) =>
+  unwrap(adminApi.get('/admin/analytics/heatmap', { params }));
 
 // ─── Reports ──────────────────────────────────────────────────────────────────
 export const fetchTransactionHistory = (params = {}) =>
   unwrap(adminApi.get('/admin/reports/transactions', { params }));
 
 export const exportReport = async (type, filters = {}) => {
+  const format = filters.format === undefined ? 'csv' : filters.format;
+  if (!['transactions', 'users', 'listings'].includes(type) || !['csv', 'json'].includes(format)) {
+    throw new Error('Unsupported report export.');
+  }
   const res = await adminApi.get(`/admin/reports/export/${type}`, {
     params: filters,
     responseType: 'blob',
   });
-  const url = window.URL.createObjectURL(new Blob([res.data]));
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `thirasara-${type}-report.csv`;
-  a.click();
-  window.URL.revokeObjectURL(url);
+  const mediaType = format === 'json' ? 'application/json;charset=utf-8' : 'text/csv;charset=utf-8';
+  const url = window.URL.createObjectURL(new Blob([res.data], { type: mediaType }));
+  try {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `thirasara-${type}-report.${format}`;
+    a.click();
+  } finally {
+    window.URL.revokeObjectURL(url);
+  }
 };
 
 // ─── Audit Logs ───────────────────────────────────────────────────────────────
@@ -138,18 +152,18 @@ export const updateSettings = (settings) =>
   unwrap(adminApi.put('/admin/settings', settings));
 
 // ─── Listing Boosts / Promotions ──────────────────────────────────────────────
-export const fetchBoosts = () =>
-  unwrap(adminApi.get('/admin/boosts'));
+export const fetchBoosts = (params = {}) =>
+  unwrap(adminApi.get('/admin/boosts', { params }));
 
 export const toggleBoost = (listingId, enabled) =>
   unwrap(adminApi.patch(`/admin/boosts/${listingId}`, { enabled }));
 
 // ─── Reported Content ─────────────────────────────────────────────────────────
-export const fetchReportedContent = () =>
-  unwrap(adminApi.get('/admin/reported'));
+export const fetchReportedContent = (params = {}) =>
+  unwrap(adminApi.get('/admin/reported', { params }));
 
-export const resolveReport = (reportId, action) =>
-  unwrap(adminApi.patch(`/admin/reported/${reportId}/resolve`, { action }));
+export const resolveReport = (reportId, payload) =>
+  unwrap(adminApi.patch(`/admin/reported/${reportId}/resolve`, payload));
 
 // ─── Role Upgrade Requests ─────────────────────────────────────────────────────
 export const fetchRoleRequests = (status = 'pending') =>

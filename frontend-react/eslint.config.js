@@ -35,4 +35,9 @@ export default defineConfig([
       'react-refresh/only-export-components': 'off',
     },
   },
+  {
+    files: ['src/**/*.{js,jsx}'],
+    ignores: ['src/**/*.test.{js,jsx}', 'src/**/*.integration.{js,jsx}', 'src/utils/clientLog.js'],
+    rules: { 'no-console': 'error' },
+  },
 ])

@@ -6,7 +6,7 @@ const findFavorite = async (userId, propertyId) => {
         .select('*')
         .eq('user_id', userId)
         .eq('property_id', propertyId)
-        .single();
+        .maybeSingle();
     return { data, error };
 };
 
@@ -29,8 +29,9 @@ const insertFavorite = async (userId, propertyId) => {
 const getUserFavorites = async (userId) => {
     const { data, error } = await supabase
         .from('favorites')
-        .select('property_id, properties(*)')
-        .eq('user_id', userId);
+        .select('property_id, properties!inner(*)')
+        .eq('user_id', userId)
+        .eq('properties.status', 'approved').is('properties.deleted_at', null);
     return { data, error };
 };
 

@@ -36,6 +36,8 @@ const BuyPage = lazy(() => import('./pages/BuyPage'));
 const AddProperty = lazy(() => import('./pages/AddProperty'));
 const Register = lazy(() => import('./pages/Register'));
 const Login = lazy(() => import('./pages/Login'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
 const MyProperties = lazy(() => import('./pages/MyProperties'));
 const Messages = lazy(() => import('./pages/Messages'));
 const ProfileSettings = lazy(() => import('./pages/ProfileSettings'));
@@ -54,11 +56,14 @@ const AdminDashboard = lazy(() => import('./pages/admin/pages/DashboardPage'));
 const AdminListings = lazy(() => import('./pages/admin/pages/ListingsPage'));
 const AdminUsers = lazy(() => import('./pages/admin/pages/UsersPage'));
 const AdminAgentApprovals = lazy(() => import('./pages/admin/pages/AgentApprovalsPage'));
+const AdminBoosts = lazy(() => import('./pages/admin/pages/BoostsPage'));
+const AdminReportedContent = lazy(() => import('./pages/admin/pages/ReportedContentPage'));
 const AdminAnalytics = lazy(() => import('./pages/admin/pages/AnalyticsPage'));
 const AdminReports = lazy(() => import('./pages/admin/pages/ReportsPage'));
 const AdminSettings = lazy(() => import('./pages/admin/pages/SettingsPage'));
 const AdminAuditLogs = lazy(() => import('./pages/admin/pages/AuditLogsPage'));
 const AdminMessages = lazy(() => import('./pages/admin/pages/MessagesPage'));
+const AdminInquiries = lazy(() => import('./pages/admin/pages/InquiriesPage'));
 
 // Loading Fallback Component
 const PageLoader = () => (
@@ -104,8 +109,11 @@ function App() {
               </ProtectedRoute>
             } />
             <Route path="/login" element={<Login />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/buy" element={<BuyPage />} />
             <Route path="/map" element={<MapSearch />} />
+            <Route path="/feasibility" element={<Navigate to="/map?feasibility=1" replace />} />
             <Route path="/rent" element={<MapSearch />} />
             <Route path="/add-property" element={
               <ProtectedRoute allowedRoles={['SELLER', 'AGENT']}>
@@ -147,7 +155,10 @@ function App() {
                   <Route path="users" element={<AdminUsers />} />
                   <Route path="agent-approvals" element={<AdminAgentApprovals />} />
                   <Route path="analytics" element={<AdminAnalytics />} />
+                  <Route path="boosts" element={<AdminBoosts />} />
+                  <Route path="reported" element={<AdminReportedContent />} />
                   <Route path="messages" element={<AdminMessages />} />
+                  <Route path="inquiries" element={<AdminInquiries />} />
                   <Route path="reports" element={<AdminReports />} />
                   <Route path="settings" element={<AdminSettings />} />
                   <Route path="audit-logs" element={<AdminAuditLogs />} />

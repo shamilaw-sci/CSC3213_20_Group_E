@@ -1,5 +1,5 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'node:fs';
+import path from 'node:path';
 const componentsDir = 'src/pages/agent/components';
 const files = fs.readdirSync(componentsDir).filter(f => f.endsWith('.jsx'));
 files.forEach(f => {
