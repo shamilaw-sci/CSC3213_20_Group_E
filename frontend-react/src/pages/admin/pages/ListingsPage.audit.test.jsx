@@ -27,7 +27,7 @@ test('inspection preserves receipt, photo selection, spatial coordinates and app
   fireEvent.click(screen.getByRole('button', { name: 'Close Audit' }));
   expect(screen.queryByText('receipt-7')).not.toBeInTheDocument();
 });
-test('table search, filter query and deletion retain original values', async () => {
+test('table search and filters preserve values while archiving retains history', async () => {
   const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true); mount();
   await screen.findByRole('button', { name: 'Inspect' });
   const search = screen.getByPlaceholderText('Search by title, location, seller...');
@@ -38,7 +38,7 @@ test('table search, filter query and deletion retain original values', async () 
   fireEvent.click(screen.getByRole('button', { name: /Pending Audit/ }));
   await vi.waitFor(() => expect(mocks.fetchListings).toHaveBeenCalledWith({ status: 'pending' }));
   fireEvent.click(await screen.findByTitle('Delete Listing'));
-  expect(confirm).toHaveBeenCalledWith('Are you sure you want to permanently delete this listing?');
+  expect(confirm).toHaveBeenCalledWith('Archive this listing and remove it from public discovery? Payment and conversation history will be retained.');
   await vi.waitFor(() => expect(mocks.deleteListing).toHaveBeenCalledWith('property-123', expect.anything()));
 });
 

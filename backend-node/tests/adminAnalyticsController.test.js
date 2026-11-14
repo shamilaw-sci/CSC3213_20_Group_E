@@ -11,9 +11,9 @@ test('dashboard preserves counts, revenue coercion and insertion-order type grou
  repo.getDashboardStats.mockResolvedValue([{ count: 8 }, { count: 4 }, { count: 2 }, { count: 1 }, {}, { count: 3 }, { count: 5 }, { data: [{ amount: '12' }, { amount: 0 }, {}] }, { data: [{ type: 'Land' }, {}, { type: 'Land' }] }]);
  const res = response(); await handlers.getDashboardStats({}, res, jest.fn()); expect(res.status).toHaveBeenCalledWith(200); expect(res.json).toHaveBeenCalledWith({ totalListings: 4, totalUsers: 8, totalProperties: 4, activeListings: 2, pendingApproval: 1, rejectedListings: 0, buyerCount: 3, sellerCount: 5, revenue: 12, listingTypes: [{ label: 'Land', value: 2 }, { label: 'Other', value: 1 }] });
 });
-test('revenue preserves six month output and month-name merging across years', async () => {
+test('revenue keeps six months and excludes matching months from earlier years', async () => {
  repo.getSuccessfulTransactions.mockResolvedValue([{ created_at: new Date(2025, 10, 2), amount: '3' }, { created_at: new Date(2026, 10, 2), amount: 4 }, {}]);
- const res = response(); await handlers.getRevenueData({}, res, jest.fn()); const rows = res.json.mock.calls[0][0].data; expect(rows).toHaveLength(6); expect(rows.map(r => r.value)).toEqual([0, 0, 0, 0, 0, 7]);
+ const res = response(); await handlers.getRevenueData({}, res, jest.fn()); const rows = res.json.mock.calls[0][0].data; expect(rows).toHaveLength(6); expect(rows.map(r => r.value)).toEqual([0, 0, 0, 0, 0, 4]);
 });
 test('growth preserves cumulative boundary behavior and ignores missing dates', async () => {
  repo.getAllUsersCreatedAt.mockResolvedValue([{ created_at: new Date(2026, 0, 1) }, { created_at: new Date(2026, 6, 20) }, {}]);

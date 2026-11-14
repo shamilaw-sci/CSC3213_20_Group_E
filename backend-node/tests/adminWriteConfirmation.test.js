@@ -1,4 +1,4 @@
-jest.mock('../config/supabase', () => ({ from: jest.fn() }));
+jest.mock('../config/supabase', () => ({ from: jest.fn(), rpc: jest.fn() }));
 jest.mock('../utils/propertyImageCleanup', () => ({}));
 const db = require('../config/supabase');
 const repo = require('../repositories/adminRepository');
@@ -63,7 +63,7 @@ test.each(['AGENT', 'REJECTED_AGENT'])('confirms required %s profile and exact s
     expect(calls[1].methods).toContainEqual(['update', { rejection_reason: reason }]);
     expect(calls[1].methods).toContainEqual(['select', 'agent_id, rejection_reason']);
 });
-test.each([['banUser', 'BANNED'], ['unbanUser', 'BUYER']])('%s confirmed row succeeds without profile write', async (name, role) => {
+test.each([['banUser', 'BANNED']])('%s confirmed row succeeds without profile write', async (name, role) => {
     results.push({ data: { id, role }, error: null }); const res = await run(name);
     expect(res.status).toHaveBeenCalledWith(200); expect(calls).toHaveLength(1);
 });
@@ -100,4 +100,22 @@ test('installed SDK maps zero-row PATCH to owned404 without real network', async
     expect(options.method).toBe('PATCH'); expect(JSON.parse(options.body)).toEqual({ role: 'BANNED' });
     expect(new URL(url).searchParams.get('select')).toBe('id,role');
     expect(new URL(url).searchParams.get('id')).toBe(`eq.${id}`);
+});
+
+test.each(['BUYER', 'SELLER', 'AGENT'])('unban confirms saved %s role through atomic RPC', async role => {
+ db.rpc.mockResolvedValue({ data: { id, role }, error: null });
+ const res = await run('unbanUser');
+ expect(res.status).toHaveBeenCalledWith(200);
+ expect(db.rpc).toHaveBeenCalledWith('restore_banned_user_role', { target_id: id });
+ expect(db.from).not.toHaveBeenCalled();
+ expect(res.json).toHaveBeenCalledWith({ message: 'User unbanned successfully', role });
+});
+test.each([null, {}, { id: other, role: 'AGENT' }, { id, role: 'BANNED' }])('unban rejects unconfirmed RPC result %p', async data => {
+ db.rpc.mockResolvedValue({ data, error: null });
+ expect((await run('unbanUser')).status).toHaveBeenCalledWith(500);
+});
+test('unban missing historical role returns conflict without assigning a fallback', async () => {
+ db.rpc.mockResolvedValue({ data: null, error: { code: 'PZ002' } });
+ expect((await run('unbanUser')).status).toHaveBeenCalledWith(409);
+ expect(db.from).not.toHaveBeenCalled();
 });

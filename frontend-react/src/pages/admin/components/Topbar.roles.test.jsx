@@ -3,11 +3,11 @@ import { render, screen, fireEvent, cleanup, act } from '@testing-library/react'
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { test, expect, vi, afterEach, beforeEach } from 'vitest';
 import Topbar from './Topbar';
-import { fetchPendingAgents, fetchDashboardStats } from '../api/adminApi';
-vi.mock('../api/adminApi', () => ({ fetchPendingAgents: vi.fn().mockResolvedValue({ agents: [] }), fetchDashboardStats: vi.fn().mockResolvedValue({ pendingApproval: 0 }), fetchRoleRequests: vi.fn().mockResolvedValue({ requests: [{ id: 'pending' }] }) }));
+import { fetchPendingAgents, fetchDashboardStats, fetchReportedContent } from '../api/adminApi';
+vi.mock('../api/adminApi', () => ({ fetchReportedContent: vi.fn().mockResolvedValue({ reports: [], total: 0 }), fetchPendingAgents: vi.fn().mockResolvedValue({ agents: [] }), fetchDashboardStats: vi.fn().mockResolvedValue({ pendingApproval: 0 }), fetchRoleRequests: vi.fn().mockResolvedValue({ requests: [{ id: 'pending' }] }) }));
 vi.mock('../../../context/ThemeProvider', () => ({ useTheme: () => ({ isDark: false, changeTheme: vi.fn() }) }));
 afterEach(() => { cleanup(); vi.useRealTimers(); });
-beforeEach(() => { vi.clearAllMocks(); fetchPendingAgents.mockResolvedValue({ agents: [] }); fetchDashboardStats.mockResolvedValue({ pendingApproval: 0 }); });
+beforeEach(() => { vi.clearAllMocks(); fetchReportedContent.mockResolvedValue({ reports: [], total: 0 }); fetchPendingAgents.mockResolvedValue({ agents: [] }); fetchDashboardStats.mockResolvedValue({ pendingApproval: 0 }); });
 function Route() { const location = useLocation(); return <output data-testid="route">{location.pathname}{location.search}</output>; }
 test('shows pending seller request in notification queue', async () => {
   render(<MemoryRouter><Topbar /></MemoryRouter>);

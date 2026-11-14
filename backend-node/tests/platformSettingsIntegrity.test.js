@@ -42,11 +42,11 @@ test('failed upsert stays private', async () => {
 });
 test('GET returns only canonical supported fee', async () => {
     results.push({ data: { setting_key: 'listing_fee', setting_value: '750.5' }, error: null });
-    const res = await run('getSettings'); expect(res.json).toHaveBeenCalledWith({ settings: { listing_fee: '750.50' } });
+    const res = await run('getSettings'); expect(res.json).toHaveBeenCalledWith({ settings: { listing_fee: '750.50' }, source: 'database' });
     expect(calls[0].methods).toContainEqual(['eq', 'setting_key', 'listing_fee']);
 });
 test('confirmed missing fee retains default', async () => {
-    results.push({ data: null, error: null }); expect((await run('getSettings')).json).toHaveBeenCalledWith({ settings: { listing_fee: '500.00' } });
+    results.push({ data: null, error: null }); expect((await run('getSettings')).json).toHaveBeenCalledWith({ settings: { listing_fee: '500.00' }, source: 'configured_default' });
 });
 test.each([{ data: null, error: { message: 'private-db' } }, { data: { setting_key: 'listing_fee', setting_value: 'bad' }, error: null }])('GET does not invent fee for %p', async result => {
     results.push(result); expect((await run('getSettings')).status).toHaveBeenCalledWith(500);

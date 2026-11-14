@@ -1,3 +1,4 @@
+jest.mock('../config/supabase', () => ({}));
 jest.mock('../repositories/adminRepository', () => ({ approveListingOnce: jest.fn(), getListingByIdWithTransactions: jest.fn() }));
 jest.mock('../controllers/savedSearchController', () => ({ checkSavedSearchMatches: jest.fn().mockResolvedValue() }));
 jest.mock('../utils/emailService', () => ({ sendListingStatusEmail: jest.fn().mockResolvedValue() }));
