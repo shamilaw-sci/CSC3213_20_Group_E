@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import { logClientError } from '../../../utils/clientLog';
+import React, { useState, useEffect, useRef } from "react";
 import { fetchTransactionHistory, exportReport } from "../api/adminApi";
 import "../styles/admin-global.css";
 import { 
@@ -15,45 +16,65 @@ import {
 
 const ReportsPage = () => {
   const [transactions, setTransactions] = useState([]);
-  const [typeFilter, setTypeFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [loadState, setLoadState] = useState('loading');
+  const [typeFilter] = useState("all");
+  const [statusFilter] = useState("all");
   const [exporting, setExporting] = useState(false);
   const [toastMsg, setToastMsg] = useState(null);
+  const mounted = useRef(false);
+  const exportLock = useRef(false);
+  const feedbackTimer = useRef(null);
 
   const showToast = (msg, type = "success") => {
     setToastMsg({ msg, type });
-    setTimeout(() => setToastMsg(null), 3000);
+    clearTimeout(feedbackTimer.current);
+    feedbackTimer.current = setTimeout(() => { if (mounted.current) setToastMsg(null); }, 3000);
   };
 
   useEffect(() => {
+    let cancelled = false;
+    mounted.current = true;
     fetchTransactionHistory()
       .then((d) => { 
-        if (d?.transactions) {
-          const mapped = d.transactions.map((t) => ({
-            id: `TXN-${String(t.id).slice(0, 8)}`,
-            listing: t.properties?.title || "Premium Property Listing",
-            seller: t.properties?.users?.name || "Verified Seller",
+        if (cancelled) return;
+        if (!Array.isArray(d?.transactions)) throw new Error('Invalid transaction response');
+        {
+          const mapped = d.transactions.map((t) => {
+            const property = Array.isArray(t.properties) ? t.properties[0] : t.properties;
+            const seller = t.payer;
+            return ({
+            id: t.id,
+            listing: property?.title || "Listing details unavailable",
+            seller: seller?.name || "Payer unavailable",
+            currency: t.currency || "Unknown",
             amount: Number(t.amount || 0),
             type: "Listing Fee",
             status: t.status === "SUCCESS" ? "Completed" : t.status,
             date: t.created_at ? new Date(t.created_at).toLocaleDateString("en-LK") : "-",
-            paymentId: t.transaction_id || "TXN-AUTO",
-          }));
+            paymentId: t.transaction_id || "Gateway reference unavailable",
+          }); });
           setTransactions(mapped);
+          setLoadState('ready');
         }
       })
-      .catch((err) => console.error("Failed to load transactions", err));
+      .catch(() => { if (!cancelled) { setLoadState('error'); logClientError('admin_transactions_load_failed'); } });
+    return () => { cancelled = true; mounted.current = false; clearTimeout(feedbackTimer.current); };
   }, []);
 
-  const handleExport = async (type) => {
+  const handleExport = async (format) => {
+    if (exportLock.current) return;
+    exportLock.current = true;
     setExporting(true);
+    setToastMsg(null);
+    clearTimeout(feedbackTimer.current);
     try {
-      await exportReport(type, {});
-      showToast(`Exported ${type.toUpperCase()} report successfully!`);
+      await exportReport('transactions', { format });
+      if (mounted.current) showToast('Download started.');
     } catch {
-      showToast("Export generated and logged.", "success");
+      if (mounted.current) showToast('Report download failed. Please try again.', 'error');
     } finally {
-      setExporting(false);
+      exportLock.current = false;
+      if (mounted.current) setExporting(false);
     }
   };
 
@@ -63,7 +84,8 @@ const ReportsPage = () => {
     return matchType && matchStatus;
   });
 
-  const totalRevenue = transactions.reduce((acc, t) => acc + (t.status === "Completed" ? t.amount : 0), 0);
+  const completed = transactions.filter(t => t.status === 'Completed' && t.currency === 'LKR');
+  const totalRevenue = transactions.reduce((acc, t) => acc + (t.status === "Completed" && t.currency === "LKR" ? t.amount : 0), 0);
 
   return (
     <div className="space-y-6">
@@ -80,8 +102,8 @@ const ReportsPage = () => {
       {/* Header */}
       <div className="admin-page-header">
         <div>
-          <h1>Financial Reports & Revenue Auditing</h1>
-          <p>Track listing fee receipts, commission payouts, and export certified transaction statements</p>
+          <h1>Transaction Reports</h1>
+          <p>View transaction history and download reports.</p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -92,16 +114,16 @@ const ReportsPage = () => {
             className="admin-btn admin-btn-secondary"
           >
             <Download className="w-4 h-4" />
-            <span>Export CSV</span>
+            <span>Export spreadsheet CSV</span>
           </button>
           <button
             type="button"
-            onClick={() => handleExport("pdf")}
+            onClick={() => handleExport("json")}
             disabled={exporting}
             className="admin-btn admin-btn-primary"
           >
             <FileText className="w-4 h-4" />
-            <span>Export PDF</span>
+            <span>Export data JSON</span>
           </button>
         </div>
       </div>
@@ -111,23 +133,23 @@ const ReportsPage = () => {
         <div className="admin-stat-card">
           <span className="admin-stat-label">Total Revenue Collected</span>
           <div className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400">
-            LKR {totalRevenue.toLocaleString()}
+            {loadState === 'ready' ? `LKR ${totalRevenue.toLocaleString()}` : 'Unavailable'}
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-semibold">100% Settled via Gateway</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-semibold">Recorded successful LKR payments; not bank settlement confirmation</p>
         </div>
         <div className="admin-stat-card">
           <span className="admin-stat-label">Completed Transactions</span>
           <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-            {transactions.filter(t => t.status === "Completed").length}
+            {loadState === 'ready' ? transactions.filter(t => t.status === 'Completed').length : 'Unavailable'}
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-semibold">Successful listing activations</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-semibold">Recorded successful payment transactions</p>
         </div>
         <div className="admin-stat-card">
-          <span className="admin-stat-label">Average Fee per Listing</span>
+          <span className="admin-stat-label">Average Completed Payment</span>
           <div className="text-2xl sm:text-3xl font-black text-blue-600 dark:text-blue-400">
-            LKR {transactions.length > 0 ? Math.round(totalRevenue / (transactions.length || 1)).toLocaleString() : "1,500"}
+            {loadState === 'ready' && completed.length > 0 ? `LKR ${Math.round(totalRevenue / completed.length).toLocaleString()}` : 'Unavailable'}
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-semibold">Standard Moderation Tier</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-semibold">Average of completed LKR payments</p>
         </div>
       </div>
 
@@ -136,10 +158,10 @@ const ReportsPage = () => {
         <table className="admin-data-table">
           <thead>
             <tr>
-              <th>Receipt Ref</th>
+              <th>Transaction ID</th>
               <th>Property / Service</th>
-              <th>Payer (Seller)</th>
-              <th>Amount (LKR)</th>
+              <th>Payer</th>
+              <th>Amount / Currency</th>
               <th>Date</th>
               <th>Status</th>
             </tr>
@@ -148,7 +170,7 @@ const ReportsPage = () => {
             {filtered.length === 0 && (
               <tr>
                 <td colSpan={6} className="text-center py-12 text-slate-500 dark:text-slate-400">
-                  No transaction records found.
+                  {loadState === 'loading' ? 'Loading transactions?' : loadState === 'error' ? 'Transactions unavailable. Refresh to retry.' : 'No transaction records found.'}
                 </td>
               </tr>
             )}
@@ -166,7 +188,7 @@ const ReportsPage = () => {
                 <td className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t.seller}</td>
                 <td>
                   <span className="font-black text-emerald-600 dark:text-emerald-400 text-sm">
-                    LKR {t.amount.toLocaleString()}
+                    {t.currency} {t.amount.toLocaleString()}
                   </span>
                 </td>
                 <td className="text-xs text-slate-500 dark:text-slate-400">{t.date}</td>

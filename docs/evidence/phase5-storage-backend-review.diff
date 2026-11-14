@@ -1,0 +1,888 @@
+Storage2B test-only, rollback successful-first-transfer proof updated
+diff --git a/backend-node/integration/storage-local.cjs b/backend-node/integration/storage-local.cjs
+new file mode 100644
+index 0000000..ce9d661
+--- /dev/null
++++ b/backend-node/integration/storage-local.cjs
+@@ -0,0 +1,89 @@
++// Test tooling only: inspect the retained local Storage identity without loading .env.
++const assert = require('node:assert/strict');
++const { execFileSync } = require('node:child_process');
++const jwt = require('jsonwebtoken');
++
++const project = 'thirasara-phase4-c';
++const network = 'thirasara-phase4-local';
++const refuse = condition => assert.ok(condition, 'Isolated Storage environment refused; check local prerequisites.');
++function environment(item) {
++    refuse(Array.isArray(item?.Config?.Env));
++    const values = {};
++    for (const entry of item.Config.Env) {
++        refuse(typeof entry === 'string' && entry.indexOf('=') > 0);
++        const index = entry.indexOf('=');
++        const key = entry.slice(0, index);
++        refuse(!Object.hasOwn(values, key));
++        values[key] = entry.slice(index + 1);
++    }
++    return values;
++}
++function localNetwork(item) {
++    const networks = item?.NetworkSettings?.Networks;
++    refuse(networks && Object.keys(networks).length === 1 && typeof networks[network]?.NetworkID === 'string'
++        && networks[network].NetworkID.length > 0);
++    return networks[network].NetworkID;
++}
++function validJwks(configured, secret) {
++    try {
++        const jwks = JSON.parse(configured);
++        return Array.isArray(jwks.keys) && jwks.keys.some(key => key.kty === 'oct') && jwks.keys.every(key => {
++            if (key.kty === 'oct') return typeof key.k === 'string' && /^[A-Za-z0-9_-]+$/.test(key.k)
++                && Buffer.from(key.k, 'base64url').equals(Buffer.from(secret));
++            return key.kty === 'EC' && key.alg === 'ES256' && key.crv === 'P-256'
++                && typeof key.x === 'string' && key.x.length > 0 && typeof key.y === 'string' && key.y.length > 0
++                && !Object.hasOwn(key, 'd');
++        });
++    } catch { return false; }
++}
++function validRoleToken(token, secret, role) {
++    try {
++        const claims = jwt.verify(token, secret, { algorithms: ['HS256'] });
++        return typeof claims === 'object' && claims !== null && claims.role === role;
++    } catch { return false; }
++}
++function validateStorageContainer(storage, db, { requireRunning = true } = {}) {
++    refuse(storage?.Name === `/supabase_storage_${project}` && typeof storage.Id === 'string' && storage.Id.length > 0);
++    refuse(!requireRunning || storage.State?.Running === true);
++    refuse(storage.Config?.Image === 'public.ecr.aws/supabase/storage-api:v1.84.19'
++        && storage.Config.Labels?.['com.supabase.cli.project'] === project);
++    refuse(localNetwork(storage) === localNetwork(db));
++    for (const bindings of [storage.HostConfig?.PortBindings, storage.NetworkSettings?.Ports]) {
++        refuse(bindings && Array.isArray(bindings['5000/tcp']) && bindings['5000/tcp'].length === 1);
++        const binding = bindings['5000/tcp'][0];
++        refuse(binding.HostIp === '127.0.0.1' && binding.HostPort === '58323');
++        for (const [port, entries] of Object.entries(bindings)) {
++            refuse(port === '5000/tcp' || entries === null || (Array.isArray(entries) && entries.length === 0));
++        }
++    }
++    refuse(Array.isArray(storage.Mounts) && storage.Mounts.length === 1);
++    const mount = storage.Mounts[0];
++    refuse(mount.Type === 'volume' && mount.Name === `supabase_storage_${project}` && mount.Destination === '/mnt');
++    const database = environment(db);
++    const config = environment(storage);
++    refuse(typeof database.POSTGRES_PASSWORD === 'string' && database.POSTGRES_PASSWORD.length > 0
++        && typeof database.JWT_SECRET === 'string' && database.JWT_SECRET.length > 0);
++    refuse(config.STORAGE_BACKEND === 'file' && config.FILE_STORAGE_BACKEND_PATH === '/mnt'
++        && config.TENANT_ID === 'stub' && config.DB_MIGRATIONS_FREEZE_AT === 'unlock-object-versioning');
++    let uri;
++    try { uri = new URL(config.DATABASE_URL); } catch { refuse(false); }
++    let credential;
++    try { credential = decodeURIComponent(uri.password); } catch { refuse(false); }
++    refuse(['postgres:', 'postgresql:'].includes(uri.protocol) && uri.username === 'supabase_storage_admin'
++        && uri.hostname === `supabase_db_${project}` && uri.port === '5432' && uri.pathname === '/postgres'
++        && !uri.search && !uri.hash && credential === database.POSTGRES_PASSWORD);
++    refuse(config.AUTH_JWT_SECRET === database.JWT_SECRET && validJwks(config.JWT_JWKS, database.JWT_SECRET));
++    refuse(validRoleToken(config.SERVICE_KEY, database.JWT_SECRET, 'service_role')
++        && validRoleToken(config.ANON_KEY, database.JWT_SECRET, 'anon'));
++    return { apiUrl: 'http://127.0.0.1:58323', containerId: storage.Id };
++}
++function inspectStorageStack() {
++    let items;
++    try {
++        items = JSON.parse(execFileSync('docker', ['inspect', `supabase_db_${project}`, `supabase_storage_${project}`],
++            { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 10000 }));
++    } catch { refuse(false); }
++    refuse(Array.isArray(items) && items.length === 2);
++    return validateStorageContainer(items[1], items[0]);
++}
++module.exports = { validateStorageContainer, inspectStorageStack };
+diff --git a/backend-node/integration/storage-state.cjs b/backend-node/integration/storage-state.cjs
+new file mode 100644
+index 0000000..9c2930c
+--- /dev/null
++++ b/backend-node/integration/storage-state.cjs
+@@ -0,0 +1,30 @@
++const { execFileSync } = require('node:child_process');
++
++function normalizeDump(sql) {
++    return sql.replace(/^\\(?:un)?restrict .*\r?\n/gm, '').replace(/\r\n/g, '\n');
++}
++async function storageDatabaseState(client) {
++    const schema = normalizeDump(execFileSync('docker', ['exec', 'supabase_db_thirasara-phase4-c',
++        'pg_dump', '-U', 'postgres', '-d', 'postgres', '--schema=storage', '--schema-only'],
++    { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 8 * 1024 * 1024, timeout: 15000 }));
++    const names = (await client.query("SELECT tablename FROM pg_tables WHERE schemaname='storage' ORDER BY tablename")).rows.map(row => row.tablename);
++    const tables = {};
++    for (const name of names) {
++        if (!/^[a-z][a-z0-9_]*$/.test(name)) throw new Error('Unexpected native Storage table name.');
++        tables[name] = (await client.query(`SELECT coalesce(jsonb_agg(to_jsonb(t) ORDER BY to_jsonb(t)::text), '[]'::jsonb) AS snapshot FROM storage."${name}" t`)).rows[0].snapshot;
++    }
++    return { schema, tables };
++}
++
++function fileManifest(containerId) {
++    if (!/^[a-f0-9]{64}$/.test(containerId)) throw new Error('Verified Storage container required for manifest.');
++    // Read-only inventory through the already-verified existing Storage process/container.
++    const script = "const fs=require('fs'),p=require('path'),c=require('crypto');const out=[];function walk(dir){for(const n of fs.readdirSync(dir).sort()){const full=p.join(dir,n),s=fs.lstatSync(full);if(s.isSymbolicLink())throw Error('symlink refused');if(s.isDirectory())walk(full);else if(s.isFile())out.push({path:p.relative('/mnt',full).split(p.sep).join('/'),size:s.size,sha256:c.createHash('sha256').update(fs.readFileSync(full)).digest('hex')});else throw Error('unexpected file type')}}walk('/mnt');process.stdout.write(JSON.stringify(out));";
++    return JSON.parse(execFileSync('docker', ['exec', containerId, 'node', '-e', script],
++        { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 8 * 1024 * 1024, timeout: 15000 }));
++}
++
++function assertStorageState(before, after) {
++    if (JSON.stringify(before) !== JSON.stringify(after)) throw new Error('Storage schema/metadata/files were not preserved.');
++}
++module.exports = { normalizeDump, storageDatabaseState, fileManifest, assertStorageState };
+diff --git a/backend-node/integration/storage-network.cjs b/backend-node/integration/storage-network.cjs
+new file mode 100644
+index 0000000..06037d9
+--- /dev/null
++++ b/backend-node/integration/storage-network.cjs
+@@ -0,0 +1,72 @@
++const faults = { owner: null, count: 0, releaseFirst: null, firstDone: null, firstPath: null, firstSucceeded: false, injectedPaths: [] };
++let observer = null;
++function directStorageUrl(input) {
++    const url = new URL(typeof input === 'string' || input instanceof URL ? input : input.url);
++    if (url.origin !== 'http://127.0.0.1:58321' || url.username || url.password || !url.pathname.startsWith('/storage/v1/')) {
++        throw new Error('Unexpected Storage transport refused.');
++    }
++    url.port = '58323';
++    url.pathname = url.pathname.slice('/storage/v1'.length);
++    return url;
++}
++const validOwner = owner => /^[0-9a-f-]{36}$/.test(owner);
++function observeSuccessfulUploads(owner, callback) {
++    if (!validOwner(owner) || typeof callback !== 'function') throw new Error('Exact synthetic owner and observer required.');
++    observer = { owner, callback };
++}
++function clearUploadObserver() { observer = null; }
++function injectSecondUploadFailure(owner) {
++    if (!validOwner(owner)) throw new Error('Exact synthetic owner required for fault.');
++    clearStorageFault();
++    faults.owner = owner;
++    faults.count = 0;
++    faults.firstPath = null;
++    faults.firstSucceeded = false;
++    faults.injectedPaths = [];
++    faults.firstDone = new Promise(resolve => { faults.releaseFirst = resolve; });
++}
++function storageFaultEvidence() {
++    return { owner: faults.owner, attempts: faults.count, firstPath: faults.firstPath,
++        firstSucceeded: faults.firstSucceeded, injectedPaths: [...faults.injectedPaths] };
++}
++function clearStorageFault() {
++    faults.releaseFirst?.(false);
++    faults.owner = null;
++    faults.releaseFirst = null;
++}
++function storageFetch(realFetch, fallback) {
++    return async (input, init) => {
++        const raw = new URL(typeof input === 'string' || input instanceof URL ? input : input.url);
++        if (!raw.pathname.startsWith('/storage/v1/')) return fallback(input, init);
++        const url = directStorageUrl(input);
++        const uploadPath = init?.method?.toUpperCase() === 'POST' && url.pathname.startsWith('/object/properties/')
++            ? decodeURIComponent(url.pathname.slice('/object/properties/'.length)) : null;
++        const targetFault = uploadPath?.startsWith(`${faults.owner}/`) && faults.owner;
++        const attempt = targetFault ? ++faults.count : 0;
++        if (attempt === 2) {
++            if (!await faults.firstDone) throw new Error('First real upload or observer failed; second-upload fault not injected.');
++            faults.injectedPaths.push(uploadPath);
++            return new Response(JSON.stringify({ statusCode: '500', error: 'Injected upload failure', message: 'Injected upload failure' }),
++                { status: 500, headers: { 'content-type': 'application/json' } });
++        }
++        try {
++            const response = await realFetch(url, { ...init, redirect: 'error', signal: AbortSignal.timeout(10000) });
++            let observed = false;
++            if (response.ok && uploadPath && observer && uploadPath.startsWith(`${observer.owner}/`)) {
++                await observer.callback({ owner: observer.owner, path: uploadPath, status: response.status });
++                observed = true;
++            }
++            if (attempt === 1) {
++                faults.firstPath = uploadPath;
++                faults.firstSucceeded = response.ok && observed;
++                faults.releaseFirst?.(faults.firstSucceeded);
++            }
++            return response;
++        } catch (error) {
++            if (attempt === 1) faults.releaseFirst?.(false);
++            throw error;
++        }
++    };
++}
++module.exports = { directStorageUrl, storageFetch, injectSecondUploadFailure, clearStorageFault,
++    observeSuccessfulUploads, clearUploadObserver, storageFaultEvidence };
+diff --git a/backend-node/integration/storage.setup.cjs b/backend-node/integration/storage.setup.cjs
+new file mode 100644
+index 0000000..489e288
+--- /dev/null
++++ b/backend-node/integration/storage.setup.cjs
+@@ -0,0 +1,21 @@
++const { inspectStorageStack } = require('./storage-local.cjs');
++const { allowedAppPorts } = require('./network-policy.cjs');
++const { storageFetch } = require('./storage-network.cjs');
++if (process.env.PHASE5_STORAGE_APPROVED !== 'stack-c') throw new Error('Verified Storage profile required.');
++const storage = inspectStorageStack();
++// Only this explicit profile extends the already installed TCP guard.
++allowedAppPorts.add(58323);
++globalThis.fetch = storageFetch(globalThis.__phase5NativeFetch, globalThis.fetch);
++process.env.PHASE5_STORAGE_CONTAINER = storage.containerId;
++
++// Only known synthetic validation/fault cases are quiet; unexpected errors remain visible.
++for (const method of ['log', 'warn', 'error']) {
++    const original = console[method].bind(console);
++    console[method] = (...args) => {
++        if (args.length === 1 && typeof args[0] === 'string'
++            && /^\[HTTP\] (POST|DELETE) \/api\/(properties(?:\/[^ ]*)?|admin\/listings(?:\/[^ ]*)?) -> [234]\d\d \(\d+ms\)$/.test(args[0])) return;
++        if (method === 'error' && args[0] === '🔥 Global Error Handler:' && typeof args[1] === 'string'
++            && /^(Invalid file type \(application\/pdf\)|File too large$|Unexpected file field$|Too many files$|invalid input syntax for type numeric: "invalid-numeric-fixture"$|Injected upload failure$)/.test(args[1])) return;
++        original(...args);
++    };
++}
+diff --git a/backend-node/integration/storage.jest.config.cjs b/backend-node/integration/storage.jest.config.cjs
+new file mode 100644
+index 0000000..03d84d8
+--- /dev/null
++++ b/backend-node/integration/storage.jest.config.cjs
+@@ -0,0 +1,7 @@
++module.exports = {
++    rootDir: '..',
++    testMatch: ['<rootDir>/integration/storage.integration.cjs'],
++    setupFiles: ['<rootDir>/integration/setup.cjs', '<rootDir>/integration/storage.setup.cjs'],
++    testTimeout: 20000,
++    verbose: true,
++};
+diff --git a/backend-node/integration/storage.integration.cjs b/backend-node/integration/storage.integration.cjs
+new file mode 100644
+index 0000000..7413889
+--- /dev/null
++++ b/backend-node/integration/storage.integration.cjs
+@@ -0,0 +1,213 @@
++const { randomUUID, createHash } = require('node:crypto');
++const { setTimeout: delay } = require('node:timers/promises');
++const request = require('supertest');
++const bcrypt = require('bcryptjs');
++const { Client } = require('pg');
++const { identitySql, validateDatabase } = require('./local-stack.cjs');
++const { allowedAppPorts } = require('./network-policy.cjs');
++const { fileManifest } = require('./storage-state.cjs');
++const { injectSecondUploadFailure, clearStorageFault, observeSuccessfulUploads,
++    clearUploadObserver, storageFaultEvidence } = require('./storage-network.cjs');
++const storage = require('../config/supabase').storage.from('properties');
++const app = require('../server');
++const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a6CkAAAAASUVORK5CYII=', 'base64');
++const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
++const run = randomUUID(), password = 'Storage-fixture-only-123!';
++const roles = ['SELLER', 'AGENT', 'BUYER', 'ADMIN', 'OTHER_SELLER'];
++const users = Object.fromEntries(roles.map(key => [key, { id: randomUUID(), role: key === 'OTHER_SELLER' ? 'SELLER' : key,
++    email: `${run}-${key.toLowerCase()}@example.test` }]));
++const ids = Object.values(users).map(user => user.id), sessions = {};
++const db = new Client(JSON.parse(process.env.PHASE5_DATABASE));
++let connected = false, server, port;
++const call = (role, method, path) => {
++    const req = request(server)[method](path);
++    return role ? req.set('Cookie', sessions[role]) : req;
++};
++const payload = extra => ({ type: 'House', title: `Storage ${run}`, description: 'Isolated synthetic image test property.',
++    price: '1000000', latitude: '7', longitude: '80', ...extra });
++const upload = (role, { fields = {}, photos = 1, tour = false } = {}) => {
++    let req = call(role, 'post', '/api/properties');
++    for (const [key, value] of Object.entries(payload(fields))) req = req.field(key, value);
++    for (let n = 0; n < photos; n++) req = req.attach('images', png, { filename: `fixture-${n}.png`, contentType: 'image/png' });
++    if (tour) req = req.field('virtualTourMetadata', JSON.stringify([{ room: 'Bedroom' }]))
++        .attach('virtualTours', png, { filename: 'panorama.png', contentType: 'image/png' });
++    return req;
++};
++const objects = async () => (await db.query("SELECT name,metadata FROM storage.objects WHERE bucket_id='properties' AND split_part(name,'/',1)=ANY($1::text[]) ORDER BY name", [ids])).rows;
++const names = async () => (await objects()).map(object => object.name);
++const rows = async () => (await db.query('SELECT id FROM public.properties WHERE seller_id=ANY($1::uuid[]) ORDER BY id', [ids])).rows.map(row => row.id);
++const files = () => fileManifest(process.env.PHASE5_STORAGE_CONTAINER).filter(file => file.path.split('/').some(part => ids.includes(part)));
++async function eventually(check, timeout = 8000) {
++    const deadline = Date.now() + timeout;
++    do { if (await check()) return true; await delay(150); } while (Date.now() < deadline);
++    return false;
++}
++const pathFromUrl = value => {
++    const url = new URL(value);
++    expect(url.origin).toBe('http://127.0.0.1:58321');
++    const prefix = '/storage/v1/object/public/properties/';
++    expect(url.pathname.startsWith(prefix)).toBe(true);
++    const path = decodeURIComponent(url.pathname.slice(prefix.length));
++    expect(ids).toContain(path.split('/')[0]);
++    return path;
++};
++async function verifyImage(url, owner) {
++    const path = pathFromUrl(url);
++    expect(path.split('/')[0]).toBe(users[owner].id);
++    const metadata = (await objects()).find(object => object.name === path)?.metadata;
++    expect(metadata).toMatchObject({ mimetype: 'image/png', size: png.length });
++    // Public bucket: prove bytes via unauthenticated public transport, not a private-file rule.
++    const response = await fetch(url);
++    expect(response.status).toBe(200);
++    expect(response.headers.get('content-type')).toMatch(/^image\/png/);
++    expect(sha256(Buffer.from(await response.arrayBuffer()))).toBe(sha256(png));
++    expect(files().some(file => file.path.split('/').includes(users[owner].id) && file.sha256 === sha256(png))).toBe(true);
++    return path;
++}
++function proveSuccessfulUpload(role, evidence) {
++    observeSuccessfulUploads(users[role].id, async transfer => {
++        expect(transfer.owner).toBe(users[role].id);
++        expect(transfer.path.startsWith(`${users[role].id}/`)).toBe(true);
++        const stored = await db.query("SELECT name,metadata FROM storage.objects WHERE bucket_id='properties' AND name=$1", [transfer.path]);
++        expect(stored.rows).toHaveLength(1);
++        expect(stored.rows[0].metadata).toMatchObject({ mimetype: 'image/png', size: png.length });
++        const physical = files().filter(file => file.path.includes(`/properties/${transfer.path}/`)
++            || file.path.endsWith(`/properties/${transfer.path}`));
++        expect(physical.some(file => file.sha256 === sha256(png) && file.size === png.length)).toBe(true);
++        evidence.push(transfer);
++    });
++}
++
++beforeAll(async () => {
++    server = await new Promise((resolve, reject) => { const listener = app.listen(0, '127.0.0.1', () => resolve(listener)); listener.once('error', reject); });
++    port = server.address().port;
++    allowedAppPorts.add(port);
++    await db.connect(); connected = true;
++    validateDatabase((await db.query(identitySql)).rows[0]);
++    const hash = await bcrypt.hash(password, 10);
++    for (const [key, user] of Object.entries(users)) {
++        await db.query('INSERT INTO public.users(id,name,email,password_hash,role) VALUES($1,$2,$3,$4,$5)',
++            [user.id, `Storage ${key}`, user.email, hash, user.role]);
++        const response = await request(server).post(key === 'ADMIN' ? '/api/admin/login' : '/api/auth/login').send({ email: user.email, password });
++        expect(response.status).toBe(200);
++        sessions[key] = response.headers['set-cookie'][0].split(';')[0];
++    }
++});
++
++afterAll(async () => {
++    clearStorageFault();
++    clearUploadObserver();
++    try {
++        if (connected) {
++            validateDatabase((await db.query(identitySql)).rows[0]);
++            const paths = await names();
++            if (paths.length) { const removed = await storage.remove(paths); if (removed.error) throw new Error('Exact Storage fixture cleanup failed.'); }
++            expect(await eventually(async () => (await names()).length === 0 && files().length === 0)).toBe(true);
++            await db.query('DELETE FROM public.properties WHERE seller_id=ANY($1::uuid[])', [ids]);
++            expect(await rows()).toEqual([]);
++            await db.query('DELETE FROM public.users WHERE id=ANY($1::uuid[]) AND email=ANY($2::text[])', [ids, Object.values(users).map(user => user.email)]);
++            expect((await db.query('SELECT id FROM public.users WHERE id=ANY($1::uuid[])', [ids])).rows).toEqual([]);
++            console.log('Storage fixture cleanup verified: actual Storage API removed exact owned objects/files before own properties/users.');
++        }
++    } finally {
++        try { await db.end(); }
++        finally { try { if (server?.listening) await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve())); }
++            finally { allowedAppPorts.delete(port); } }
++    }
++});
++
++describe('Real local image/Storage integration', () => {
++    test.each(['SELLER', 'AGENT'])('%s image creation persists URL, metadata and exact public bytes', async role => {
++        const response = await upload(role);
++        expect(response.status).toBe(201);
++        expect(response.body.property).toMatchObject({ seller_id: users[role].id, status: 'pending', payment_status: 'Unpaid' });
++        expect(response.body.property.images).toHaveLength(1);
++        await verifyImage(response.body.property.images[0], role);
++    });
++
++    test('multiple real photos and tour preserve URL/room associations', async () => {
++        const response = await upload('SELLER', { photos: 2, tour: true });
++        expect(response.status).toBe(201);
++        expect(response.body.property.images).toHaveLength(2);
++        expect(response.body.property.virtual_tours).toHaveLength(1);
++        expect(response.body.property.virtual_tours[0].room).toBe('Bedroom');
++        const urls = [...response.body.property.images, response.body.property.virtual_tours[0].url];
++        expect(new Set(urls).size).toBe(3);
++        for (const url of urls) await verifyImage(url, 'SELLER');
++        const persisted = (await db.query('SELECT images,virtual_tours FROM public.properties WHERE id=$1', [response.body.property.id])).rows[0];
++        expect(persisted).toMatchObject({ images: response.body.property.images, virtual_tours: response.body.property.virtual_tours });
++    });
++
++    test.each(['MIME', 'size', 'field', 'count'])('%s rejection leaves no new listing/object/file', async kind => {
++        const beforeNames = await names(), beforeRows = await rows(), beforeFiles = files();
++        let req = call('SELLER', 'post', '/api/properties');
++        for (const [key, value] of Object.entries(payload())) req = req.field(key, value);
++        if (kind === 'MIME') req = req.attach('images', Buffer.from('reject'), { filename: 'bad.pdf', contentType: 'application/pdf' });
++        else if (kind === 'size') req = req.attach('images', Buffer.alloc(5 * 1024 * 1024 + 1), { filename: 'large.png', contentType: 'image/png' });
++        else if (kind === 'field') req = req.attach('unexpected', png, { filename: 'wrong.png', contentType: 'image/png' });
++        else { for (let n = 0; n < 8; n++) req = req.attach('images', png, { filename: `${n}.png`, contentType: 'image/png' });
++            for (let n = 0; n < 3; n++) req = req.attach('virtualTours', png, { filename: `tour-${n}.png`, contentType: 'image/png' }); }
++        const response = await req;
++        expect(response.status).toBe(400);
++        expect(response.body.message).toMatch(kind === 'MIME' ? /Invalid file type/ : kind === 'size' ? /too large/ : kind === 'field' ? /Unexpected upload field/ : /Too many files/);
++        expect(await names()).toEqual(beforeNames); expect(await rows()).toEqual(beforeRows); expect(files()).toEqual(beforeFiles);
++    });
++
++    test('actual DB failure after upload rolls back stored objects and persisted bytes', async () => {
++        const beforeNames = await names(), beforeRows = await rows(), beforeFiles = files();
++        const evidence = [];
++        const errors = jest.spyOn(console, 'error');
++        proveSuccessfulUpload('SELLER', evidence);
++        try {
++            const response = await upload('SELLER', { fields: { houseSize: 'invalid-numeric-fixture' } });
++            expect(response.status).toBe(500);
++            expect(evidence).toHaveLength(1);
++            expect(errors.mock.calls.some(args => args.some(value => typeof value === 'string'
++                && /invalid input syntax for type numeric/.test(value) && value.includes('invalid-numeric-fixture')))).toBe(true);
++            expect(await rows()).toEqual(beforeRows);
++            expect(await eventually(async () => JSON.stringify(await names()) === JSON.stringify(beforeNames) && JSON.stringify(files()) === JSON.stringify(beforeFiles))).toBe(true);
++        } finally { clearUploadObserver(); clearStorageFault(); errors.mockRestore(); }
++    });
++
++    test('controlled second transfer failure rolls back the completed first real transfer', async () => {
++        const beforeNames = await names(), beforeRows = await rows(), beforeFiles = files();
++        const evidence = [];
++        proveSuccessfulUpload('AGENT', evidence);
++        injectSecondUploadFailure(users.AGENT.id);
++        try {
++            const response = await upload('AGENT', { photos: 2 });
++            expect(response.status).toBe(500);
++            expect(evidence).toHaveLength(1);
++            const fault = storageFaultEvidence();
++            expect(fault).toMatchObject({ owner: users.AGENT.id, attempts: 2, firstSucceeded: true, firstPath: evidence[0].path });
++            expect(fault.injectedPaths).toHaveLength(1);
++            expect(fault.injectedPaths[0].startsWith(`${users.AGENT.id}/`)).toBe(true);
++            expect(fault.injectedPaths[0]).not.toBe(evidence[0].path);
++            expect(await rows()).toEqual(beforeRows);
++            expect(await eventually(async () => JSON.stringify(await names()) === JSON.stringify(beforeNames) && JSON.stringify(files()) === JSON.stringify(beforeFiles))).toBe(true);
++        } finally { clearStorageFault(); clearUploadObserver(); }
++    });
++
++    test('anonymous/wrong-role uploads and foreign-owner delete preserve other objects', async () => {
++        const response = await upload('SELLER'); expect(response.status).toBe(201);
++        const id = response.body.property.id, beforeNames = await names(), beforeFiles = files();
++        for (const role of [null, 'BUYER', 'ADMIN']) expect((await upload(role)).status).toBe(role ? 403 : 401);
++        expect((await call('OTHER_SELLER', 'delete', `/api/properties/my-listings/${id}`)).status).toBe(404);
++        expect(await names()).toEqual(beforeNames); expect(files()).toEqual(beforeFiles);
++        expect((await db.query('SELECT id FROM public.properties WHERE id=$1', [id])).rows).toHaveLength(1);
++    });
++
++    test.each(['SELLER', 'ADMIN'])('%s listing deletion also removes its image objects and bytes', async role => {
++        const response = await upload('SELLER'); expect(response.status).toBe(201);
++        const id = response.body.property.id, targets = response.body.property.images.map(pathFromUrl);
++        const deleted = await call(role, 'delete', role === 'ADMIN' ? `/api/admin/listings/${id}` : `/api/properties/my-listings/${id}`);
++        expect(deleted.status).toBe(200);
++        expect((await db.query('SELECT id FROM public.properties WHERE id=$1', [id])).rows).toEqual([]);
++        const removed = await eventually(async () => !(await names()).some(name => targets.includes(name)), 3000);
++        const remainingFiles = files().filter(file => targets.some(path => file.path.includes(`/properties/${path}/`) || file.path.endsWith(`/properties/${path}`)));
++        const publicStatus = (await fetch(response.body.property.images[0])).status;
++        console.log(`Observed ${role} delete: remaining target objects=${(await names()).filter(name => targets.includes(name)).length}, files=${remainingFiles.length}, public GET=${publicStatus}.`);
++        expect(removed).toBe(true);
++        expect(files().filter(file => targets.some(path => file.path.includes(`/properties/${path}/`) || file.path.endsWith(`/properties/${path}`)))).toEqual([]);
++    });
++});
+diff --git a/backend-node/integration/run-storage.cjs b/backend-node/integration/run-storage.cjs
+new file mode 100644
+index 0000000..f5cefc7
+--- /dev/null
++++ b/backend-node/integration/run-storage.cjs
+@@ -0,0 +1,2 @@
++const { runLocal } = require('./run-local.cjs');
++void runLocal('storage');
+diff --git a/backend-node/integration/run-local.cjs b/backend-node/integration/run-local.cjs
+new file mode 100644
+index 0000000..5c328b2
+--- /dev/null
++++ b/backend-node/integration/run-local.cjs
+@@ -0,0 +1,96 @@
++const { spawnSync } = require('node:child_process');
++const path = require('node:path');
++const jwt = require('jsonwebtoken');
++const { Client } = require('pg');
++const { inspectLocalStack, validateDatabase, identitySql } = require('./local-stack.cjs');
++const { snapshotState, assertSameState } = require('./database-state.cjs');
++
++const profiles = Object.freeze({
++    'login-roles': { label: 'Login/roles', config: 'jest.config.cjs', tables: ['users'] },
++    listings: { label: 'Listings', config: 'listings.jest.config.cjs',
++        tables: ['users', 'properties', 'transactions', 'payment_orders', 'payment_receipt_outbox'] },
++    storage: { label: 'Listings Storage', config: 'storage.jest.config.cjs',
++        tables: ['users', 'properties', 'transactions', 'payment_orders', 'payment_receipt_outbox'] },
++});
++
++async function runLocal(profileName) {
++    let stage = 'container/workdir/checksum identity';
++    let client;
++    try {
++        if (!Object.hasOwn(profiles, profileName)) throw new Error('Unknown test profile.');
++        const profile = profiles[profileName];
++        const local = inspectLocalStack();
++        client = new Client(local.database);
++        stage = 'read-only database connection';
++        await client.connect();
++        await client.query('BEGIN READ ONLY');
++        stage = 'database marker and ledger identity';
++        validateDatabase((await client.query(identitySql)).rows[0]);
++        const before = await snapshotState(client, profile.tables);
++        let storage, storageBefore;
++        if (profileName === 'storage') {
++            storage = require('./storage-local.cjs').inspectStorageStack();
++            storageBefore = { database: await require('./storage-state.cjs').storageDatabaseState(client),
++                files: require('./storage-state.cjs').fileManifest(storage.containerId) };
++        }
++        const ids = (await client.query('SELECT id FROM public.users ORDER BY id')).rows.map(row => row.id);
++        const key = jwt.sign({ role: 'service_role', iss: 'supabase' }, local.jwtSecret, { expiresIn: '10m' });
++        stage = 'PostgREST read-only identity cross-check';
++        const response = await fetch(`${local.apiUrl}/users?select=id&order=id`, {
++            headers: { Authorization: `Bearer ${key}` }, redirect: 'error', signal: AbortSignal.timeout(5000),
++        });
++        if (!response.ok || JSON.stringify((await response.json()).map(row => row.id)) !== JSON.stringify(ids)) {
++            throw new Error('Local API and database identity cross-check failed.');
++        }
++        if (storage) {
++            const bucket = await fetch(`${storage.apiUrl}/bucket/properties`, { headers: { Authorization: `Bearer ${key}` },
++                redirect: 'error', signal: AbortSignal.timeout(5000) });
++            if (!bucket.ok || (await bucket.json()).id !== 'properties') throw new Error('Checked Storage bucket unavailable.');
++            require('./storage-state.cjs').assertStorageState(storageBefore.database,
++                await require('./storage-state.cjs').storageDatabaseState(client));
++        }
++        await client.query('ROLLBACK');
++        if (process.argv.includes('--preflight')) {
++            console.log(`PASS: ${profile.label} stack-c container/DB/API/marker/checksums/ledger; read-only state snapshot. No fixture writes.`);
++            return;
++        }
++        const env = Object.fromEntries(['PATH', 'SystemRoot', 'WINDIR', 'TEMP', 'TMP', 'COMSPEC', 'PATHEXT']
++            .filter(name => process.env[name]).map(name => [name, process.env[name]]));
++        Object.assign(env, {
++            NODE_ENV: 'test', JWT_SECRET: 'phase5-isolated-auth-tests-only',
++            SUPABASE_URL: local.apiUrl, SUPABASE_KEY: key,
++            PHASE5_DATABASE: JSON.stringify(local.database), PHASE5_LOCAL_APPROVED: 'stack-c',
++        });
++        if (storage) env.PHASE5_STORAGE_APPROVED = 'stack-c';
++        console.log(`Running real ${profile.label} integration against verified stack-c; external delivery disabled.`);
++        stage = 'integration assertions and fixture cleanup';
++        const result = spawnSync(process.execPath, [require.resolve('jest/bin/jest'), '--config',
++            path.join(__dirname, profile.config), '--runInBand', '--no-cache'], {
++            cwd: path.resolve(__dirname, '..'), env, stdio: 'inherit', timeout: 120000,
++        });
++        // Check preservation after child failure/timeout as well as success.
++        stage = 'post-run state preservation';
++        validateDatabase((await client.query(identitySql)).rows[0]);
++        assertSameState(before, await snapshotState(client, profile.tables));
++        if (storage) {
++            require('./storage-state.cjs').assertStorageState(storageBefore, {
++                database: await require('./storage-state.cjs').storageDatabaseState(client),
++                files: require('./storage-state.cjs').fileManifest(storage.containerId),
++            });
++            console.log('PASS: full native Storage schema/metadata and persisted file manifest preserved.');
++        }
++        console.log(`PASS: ${profile.tables.length} full table snapshot(s) and canonical ledger preserved after cleanup.`);
++        if (result.status !== 0) {
++            stage = 'integration assertions or fixture cleanup';
++            throw new Error('Integration assertions or cleanup failed.');
++        }
++    } catch {
++        // Docker/pg errors can include generated credentials or private configuration.
++        console.error(`FAIL: local ${profileName} integration at ${stage}; credentials suppressed.`);
++        process.exitCode = 1;
++    } finally {
++        if (client) await client.end().catch(() => { process.exitCode = 1; });
++    }
++}
++
++module.exports = { runLocal };
+diff --git a/backend-node/integration/setup.cjs b/backend-node/integration/setup.cjs
+new file mode 100644
+index 0000000..5ee0f13
+--- /dev/null
++++ b/backend-node/integration/setup.cjs
+@@ -0,0 +1,62 @@
++const net = require('node:net');
++const { validateDatabase, identitySql } = require('./local-stack.cjs');
++const { Client } = require('pg');
++const { allowSocket, directRestUrl, allowedAppPorts } = require('./network-policy.cjs');
++
++if (process.env.PHASE5_LOCAL_APPROVED !== 'stack-c' || process.env.NODE_ENV !== 'test'
++    || process.env.SUPABASE_URL !== 'http://127.0.0.1:58321'
++    || process.env.JWT_SECRET !== 'phase5-isolated-auth-tests-only') {
++    throw new Error('Verified integration launcher required.');
++}
++
++// Keep all dotenv calls from loading hosted credentials from the checkout.
++jest.mock('dotenv', () => ({ config: () => ({ parsed: {} }) }));
++jest.mock('../utils/emailService', () => new Proxy({}, {
++    get: (_target, name) => {
++        if (name === '__esModule') return false;
++        return () => { throw new Error('External email is forbidden in Login/roles integration.'); };
++    },
++}));
++jest.mock('../utils/paymentReceiptQueue', () => ({
++    start: () => { throw new Error('Receipt worker must not start in integration.'); },
++    drain: () => { throw new Error('Receipt delivery is forbidden in Login/roles integration.'); },
++}));
++
++// Defense in depth for axios, SMTP, Google and arbitrary TCP clients.
++const originalConnect = net.Socket.prototype.connect;
++net.Socket.prototype.connect = function (...args) {
++    if (!allowSocket(args, allowedAppPorts)) {
++        throw new Error('Unexpected outbound socket refused by integration harness.');
++    }
++    return originalConnect.apply(this, args);
++};
++
++const originalFetch = globalThis.fetch;
++// Hand the native transport only to the separately revalidated Storage profile.
++if (process.env.PHASE5_STORAGE_APPROVED === 'stack-c') globalThis.__phase5NativeFetch = originalFetch;
++globalThis.fetch = (input, init) => {
++    // Supabase JS normally uses Kong's /rest/v1 prefix. The retained local stack exposes PostgREST directly.
++    const url = directRestUrl(input);
++    return originalFetch(url, { ...init, redirect: 'error', signal: AbortSignal.timeout(5000) });
++};
++
++// Expected 4xx security scenarios produce normal HTTP logger warnings. Keep other output visible.
++for (const method of ['log', 'warn']) {
++    const original = console[method].bind(console);
++    console[method] = (...args) => {
++        if (args.length === 1 && typeof args[0] === 'string'
++            && /^\[HTTP\] (GET|POST) \/api\/(auth\/(login|me|logout)|admin\/(login|verify)) -> [234]\d\d \(\d+ms\)$/.test(args[0])) return;
++        original(...args);
++    };
++}
++
++// Revalidate DB identity inside the child before any test setup can seed users.
++module.exports = async () => {
++    const client = new Client(JSON.parse(process.env.PHASE5_DATABASE));
++    try {
++        await client.connect();
++        await client.query('BEGIN READ ONLY');
++        validateDatabase((await client.query(identitySql)).rows[0]);
++        await client.query('ROLLBACK');
++    } finally { await client.end(); }
++};
+diff --git a/backend-node/tests/storageLocalGuard.test.js b/backend-node/tests/storageLocalGuard.test.js
+new file mode 100644
+index 0000000..9b79528
+--- /dev/null
++++ b/backend-node/tests/storageLocalGuard.test.js
+@@ -0,0 +1,133 @@
++const jwt = require('jsonwebtoken');
++const { validateStorageContainer } = require('../integration/storage-local.cjs');
++
++const project = 'thirasara-phase4-c';
++const network = 'thirasara-phase4-local';
++const secret = 'synthetic-local-only-jwt-secret-for-guard-tests';
++const password = 'synthetic-db-password';
++const env = values => Object.entries(values).map(([key, value]) => `${key}=${value}`);
++function fixture() {
++    const db = { Config: { Env: env({ POSTGRES_PASSWORD: password, JWT_SECRET: secret }) },
++        NetworkSettings: { Networks: { [network]: { NetworkID: 'local-network-id' } } } };
++    const storage = {
++        Id: 'synthetic-storage-id', Name: `/supabase_storage_${project}`, State: { Running: true },
++        Config: { Image: 'public.ecr.aws/supabase/storage-api:v1.84.19',
++            Labels: { 'com.supabase.cli.project': project }, Env: env({
++                STORAGE_BACKEND: 'file', FILE_STORAGE_BACKEND_PATH: '/mnt', TENANT_ID: 'stub',
++                DB_MIGRATIONS_FREEZE_AT: 'unlock-object-versioning',
++                DATABASE_URL: `postgresql://supabase_storage_admin:${password}@supabase_db_${project}:5432/postgres`,
++                AUTH_JWT_SECRET: secret,
++                JWT_JWKS: JSON.stringify({ keys: [{ kty: 'oct', k: Buffer.from(secret).toString('base64url') }] }),
++                SERVICE_KEY: jwt.sign({ role: 'service_role' }, secret, { algorithm: 'HS256' }),
++                ANON_KEY: jwt.sign({ role: 'anon' }, secret, { algorithm: 'HS256' }),
++            }) },
++        HostConfig: { PortBindings: { '5000/tcp': [{ HostIp: '127.0.0.1', HostPort: '58323' }] } },
++        NetworkSettings: { Networks: { [network]: { NetworkID: 'local-network-id' } },
++            Ports: { '5000/tcp': [{ HostIp: '127.0.0.1', HostPort: '58323' }] } },
++        Mounts: [{ Type: 'volume', Name: `supabase_storage_${project}`, Destination: '/mnt' }],
++    };
++    return { storage, db };
++}
++function setEnv(storage, key, value) {
++    storage.Config.Env = storage.Config.Env.filter(entry => !entry.startsWith(`${key}=`));
++    if (value !== undefined) storage.Config.Env.push(`${key}=${value}`);
++}
++
++describe('Retained local Storage identity guard without network calls', () => {
++    test('returns only safe manifest identity for the exact retained instance', () => {
++        const { storage, db } = fixture();
++        expect(validateStorageContainer(storage, db)).toEqual({
++            apiUrl: 'http://127.0.0.1:58323', containerId: 'synthetic-storage-id',
++        });
++    });
++    test('stopped inspection requires explicit opt out of runtime check', () => {
++        const { storage, db } = fixture();
++        storage.State.Running = false;
++        expect(() => validateStorageContainer(storage, db)).toThrow(/refused/);
++        expect(validateStorageContainer(storage, db, { requireRunning: false }).containerId).toBe(storage.Id);
++    });
++    test('also accepts the explicit postgres URL scheme', () => {
++        const { storage, db } = fixture();
++        setEnv(storage, 'DATABASE_URL', `postgres://supabase_storage_admin:${password}@supabase_db_${project}:5432/postgres`);
++        expect(validateStorageContainer(storage, db).containerId).toBe(storage.Id);
++    });
++    test('accepts retained mixed public EC and locally proven oct JWKS', () => {
++        const { storage, db } = fixture();
++        setEnv(storage, 'JWT_JWKS', JSON.stringify({ keys: [
++            { kty: 'EC', alg: 'ES256', crv: 'P-256', x: 'public-x', y: 'public-y' },
++            { kty: 'oct', k: Buffer.from(secret).toString('base64url') },
++        ] }));
++        expect(validateStorageContainer(storage, db).containerId).toBe(storage.Id);
++    });
++    test.each(['POSTGRES_PASSWORD', 'JWT_SECRET'])('requires DB credential provenance %s', key => {
++        const { storage, db } = fixture();
++        db.Config.Env = db.Config.Env.filter(entry => !entry.startsWith(`${key}=`));
++        expect(() => validateStorageContainer(storage, db)).toThrow(/refused/);
++    });
++    test('rejects duplicate environment keys instead of selecting an ambiguous secret', () => {
++        const { storage, db } = fixture();
++        storage.Config.Env.push(`AUTH_JWT_SECRET=${secret}`);
++        expect(() => validateStorageContainer(storage, db)).toThrow(/refused/);
++    });
++    test.each([
++        ['name', s => { s.Name = '/another-storage'; }],
++        ['image', s => { s.Config.Image = 'public.ecr.aws/supabase/storage-api:latest'; }],
++        ['label', s => { s.Config.Labels['com.supabase.cli.project'] = 'other'; }],
++        ['missing ID', s => { delete s.Id; }],
++        ['different network', s => { s.NetworkSettings.Networks[network].NetworkID = 'other'; }],
++        ['extra network', s => { s.NetworkSettings.Networks.other = { NetworkID: 'other' }; }],
++        ['configured public binding', s => { s.HostConfig.PortBindings['5000/tcp'][0].HostIp = '0.0.0.0'; }],
++        ['actual public binding', s => { s.NetworkSettings.Ports['5000/tcp'][0].HostIp = '::'; }],
++        ['wrong published port', s => { s.NetworkSettings.Ports['5000/tcp'][0].HostPort = '5000'; }],
++        ['extra binding', s => { s.HostConfig.PortBindings['5000/tcp'].push({ HostIp: '127.0.0.1', HostPort: '58324' }); }],
++        ['extra public port', s => { s.NetworkSettings.Ports['9000/tcp'] = [{ HostIp: '0.0.0.0', HostPort: '9000' }]; }],
++        ['wrong volume', s => { s.Mounts[0].Name = 'other'; }],
++        ['bind mount', s => { s.Mounts[0].Type = 'bind'; }],
++        ['wrong mount path', s => { s.Mounts[0].Destination = '/other'; }],
++        ['extra mount', s => { s.Mounts.push({ Type: 'volume', Name: 'other', Destination: '/elsewhere' }); }],
++    ])('rejects changed %s', (_label, mutate) => {
++        const { storage, db } = fixture();
++        mutate(storage);
++        expect(() => validateStorageContainer(storage, db)).toThrow(/refused/);
++    });
++    test.each([
++        ['STORAGE_BACKEND', 's3'], ['FILE_STORAGE_BACKEND_PATH', '/tmp'], ['TENANT_ID', 'other'],
++        ['DB_MIGRATIONS_FREEZE_AT', 'other'], ['AUTH_JWT_SECRET', 'different'],
++        ['JWT_JWKS', '{}'], ['JWT_JWKS', 'not-json'],
++        ['JWT_JWKS', JSON.stringify({ keys: [{ kty: 'oct', k: Buffer.from('other').toString('base64url') }] })],
++        ['JWT_JWKS', JSON.stringify({ keys: [
++            { kty: 'oct', k: Buffer.from(secret).toString('base64url') },
++            { kty: 'oct', k: Buffer.from('other').toString('base64url') },
++        ] })],
++        ...[
++            { kty: 'EC', alg: 'ES256', crv: 'P-256', x: 'x', y: 'y', d: 'private' },
++            { kty: 'EC', alg: 'ES384', crv: 'P-256', x: 'x', y: 'y' },
++            { kty: 'RSA', alg: 'RS256', n: 'n', e: 'AQAB' },
++        ].map(key => ['JWT_JWKS', JSON.stringify({ keys: [
++            { kty: 'oct', k: Buffer.from(secret).toString('base64url') }, key,
++        ] })]),
++        ['JWT_JWKS', JSON.stringify({ keys: [{ kty: 'EC', alg: 'ES256', crv: 'P-256', x: 'x', y: 'y' }] })],
++        ['SERVICE_KEY', jwt.sign({ role: 'anon' }, secret)],
++        ['SERVICE_KEY', jwt.sign({ role: 'service_role' }, 'wrong-secret')],
++        ['ANON_KEY', jwt.sign({ role: 'anon' }, secret, { algorithm: 'HS384' })],
++        ['ANON_KEY', undefined],
++        ['DATABASE_URL', `postgres://supabase_storage_admin:wrong@supabase_db_${project}:5432/postgres`],
++        ['DATABASE_URL', `postgres://postgres:${password}@supabase_db_${project}:5432/postgres`],
++        ['DATABASE_URL', `postgres://supabase_storage_admin:${password}@hosted.example:5432/postgres`],
++        ['DATABASE_URL', `postgres://supabase_storage_admin:${password}@supabase_db_${project}:5432/postgres?sslmode=require`],
++    ])('rejects changed %s configuration', (key, value) => {
++        const { storage, db } = fixture();
++        setEnv(storage, key, value);
++        expect(() => validateStorageContainer(storage, db)).toThrow(/refused/);
++    });
++    test('refusal errors do not expose credentials', () => {
++        const { storage, db } = fixture();
++        setEnv(storage, 'DATABASE_URL', `postgres://${password}@invalid`);
++        try { validateStorageContainer(storage, db); throw new Error('Expected refusal'); }
++        catch (error) {
++            expect(error.message).toMatch(/refused/);
++            expect(error.message).not.toContain(password);
++            expect(error.message).not.toContain(secret);
++        }
++    });
++});
+diff --git a/backend-node/tests/storageState.test.js b/backend-node/tests/storageState.test.js
+new file mode 100644
+index 0000000..8e5f1a8
+--- /dev/null
++++ b/backend-node/tests/storageState.test.js
+@@ -0,0 +1,17 @@
++const { normalizeDump, assertStorageState, fileManifest } = require('../integration/storage-state.cjs');
++test('normalizes only pg_dump random restrict tokens and Windows line endings', () => {
++    expect(normalizeDump('\\restrict random\r\nCREATE TABLE example(id uuid);\r\n\\unrestrict random\r\n'))
++        .toBe('CREATE TABLE example(id uuid);\n');
++});
++test('accepts exact Storage state', () => {
++    const state = { schema: 'table', tables: { objects: [] }, files: [] };
++    expect(() => assertStorageState(state, structuredClone(state))).not.toThrow();
++});
++test.each(['schema', 'tables', 'files'])('refuses %s drift without printing contents', key => {
++    const before = { schema: 'private-definition', tables: {}, files: [] };
++    expect(() => assertStorageState(before, { ...before, [key]: 'different-private-value' }))
++        .toThrow('Storage schema/metadata/files were not preserved.');
++});
++test('refuses unverified container identifiers before Docker invocation', () => {
++    expect(() => fileManifest('supabase_storage_other')).toThrow(/Verified Storage/);
++});
+diff --git a/backend-node/tests/storageNetwork.test.js b/backend-node/tests/storageNetwork.test.js
+new file mode 100644
+index 0000000..266f0b1
+--- /dev/null
++++ b/backend-node/tests/storageNetwork.test.js
+@@ -0,0 +1,73 @@
++const { directStorageUrl, storageFetch, injectSecondUploadFailure, clearStorageFault } = require('../integration/storage-network.cjs');
++test('maps only checked Storage route to its direct loopback port', () => {
++    expect(directStorageUrl('http://127.0.0.1:58321/storage/v1/object/public/properties/fixture.png').href)
++        .toBe('http://127.0.0.1:58323/object/public/properties/fixture.png');
++});
++test.each(['https://hosted.example/storage/v1/object', 'http://127.0.0.1:5000/storage/v1/object',
++    'http://127.0.0.1:58321/rest/v1/users', 'http://user@127.0.0.1:58321/storage/v1/object',
++    'http://127.0.0.1:58321/storage/v1/../../auth'])('rejects %s', url => {
++    expect(() => directStorageUrl(url)).toThrow(/refused/);
++});
++test('keeps ordinary REST at the prior restricted transport', async () => {
++    const real = jest.fn(), fallback = jest.fn().mockResolvedValue('rest');
++    expect(await storageFetch(real, fallback)('http://127.0.0.1:58321/rest/v1/users')).toBe('rest');
++    expect(real).not.toHaveBeenCalled();
++});
++test('fault injection refuses arbitrary prefixes', () => {
++    expect(() => injectSecondUploadFailure('other/path')).toThrow(/synthetic owner/);
++    clearStorageFault();
++});
++
++const { observeSuccessfulUploads, clearUploadObserver, storageFaultEvidence } = require('../integration/storage-network.cjs');
++const owner = '11111111-1111-4111-8111-111111111111';
++const target = name => `http://127.0.0.1:58321/storage/v1/object/properties/${owner}/${name}.png`;
++afterEach(() => { clearStorageFault(); clearUploadObserver(); });
++
++test('observer completes after actual success and before response or second injected failure', async () => {
++    let release;
++    const proof = new Promise(resolve => { release = resolve; });
++    const observed = [];
++    observeSuccessfulUploads(owner, async transfer => { await proof; observed.push(transfer.path); });
++    injectSecondUploadFailure(owner);
++    const real = jest.fn().mockResolvedValue(new Response('{}', { status: 200 }));
++    const transport = storageFetch(real, jest.fn());
++    let firstReturned = false, secondReturned = false;
++    const first = transport(target('first'), { method: 'POST' }).then(response => { firstReturned = true; return response; });
++    const second = transport(target('second'), { method: 'POST' }).then(response => { secondReturned = true; return response; });
++    await Promise.resolve();
++    expect(firstReturned).toBe(false); expect(secondReturned).toBe(false);
++    expect(storageFaultEvidence().injectedPaths).toEqual([]);
++    release();
++    expect((await first).status).toBe(200);
++    expect((await second).status).toBe(500);
++    expect(real).toHaveBeenCalledTimes(1);
++    expect(observed).toEqual([`${owner}/first.png`]);
++    expect(storageFaultEvidence()).toEqual({ owner, attempts: 2, firstPath: `${owner}/first.png`,
++        firstSucceeded: true, injectedPaths: [`${owner}/second.png`] });
++});
++
++test.each(['non2xx', 'throw', 'observer failure'])('first %s never qualifies as the partial-transfer fault', async kind => {
++    const observed = jest.fn(async () => { if (kind === 'observer failure') throw new Error('proof failed'); });
++    observeSuccessfulUploads(owner, observed);
++    injectSecondUploadFailure(owner);
++    const real = kind === 'throw' ? jest.fn().mockRejectedValue(new Error('real transfer failed'))
++        : jest.fn().mockResolvedValue(new Response('{}', { status: kind === 'non2xx' ? 500 : 200 }));
++    const transport = storageFetch(real, jest.fn());
++    const first = transport(target('first'), { method: 'POST' });
++    const firstCheck = kind === 'non2xx' ? expect(first).resolves.toHaveProperty('status', 500) : expect(first).rejects.toThrow();
++    const secondCheck = expect(transport(target('second'), { method: 'POST' })).rejects.toThrow(/not injected/);
++    await Promise.all([firstCheck, secondCheck]);
++    expect(storageFaultEvidence().firstSucceeded).toBe(false);
++    expect(storageFaultEvidence().injectedPaths).toEqual([]);
++    if (kind !== 'observer failure') expect(observed).not.toHaveBeenCalled();
++});
++
++test('observer is limited to its exact owner and successful POST uploads', async () => {
++    const observed = jest.fn();
++    observeSuccessfulUploads(owner, observed);
++    const real = jest.fn().mockResolvedValue(new Response('{}', { status: 200 }));
++    const transport = storageFetch(real, jest.fn());
++    await transport(target('first'), { method: 'GET' });
++    await transport(target('first').replace(owner, '22222222-2222-4222-8222-222222222222'), { method: 'POST' });
++    expect(observed).not.toHaveBeenCalled();
++});

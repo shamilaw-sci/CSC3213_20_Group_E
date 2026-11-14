@@ -1,0 +1,450 @@
+Saved searches Task1 updated after async observation fix; no commits.
+diff --git a/backend-node/integration/run-local.cjs b/backend-node/integration/run-local.cjs
+new file mode 100644
+index 0000000..6c20de5
+--- /dev/null
++++ b/backend-node/integration/run-local.cjs
+@@ -0,0 +1,98 @@
++const { spawnSync } = require('node:child_process');
++const path = require('node:path');
++const jwt = require('jsonwebtoken');
++const { Client } = require('pg');
++const { inspectLocalStack, validateDatabase, identitySql } = require('./local-stack.cjs');
++const { snapshotState, assertSameState } = require('./database-state.cjs');
++
++const profiles = Object.freeze({
++    'login-roles': { label: 'Login/roles', config: 'jest.config.cjs', tables: ['users'] },
++    listings: { label: 'Listings', config: 'listings.jest.config.cjs',
++        tables: ['users', 'properties', 'transactions', 'payment_orders', 'payment_receipt_outbox'] },
++    'saved-searches': { label: 'Saved searches', config: 'saved-searches.jest.config.cjs',
++        tables: ['users', 'properties', 'saved_searches', 'transactions', 'payment_orders', 'payment_receipt_outbox'] },
++    storage: { label: 'Listings Storage', config: 'storage.jest.config.cjs',
++        tables: ['users', 'properties', 'transactions', 'payment_orders', 'payment_receipt_outbox'] },
++});
++
++async function runLocal(profileName) {
++    let stage = 'container/workdir/checksum identity';
++    let client;
++    try {
++        if (!Object.hasOwn(profiles, profileName)) throw new Error('Unknown test profile.');
++        const profile = profiles[profileName];
++        const local = inspectLocalStack();
++        client = new Client(local.database);
++        stage = 'read-only database connection';
++        await client.connect();
++        await client.query('BEGIN READ ONLY');
++        stage = 'database marker and ledger identity';
++        validateDatabase((await client.query(identitySql)).rows[0]);
++        const before = await snapshotState(client, profile.tables);
++        let storage, storageBefore;
++        if (profileName === 'storage') {
++            storage = require('./storage-local.cjs').inspectStorageStack();
++            storageBefore = { database: await require('./storage-state.cjs').storageDatabaseState(client),
++                files: require('./storage-state.cjs').fileManifest(storage.containerId) };
++        }
++        const ids = (await client.query('SELECT id FROM public.users ORDER BY id')).rows.map(row => row.id);
++        const key = jwt.sign({ role: 'service_role', iss: 'supabase' }, local.jwtSecret, { expiresIn: '10m' });
++        stage = 'PostgREST read-only identity cross-check';
++        const response = await fetch(`${local.apiUrl}/users?select=id&order=id`, {
++            headers: { Authorization: `Bearer ${key}` }, redirect: 'error', signal: AbortSignal.timeout(5000),
++        });
++        if (!response.ok || JSON.stringify((await response.json()).map(row => row.id)) !== JSON.stringify(ids)) {
++            throw new Error('Local API and database identity cross-check failed.');
++        }
++        if (storage) {
++            const bucket = await fetch(`${storage.apiUrl}/bucket/properties`, { headers: { Authorization: `Bearer ${key}` },
++                redirect: 'error', signal: AbortSignal.timeout(5000) });
++            if (!bucket.ok || (await bucket.json()).id !== 'properties') throw new Error('Checked Storage bucket unavailable.');
++            require('./storage-state.cjs').assertStorageState(storageBefore.database,
++                await require('./storage-state.cjs').storageDatabaseState(client));
++        }
++        await client.query('ROLLBACK');
++        if (process.argv.includes('--preflight')) {
++            console.log(`PASS: ${profile.label} stack-c container/DB/API/marker/checksums/ledger; read-only state snapshot. No fixture writes.`);
++            return;
++        }
++        const env = Object.fromEntries(['PATH', 'SystemRoot', 'WINDIR', 'TEMP', 'TMP', 'COMSPEC', 'PATHEXT']
++            .filter(name => process.env[name]).map(name => [name, process.env[name]]));
++        Object.assign(env, {
++            NODE_ENV: 'test', JWT_SECRET: 'phase5-isolated-auth-tests-only',
++            SUPABASE_URL: local.apiUrl, SUPABASE_KEY: key,
++            PHASE5_DATABASE: JSON.stringify(local.database), PHASE5_LOCAL_APPROVED: 'stack-c',
++        });
++        if (storage) env.PHASE5_STORAGE_APPROVED = 'stack-c';
++        console.log(`Running real ${profile.label} integration against verified stack-c; external delivery disabled.`);
++        stage = 'integration assertions and fixture cleanup';
++        const result = spawnSync(process.execPath, [require.resolve('jest/bin/jest'), '--config',
++            path.join(__dirname, profile.config), '--runInBand', '--no-cache'], {
++            cwd: path.resolve(__dirname, '..'), env, stdio: 'inherit', timeout: 120000,
++        });
++        // Check preservation after child failure/timeout as well as success.
++        stage = 'post-run state preservation';
++        validateDatabase((await client.query(identitySql)).rows[0]);
++        assertSameState(before, await snapshotState(client, profile.tables));
++        if (storage) {
++            require('./storage-state.cjs').assertStorageState(storageBefore, {
++                database: await require('./storage-state.cjs').storageDatabaseState(client),
++                files: require('./storage-state.cjs').fileManifest(storage.containerId),
++            });
++            console.log('PASS: full native Storage schema/metadata and persisted file manifest preserved.');
++        }
++        console.log(`PASS: ${profile.tables.length} full table snapshot(s) and canonical ledger preserved after cleanup.`);
++        if (result.status !== 0) {
++            stage = 'integration assertions or fixture cleanup';
++            throw new Error('Integration assertions or cleanup failed.');
++        }
++    } catch {
++        // Docker/pg errors can include generated credentials or private configuration.
++        console.error(`FAIL: local ${profileName} integration at ${stage}; credentials suppressed.`);
++        process.exitCode = 1;
++    } finally {
++        if (client) await client.end().catch(() => { process.exitCode = 1; });
++    }
++}
++
++module.exports = { runLocal };
+diff --git a/backend-node/integration/database-state.cjs b/backend-node/integration/database-state.cjs
+new file mode 100644
+index 0000000..ab1f7a2
+--- /dev/null
++++ b/backend-node/integration/database-state.cjs
+@@ -0,0 +1,31 @@
++const tables = Object.freeze({ users: 'id', properties: 'id', saved_searches: 'id', transactions: 'id',
++    payment_orders: 'id', payment_receipt_outbox: 'order_id' });
++
++async function snapshotState(client, names) {
++    if (!names.length || names.some(name => !Object.hasOwn(tables, name))) throw new Error('Unsupported snapshot table.');
++    const result = {};
++    for (const name of names) {
++        const response = await client.query(`SELECT coalesce(jsonb_agg(to_jsonb(t) ORDER BY ${tables[name]}), '[]'::jsonb) AS snapshot FROM public.${name} t`);
++        result[name] = response.rows[0].snapshot;
++    }
++    return result;
++}
++
++function assertSameState(before, after) {
++    if (JSON.stringify(Object.keys(before).sort()) !== JSON.stringify(Object.keys(after).sort())) {
++        throw new Error('Starting state not preserved: snapshot table set differs.');
++    }
++    for (const name of Object.keys(before)) {
++        if (JSON.stringify(before[name]) !== JSON.stringify(after[name])) {
++            throw new Error(`Starting state not preserved for ${name}.`);
++        }
++    }
++}
++
++function assertOwnedListings(rows, sellerIds) {
++    const owned = new Set(sellerIds);
++    if (rows.some(row => !row.id || !owned.has(row.seller_id))) throw new Error('Cleanup requires run-owned listing rows.');
++    return rows.map(row => row.id);
++}
++
++module.exports = { snapshotState, assertSameState, assertOwnedListings };
+diff --git a/backend-node/tests/integrationState.test.js b/backend-node/tests/integrationState.test.js
+new file mode 100644
+index 0000000..1a9fe92
+--- /dev/null
++++ b/backend-node/tests/integrationState.test.js
+@@ -0,0 +1,43 @@
++const { snapshotState, assertSameState, assertOwnedListings } = require('../integration/database-state.cjs');
++
++describe('Local integration state preservation (no database connections)', () => {
++    test('snapshots complete saved searches in deterministic id order', async () => {
++        const client = { query: jest.fn().mockResolvedValue({ rows: [{ snapshot: [{ id: 'search', filters: { version: 1 } }] }] }) };
++        expect((await snapshotState(client, ['saved_searches'])).saved_searches).toEqual([{ id: 'search', filters: { version: 1 } }]);
++        expect(client.query).toHaveBeenCalledWith(expect.stringContaining('to_jsonb(t) ORDER BY id'));
++        expect(client.query).toHaveBeenCalledWith(expect.stringContaining('FROM public.saved_searches t'));
++    });
++    test('snapshots complete rows in deterministic id order for allowlisted tables', async () => {
++        const client = { query: jest.fn().mockResolvedValue({ rows: [{ snapshot: [{ id: 'original', title: 'Preserve me' }] }] }) };
++        const result = await snapshotState(client, ['users', 'properties']);
++        expect(client.query.mock.calls.map(([sql]) => sql)).toEqual([
++            expect.stringContaining('to_jsonb(t) ORDER BY id'), expect.stringContaining('to_jsonb(t) ORDER BY id'),
++        ]);
++        expect(result.properties).toEqual([{ id: 'original', title: 'Preserve me' }]);
++    });
++    test.each(['settings', 'users;DROP TABLE users', 'properties WHERE true'])('refuses table %s before querying', async table => {
++        const client = { query: jest.fn() };
++        await expect(snapshotState(client, [table])).rejects.toThrow(/snapshot table/);
++        expect(client.query).not.toHaveBeenCalled();
++    });
++    test('accepts identical full snapshots', () => {
++        expect(() => assertSameState({ users: [], properties: [{ id: 'p', price: 5 }] },
++            { users: [], properties: [{ id: 'p', price: 5 }] })).not.toThrow();
++    });
++    test.each([
++        { users: [{ id: 'unremoved-fixture' }], properties: [] },
++        { users: [], properties: [{ id: 'original', title: 'Changed' }] },
++        { users: [] },
++    ])('rejects drift without exposing row contents', after => {
++        expect(() => assertSameState({ users: [], properties: [{ id: 'original', title: 'Private original' }] }, after))
++            .toThrow(/^Starting state not preserved/);
++        try { assertSameState({ users: [{ id: 'secret-identity' }] }, after); }
++        catch (error) { expect(error.message).not.toContain('secret-identity'); }
++    });
++    test('allows cleanup recovery only for run-owned listing rows', () => {
++        expect(assertOwnedListings([{ id: 'p1', seller_id: 'own-seller' }], ['own-seller'])).toEqual(['p1']);
++    });
++    test('refuses a pre-existing or foreign-owner listing before cleanup', () => {
++        expect(() => assertOwnedListings([{ id: 'p1', seller_id: 'other' }], ['own-seller'])).toThrow(/run-owned/);
++    });
++});
+diff --git a/backend-node/integration/run-saved-searches.cjs b/backend-node/integration/run-saved-searches.cjs
+new file mode 100644
+index 0000000..cf50584
+--- /dev/null
++++ b/backend-node/integration/run-saved-searches.cjs
+@@ -0,0 +1 @@
++require('./run-local.cjs').runLocal('saved-searches');
+diff --git a/backend-node/integration/saved-searches.jest.config.cjs b/backend-node/integration/saved-searches.jest.config.cjs
+new file mode 100644
+index 0000000..138e9e3
+--- /dev/null
++++ b/backend-node/integration/saved-searches.jest.config.cjs
+@@ -0,0 +1,5 @@
++module.exports = {
++    rootDir: '..', testMatch: ['<rootDir>/integration/saved-searches.integration.cjs'],
++    setupFiles: ['<rootDir>/integration/setup.cjs', '<rootDir>/integration/saved-searches.setup.cjs'],
++    testTimeout: 15000, verbose: true,
++};
+diff --git a/backend-node/integration/saved-searches.setup.cjs b/backend-node/integration/saved-searches.setup.cjs
+new file mode 100644
+index 0000000..3952cc5
+--- /dev/null
++++ b/backend-node/integration/saved-searches.setup.cjs
+@@ -0,0 +1,8 @@
++// Only delivery is replaced; matching, repositories, REST and moderation remain real.
++jest.mock('../utils/emailService', () => ({
++    sendSavedSearchAlertEmail: jest.fn().mockResolvedValue(),
++    sendListingStatusEmail: jest.fn().mockResolvedValue(),
++}));
++
++// Observe detached approval coordination while retaining the real implementation.
++jest.spyOn(require('../controllers/savedSearchController'), 'checkSavedSearchMatches');
+diff --git a/backend-node/integration/saved-searches.integration.cjs b/backend-node/integration/saved-searches.integration.cjs
+new file mode 100644
+index 0000000..962e821
+--- /dev/null
++++ b/backend-node/integration/saved-searches.integration.cjs
+@@ -0,0 +1,221 @@
++const { randomUUID } = require('node:crypto');
++const request = require('supertest');
++const bcrypt = require('bcryptjs');
++const jwt = require('jsonwebtoken');
++const { Client } = require('pg');
++const { identitySql, validateDatabase } = require('./local-stack.cjs');
++const { assertOwnedListings } = require('./database-state.cjs');
++const { allowedAppPorts } = require('./network-policy.cjs');
++const { sendSavedSearchAlertEmail, sendListingStatusEmail } = require('../utils/emailService');
++const { checkSavedSearchMatches } = require('../controllers/savedSearchController');
++const app = require('../server');
++
++const run = randomUUID();
++const users = Object.fromEntries(['BUYER', 'OTHER', 'SELLER', 'ADMIN', 'BANNED'].map(key => [key, {
++    id: randomUUID(), role: key === 'OTHER' ? 'BUYER' : key,
++    name: `Saved searches ${key}`, email: `${run}-${key.toLowerCase()}@example.test`,
++}]));
++const userIds = Object.values(users).map(user => user.id);
++const sessions = {};
++const db = new Client(JSON.parse(process.env.PHASE5_DATABASE));
++const polygon = 'POLYGON((79 6,81 6,81 8,79 8,79 6))';
++const filters = { version: 1, searchTerm: run, listingType: 'Sale', minPrice: 0, maxPrice: 2000000,
++    beds: 0, baths: 0, exactMatch: true, has360Tour: false,
++    propTypes: { House: true, Land: false, Apartment: false, Villa: false } };
++const propertyId = randomUUID();
++let connected = false;
++let server, appPort;
++const call = (role, method, path = '/api/saved-searches') => {
++    const req = request(server)[method](path);
++    return role ? req.set('Cookie', sessions[role]) : req;
++};
++const searches = async () => (await db.query('SELECT * FROM public.saved_searches WHERE user_id=ANY($1::uuid[]) ORDER BY id', [userIds])).rows;
++const row = async id => (await db.query('SELECT * FROM public.saved_searches WHERE id=$1', [id])).rows[0];
++const save = async (role, payload) => {
++    const response = await call(role, 'post').send(payload);
++    expect(response.status).toBe(201);
++    expect(await row(response.body.savedSearch.id)).toMatchObject({ user_id: users[role].id });
++    return response.body.savedSearch;
++};
++const captures = () => sendSavedSearchAlertEmail.mock.calls.filter(([, title]) => title.startsWith(run));
++const toggle = (id, enabled) => call('BUYER', 'patch', `/api/saved-searches/${id}/alerts`).send({ emailAlertsEnabled: enabled });
++async function awaitCoordination(promise) {
++    let timer;
++    try {
++        await Promise.race([promise, new Promise((_, reject) => {
++            timer = setTimeout(() => reject(new Error('Saved-search coordination did not finish within five seconds.')), 5000);
++        })]);
++    } finally { clearTimeout(timer); }
++}
++
++beforeAll(async () => {
++    server = await new Promise((resolve, reject) => {
++        const listener = app.listen(0, '127.0.0.1', () => resolve(listener));
++        listener.once('error', reject);
++    });
++    appPort = server.address().port;
++    allowedAppPorts.add(appPort);
++    await db.connect(); connected = true;
++    validateDatabase((await db.query(identitySql)).rows[0]);
++    const password = 'Saved-searches-fixture-only-123!';
++    const hash = await bcrypt.hash(password, 10);
++    for (const user of Object.values(users)) {
++        await db.query('INSERT INTO public.users(id,name,email,password_hash,role) VALUES($1,$2,$3,$4,$5)',
++            [user.id, user.name, user.email, hash, user.role]);
++    }
++    for (const key of ['BUYER', 'OTHER', 'SELLER', 'ADMIN']) {
++        const response = await request(server).post(key === 'ADMIN' ? '/api/admin/login' : '/api/auth/login')
++            .send({ email: users[key].email, password });
++        expect(response.status).toBe(200);
++        sessions[key] = response.headers['set-cookie'][0].split(';')[0];
++    }
++    sessions.BANNED = `token=${jwt.sign({ id: users.BANNED.id, role: 'BANNED' }, process.env.JWT_SECRET, { expiresIn: '5m' })}`;
++    await db.query(`INSERT INTO public.properties(id,seller_id,title,description,price,status,payment_status,type,latitude,longitude,bedrooms,bathrooms,listing_type)
++        VALUES($1,$2,$3,'Synthetic saved-search fixture',1500000,'pending','Paid','House',7,80,0,0,'Sale')`,
++    [propertyId, users.SELLER.id, `${run} property`]);
++});
++
++afterAll(async () => {
++    try {
++        if (connected) {
++            validateDatabase((await db.query(identitySql)).rows[0]);
++            // Recover all API inserts, including any whose response assertion failed.
++            const owned = await searches();
++            if (owned.some(item => !item.id || !userIds.includes(item.user_id))) throw new Error('Cleanup requires run-owned searches.');
++            await db.query('DELETE FROM public.saved_searches WHERE id=ANY($1::uuid[]) AND user_id=ANY($2::uuid[])', [owned.map(item => item.id), userIds]);
++            expect(await searches()).toEqual([]);
++            const properties = assertOwnedListings((await db.query('SELECT id,seller_id FROM public.properties WHERE seller_id=ANY($1::uuid[])', [userIds])).rows, userIds);
++            await db.query('DELETE FROM public.properties WHERE id=ANY($1::uuid[]) AND seller_id=ANY($2::uuid[])', [properties, userIds]);
++            expect((await db.query('SELECT id FROM public.properties WHERE seller_id=ANY($1::uuid[])', [userIds])).rows).toEqual([]);
++            for (const user of Object.values(users)) await db.query('DELETE FROM public.users WHERE id=$1 AND email=$2', [user.id, user.email]);
++            expect((await db.query('SELECT id FROM public.users WHERE id=ANY($1::uuid[])', [userIds])).rows).toEqual([]);
++            console.log('Saved-search fixtures removed: exact owner searches, properties, UUID/email users; partial API inserts recovered.');
++        }
++    } finally {
++        try { await db.end(); }
++        finally {
++            try { if (server?.listening) await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve())); }
++            finally { allowedAppPorts.delete(appPort); }
++        }
++    }
++});
++
++test('persists legacy/default, full zero criteria, type derivation, duplicates and isolated newest-first lists', async () => {
++    const legacy = await save('BUYER', { polygon, beds: 0, baths: 0, property_type: 'House', user_id: users.OTHER.id });
++    expect(await row(legacy.id)).toMatchObject({ title: 'My Saved Search', beds: 0, baths: 0, property_type: 'House', filters: null });
++    const full = await save('BUYER', { title: `${run} full persistence`, polygon, filters, user_id: users.OTHER.id });
++    expect(await row(full.id)).toMatchObject({ polygon, filters, beds: 0, baths: 0, property_type: 'House' });
++    const duplicate = await save('BUYER', { title: full.title, polygon, filters });
++    expect(duplicate.id).not.toBe(full.id);
++    const multi = await save('SELLER', { title: `${run} seller`, filters: { ...filters, propTypes: { ...filters.propTypes, Land: true } } });
++    expect((await row(multi.id)).property_type).toBeNull();
++    const other = await save('OTHER', { title: `${run} foreign` });
++    for (const role of ['BUYER', 'OTHER', 'SELLER', 'ADMIN']) {
++        const response = await call(role, 'get'); expect(response.status).toBe(200);
++        const expected = (await searches()).filter(item => item.user_id === users[role].id).map(item => item.id).sort();
++        expect(response.body.savedSearches.map(item => item.id).sort()).toEqual(expected);
++        const dates = response.body.savedSearches.map(item => Date.parse(item.created_at));
++        expect(dates).toEqual([...dates].sort((a, b) => b - a));
++        expect(response.body.savedSearches.every(item => item.user_id === users[role].id)).toBe(true);
++    }
++    expect((await row(other.id)).user_id).toBe(users.OTHER.id);
++    // Keep persistence fixtures out of subsequent match captures via the real owner toggle.
++    for (const item of [legacy, full, duplicate]) expect((await toggle(item.id, false)).status).toBe(200);
++});
++
++test('invalid inputs, anonymous and banned operations preserve complete run-owned rows', async () => {
++    const before = await searches();
++    for (const payload of [{ filters: { ...filters, version: 2 } }, { filters: { ...filters, minPrice: 9, maxPrice: 1 } },
++        { filters: { ...filters, propTypes: { House: 'yes' } } }, { beds: -1 }, { title: '' }]) {
++        expect((await call('BUYER', 'post').send(payload)).status).toBe(400);
++    }
++    for (const role of [null, 'BANNED']) {
++        for (const [method, path, payload] of [['get', '/api/saved-searches'], ['post', '/api/saved-searches', {}],
++            ['patch', `/api/saved-searches/${before[0].id}/alerts`, { emailAlertsEnabled: false }], ['delete', `/api/saved-searches/${before[0].id}`]]) {
++            expect((await call(role, method, path).send(payload)).status).toBe(role ? 403 : 401);
++        }
++    }
++    expect(await searches()).toEqual(before);
++});
++
++test('owner toggle/delete persist while malformed, foreign, missing and repeated requests preserve unrelated rows', async () => {
++    const own = await save('BUYER', { title: `${run} disposable` });
++    for (const enabled of [false, true]) {
++        const response = await toggle(own.id, enabled); expect(response.status).toBe(200);
++        expect(response.body.savedSearch.email_alerts_enabled).toBe(enabled);
++        expect((await row(own.id)).email_alerts_enabled).toBe(enabled);
++    }
++    const before = await searches();
++    for (const payload of [{}, { emailAlertsEnabled: 'false' }, { emailAlertsEnabled: null }]) {
++        expect((await call('BUYER', 'patch', `/api/saved-searches/${own.id}/alerts`).send(payload)).status).toBe(400);
++    }
++    expect((await toggle('bad-id', false)).status).toBe(400);
++    expect((await call('BUYER', 'delete', '/api/saved-searches/bad-id')).status).toBe(400);
++    expect((await call('OTHER', 'patch', `/api/saved-searches/${own.id}/alerts`).send({ emailAlertsEnabled: false })).status).toBe(404);
++    expect((await toggle(randomUUID(), false)).status).toBe(404);
++    for (const [role, id] of [['OTHER', own.id], ['BUYER', randomUUID()]]) expect((await call(role, 'delete', `/api/saved-searches/${id}`)).status).toBe(200);
++    expect(await searches()).toEqual(before);
++    for (let i = 0; i < 2; i++) expect((await call('BUYER', 'delete', `/api/saved-searches/${own.id}`)).status).toBe(200);
++    expect(await row(own.id)).toBeUndefined();
++    expect(await searches()).toEqual(before.filter(item => item.id !== own.id));
++});
++
++test('real joined matching, toggle and deletion enforce full/legacy criteria and exact recipients', async () => {
++    // Disable previous other-role fixtures, without replacing the matcher.
++    await db.query('UPDATE public.saved_searches SET email_alerts_enabled=false WHERE user_id=ANY($1::uuid[])', [userIds]);
++    const full = await save('BUYER', { title: `${run} match full`, polygon, filters });
++    const legacy = await save('OTHER', { title: `${run} match legacy`, polygon, beds: 0, baths: 0, property_type: 'House' });
++    const disabled = await save('BUYER', { title: `${run} disabled`, polygon });
++    expect((await toggle(disabled.id, false)).status).toBe(200);
++    const deleted = await save('BUYER', { title: `${run} deleted`, polygon });
++    expect((await call('BUYER', 'delete', `/api/saved-searches/${deleted.id}`)).status).toBe(200);
++    for (const [name, payload] of [['location', { polygon: 'POLYGON((0 0,1 0,1 1,0 1,0 0))' }],
++        ['legacy type', { property_type: 'Land' }], ['legacy beds', { beds: 1 }], ['legacy baths', { baths: 1 }],
++        ...Object.entries({ listing: { listingType: 'Rent' }, text: { searchTerm: 'unmatched-fixture-location' },
++            price: { maxPrice: 1 }, rooms: { beds: 1 }, tour: { has360Tour: true }, type: { propTypes: { House: false, Land: true, Apartment: false, Villa: false } } })
++            .map(([name, changes]) => [name, { filters: { ...filters, ...changes } }])]) {
++        await save('BUYER', { title: `${run} nonmatch ${name}`, ...payload });
++    }
++    const property = (await db.query('SELECT * FROM public.properties WHERE id=$1', [propertyId])).rows[0];
++    sendSavedSearchAlertEmail.mockClear();
++    await checkSavedSearchMatches(property);
++    expect(captures()).toEqual(expect.arrayContaining([
++        [users.BUYER.email, full.title, expect.objectContaining({ id: propertyId })],
++        [users.OTHER.email, legacy.title, expect.objectContaining({ id: propertyId })],
++    ]));
++    expect(captures()).toHaveLength(2);
++    expect((await toggle(full.id, false)).status).toBe(200);
++    sendSavedSearchAlertEmail.mockClear(); await checkSavedSearchMatches(property);
++    expect(captures().map(([, title]) => title)).toEqual([legacy.title]);
++    expect((await toggle(full.id, true)).status).toBe(200);
++    expect((await call('OTHER', 'delete', `/api/saved-searches/${legacy.id}`)).status).toBe(200);
++    sendSavedSearchAlertEmail.mockClear(); await checkSavedSearchMatches(property);
++    expect(captures()).toEqual([[users.BUYER.email, full.title, expect.objectContaining({ id: propertyId })]]);
++});
++
++test('real admin approval tolerates one rejected alert, sends other captures and repeats without coordination', async () => {
++    const failing = await save('BUYER', { title: `${run} rejected delivery`, filters });
++    const surviving = await save('OTHER', { title: `${run} surviving delivery`, filters });
++    sendSavedSearchAlertEmail.mockClear(); sendListingStatusEmail.mockClear();
++    sendSavedSearchAlertEmail.mockImplementation((_email, title) => title === failing.title
++        ? Promise.reject(new Error('Controlled fixture delivery failure')) : Promise.resolve());
++    checkSavedSearchMatches.mockClear();
++    try {
++        const response = await call('ADMIN', 'patch', `/api/admin/listings/${propertyId}/approve`);
++        expect(response.status).toBe(200);
++        expect(checkSavedSearchMatches).toHaveBeenCalledTimes(1);
++        expect(checkSavedSearchMatches.mock.results[0].type).toBe('return');
++        await awaitCoordination(checkSavedSearchMatches.mock.results[0].value);
++        expect(captures()).toHaveLength(3);
++        expect(captures()).toEqual(expect.arrayContaining([
++            [users.BUYER.email, failing.title, expect.objectContaining({ id: propertyId, status: 'approved' })],
++            [users.OTHER.email, surviving.title, expect.objectContaining({ id: propertyId, status: 'approved' })],
++        ]));
++        expect(sendListingStatusEmail.mock.calls).toEqual([[users.SELLER.email, users.SELLER.name, `${run} property`, 'approved']]);
++        expect((await db.query('SELECT status FROM public.properties WHERE id=$1', [propertyId])).rows[0].status).toBe('approved');
++        const repeated = await call('ADMIN', 'patch', `/api/admin/listings/${propertyId}/approve`);
++        expect(repeated.status).toBe(200); expect(repeated.body.message).toBe('Listing already approved');
++        expect(checkSavedSearchMatches).toHaveBeenCalledTimes(1);
++        expect(captures()).toHaveLength(3); expect(sendListingStatusEmail).toHaveBeenCalledTimes(1);
++    } finally { sendSavedSearchAlertEmail.mockResolvedValue(); }
++});

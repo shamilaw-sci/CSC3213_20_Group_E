@@ -46,6 +46,18 @@ describe('Authentication & Security API', () => {
         mockSupabase._insertResult = undefined;
     });
 
+    it('clears the HttpOnly authentication cookie when an admin signs out', async () => {
+        const res = await request(app)
+            .post('/api/auth/logout')
+            .set('Origin', process.env.CLIENT_URL || 'http://localhost:5173')
+            .set('Cookie', 'token=existing-admin-session');
+
+        expect(res.statusCode).toBe(200);
+        expect(res.headers['set-cookie']).toEqual(expect.arrayContaining([
+            expect.stringMatching(/^token=;.*Expires=Thu, 01 Jan 1970.*HttpOnly/i),
+        ]));
+    });
+
     describe('POST /api/auth/register', () => {
         it('should block Role Spoofing (ADMIN attempt defaults to BUYER)', async() => {
             mockSupabase.single.mockResolvedValueOnce({ data: null });
@@ -59,7 +71,7 @@ describe('Authentication & Security API', () => {
                 .send({
                     name: 'Hacker',
                     email: 'hacker@example.com',
-                    password: 'password123',
+                    password: 'password123-long',
                     role: 'ADMIN' // Malicious attempt
                 });
 
@@ -81,7 +93,7 @@ describe('Authentication & Security API', () => {
                 .send({
                     name: 'Test',
                     email: 'test@example.com',
-                    password: 'password123'
+                    password: 'password123-long'
                 });
 
             expect(res.statusCode).toEqual(400);
@@ -91,7 +103,7 @@ describe('Authentication & Security API', () => {
 
     describe('POST /api/auth/login', () => {
         it('should return HttpOnly cookie on successful login', async() => {
-            const hashedPassword = await bcrypt.hash('password123', 10);
+            const hashedPassword = await bcrypt.hash('password123-long', 10);
             mockSupabase.single.mockResolvedValueOnce({
                 data: { id: 1, email: 'test@example.com', password_hash: hashedPassword, role: 'BUYER' },
                 error: null
@@ -101,7 +113,7 @@ describe('Authentication & Security API', () => {
                 .post('/api/auth/login')
                 .send({
                     email: 'test@example.com',
-                    password: 'password123'
+                    password: 'password123-long'
                 });
 
             expect(res.statusCode).toEqual(200);
@@ -110,7 +122,7 @@ describe('Authentication & Security API', () => {
         });
 
         it('should return 400 for invalid credentials', async() => {
-            const hashedPassword = await bcrypt.hash('password123', 10);
+            const hashedPassword = await bcrypt.hash('password123-long', 10);
             mockSupabase.single.mockResolvedValueOnce({
                 data: { id: 1, email: 'test@example.com', password_hash: hashedPassword, role: 'BUYER' },
                 error: null

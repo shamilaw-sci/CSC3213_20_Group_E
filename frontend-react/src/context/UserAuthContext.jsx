@@ -1,6 +1,6 @@
+import { logClientError } from '../utils/clientLog';
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from './api';
-import toast from 'react-hot-toast';
 
 // Create Context
 const UserAuthContext = createContext();
@@ -50,7 +50,7 @@ export const UserAuthProvider = ({ children }) => {
         try {
             await api.post('/auth/logout');
         } catch (error) {
-            console.error('Logout error:', error.response?.data?.message || error.message);
+            logClientError('user_logout_failed');
         } finally {
             setUser(null);
         }

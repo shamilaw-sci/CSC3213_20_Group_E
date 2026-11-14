@@ -3,13 +3,15 @@ const router = express.Router();
 const { propertyImageUpload } = require('../middleware/uploadMiddleware');
 
 const { addProperty, getProperties, getMyProperties, updateMyProperty, deleteMyProperty, getPropertyById, incrementViews, getSimilarProperties, getPriceInsight, searchProperties } = require('../controllers/propertyController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, optionalAuth } = require('../middleware/authMiddleware');
 const validate = require('../middleware/validate');
 const { addPropertySchema, updatePropertySchema, getPropertiesSchema } = require('../validators/propertyValidator');
 const { searchPropertiesSchema } = require('../validators/searchValidator');
+const { getSellerActivity } = require('../controllers/property/sellerActivityController');
 
 // 1. Get all properties (Public route - no authentication required)
 router.get('/', validate(getPropertiesSchema), getProperties);
+router.get('/featured', require('../controllers/admin/adminPromotionController').getFeaturedProperties);
 
 // 2. Add new property (Protected route - requires authentication)
 // Accepts up to 10 images with 5MB limit each and strict MIME validation
@@ -17,6 +19,7 @@ router.post('/', protect, propertyImageUpload.fields([{ name: 'images', maxCount
 
 // 3. Get properties submitted by the logged-in seller
 router.get('/my-listings', protect, validate(getPropertiesSchema), getMyProperties);
+router.get('/my-listings/activity', protect, getSellerActivity);
 
 router.patch('/my-listings/:id', protect, validate(updatePropertySchema), updateMyProperty);
 router.delete('/my-listings/:id', protect, deleteMyProperty);
@@ -35,6 +38,6 @@ router.get('/:id/price-insight', getPriceInsight);
 
 // 1.5 Get specific property by ID
 // Must be after /my-listings to prevent overriding
-router.get('/:id', getPropertyById);
+router.get('/:id', optionalAuth, getPropertyById);
 
 module.exports = router;

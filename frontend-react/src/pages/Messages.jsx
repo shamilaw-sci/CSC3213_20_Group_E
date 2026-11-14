@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/UserAuthContext';
 import Navbar from '../components/layout/Navbar';
+import { getParticipant } from '../utils/conversationParticipant';
 import { m } from "framer-motion";
 import { Send, Paperclip, X, Image as ImageIcon, FileText, User, MessageSquare, ShieldAlert, ArrowLeft } from 'lucide-react';
 
@@ -22,20 +23,12 @@ const isSafeAttachmentUrl = (url) => {
 };
 
 const getConversationTitle = (conversation, user) => {
-    if (conversation.type === 'support') return 'Admin Support';
-    if (user?.role === 'BUYER') return conversation.seller?.name || 'Seller';
-    return conversation.buyer?.name || 'Buyer';
+    return getParticipant(conversation, user).name;
 };
 
 const getConversationSubtitle = (conversation) => {
     if (conversation.type === 'support') return 'Support conversation';
     return conversation.property?.title || 'Property inquiry';
-};
-
-const getParticipant = (conversation, user) => {
-    if (conversation.type === 'support') return { role: 'ADMIN', name: 'Admin Support', avatar_url: null };
-    if (user?.role === 'BUYER') return conversation.seller || { role: 'SELLER', name: 'Seller' };
-    return conversation.buyer || { role: 'BUYER', name: 'Buyer' };
 };
 
 const formatMessageTime = (value) => {
@@ -98,6 +91,12 @@ const Messages = () => {
         }
     }, [selectedId]);
 
+    const scrollToBottom = useCallback(() => {
+        setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+    }, []);
+
     useEffect(() => {
         loadConversations();
     }, [loadConversations]);
@@ -125,7 +124,7 @@ const Messages = () => {
 
         loadMessages();
         return () => controller.abort();
-    }, [selectedId, setSearchParams]);
+    }, [selectedId, setSearchParams, scrollToBottom]);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -146,12 +145,6 @@ const Messages = () => {
 
         return () => { clearInterval(interval); controller.abort(); };
     }, [selectedId, loadConversations]);
-
-    const scrollToBottom = () => {
-        setTimeout(() => {
-            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
-    };
 
     const startSupport = async () => {
         try {
@@ -418,6 +411,9 @@ const Messages = () => {
                                                             : 'bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 text-gray-900 dark:text-gray-100 rounded-[20px] rounded-tl-[4px]'
                                                     }`}>
                                                         {message.body && <p className="text-[15px] whitespace-pre-wrap leading-snug">{message.body}</p>}
+                                                        {message.attachment_unavailable && (
+                                                            <p className="mt-2 text-xs">Attachment temporarily unavailable. Refresh to retry.</p>
+                                                        )}
                                                         
                                                         {message.attachment_url && isSafeAttachmentUrl(message.attachment_url) && (
                                                             <a aria-label="Accessible interactive control"
@@ -442,6 +438,7 @@ const Messages = () => {
                                                     
                                                     <p className={`text-[10px] font-medium mt-1 px-1.5 ${mine ? 'text-gray-400 dark:text-gray-500' : 'text-gray-400 dark:text-gray-500'}`}>
                                                         {formatMessageTime(message.created_at)}
+                                                        {mine && <span className="ml-2">{message.recipient_read_at ? 'Read' : 'Sent'}</span>}
                                                     </p>
                                                 </div>
                                             </m.div>

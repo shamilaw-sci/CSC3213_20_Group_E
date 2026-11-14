@@ -19,7 +19,7 @@ const write = (level, message, meta) => {
 
     if (meta !== undefined) {
         payload.meta = meta instanceof Error
-            ? { message: meta.message, stack: meta.stack }
+            ? { code: 'ERROR_UNAVAILABLE' }
             : meta;
     }
 

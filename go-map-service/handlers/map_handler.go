@@ -32,6 +32,10 @@ func (h *MapHandler) SearchMap(c *gin.Context) {
 	}
 
 	// Validate WKT Polygon syntax, bounds, and vertex limits (M1 fix)
+	if req.MinPrice != nil && req.MaxPrice != nil && *req.MinPrice > *req.MaxPrice {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Minimum price cannot exceed maximum price."})
+		return
+	}
 	if err := models.ValidatePolygon(req.Polygon); err != nil {
 		zap.L().Warn("Invalid polygon format", zap.Error(err))
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid polygon geometry: " + err.Error()})
@@ -49,5 +53,6 @@ func (h *MapHandler) SearchMap(c *gin.Context) {
 	}
 
 	zap.L().Info("Found Properties", zap.Int("count", len(properties)))
+	h.recordDemand(c, req.SearchEventID, req.SearchDistrict)
 	c.JSON(http.StatusOK, gin.H{"properties": properties})
 }

@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { fetchDashboardStats } from "../api/adminApi";
+import { fetchDashboardStats, fetchRoleRequests, fetchPendingAgents, fetchReportedContent } from "../api/adminApi";
 import { useTheme } from "../../../context/ThemeProvider";
 import { Bell, Search, CheckCircle2, Clock, MessageSquare, ArrowRight, ShieldCheck, X, Sun, Moon } from "lucide-react";
 
 const PAGE_TITLES = {
+  "/admin/boosts": { title: "Featured Listings", subtitle: "Manage real featured listing placements" },
+  "/admin/reported": { title: "Reported Listings", subtitle: "Review listing complaints and record decisions" },
   "/admin/dashboard": { title: "Executive Dashboard", subtitle: "Live platform vitals, deed verifications & revenue analytics" },
   "/admin/listings": { title: "Listings & Spatial Moderation", subtitle: "Inspect PostGIS polygons, deeds, and approve properties" },
   "/admin/users": { title: "User & Role Management", subtitle: "Manage verified buyers, sellers, and system roles" },
@@ -12,15 +14,19 @@ const PAGE_TITLES = {
   "/admin/analytics": { title: "Intelligence & Analytics", subtitle: "Search demand heatmaps, conversion rates & growth velocity" },
   "/admin/messages": { title: "Administrative Messaging Hub", subtitle: "Audit platform conversations, inquiries & dispute resolution" },
   "/admin/reports": { title: "Financial & Revenue Audit", subtitle: "Listing fees, transactions, and commission records" },
-  "/admin/audit-logs": { title: "Security & Audit Trail", subtitle: "Immutable system activity log & security telemetry" },
+  "/admin/audit-logs": { title: "Security & Audit Trail", subtitle: "Recorded Admin changes, actors and targets" },
   "/admin/settings": { title: "System Parameters & Config", subtitle: "Platform rules, fee structures & API integrations" },
 };
 
 const Topbar = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { theme, isDark, changeTheme } = useTheme();
+  const { isDark, changeTheme } = useTheme();
   const [pendingCount, setPendingCount] = useState(0);
+  const [roleCount, setRoleCount] = useState(0);
+  const [agentCount, setAgentCount] = useState(0);
+  const [reportCount, setReportCount] = useState(0);
+  const actionCount = pendingCount + roleCount + agentCount + reportCount;
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const notifRef = useRef(null);
@@ -38,6 +44,15 @@ const Topbar = () => {
     fetchDashboardStats()
       .then((data) => setPendingCount(data.pendingApproval || 0))
       .catch(() => setPendingCount(0));
+    fetchRoleRequests('pending')
+      .then(data => setRoleCount(data.requests?.length || 0))
+      .catch(() => {});
+    fetchReportedContent({ status: 'open', page: 1, limit: 1 })
+      .then(data => setReportCount(data.total || 0))
+      .catch(() => {});
+    fetchPendingAgents()
+      .then(data => setAgentCount(data.agents?.length || 0))
+      .catch(() => {});
   };
 
   useEffect(() => {
@@ -72,7 +87,7 @@ const Topbar = () => {
   };
 
   return (
-    <header className="h-20 px-8 flex items-center justify-between bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl sticky top-0 z-40 border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors duration-200">
+    <header className="admin-workspace-topbar h-20 px-8 flex items-center justify-between bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl sticky top-0 z-40 border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors duration-200">
       
       {/* Left: Title & Subtitle */}
       <div>
@@ -102,7 +117,7 @@ const Topbar = () => {
             <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{now}</span>
             <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">System Online</span>
+                <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Admin workspace</span>
             </div>
         </div>
 
@@ -120,7 +135,7 @@ const Topbar = () => {
         <div className="relative" ref={notifRef}>
             <button
                 type="button"
-                onClick={() => setIsNotifOpen(!isNotifOpen)}
+                onClick={() => { loadStats(); setIsNotifOpen(!isNotifOpen); }}
                 className={`p-2.5 rounded-2xl transition-all duration-200 cursor-pointer relative border ${
                     isNotifOpen 
                         ? 'bg-blue-600/20 text-blue-600 dark:text-blue-400 border-blue-500/50 ring-2 ring-blue-500/30' 
@@ -129,9 +144,9 @@ const Topbar = () => {
                 title="Notifications"
             >
                 <Bell className="w-5 h-5" />
-                {pendingCount > 0 && (
+                {actionCount > 0 && (
                     <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 bg-amber-500 text-slate-950 text-[10px] font-black flex items-center justify-center rounded-full shadow-md border-2 border-white dark:border-slate-900 animate-pulse">
-                        {pendingCount}
+                        {actionCount}
                     </span>
                 )}
             </button>
@@ -144,9 +159,9 @@ const Topbar = () => {
                     <div className="p-4 px-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950/60">
                         <div className="flex items-center gap-2">
                             <h4 className="font-bold text-sm text-slate-900 dark:text-white">Admin Queue & Alerts</h4>
-                            {pendingCount > 0 && (
+                            {actionCount > 0 && (
                                 <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30">
-                                    {pendingCount} Action{pendingCount > 1 ? 's' : ''}
+                                    {actionCount} Action{actionCount > 1 ? 's' : ''}
                                 </span>
                             )}
                         </div>
@@ -161,6 +176,24 @@ const Topbar = () => {
 
                     {/* Notification Items List */}
                     <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/80 p-2">
+                        {reportCount > 0 && (
+                            <button type="button" className="w-full p-3.5 text-left rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/70 text-sm font-bold text-red-700 dark:text-red-400"
+                                onClick={() => { setIsNotifOpen(false); navigate('/admin/reported'); }}>
+                                {reportCount} listing report{reportCount === 1 ? '' : 's'} awaiting review
+                            </button>
+                        )}
+                        {agentCount > 0 && (
+                            <button type="button" className="w-full p-3.5 text-left rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/70 text-sm font-bold text-blue-600 dark:text-blue-400"
+                                onClick={() => { setIsNotifOpen(false); navigate('/admin/agent-approvals'); }}>
+                                {agentCount} agent application{agentCount === 1 ? '' : 's'} awaiting review
+                            </button>
+                        )}
+                        {roleCount > 0 && (
+                            <button type="button" className="w-full p-3.5 text-left rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/70 text-sm font-bold text-amber-600 dark:text-amber-400"
+                                onClick={() => { setIsNotifOpen(false); navigate('/admin/users?section=requests'); }}>
+                                {roleCount} seller upgrade request{roleCount === 1 ? '' : 's'} awaiting review
+                            </button>
+                        )}
                         
                         {/* 1. Pending Property Approvals */}
                         {pendingCount > 0 ? (
@@ -215,11 +248,11 @@ const Topbar = () => {
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-xs font-bold text-slate-900 dark:text-white">Security & Audit Health</span>
-                                    <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">Verified</span>
+                                    <span className="text-xs font-bold text-slate-900 dark:text-white">Admin Audit Trail</span>
+                                    <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">View records</span>
                                 </div>
                                 <p className="text-[11px] text-slate-500 dark:text-slate-300 mt-0.5">
-                                    RBAC guards, JWT protection, and immutable logs active.
+                                    Review recorded Admin changes and their actor, target and timestamp.
                                 </p>
                             </div>
                         </div>

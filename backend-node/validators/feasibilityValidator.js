@@ -1,5 +1,6 @@
 const { z } = require('zod');
 
+// Shared numeric rules for the core financial inputs
 const calculateSchema = z.object({
     body: z.object({
         salary: z.coerce.number()
@@ -20,6 +21,9 @@ const calculateSchema = z.object({
     }),
 });
 
+// Saving a calculation reuses the same core fields, plus the computed results
+// returned by the /calculate endpoint (so we don't recompute on the server twice
+// with potentially different rounding).
 const saveHistorySchema = z.object({
     body: z.object({
         salary: z.coerce.number().nonnegative(),

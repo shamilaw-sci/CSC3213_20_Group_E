@@ -1,7 +1,9 @@
+import { logClientError } from '../../../utils/clientLog';
 import React, { useState, useEffect } from "react";
 import { fetchDashboardStats, fetchRevenueData, fetchUserGrowth, fetchListings } from "../api/adminApi";
 import { useNavigate } from "react-router-dom";
 import { m } from "framer-motion";
+import { ResponsiveContainer, BarChart as RechartsBarChart, Bar, AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip } from "recharts";
 import { 
   Building2, 
   Clock, 
@@ -18,49 +20,32 @@ import {
   AlertCircle
 } from "lucide-react";
 
-// Modern Interactive Bar Chart with tooltips and glowing columns
-const BarChart = ({ data = [], colorClass = "from-blue-600 to-indigo-500", suffix = "" }) => {
-  if (!data || !data.length) {
-    return (
-      <div className="h-48 flex items-center justify-center text-xs text-slate-500 font-bold">
-        No transaction records in this interval.
-      </div>
-    );
-  }
-  const max = Math.max(...data.map((d) => Number(d.value ?? d.users ?? d.count ?? 0)), 1);
-
-  return (
-    <div className="flex items-end justify-between h-48 mt-4 gap-2.5 sm:gap-4 px-2">
-      {data.map((d, i) => {
-        const val = Number(d.value ?? d.users ?? d.count ?? 0);
-        const heightPct = Math.max((val / max) * 100, 10);
-
-        return (
-          <div key={i} className="flex flex-col items-center flex-1 group relative">
-            {/* Hover Tooltip */}
-            <div className="absolute -top-9 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-slate-800 text-white text-[11px] font-black py-1 px-2.5 rounded-lg shadow-xl whitespace-nowrap z-20 pointer-events-none -translate-y-1 group-hover:translate-y-0 border border-slate-700">
-              {suffix === "LKR" ? `LKR ${val.toLocaleString()}` : `${val.toLocaleString()} ${suffix}`}
-            </div>
-
-            {/* Bar Track Container */}
-            <div className="w-full relative flex items-end justify-center h-36 rounded-2xl bg-slate-800/60 p-1 overflow-hidden border border-slate-700/50">
-              <m.div
-                initial={{ height: 0 }}
-                animate={{ height: `${heightPct}%` }}
-                transition={{ duration: 0.8, ease: "easeOut", delay: i * 0.08 }}
-                className={`w-full bg-gradient-to-t ${colorClass} rounded-xl shadow-md opacity-90 group-hover:opacity-100 transition-opacity min-h-[8px]`}
-              />
-            </div>
-
-            {/* Month / Period Label */}
-            <span className="text-[10px] sm:text-xs font-bold text-slate-400 mt-2.5 uppercase tracking-wider">
-              {d.label}
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  );
+// Presentation only: both visualizations consume the existing monthly API rows.
+const BarChart = ({ data = [], suffix = "" }) => {
+  const chartId = React.useId().replace(/:/g, '');
+  if (!data.length) return <div className="admin-chart-empty">No records in this interval.</div>;
+  const rows = data.map(row => ({ ...row, amount: Number(row.value ?? row.users ?? row.count ?? 0) }));
+  const accounts = suffix === 'accounts';
+  const valueLabel = value => suffix === 'LKR' ? `LKR ${Number(value).toLocaleString()}` : `${Number(value).toLocaleString()} accounts`;
+  return <div className="admin-trend-chart" role="img" aria-label={accounts ? 'Cumulative registered accounts by month' : 'Recorded revenue by month'}>
+    <ResponsiveContainer width="100%" height={260}>
+      {accounts ? <AreaChart data={rows} margin={{ top: 20, right: 12, left: 0, bottom: 0 }}>
+        <defs><linearGradient id={chartId} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#278c86" stopOpacity={0.22}/><stop offset="100%" stopColor="#278c86" stopOpacity={0}/></linearGradient></defs>
+        <CartesianGrid vertical={false} stroke="var(--ap-border)" strokeDasharray="3 5"/>
+        <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: 'var(--ap-muted)', fontSize: 11 }} tickMargin={14}/>
+        <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={38} tick={{ fill: 'var(--ap-muted)', fontSize: 11 }}/>
+        <Tooltip formatter={valueLabel} contentStyle={{ background: 'var(--ap-surface)', border: '1px solid var(--ap-border)', borderRadius: 10, color: 'var(--ap-text)' }}/>
+        <Area type="monotone" dataKey="amount" name="Accounts" stroke="#278c86" strokeWidth={2.5} fill={`url(#${chartId})`} dot={{ r: 3, fill: '#278c86', strokeWidth: 2 }} isAnimationActive={false}/>
+      </AreaChart> : <RechartsBarChart data={rows} margin={{ top: 20, right: 12, left: 0, bottom: 0 }}>
+        <CartesianGrid vertical={false} stroke="var(--ap-border)" strokeDasharray="3 5"/>
+        <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: 'var(--ap-muted)', fontSize: 11 }} tickMargin={14}/>
+        <YAxis tickLine={false} axisLine={false} width={48} tick={{ fill: 'var(--ap-muted)', fontSize: 11 }} tickFormatter={value => value >= 1000 ? `${value / 1000}k` : value}/>
+        <Tooltip cursor={{ fill: 'var(--ap-hover)' }} formatter={valueLabel} contentStyle={{ background: 'var(--ap-surface)', border: '1px solid var(--ap-border)', borderRadius: 10, color: 'var(--ap-text)' }}/>
+        <Bar dataKey="amount" name="Revenue" fill="#4875de" radius={[5, 5, 0, 0]} maxBarSize={42} isAnimationActive={false}/>
+      </RechartsBarChart>}
+    </ResponsiveContainer>
+    <details className="admin-chart-data"><summary>View monthly figures</summary><table><thead><tr><th>Month</th><th>{accounts ? 'Accounts' : 'Revenue (LKR)'}</th></tr></thead><tbody>{rows.map(row => <tr key={row.label}><td>{row.label}</td><td>{row.amount.toLocaleString()}</td></tr>)}</tbody></table></details>
+  </div>;
 };
 
 const DashboardPage = () => {
@@ -80,16 +65,20 @@ const DashboardPage = () => {
   const [userGrowth, setUserGrowth] = useState([]);
   const [pendingListings, setPendingListings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [failedSections, setFailedSections] = useState([]);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [s, r, u, pending] = await Promise.all([
+        const results = await Promise.allSettled([
           fetchDashboardStats(),
           fetchRevenueData("monthly"),
           fetchUserGrowth(),
           fetchListings({ status: "pending" }),
         ]);
+        const names = ['statistics', 'revenue', 'user growth', 'pending listings'];
+        setFailedSections(results.flatMap((result, index) => result.status === 'rejected' ? [names[index]] : []));
+        const [s, r, u, pending] = results.map(result => result.status === 'fulfilled' ? result.value : null);
         if (s) setStats(s);
         if (r?.data) setRevenue(r.data);
         if (u?.data) setUserGrowth(u.data);
@@ -98,15 +87,16 @@ const DashboardPage = () => {
             pending.listings.slice(0, 5).map((listing) => ({
               id: listing.id,
               title: listing.title,
-              seller: listing.seller_id || "Verified Seller",
-              city: listing.city || listing.district || "Colombo",
+              seller: listing.seller_id || "Seller unavailable",
+              city: listing.city || listing.district || "Location unavailable",
               date: listing.created_at?.slice(0, 10) || "-",
               price: `LKR ${Number(listing.price || 0).toLocaleString("en-LK")}`,
             }))
           );
         }
       } catch (err) {
-        console.error("Failed to load dashboard data:", err);
+        logClientError('admin_dashboard_load_failed');
+        setFailedSections(['statistics', 'revenue', 'user growth', 'pending listings']);
       } finally {
         setLoading(false);
       }
@@ -139,7 +129,7 @@ const DashboardPage = () => {
       route: "/admin/listings?status=pending"
     },
     { 
-      title: "Verified Platform Users", 
+      title: "Registered Platform Users", 
       value: fmt(stats.totalUsers || 0), 
       icon: Users, 
       desc: `${stats.buyerCount || 0} Buyers · ${stats.sellerCount || 0} Sellers`, 
@@ -152,7 +142,7 @@ const DashboardPage = () => {
       title: "Total Platform Revenue", 
       value: fmtCur(stats.revenue || 0), 
       icon: DollarSign, 
-      desc: "Listing Fees & Promotion Subscriptions", 
+      desc: "Recorded successful listing payments", 
       color: "from-emerald-600 to-teal-500",
       textColor: "text-emerald-400",
       bgLight: "bg-emerald-950/60 border border-emerald-800/60",
@@ -160,8 +150,12 @@ const DashboardPage = () => {
     }
   ];
 
+  if (loading) return <p role="status" className="text-slate-300 p-6">Loading dashboard…</p>;
+  if (failedSections.includes('statistics')) return <p role="alert" className="text-amber-300 p-6">Dashboard statistics are unavailable. Reload to try again.</p>;
+
   return (
-    <div className="space-y-8 pb-12 font-sans text-slate-100">
+    <div className="admin-dashboard space-y-8 pb-12 font-sans text-slate-100">
+      {failedSections.length > 0 && <p role="alert" className="text-amber-300">Unable to load {failedSections.join(', ')}. Reload to try again.</p>}
       
       {/* 1. High-Contrast Official Amber Moderation Banner */}
       {stats.pendingApproval > 0 && (
@@ -200,11 +194,11 @@ const DashboardPage = () => {
       )}
 
       {/* 2. Top Executive KPI Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="admin-kpi-strip grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {statCards.map((stat, idx) => {
           const Icon = stat.icon;
           return (
-            <m.div 
+            <m.button type="button"
               key={stat.title}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -232,13 +226,13 @@ const DashboardPage = () => {
                 </span>
                 <ChevronRight className="w-4 h-4 text-slate-500 group-hover:translate-x-1 group-hover:text-blue-400 transition-all" />
               </div>
-            </m.div>
+            </m.button>
           );
         })}
       </div>
 
       {/* 3. Deep Analytics Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="admin-dashboard-charts grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Revenue Overview Card */}
         <m.div 
@@ -256,7 +250,7 @@ const DashboardPage = () => {
                 </span>
               </div>
               <p className="text-xs font-semibold text-slate-400 mt-0.5">
-                Paid listing subscriptions, premium highlights & agent commissions
+                Recorded successful listing payments
               </p>
             </div>
             <button 
@@ -267,7 +261,7 @@ const DashboardPage = () => {
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
-          <BarChart data={revenue} colorClass="from-blue-600 to-cyan-500" suffix="LKR" />
+          {failedSections.includes('revenue') ? <p>Revenue data is unavailable.</p> : <BarChart data={revenue} colorClass="from-blue-600 to-cyan-500" suffix="LKR" />}
         </m.div>
 
         {/* User Growth Card */}
@@ -286,7 +280,7 @@ const DashboardPage = () => {
                 </span>
               </div>
               <p className="text-xs font-semibold text-slate-400 mt-0.5">
-                Total verified buyers, sellers, and licensed property brokers
+                Cumulative registered platform accounts
               </p>
             </div>
             <button 
@@ -297,7 +291,7 @@ const DashboardPage = () => {
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
-          <BarChart data={userGrowth} colorClass="from-purple-600 to-indigo-500" suffix="accounts" />
+          {failedSections.includes('user growth') ? <p>User growth data is unavailable.</p> : <BarChart data={userGrowth} colorClass="from-purple-600 to-indigo-500" suffix="accounts" />}
         </m.div>
 
       </div>
@@ -316,7 +310,7 @@ const DashboardPage = () => {
             <h3 className="text-base font-black text-white">Platform Health & Inventory</h3>
             <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest flex items-center gap-1.5 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              Live Sync
+              Loaded on page open
             </span>
           </div>
 
@@ -339,8 +333,8 @@ const DashboardPage = () => {
           <div className="mt-5 p-4 rounded-2xl bg-blue-950/40 border border-blue-800/50 flex items-start gap-3">
             <ShieldCheck className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
             <div className="text-[11px] text-slate-300 leading-relaxed font-light">
-              <span className="font-bold text-white block mb-0.5">PostGIS Spatial Verification:</span>
-              Coordinates and boundaries are automatically cross-checked against Sri Lanka Surveyor General survey maps.
+              <span className="font-bold text-white block mb-0.5">Location review:</span>
+              Review submitted coordinates, boundaries and supporting documents before approving a listing.
             </div>
           </div>
         </m.div>
@@ -381,7 +375,8 @@ const DashboardPage = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/80">
-                {pendingListings.length === 0 && (
+                {failedSections.includes('pending listings') && <tr><td colSpan={5} className="py-10 text-center">Pending listings are unavailable.</td></tr>}
+                {!failedSections.includes('pending listings') && pendingListings.length === 0 && (
                   <tr>
                     <td colSpan={5} className="text-center py-10">
                       <div className="flex flex-col items-center">

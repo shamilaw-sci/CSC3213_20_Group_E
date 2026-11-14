@@ -1,5 +1,5 @@
 # This workflow defines the Continuous Integration process for the frontend application.
-# It automatically builds and tests the React app whenever changes are pushed to the main branch.
+# Builds and tests the React app on the branches and paths configured below.
 
 name: Frontend CI
 
@@ -7,13 +7,18 @@ name: Frontend CI
 on:
   # Triggers the workflow on push or pull request events for the 'developer' branch
   push:
-    branches: [ developer, dgpiumal_dev ]
+    branches: [ developer, dgpiumal_dev, version-3.0 ]
     paths:
       - 'frontend-react/**' # Only run if files in the frontend folder change
+      - '.github/workflows/frontend-ci.yml'
   pull_request:
-    branches: [ developer, dgpiumal_dev ]
+    branches: [ developer, dgpiumal_dev, version-3.0 ]
     paths:
       - 'frontend-react/**'
+      - '.github/workflows/frontend-ci.yml'
+
+permissions:
+  contents: read
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -37,13 +42,13 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20' # Use a recent Long-Term Support (LTS) version of Node.js
+          node-version: '24' # Keep the selected Node LTS major aligned with Docker.
           cache: 'npm' # Enable caching for npm to speed up dependency installation
           cache-dependency-path: frontend-react/package-lock.json
 
       # 3. Installs all the project dependencies using npm
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       # 4. Runs the build script (`vite build`) to create a production-ready version of the app
       - name: Build project
@@ -51,4 +56,4 @@ jobs:
 
       # 5. Runs tests using Vitest.
       - name: Run tests
-        run: npm test
+        run: npm test -- --maxWorkers=1

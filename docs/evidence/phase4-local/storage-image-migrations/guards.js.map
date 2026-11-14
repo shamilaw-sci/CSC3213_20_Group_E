@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../src/internal/database/migrations/guards.ts"],
+  "sourcesContent": ["import { DBMigration } from './types'\n\nexport function isDBMigrationName(value: unknown): value is keyof typeof DBMigration {\n  return typeof value === 'string' && Object.prototype.hasOwnProperty.call(DBMigration, value)\n}\n\n/** A non-empty name this binary does not know, e.g. one recorded by a newer release. */\nexport function isUnrecognizedMigration(value: unknown): value is string {\n  return typeof value === 'string' && value.length > 0 && !isDBMigrationName(value)\n}\n\nconst knownMigrationNames = Object.keys(DBMigration) as (keyof typeof DBMigration)[]\nconst highestKnownMigration = knownMigrationNames.reduce((highest, name) =>\n  DBMigration[name] > DBMigration[highest] ? name : highest\n)\n\nexport function knownMigrationVersions(): string[] {\n  return knownMigrationNames\n}\n\n/** Highest migration this binary knows, ignoring any freeze target. */\nexport function highestKnownMigrationName() {\n  return highestKnownMigration\n}\n"],
+  "mappings": ";;;;;;;;;;;;;;;;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA,mBAA4B;AAErB,SAAS,kBAAkB,OAAmD;AACnF,SAAO,OAAO,UAAU,YAAY,OAAO,UAAU,eAAe,KAAK,0BAAa,KAAK;AAC7F;AAGO,SAAS,wBAAwB,OAAiC;AACvE,SAAO,OAAO,UAAU,YAAY,MAAM,SAAS,KAAK,CAAC,kBAAkB,KAAK;AAClF;AAEA,MAAM,sBAAsB,OAAO,KAAK,wBAAW;AACnD,MAAM,wBAAwB,oBAAoB;AAAA,EAAO,CAAC,SAAS,SACjE,yBAAY,IAAI,IAAI,yBAAY,OAAO,IAAI,OAAO;AACpD;AAEO,SAAS,yBAAmC;AACjD,SAAO;AACT;AAGO,SAAS,4BAA4B;AAC1C,SAAO;AACT;",
+  "names": []
+}

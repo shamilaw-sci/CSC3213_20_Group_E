@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../src/internal/database/migrations/index.ts"],
+  "sourcesContent": ["export * from './files'\nexport * from './guards'\nexport * from './migrate'\nexport * from './types'\n"],
+  "mappings": ";;;;;;;;;;;;;;;AAAA;AAAA;AAAA,+BAAc,oBAAd;AACA,+BAAc,qBADd;AAEA,+BAAc,sBAFd;AAGA,+BAAc,oBAHd;",
+  "names": []
+}

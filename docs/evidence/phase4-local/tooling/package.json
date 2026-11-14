@@ -1,0 +1,9 @@
+{
+  "name": "thirasara-phase4-local-tooling",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Isolated local database verification tools; not application dependencies",
+  "devDependencies": {
+    "supabase": "2.122.0"
+  }
+}

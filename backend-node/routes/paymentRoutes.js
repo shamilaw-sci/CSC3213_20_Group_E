@@ -6,6 +6,7 @@ const validate = require('../middleware/validate');
 const { generateHashSchema, notifyWebhookSchema } = require('../validators/paymentValidator');
 
 router.get('/config', paymentController.getPaymentConfig);
+router.get('/receipt-retries', paymentController.retryReceipts);
 router.post('/generate-hash', protect, validate(generateHashSchema), paymentController.generateHash);
 router.post('/notify', validate(notifyWebhookSchema), paymentController.processWebhook);
 router.post('/confirm-client-success', protect, paymentController.confirmPayment);

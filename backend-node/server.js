@@ -22,25 +22,12 @@ app.use(cors({
 }));
 
 app.use(cookieParser());
+app.use(require('./middleware/csrfProtection'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Lightweight production request logger with execution latency
-app.use((req, res, next) => {
-    const start = Date.now();
-    res.on('finish', () => {
-        const duration = Date.now() - start;
-        if (req.path === '/health' || req.path === '/health/ready') {
-            if (res.statusCode >= 400) {
-                console.warn(`[HEALTH-WARN] ${req.method} ${req.path} -> ${res.statusCode} (${duration}ms)`);
-            }
-            return;
-        }
-        const logMethod = res.statusCode >= 500 ? console.error : (res.statusCode >= 400 ? console.warn : console.log);
-        logMethod(`[HTTP] ${req.method} ${req.originalUrl || req.url} -> ${res.statusCode} (${duration}ms)`);
-    });
-    next();
-});
+app.use(require('./middleware/requestLogger'));
 
 // Rate Limiting for Auth Routes
 const authLimiter = rateLimit({
@@ -75,6 +62,8 @@ app.use('/api/agents', agentRoutes);
 const adminRoutes = require('./routes/adminRoutes');
 const favoritesRoutes = require('./routes/favoritesRoutes'); // Added favorites route
 app.use('/api/admin', adminRoutes);
+app.use('/api/inquiries', require('./routes/inquiryRoutes'));
+app.use('/api/reports', require('./routes/listingReportRoutes'));
 // Routes: /api/admin/login, /api/admin/dashboard/stats, etc.
 // ----------------------------------------
 
@@ -136,36 +125,7 @@ app.get('/health', (req, res) => {
 });
 
 // 2. Health Readiness Probe (Deep database connectivity ping)
-app.get('/health/ready', async (req, res) => {
-    try {
-        const startTime = Date.now();
-        const { error } = await supabase.from('settings').select('count', { count: 'exact', head: true });
-        const dbLatency = Date.now() - startTime;
-
-        if (error) {
-            return res.status(503).json({
-                status: "unready",
-                database: "disconnected",
-                error: error.message,
-                timestamp: new Date().toISOString()
-            });
-        }
-
-        res.status(200).json({
-            status: "ready",
-            database: "connected",
-            db_latency_ms: dbLatency,
-            timestamp: new Date().toISOString()
-        });
-    } catch (err) {
-        res.status(503).json({
-            status: "unready",
-            database: "error",
-            error: err.message,
-            timestamp: new Date().toISOString()
-        });
-    }
-});
+app.get('/health/ready', require('./controllers/healthController').createReadinessHandler(supabase));
 
 // Global Error Handler
 const errorHandler = require('./middleware/errorHandler');
@@ -183,6 +143,7 @@ if (process.env.VERCEL) {
             process.exit(1);
         }
         console.log(`Server is running on port ${PORT}`);
+        require('./utils/paymentReceiptQueue').start();
     });
 }
 

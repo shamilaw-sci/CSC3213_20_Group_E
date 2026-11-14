@@ -1,351 +1,119 @@
-import React, { useState, useEffect } from "react";
-import toast from "react-hot-toast";
+import { useEffect, useRef, useState } from "react";
 import { fetchSettings, updateSettings } from "../api/adminApi";
 import { useTheme } from "../../../context/ThemeProvider";
+import { DollarSign, Save, Sun, Moon, Laptop, Palette } from "lucide-react";
+import { cn } from "../../../lib/utils";
 import "../styles/admin-global.css";
-import { 
-  Settings, 
-  DollarSign, 
-  Percent, 
-  ShieldCheck, 
-  Bell, 
-  Save, 
-  CreditCard, 
-  Plus, 
-  Trash2,
-  CheckCircle2,
-  Sun,
-  Moon,
-  Laptop,
-  Palette
-} from "lucide-react";
 
-const DEFAULT_SETTINGS = {
-  listingFee: 1500,
-  boostFee: 5000,
-  loanInterestRate: 13.5,
-  maxRepaymentTenure: 30,
-  maxImagesPerListing: 8,
-  maxInquiriesPerDay: 20,
-  sessionTimeoutMinutes: 60,
-  categories: ["Residential Villa", "Commercial Plot", "Agricultural Estate", "Luxury Apartment"],
-  maintenanceMode: false,
-  emailNotificationsEnabled: true,
-  payhereMode: "live",
-};
+function canonicalFee(value) {
+  if (typeof value !== "string" || value.length > 64) return null;
+  const match = value.trim().match(/^(\d{1,10})(?:\.(\d{1,2}))?$/);
+  if (!match) return null;
+  const cents = BigInt(match[1]) * 100n + BigInt((match[2] || "").padEnd(2, "0"));
+  if (cents <= 0n || cents > 999999999999n) return null;
+  return `${cents / 100n}.${String(cents % 100n).padStart(2, "0")}`;
+}
+const themes = [
+  { value: "light", label: "Light Mode", Icon: Sun, detail: "A light workspace" },
+  { value: "dark", label: "Dark Mode", Icon: Moon, detail: "A dark workspace" },
+  { value: "system", label: "System Preference", Icon: Laptop, detail: "Follow your device settings" },
+];
 
-const SettingsPage = () => {
-  const { theme, isDark, changeTheme } = useTheme();
-  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
-  const [dirty, setDirty] = useState(false);
+export default function SettingsPage() {
+  const { theme, changeTheme } = useTheme();
+  const [draft, setDraft] = useState("");
+  const [feeSource, setFeeSource] = useState('database');
+  const [saved, setSaved] = useState("");
+  const [phase, setPhase] = useState("loading");
+  const [reload, setReload] = useState(0);
   const [saving, setSaving] = useState(false);
-  const [toastMsg, setToastMsg] = useState(null);
-  const [newCategory, setNewCategory] = useState("");
+  const [feedback, setFeedback] = useState(null);
+  const mounted = useRef(false);
+  const saveLock = useRef(false);
+  const fee = canonicalFee(draft);
+  const dirty = draft !== saved;
 
   useEffect(() => {
-    fetchSettings()
-      .then((d) => { 
-        if (d) {
-          setSettings({ ...DEFAULT_SETTINGS, ...d, listingFee: d.listing_fee || 1500 });
-        }
-      })
-      .catch((err) => { toast.error("Failed to load settings"); console.error(err); });
-  }, []);
-
-  const showToast = (msg, type = "success") => {
-    setToastMsg({ msg, type });
-    setTimeout(() => setToastMsg(null), 3000);
-  };
-
-  const update = (key, val) => {
-    setSettings((p) => ({ ...p, [key]: val }));
-    setDirty(true);
-  };
+    let cancelled = false;
+    mounted.current = true;
+    fetchSettings().then(result => {
+      if (cancelled) return;
+      const value = canonicalFee(result?.settings?.listing_fee);
+      if (value === null) throw new Error("Unconfirmed settings.");
+      setDraft(value); setSaved(value); setFeeSource(result.source || 'database'); setPhase("ready");
+    }).catch(() => {
+      if (!cancelled) setPhase("error");
+    });
+    return () => { cancelled = true; mounted.current = false; };
+  }, [reload]);
 
   const handleSave = async () => {
-    setSaving(true);
+    if (phase !== "ready" || saveLock.current || !dirty || fee === null) return;
+    saveLock.current = true;
+    setSaving(true); setFeedback(null);
     try {
-      await updateSettings({ ...settings, listing_fee: settings.listingFee });
-      setDirty(false);
-      showToast("Platform parameters saved and committed to audit trail.");
+      const result = await updateSettings({ listing_fee: fee });
+      if (!mounted.current) return;
+      if (result?.settings?.listing_fee !== fee) throw new Error("Unconfirmed settings.");
+      setDraft(fee); setSaved(fee); setFeeSource('database'); setFeedback({ error: Boolean(result.warning), message: result.warning || "Listing fee saved." });
     } catch {
-      showToast("Failed to save settings.", "error");
+      if (mounted.current) setFeedback({ error: true, message: "Listing fee could not be confirmed. Refresh before retrying." });
     } finally {
-      setSaving(false);
+      saveLock.current = false;
+      if (mounted.current) setSaving(false);
     }
   };
 
-  const addCategory = () => {
-    if (!newCategory.trim()) return;
-    if (settings.categories.includes(newCategory.trim())) return;
-    update("categories", [...settings.categories, newCategory.trim()]);
-    setNewCategory("");
-  };
-
-  const removeCategory = (cat) => {
-    update("categories", settings.categories.filter((c) => c !== cat));
-  };
-
-  const handleThemeChange = (newTheme) => {
-    changeTheme(newTheme);
-    showToast(`Interface theme switched to ${newTheme.toUpperCase()}`);
-  };
-
   return (
-    <div className="space-y-6">
-      
-      {/* Toast */}
-      {toastMsg && (
-        <div className="admin-toast-container">
-          <div className={`admin-toast ${toastMsg.type}`}>
-            <span>{toastMsg.msg}</span>
-          </div>
-        </div>
-      )}
-
-      {/* Header */}
+    <div className="flex flex-col gap-6">
       <div className="admin-page-header">
         <div>
-          <h1>System Parameters & Configuration</h1>
-          <p>Manage platform monetization fees, admin theme appearance, and gateway rules</p>
+          <h1>System Parameters &amp; Configuration</h1>
+          <p>Manage the listing fee and your interface theme.</p>
         </div>
-
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={!dirty || saving}
-          className="admin-btn admin-btn-primary disabled:opacity-50"
-        >
-          <Save className="w-4 h-4" />
-          <span>{saving ? "Saving Changes..." : "Save Parameters"}</span>
+        <button type="button" onClick={handleSave} disabled={phase !== "ready" || saving || !dirty || fee === null}
+          aria-busy={saving} className="admin-btn admin-btn-primary disabled:opacity-50">
+          <Save className="size-4" /><span>Save listing fee</span>
         </button>
       </div>
-
+      {feedback && <p role={feedback.error ? "alert" : "status"}>{feedback.message}</p>}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        {/* Card 0: Theme & Appearance (Admin Theme Switcher) */}
         <div className="admin-card lg:col-span-2">
           <div className="admin-card-header">
-            <h3 className="admin-card-title flex items-center gap-2">
-              <Palette className="w-5 h-5 text-purple-500" /> Admin Interface Theme & Display Mode
-            </h3>
+            <h3 className="admin-card-title flex items-center gap-2"><Palette className="size-5" />Admin Interface Theme &amp; Display Mode</h3>
           </div>
-
-          <p className="text-xs text-slate-500 dark:text-slate-400 mb-5">
-            Choose your preferred workspace theme. Dark Mode provides high-contrast executive telemetry, while Light Mode offers a crisp clean studio look.
-          </p>
-
+          <p className="text-sm mb-5">Choose your workspace theme. This preference is independent of the listing fee.</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            
-            {/* 1. Light Mode */}
-            <div
-              onClick={() => handleThemeChange("light")}
-              className={`p-5 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between ${
-                theme === "light"
-                  ? "border-blue-600 bg-blue-50/60 dark:bg-blue-900/20 text-slate-900 shadow-md ring-2 ring-blue-500/20"
-                  : "border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700"
-              }`}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-500 flex items-center justify-center font-bold">
-                  <Sun className="w-5 h-5" />
-                </div>
-                {theme === "light" && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-600 text-white">
-                    Active
-                  </span>
-                )}
-              </div>
-              <div>
-                <h4 className="font-bold text-sm text-slate-900 dark:text-white">Light Mode</h4>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Crisp high-contrast day studio with clean borders</p>
-              </div>
-            </div>
-
-            {/* 2. Dark Mode */}
-            <div
-              onClick={() => handleThemeChange("dark")}
-              className={`p-5 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between ${
-                theme === "dark"
-                  ? "border-blue-600 bg-blue-50/60 dark:bg-blue-900/20 text-slate-900 shadow-md ring-2 ring-blue-500/20"
-                  : "border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700"
-              }`}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold">
-                  <Moon className="w-5 h-5" />
-                </div>
-                {theme === "dark" && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-600 text-white">
-                    Active
-                  </span>
-                )}
-              </div>
-              <div>
-                <h4 className="font-bold text-sm text-slate-900 dark:text-white">Dark Mode (Executive)</h4>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Obsidian command center with glowing indicators</p>
-              </div>
-            </div>
-
-            {/* 3. System Sync */}
-            <div
-              onClick={() => handleThemeChange("system")}
-              className={`p-5 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between ${
-                theme === "system"
-                  ? "border-blue-600 bg-blue-50/60 dark:bg-blue-900/20 text-slate-900 shadow-md ring-2 ring-blue-500/20"
-                  : "border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700"
-              }`}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-10 h-10 rounded-xl bg-slate-500/20 text-slate-400 flex items-center justify-center font-bold">
-                  <Laptop className="w-5 h-5" />
-                </div>
-                {theme === "system" && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-600 text-white">
-                    Active
-                  </span>
-                )}
-              </div>
-              <div>
-                <h4 className="font-bold text-sm text-slate-900 dark:text-white">System Preference</h4>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Automatically synchronize with your OS settings</p>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        {/* Card 1: Monetization & Fee Rules */}
-        <div className="admin-card">
-          <div className="admin-card-header">
-            <h3 className="admin-card-title flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-emerald-500" /> Monetization & Listing Fees
-            </h3>
-          </div>
-
-          <div className="space-y-4">
-            <div className="admin-form-group">
-              <label className="admin-form-label">Base Listing Moderation Fee (LKR)</label>
-              <input
-                type="number"
-                className="admin-form-control"
-                value={settings.listingFee}
-                onChange={(e) => update("listingFee", Number(e.target.value))}
-              />
-            </div>
-
-            <div className="admin-form-group">
-              <label className="admin-form-label">Featured Spotlight Boost Fee (LKR)</label>
-              <input
-                type="number"
-                className="admin-form-control"
-                value={settings.boostFee}
-                onChange={(e) => update("boostFee", Number(e.target.value))}
-              />
-            </div>
-
-            <div className="admin-form-group">
-              <label className="admin-form-label">Payment Gateway Mode</label>
-              <select
-                className="admin-form-control cursor-pointer"
-                value={settings.payhereMode}
-                onChange={(e) => update("payhereMode", e.target.value)}
-              >
-                <option value="live">PayHere Production (Live)</option>
-                <option value="sandbox">PayHere Sandbox (Test Mode)</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 2: Property & Moderation Parameters */}
-        <div className="admin-card">
-          <div className="admin-card-header">
-            <h3 className="admin-card-title flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-blue-500" /> Moderation & Upload Limits
-            </h3>
-          </div>
-
-          <div className="space-y-4">
-            <div className="admin-form-group">
-              <label className="admin-form-label">Max HD Photos per Listing</label>
-              <input
-                type="number"
-                className="admin-form-control"
-                value={settings.maxImagesPerListing}
-                onChange={(e) => update("maxImagesPerListing", Number(e.target.value))}
-              />
-            </div>
-
-            <div className="admin-form-group">
-              <label className="admin-form-label">Max Buyer Inquiries Allowed per Day</label>
-              <input
-                type="number"
-                className="admin-form-control"
-                value={settings.maxInquiriesPerDay}
-                onChange={(e) => update("maxInquiriesPerDay", Number(e.target.value))}
-              />
-            </div>
-
-            <div className="admin-form-group">
-              <label className="admin-form-label">Admin JWT Session Timeout (Minutes)</label>
-              <input
-                type="number"
-                className="admin-form-control"
-                value={settings.sessionTimeoutMinutes}
-                onChange={(e) => update("sessionTimeoutMinutes", Number(e.target.value))}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Card 3: Approved Property Categories */}
-        <div className="admin-card lg:col-span-2">
-          <div className="admin-card-header">
-            <h3 className="admin-card-title">Supported Property Categories</h3>
-          </div>
-
-          <div className="flex flex-wrap gap-2.5 mb-5">
-            {settings.categories.map((cat) => (
-              <span
-                key={cat}
-                className="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold flex items-center gap-2"
-              >
-                <span>{cat}</span>
-                <button
-                  type="button"
-                  onClick={() => removeCategory(cat)}
-                  className="text-slate-400 hover:text-red-500 transition cursor-pointer"
-                >
-                  ✕
-                </button>
-              </span>
+            {themes.map(({ value, label, Icon, detail }) => (
+              <button type="button" key={value} aria-pressed={theme === value} onClick={() => changeTheme(value)}
+                className={cn("p-5 rounded-2xl border-2 transition cursor-pointer flex flex-col gap-3 text-left",
+                  theme === value ? "border-primary bg-primary/10" : "border-border bg-background")}>
+                <Icon className="size-5" /><span className="font-bold text-sm">{label}</span><span className="text-xs">{detail}</span>
+              </button>
             ))}
           </div>
-
-          <div className="flex gap-3 max-w-md">
-            <input
-              type="text"
-              placeholder="Add new category (e.g. Tea Estate, Luxury Penthouse)..."
-              value={newCategory}
-              onChange={(e) => setNewCategory(e.target.value)}
-              className="admin-form-control"
-            />
-            <button
-              type="button"
-              onClick={addCategory}
-              className="admin-btn admin-btn-primary shrink-0"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add</span>
-            </button>
+        </div>
+        <div className="admin-card">
+          <div className="admin-card-header"><h3 className="admin-card-title flex items-center gap-2"><DollarSign className="size-5" />Listing Fee</h3></div>
+          {phase === "loading" && <p role="status">Loading settings...</p>}
+          {phase === "error" && <div role="alert">
+            <p>Settings could not be loaded.</p>
+            <button type="button" className="admin-btn" onClick={() => { setPhase("loading"); setFeedback(null); setReload(n => n + 1); }}>Retry loading settings</button>
+          </div>}
+          <div className="admin-form-group">
+            <label className="admin-form-label" htmlFor="listing-fee">Listing fee (LKR)</label>
+            <input id="listing-fee" type="text" inputMode="decimal" maxLength={64} className="admin-form-control"
+              value={draft} disabled={phase !== "ready" || saving} aria-invalid={dirty && fee === null}
+              aria-describedby="listing-fee-help" onChange={event => { setDraft(event.target.value); setFeedback(null); }} />
+            <p id="listing-fee-help" className="text-xs mt-2">{feeSource === 'configured_default' ? 'Showing the configured default; no saved fee record exists. ' : ''}Enter a positive amount with at most two decimal places, up to 9,999,999,999.99 LKR.</p>
+            {dirty && fee === null && <p role="alert">Enter a valid listing fee.</p>}
           </div>
         </div>
-
+        <div className="admin-card">
+          <div className="admin-card-header"><h3 className="admin-card-title">Available settings</h3></div>
+          <p>Only the listing fee and interface theme are configurable here. Payment gateway mode is managed separately.</p>
+        </div>
       </div>
-
     </div>
   );
-};
-
-export default SettingsPage;
+}

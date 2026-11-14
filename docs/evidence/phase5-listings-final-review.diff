@@ -1,0 +1,990 @@
+Listings2A current delta files; Login foundation retained unchanged except shared launcher/README.
+diff --git a/backend-node/integration/database-state.cjs b/backend-node/integration/database-state.cjs
+new file mode 100644
+index 0000000..fe6e69d
+--- /dev/null
++++ b/backend-node/integration/database-state.cjs
+@@ -0,0 +1,31 @@
++const tables = Object.freeze({ users: 'id', properties: 'id', transactions: 'id',
++    payment_orders: 'id', payment_receipt_outbox: 'order_id' });
++
++async function snapshotState(client, names) {
++    if (!names.length || names.some(name => !Object.hasOwn(tables, name))) throw new Error('Unsupported snapshot table.');
++    const result = {};
++    for (const name of names) {
++        const response = await client.query(`SELECT coalesce(jsonb_agg(to_jsonb(t) ORDER BY ${tables[name]}), '[]'::jsonb) AS snapshot FROM public.${name} t`);
++        result[name] = response.rows[0].snapshot;
++    }
++    return result;
++}
++
++function assertSameState(before, after) {
++    if (JSON.stringify(Object.keys(before).sort()) !== JSON.stringify(Object.keys(after).sort())) {
++        throw new Error('Starting state not preserved: snapshot table set differs.');
++    }
++    for (const name of Object.keys(before)) {
++        if (JSON.stringify(before[name]) !== JSON.stringify(after[name])) {
++            throw new Error(`Starting state not preserved for ${name}.`);
++        }
++    }
++}
++
++function assertOwnedListings(rows, sellerIds) {
++    const owned = new Set(sellerIds);
++    if (rows.some(row => !row.id || !owned.has(row.seller_id))) throw new Error('Cleanup requires run-owned listing rows.');
++    return rows.map(row => row.id);
++}
++
++module.exports = { snapshotState, assertSameState, assertOwnedListings };
+diff --git a/backend-node/integration/run-local.cjs b/backend-node/integration/run-local.cjs
+new file mode 100644
+index 0000000..b38639d
+--- /dev/null
++++ b/backend-node/integration/run-local.cjs
+@@ -0,0 +1,73 @@
++const { spawnSync } = require('node:child_process');
++const path = require('node:path');
++const jwt = require('jsonwebtoken');
++const { Client } = require('pg');
++const { inspectLocalStack, validateDatabase, identitySql } = require('./local-stack.cjs');
++const { snapshotState, assertSameState } = require('./database-state.cjs');
++
++const profiles = Object.freeze({
++    'login-roles': { label: 'Login/roles', config: 'jest.config.cjs', tables: ['users'] },
++    listings: { label: 'Listings', config: 'listings.jest.config.cjs',
++        tables: ['users', 'properties', 'transactions', 'payment_orders', 'payment_receipt_outbox'] },
++});
++
++async function runLocal(profileName) {
++    let stage = 'container/workdir/checksum identity';
++    let client;
++    try {
++        if (!Object.hasOwn(profiles, profileName)) throw new Error('Unknown test profile.');
++        const profile = profiles[profileName];
++        const local = inspectLocalStack();
++        client = new Client(local.database);
++        stage = 'read-only database connection';
++        await client.connect();
++        await client.query('BEGIN READ ONLY');
++        stage = 'database marker and ledger identity';
++        validateDatabase((await client.query(identitySql)).rows[0]);
++        const before = await snapshotState(client, profile.tables);
++        const ids = (await client.query('SELECT id FROM public.users ORDER BY id')).rows.map(row => row.id);
++        const key = jwt.sign({ role: 'service_role', iss: 'supabase' }, local.jwtSecret, { expiresIn: '10m' });
++        stage = 'PostgREST read-only identity cross-check';
++        const response = await fetch(`${local.apiUrl}/users?select=id&order=id`, {
++            headers: { Authorization: `Bearer ${key}` }, redirect: 'error', signal: AbortSignal.timeout(5000),
++        });
++        if (!response.ok || JSON.stringify((await response.json()).map(row => row.id)) !== JSON.stringify(ids)) {
++            throw new Error('Local API and database identity cross-check failed.');
++        }
++        await client.query('ROLLBACK');
++        if (process.argv.includes('--preflight')) {
++            console.log(`PASS: ${profile.label} stack-c container/DB/API/marker/checksums/ledger; read-only state snapshot. No fixture writes.`);
++            return;
++        }
++        const env = Object.fromEntries(['PATH', 'SystemRoot', 'WINDIR', 'TEMP', 'TMP', 'COMSPEC', 'PATHEXT']
++            .filter(name => process.env[name]).map(name => [name, process.env[name]]));
++        Object.assign(env, {
++            NODE_ENV: 'test', JWT_SECRET: 'phase5-isolated-auth-tests-only',
++            SUPABASE_URL: local.apiUrl, SUPABASE_KEY: key,
++            PHASE5_DATABASE: JSON.stringify(local.database), PHASE5_LOCAL_APPROVED: 'stack-c',
++        });
++        console.log(`Running real ${profile.label} integration against verified stack-c; external delivery disabled.`);
++        stage = 'integration assertions and fixture cleanup';
++        const result = spawnSync(process.execPath, [require.resolve('jest/bin/jest'), '--config',
++            path.join(__dirname, profile.config), '--runInBand', '--no-cache'], {
++            cwd: path.resolve(__dirname, '..'), env, stdio: 'inherit', timeout: 120000,
++        });
++        // Check preservation after child failure/timeout as well as success.
++        stage = 'post-run state preservation';
++        validateDatabase((await client.query(identitySql)).rows[0]);
++        assertSameState(before, await snapshotState(client, profile.tables));
++        console.log(`PASS: ${profile.tables.length} full table snapshot(s) and canonical ledger preserved after cleanup.`);
++        if (result.status !== 0) {
++            stage = 'integration assertions or fixture cleanup';
++            throw new Error('Integration assertions or cleanup failed.');
++        }
++    } catch {
++        // Docker/pg errors can include generated credentials or private configuration.
++        console.error(`FAIL: local ${profileName} integration at ${stage}; credentials suppressed.`);
++        process.exitCode = 1;
++    } finally {
++        if (client) await client.end().catch(() => { process.exitCode = 1; });
++    }
++}
++
++module.exports = { runLocal };
+diff --git a/backend-node/integration/run-login-roles.cjs b/backend-node/integration/run-login-roles.cjs
+new file mode 100644
+index 0000000..d73f22a
+--- /dev/null
++++ b/backend-node/integration/run-login-roles.cjs
+@@ -0,0 +1,2 @@
++const { runLocal } = require('./run-local.cjs');
++void runLocal('login-roles');
+diff --git a/backend-node/integration/run-listings.cjs b/backend-node/integration/run-listings.cjs
+new file mode 100644
+index 0000000..b6ea43e
+--- /dev/null
++++ b/backend-node/integration/run-listings.cjs
+@@ -0,0 +1,2 @@
++const { runLocal } = require('./run-local.cjs');
++void runLocal('listings');
+diff --git a/backend-node/integration/listings.jest.config.cjs b/backend-node/integration/listings.jest.config.cjs
+new file mode 100644
+index 0000000..245db08
+--- /dev/null
++++ b/backend-node/integration/listings.jest.config.cjs
+@@ -0,0 +1,7 @@
++module.exports = {
++    rootDir: '..',
++    testMatch: ['<rootDir>/integration/listings.integration.cjs'],
++    setupFiles: ['<rootDir>/integration/setup.cjs', '<rootDir>/integration/listings.setup.cjs'],
++    testTimeout: 15000,
++    verbose: true,
++};
+diff --git a/backend-node/integration/listings.setup.cjs b/backend-node/integration/listings.setup.cjs
+new file mode 100644
+index 0000000..596d0ef
+--- /dev/null
++++ b/backend-node/integration/listings.setup.cjs
+@@ -0,0 +1,15 @@
++// Moderation side effects are boundary spies; matching/delivery is a later flow.
++jest.mock('../utils/emailService', () => ({ sendListingStatusEmail: jest.fn().mockResolvedValue() }));
++jest.mock('../controllers/savedSearchController', () => ({
++    ...jest.requireActual('../controllers/savedSearchController'),
++    checkSavedSearchMatches: jest.fn().mockResolvedValue(),
++}));
++
++for (const method of ['log', 'warn']) {
++    const original = console[method].bind(console);
++    console[method] = (...args) => {
++        if (args.length === 1 && typeof args[0] === 'string'
++            && /^\[HTTP\] (GET|POST|PATCH|DELETE) \/api\/(properties(?:\/[^ ]*)?|admin\/listings(?:\/[^ ]*)?) -> [234]\d\d \(\d+ms\)$/.test(args[0])) return;
++        original(...args);
++    };
++}
+diff --git a/backend-node/integration/listings.integration.cjs b/backend-node/integration/listings.integration.cjs
+new file mode 100644
+index 0000000..f656d5b
+--- /dev/null
++++ b/backend-node/integration/listings.integration.cjs
+@@ -0,0 +1,284 @@
++const { randomUUID } = require('node:crypto');
++const request = require('supertest');
++const bcrypt = require('bcryptjs');
++const jwt = require('jsonwebtoken');
++const { Client } = require('pg');
++const { identitySql, validateDatabase } = require('./local-stack.cjs');
++const { assertOwnedListings } = require('./database-state.cjs');
++const { allowedAppPorts } = require('./network-policy.cjs');
++const { sendListingStatusEmail } = require('../utils/emailService');
++const { checkSavedSearchMatches } = require('../controllers/savedSearchController');
++const app = require('../server');
++
++const run = randomUUID();
++const password = 'Listings2A-fixture-only-123!';
++const roles = ['SELLER', 'AGENT', 'BUYER', 'ADMIN', 'PENDING_AGENT', 'REJECTED_AGENT', 'BANNED', 'OTHER_SELLER'];
++const users = Object.fromEntries(roles.map(key => [key, {
++    id: randomUUID(), role: key === 'OTHER_SELLER' ? 'SELLER' : key,
++    name: `Listings2A ${key}`, email: `${run}-${key.toLowerCase()}@example.test`,
++}]));
++const userIds = Object.values(users).map(user => user.id);
++const seeds = Object.fromEntries(['private', 'public', 'rejected', 'moderation', 'delete'].map(key => [key, randomUUID()]));
++const created = new Set();
++const sessions = {};
++const db = new Client(JSON.parse(process.env.PHASE5_DATABASE));
++let connected = false;
++let server;
++let appPort;
++const body = changes => ({ type: 'House', title: `Listing ${run}`, description: 'Synthetic listing for isolated lifecycle verification.',
++    price: '1500000', latitude: '7', longitude: '80', bedrooms: '0', bathrooms: '0', landSize: '0',
++    boundary: 'POLYGON((80 7,80.001 7,80.001 7.001,80 7.001,80 7))', ...changes });
++const call = (role, method, path) => {
++    const req = request(server)[method](path);
++    return role ? req.set('Cookie', sessions[role]) : req;
++};
++const tokenCookie = role => `token=${jwt.sign({ id: users[role].id, role: users[role].role }, process.env.JWT_SECRET, { expiresIn: '5m' })}`;
++const row = async id => (await db.query('SELECT p.*,price::text AS price,land_size::text AS land_size FROM public.properties p WHERE id=$1', [id])).rows[0];
++const ownIds = async () => assertOwnedListings((await db.query('SELECT id,seller_id FROM public.properties WHERE seller_id=ANY($1::uuid[]) ORDER BY id', [userIds])).rows, userIds);
++const publicIds = async () => {
++    const response = await request(server).get('/api/properties?limit=100');
++    expect(response.status).toBe(200);
++    return response.body.properties.map(property => property.id);
++};
++const searchIds = async () => {
++    const response = await request(server).get('/api/properties/search').query({ q: run, limit: 50 });
++    expect(response.status).toBe(200);
++    return response.body.properties.map(property => property.id);
++};
++
++beforeAll(async () => {
++    server = await new Promise((resolve, reject) => {
++        const listener = app.listen(0, '127.0.0.1', () => resolve(listener));
++        listener.once('error', reject);
++    });
++    appPort = server.address().port;
++    allowedAppPorts.add(appPort);
++    await db.connect();
++    connected = true;
++    validateDatabase((await db.query(identitySql)).rows[0]);
++    const hash = await bcrypt.hash(password, 10);
++    for (const user of Object.values(users)) {
++        await db.query('INSERT INTO public.users(id,name,email,password_hash,role) VALUES($1,$2,$3,$4,$5)',
++            [user.id, user.name, user.email, hash, user.role]);
++    }
++    for (const key of roles.filter(key => !['ADMIN', 'BANNED'].includes(key))) {
++        const response = await request(server).post('/api/auth/login').send({ email: users[key].email, password });
++        expect(response.status).toBe(200);
++        sessions[key] = response.headers['set-cookie'][0].split(';')[0];
++    }
++    const admin = await request(server).post('/api/admin/login').send({ email: users.ADMIN.email, password });
++    expect(admin.status).toBe(200);
++    sessions.ADMIN = admin.headers['set-cookie'][0].split(';')[0];
++    sessions.BANNED = tokenCookie('BANNED');
++    for (const [key, id] of Object.entries(seeds)) {
++        const status = key === 'public' ? 'approved' : key === 'rejected' ? 'rejected' : 'pending';
++        await db.query(`INSERT INTO public.properties(id,seller_id,title,description,price,status,payment_status,rejection_reason,type,latitude,longitude)
++            VALUES($1,$2,$3,$4,$5,$6,$7,$8,'House',7,80)`,
++        [id, users.SELLER.id, `${key} ${run}`, `Synthetic ${key} listing ${run}`, 1500000, status,
++            key === 'private' || key === 'delete' ? 'Unpaid' : 'Paid', key === 'rejected' ? 'Correct the details' : null]);
++    }
++    expect(await ownIds()).toHaveLength(Object.keys(seeds).length);
++});
++
++beforeEach(() => { sendListingStatusEmail.mockClear(); checkSavedSearchMatches.mockClear(); });
++
++afterAll(async () => {
++    try {
++        if (connected) {
++            validateDatabase((await db.query(identitySql)).rows[0]);
++            // Recover API inserts whose response might have failed, scoped to exact synthetic owners.
++            const recovered = await ownIds();
++            const ids = [...new Set([...Object.values(seeds), ...created, ...recovered])];
++            await db.query('DELETE FROM public.properties WHERE id=ANY($1::uuid[]) AND seller_id=ANY($2::uuid[])', [ids, userIds]);
++            expect(await ownIds()).toEqual([]);
++            await db.query('DELETE FROM public.users WHERE id=ANY($1::uuid[]) AND email=ANY($2::text[])',
++                [userIds, Object.values(users).map(user => user.email)]);
++            expect((await db.query('SELECT id FROM public.users WHERE id=ANY($1::uuid[])', [userIds])).rows).toEqual([]);
++            console.log('Listings fixtures removed: exact run-owned properties before eight users; partial inserts recovered by owner IDs.');
++        }
++    } finally {
++        try { await db.end(); }
++        finally {
++            try { if (server?.listening) await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve())); }
++            finally { allowedAppPorts.delete(appPort); }
++        }
++    }
++});
++
++describe('Real local listing lifecycle and ownership', () => {
++    test.each(['SELLER', 'AGENT'])('%s multipart creation persists server-owned defaults, zero values and PostGIS geometry', async role => {
++        let req = call(role, 'post', '/api/properties');
++        for (const [key, value] of Object.entries(body({ seller_id: users.BUYER.id, status: 'approved', payment_status: 'Paid' }))) req = req.field(key, value);
++        const response = await req;
++        if (response.body.property?.id) created.add(response.body.property.id);
++        expect(response.status).toBe(201);
++        const id = response.body.property.id;
++        expect(await row(id)).toMatchObject({ seller_id: users[role].id, status: 'pending', payment_status: 'Unpaid',
++            price: '1500000.00', bedrooms: 0, bathrooms: 0, land_size: '0' });
++        const geo = (await db.query('SELECT extensions.ST_SRID(boundary) AS srid, extensions.ST_IsValid(boundary) AS valid, extensions.ST_AsText(boundary) AS wkt FROM public.properties WHERE id=$1', [id])).rows[0];
++        expect(geo).toMatchObject({ srid: 4326, valid: true });
++        expect(geo.wkt).toBe(body().boundary);
++        expect(response.body.property.images).toEqual([]);
++        expect(await publicIds()).not.toContain(id);
++    });
++
++    test.each([
++        ['post', '/api/properties', body()],
++        ['patch', () => `/api/properties/my-listings/${seeds.private}`, { title: 'Anonymous edit' }],
++        ['delete', () => `/api/properties/my-listings/${seeds.private}`, undefined],
++    ])('anonymous %s write is401 and unchanged', async (method, path, payload) => {
++        const before = await row(seeds.private);
++        const response = await call(null, method, typeof path === 'function' ? path() : path).send(payload);
++        expect(response.status).toBe(401);
++        expect(await row(seeds.private)).toEqual(before);
++    });
++
++    test.each(['BUYER', 'PENDING_AGENT', 'REJECTED_AGENT', 'ADMIN', 'BANNED'])(
++        '%s cannot create/edit/delete via seller endpoints', async role => {
++            const before = await ownIds();
++            const original = await row(seeds.private);
++            for (const [method, path, payload] of [['post', '/api/properties', body()],
++                ['patch', `/api/properties/my-listings/${seeds.private}`, { title: 'Forbidden edit' }],
++                ['delete', `/api/properties/my-listings/${seeds.private}`, undefined]]) {
++                expect((await call(role, method, path).send(payload)).status).toBe(403);
++            }
++            expect(await ownIds()).toEqual(before);
++            expect(await row(seeds.private)).toEqual(original);
++        });
++
++    test.each([
++        ['title', 'ab'], ['description', 'short'], ['price', -1], ['latitude', 91], ['longitude', -181],
++        ['bedrooms', -1], ['bathrooms', 1.5], ['landSize', -1],
++    ])('invalid %s rejects with validation400 and no row', async (key, value) => {
++        const before = await ownIds();
++        const response = await call('SELLER', 'post', '/api/properties').send(body({ [key]: value }));
++        expect(response.status).toBe(400);
++        expect(response.body).toMatchObject({ message: 'Validation Error', errors: expect.arrayContaining([
++            expect.objectContaining({ path: `body.${key}` }),
++        ]) });
++        expect(await ownIds()).toEqual(before);
++    });
++
++    test('invalid upload MIME is rejected before storage or property insertion', async () => {
++        const before = await ownIds();
++        const originalError = console.error;
++        const logged = jest.spyOn(console, 'error').mockImplementation((...args) => {
++            if (args[0] !== '🔥 Global Error Handler:' || !String(args[1]).startsWith('Invalid file type')) originalError(...args);
++        });
++        try {
++            const response = await call('SELLER', 'post', '/api/properties')
++                .attach('images', Buffer.from('Synthetic rejected file'), { filename: 'fixture.pdf', contentType: 'application/pdf' });
++            expect(response.status).toBe(400);
++            expect(response.body.message).toMatch(/Invalid file type.*application\/pdf/);
++            expect(logged).toHaveBeenCalledWith('🔥 Global Error Handler:', expect.stringContaining('Invalid file type'));
++            expect(await ownIds()).toEqual(before);
++        } finally { logged.mockRestore(); }
++    });
++
++    test('each seller/agent sees only their own listings, including private rows', async () => {
++        for (const role of ['SELLER', 'AGENT', 'OTHER_SELLER']) {
++            const response = await call(role, 'get', '/api/properties/my-listings?limit=100');
++            expect(response.status).toBe(200);
++            const expected = (await db.query('SELECT id FROM public.properties WHERE seller_id=$1 ORDER BY id', [users[role].id])).rows.map(item => item.id);
++            expect(response.body.properties.map(property => property.id).sort()).toEqual(expected);
++            expect(response.body.totalCount).toBe(expected.length);
++        }
++    });
++
++    test.each(['OTHER_SELLER', 'AGENT'])('%s cannot inspect, edit or delete another owner private row', async role => {
++        const before = await row(seeds.private);
++        expect((await call(role, 'get', `/api/properties/${seeds.private}`)).status).toBe(404);
++        expect((await call(role, 'patch', `/api/properties/my-listings/${seeds.private}`).send({ title: 'Foreign edit' })).status).toBe(404);
++        expect((await call(role, 'delete', `/api/properties/my-listings/${seeds.private}`)).status).toBe(404);
++        expect(await row(seeds.private)).toEqual(before);
++    });
++
++    test('public visibility excludes pending/rejected and permits approved; owner/admin can inspect private', async () => {
++        for (const getIds of [publicIds, searchIds]) {
++            const ids = await getIds();
++            expect(ids).toContain(seeds.public);
++            expect(ids).not.toContain(seeds.private);
++            expect(ids).not.toContain(seeds.rejected);
++        }
++        for (const id of [seeds.private, seeds.rejected]) {
++            const response = await request(server).get(`/api/properties/${id}`);
++            expect(response.status).toBe(404);
++            expect(response.body.property).toBeUndefined();
++            for (const role of ['SELLER', 'ADMIN']) {
++                const allowed = await call(role, 'get', `/api/properties/${id}`);
++                expect(allowed.status).toBe(200);
++                expect(allowed.body.property.id).toBe(id);
++            }
++        }
++        expect((await request(server).get(`/api/properties/${seeds.public}`)).status).toBe(200);
++        expect((await request(server).get(`/api/properties/${randomUUID()}`)).status).toBe(404);
++    });
++
++    test('owner edits rejected listing back to pending preserving identity/payment and valid zero values', async () => {
++        const response = await call('SELLER', 'patch', `/api/properties/my-listings/${seeds.rejected}`)
++            .send({ title: `Corrected ${run}`, bedrooms: 0, bathrooms: 0, landSize: 0, seller_id: users.BUYER.id, payment_status: 'Unpaid' });
++        expect(response.status).toBe(200);
++        expect(await row(seeds.rejected)).toMatchObject({ status: 'pending', rejection_reason: null, payment_status: 'Paid',
++            seller_id: users.SELLER.id, bedrooms: 0, bathrooms: 0, land_size: '0' });
++    });
++
++    test('owner can edit pending row but approved edit is400 without changes', async () => {
++        const updated = await call('SELLER', 'patch', `/api/properties/my-listings/${seeds.private}`).send({ title: `Pending edit ${run}` });
++        expect(updated.status).toBe(200);
++        expect(await row(seeds.private)).toMatchObject({ title: `Pending edit ${run}`, status: 'pending', payment_status: 'Unpaid', seller_id: users.SELLER.id });
++        const before = await row(seeds.public);
++        const denied = await call('SELLER', 'patch', `/api/properties/my-listings/${seeds.public}`).send({ title: 'Cannot edit approved' });
++        expect(denied.status).toBe(400);
++        expect(denied.body.message).toMatch(/Approved properties cannot be edited/);
++        expect(await row(seeds.public)).toEqual(before);
++    });
++
++    test.each(['SELLER', 'AGENT', 'BUYER', 'PENDING_AGENT', 'REJECTED_AGENT'])(
++        '%s cannot moderate a Paid listing', async role => {
++            const before = await row(seeds.moderation);
++            for (const action of ['approve', 'reject']) {
++                const response = await call(role, 'patch', `/api/admin/listings/${seeds.moderation}/${action}`).send({ reason: 'Not authorized' });
++                expect(response.status).toBe(403);
++            }
++            expect(await row(seeds.moderation)).toEqual(before);
++            expect(sendListingStatusEmail).not.toHaveBeenCalled();
++            expect(checkSavedSearchMatches).not.toHaveBeenCalled();
++        });
++
++    test('Paid moderation approve/retry/reject/correction changes visibility without duplicate coordination', async () => {
++        const id = seeds.moderation;
++        expect((await row(id)).payment_status).toBe('Paid');
++        expect((await call('ADMIN', 'patch', `/api/admin/listings/${id}/approve`)).status).toBe(200);
++        expect(await row(id)).toMatchObject({ status: 'approved', rejection_reason: null, payment_status: 'Paid' });
++        expect(await publicIds()).toContain(id);
++        expect(await searchIds()).toContain(id);
++        expect(sendListingStatusEmail).toHaveBeenCalledTimes(1);
++        expect(sendListingStatusEmail).toHaveBeenCalledWith(users.SELLER.email, users.SELLER.name, `moderation ${run}`, 'approved');
++        expect(checkSavedSearchMatches).toHaveBeenCalledTimes(1);
++        expect(checkSavedSearchMatches).toHaveBeenCalledWith(expect.objectContaining({ id, status: 'approved' }));
++        const approved = await row(id);
++        const repeated = await call('ADMIN', 'patch', `/api/admin/listings/${id}/approve`);
++        expect(repeated.status).toBe(200);
++        expect(repeated.body.message).toBe('Listing already approved');
++        expect(await row(id)).toEqual(approved);
++        expect(sendListingStatusEmail).toHaveBeenCalledTimes(1);
++        expect(checkSavedSearchMatches).toHaveBeenCalledTimes(1);
++        expect((await call('ADMIN', 'patch', `/api/admin/listings/${id}/reject`).send({ reason: 'Please correct location' })).status).toBe(200);
++        expect(await row(id)).toMatchObject({ status: 'rejected', rejection_reason: 'Please correct location', payment_status: 'Paid' });
++        expect(await publicIds()).not.toContain(id);
++        expect(await searchIds()).not.toContain(id);
++        expect((await request(server).get(`/api/properties/${id}`)).status).toBe(404);
++        expect(sendListingStatusEmail).toHaveBeenCalledTimes(2);
++        expect(checkSavedSearchMatches).toHaveBeenCalledTimes(1);
++        expect((await call('SELLER', 'patch', `/api/properties/my-listings/${id}`).send({ title: `Resubmitted ${run}` })).status).toBe(200);
++        expect(await row(id)).toMatchObject({ status: 'pending', rejection_reason: null, payment_status: 'Paid' });
++    });
++
++    test('owner deletion removes only its disposable listing and detail becomes404', async () => {
++        const preserved = await row(seeds.public);
++        expect((await call('SELLER', 'delete', `/api/properties/my-listings/${seeds.delete}`)).status).toBe(200);
++        expect(await row(seeds.delete)).toBeUndefined();
++        expect((await call('SELLER', 'get', `/api/properties/${seeds.delete}`)).status).toBe(404);
++        expect(await row(seeds.public)).toEqual(preserved);
++    });
++});
+diff --git a/backend-node/tests/integrationState.test.js b/backend-node/tests/integrationState.test.js
+new file mode 100644
+index 0000000..2d34229
+--- /dev/null
++++ b/backend-node/tests/integrationState.test.js
+@@ -0,0 +1,37 @@
++const { snapshotState, assertSameState, assertOwnedListings } = require('../integration/database-state.cjs');
++
++describe('Local integration state preservation (no database connections)', () => {
++    test('snapshots complete rows in deterministic id order for allowlisted tables', async () => {
++        const client = { query: jest.fn().mockResolvedValue({ rows: [{ snapshot: [{ id: 'original', title: 'Preserve me' }] }] }) };
++        const result = await snapshotState(client, ['users', 'properties']);
++        expect(client.query.mock.calls.map(([sql]) => sql)).toEqual([
++            expect.stringContaining('to_jsonb(t) ORDER BY id'), expect.stringContaining('to_jsonb(t) ORDER BY id'),
++        ]);
++        expect(result.properties).toEqual([{ id: 'original', title: 'Preserve me' }]);
++    });
++    test.each(['settings', 'users;DROP TABLE users', 'properties WHERE true'])('refuses table %s before querying', async table => {
++        const client = { query: jest.fn() };
++        await expect(snapshotState(client, [table])).rejects.toThrow(/snapshot table/);
++        expect(client.query).not.toHaveBeenCalled();
++    });
++    test('accepts identical full snapshots', () => {
++        expect(() => assertSameState({ users: [], properties: [{ id: 'p', price: 5 }] },
++            { users: [], properties: [{ id: 'p', price: 5 }] })).not.toThrow();
++    });
++    test.each([
++        { users: [{ id: 'unremoved-fixture' }], properties: [] },
++        { users: [], properties: [{ id: 'original', title: 'Changed' }] },
++        { users: [] },
++    ])('rejects drift without exposing row contents', after => {
++        expect(() => assertSameState({ users: [], properties: [{ id: 'original', title: 'Private original' }] }, after))
++            .toThrow(/^Starting state not preserved/);
++        try { assertSameState({ users: [{ id: 'secret-identity' }] }, after); }
++        catch (error) { expect(error.message).not.toContain('secret-identity'); }
++    });
++    test('allows cleanup recovery only for run-owned listing rows', () => {
++        expect(assertOwnedListings([{ id: 'p1', seller_id: 'own-seller' }], ['own-seller'])).toEqual(['p1']);
++    });
++    test('refuses a pre-existing or foreign-owner listing before cleanup', () => {
++        expect(() => assertOwnedListings([{ id: 'p1', seller_id: 'other' }], ['own-seller'])).toThrow(/run-owned/);
++    });
++});
+diff --git a/backend-node/integration/README.md b/backend-node/integration/README.md
+new file mode 100644
+index 0000000..33f0351
+--- /dev/null
++++ b/backend-node/integration/README.md
+@@ -0,0 +1,64 @@
++# Local critical-flow integration
++
++These are explicit real-database test commands. Ordinary `npm test` includes pure isolation/network/state guard tests and existing mocked API suites. It does not discover `login-roles.integration.cjs` or `listings.integration.cjs`.
++
++From `backend-node`, with existing dependencies and the checked local stack running:
++
++```powershell
++node integration/run-login-roles.cjs --preflight
++node integration/run-login-roles.cjs
++node integration/run-listings.cjs --preflight
++node integration/run-listings.cjs
++```
++
++Preflight is read-only. Login/roles seeds seven synthetic users, runs the actual Express auth endpoints through Supertest and deletes only those run-specific UUID/email pairs. It checks the complete starting users snapshot and canonical migration ledger. Each invocation creates a fresh Jest process and fixture IDs, retaining real auth rate limits.
++
++Listings 2A seeds eight synthetic users and its own moderation properties, then exercises actual creation, ownership, validation, visibility, editing, moderation and deletion. It cleans only properties belonging to those exact run-owned users, before deleting fixture users. This includes recovery of an insert whose API response failed. The shared launcher checks full starting/ending users, properties, transactions, payment_orders and payment_receipt_outbox snapshots plus the ledger, even if the child suite fails. It reports drift without printing table contents. Normal assertion/setup failures run cleanup; abrupt termination may prevent hooks and must be investigated without reset or broad deletion.
++
++The launcher accepts no database URL or credentials from the command line. It derives generated local credentials in memory from exactly `supabase_db_thirasara-phase4-c` and `supabase_rest_thirasara-phase4-c`; it never loads the application `.env`. It refuses missing/wrong container identities, images, networks, bindings, CLI project, remote link, approval marker, file checksums, migration ledger or API/DB read cross-check. An unavailable stack is a failure, not a skipped green test.
++
++## Local prerequisites
++
++See `../../docs/database/setup.md` for the Phase 4 isolated environment. No Docker resources are created, started, reset or removed by the test command. Inspect retained containers before restarting them. Do not use native Supabase CLI start: the documented original default bindings were unsafe on this Docker Desktop setup.
++
++The owner approved publishing the retained stack-c PostgREST service at `127.0.0.1:58321`; DB remains `127.0.0.1:58322`. The original stopped REST container is retained as `supabase_rest_thirasara-phase4-c-before-phase5-port`. Private generated Compose configuration is in `docs/evidence/phase4-local/stack-c-phase5-rest.private.json`; keep it and all generated credentials untracked. This local test setup does not repoint the existing application or ngrok backend.
++
++On the existing prepared machine, inspect the exact two containers and verify their configured loopback bindings before starting those containers:
++
++```powershell
++docker inspect --format '{{.Name}} {{json .HostConfig.PortBindings}}' supabase_db_thirasara-phase4-c supabase_rest_thirasara-phase4-c
++```
++
++Only after confirming DB 5432 -> 127.0.0.1:58322 and REST 3000 -> 127.0.0.1:58321, with no other published addresses, restart those retained containers:
++
++```powershell
++docker start supabase_db_thirasara-phase4-c supabase_rest_thirasara-phase4-c
++```
++
++Then run preflight, which independently checks the remaining identity requirements and readiness before permitting fixture writes. A startup/readiness refusal is not a reason to bypass the guard. Do not start auth, storage, mail, receipt workers or unrelated services. A different/fresh machine first needs its own explicitly authorized isolated setup; copying hosted keys or data is forbidden.
++
++The two test services were stopped after this batch's verification; all containers/volumes/configuration remain available. Stop only these two again when finished:
++
++```powershell
++docker stop --timeout 20 supabase_rest_thirasara-phase4-c supabase_db_thirasara-phase4-c
++```
++
++The retained REST endpoint is direct PostgREST, not Kong. Test-only fetch transport removes Supabase JS's `/rest/v1` prefix and permits only this checked origin; redirects fail. The real application Supabase client, queries, repositories, bcrypt, JWT and middleware remain in use. Login/roles refuses email calls; listings uses controlled listing-status email and saved-search-coordination spies. Receipt delivery is always forbidden. Dotenv is disabled inside the child, and TCP is restricted to `127.0.0.1` on the verified DB/REST ports plus the explicitly registered ephemeral app listener. Port 5000 is always blocked. Expected HTTP 2xx/4xx access logs are filtered narrowly; other warnings/errors remain visible.
++
++## Scope and limits
++
++- Password login/session/role assertions are in the integration suite. Google/Apple/Facebook, browser cookie/CORS rules, password reset delivery and registration are outside this batch.
++- Logout verifies cookie clearing, not revocation of a copied JWT.
++- Frontend provider/router integration uses controlled API responses and is not full browser E2E.
++- Listings 2A API creation uses no successful file transfer; the frontend synthetic File tests stop at the controlled API/payment boundary. Real Storage upload/rollback/removal and the full AddProperty wizard remain listings 2B. No Storage service is started by these commands.
++- Moderation uses directly seeded Paid properties; this is not evidence of checkout settlement or enforcement of payment eligibility by the approval endpoint. Unpaid approval rules require a separate decision.
++- PayHere sandbox checkout and ngrok webhook verification belong to the later checkout batch. No payment endpoints are called here.
++- Failure during normal setup/assertions runs exact fixture cleanup in `afterAll`. Abrupt process termination can prevent hooks; preserve the environment for investigation instead of using reset or broad cleanup.
++- Windows sandbox restrictions may require approval for Docker pipe and loopback access. Resource-heavy verification should run sequentially if Windows paging/commit memory is constrained.
++
++Run pure safety checks without Docker or network:
++
++```powershell
++npm test -- --runInBand tests/localStackGuard.test.js tests/integrationNetworkGuard.test.js
++npm test -- --runInBand tests/integrationState.test.js
++```
+diff --git a/frontend-react/src/hooks/usePropertyForm.integration.test.jsx b/frontend-react/src/hooks/usePropertyForm.integration.test.jsx
+new file mode 100644
+index 0000000..b1dbc92
+--- /dev/null
++++ b/frontend-react/src/hooks/usePropertyForm.integration.test.jsx
+@@ -0,0 +1,132 @@
++import { act, renderHook } from '@testing-library/react';
++import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
++import usePropertyForm from './usePropertyForm';
++
++const api = vi.hoisted(() => ({ post: vi.fn() }));
++const payment = vi.hoisted(() => ({ triggerPayment: vi.fn(), paymentConfig: { listing_fee: '500.00', sandbox: true } }));
++vi.mock('../context/api', () => ({ default: api }));
++vi.mock('./usePayhere', () => ({ usePayhere: () => payment }));
++
++const image = () => new File(['synthetic image'], 'fixture.jpg', { type: 'image/jpeg' });
++const submitEvent = () => ({ preventDefault: vi.fn() });
++
++beforeEach(() => {
++  vi.resetAllMocks();
++  api.post.mockResolvedValue({ data: { property: { id: 'saved-fixture-id' } } });
++  payment.triggerPayment.mockResolvedValue(undefined);
++});
++afterEach(() => vi.restoreAllMocks());
++
++async function submit(result) {
++  await act(async () => result.current.handleSubmit(submitEvent()));
++}
++
++describe('Actual listing form submission with HTTP and payment boundaries', () => {
++  test('missing image produces feedback without saving or attempting payment', async () => {
++    const { result } = renderHook(() => usePropertyForm());
++    await submit(result);
++    expect(result.current.message).toEqual({ type: 'error', text: 'Please upload at least 1 image.' });
++    expect(result.current.loading).toBe(false);
++    expect(api.post).not.toHaveBeenCalled();
++    expect(payment.triggerPayment).not.toHaveBeenCalled();
++  });
++
++  test.each([
++    [[[6, 79], [6, 80]], 'Please select at least 3 points to draw a boundary.'],
++    [[[6, 79], [6, 80], [6, 79]], 'A valid boundary must have at least 3 distinct points (a triangle).'],
++  ])('an incomplete boundary is rejected before any save', async (points, message) => {
++    const { result } = renderHook(() => usePropertyForm());
++    act(() => {
++      result.current.setImages([image()]);
++      result.current.setLocationMode('boundary');
++      result.current.setBoundaryCoordinates(points);
++    });
++    await submit(result);
++    expect(result.current.message).toEqual({ type: 'error', text: message });
++    expect(result.current.loading).toBe(false);
++    expect(api.post).not.toHaveBeenCalled();
++    expect(payment.triggerPayment).not.toHaveBeenCalled();
++  });
++
++  test('multipart payload preserves numeric zeros, exact field names, files and point WKT', async () => {
++    const { result } = renderHook(() => usePropertyForm());
++    const photo = image();
++    const tour = new File(['synthetic tour'], 'tour.jpg', { type: 'image/jpeg' });
++    const tourMetadata = [{ title: 'Entrance', fileIndex: 0 }];
++    act(() => {
++      result.current.setFormData(previous => ({
++        ...previous, listingType: 'Rent', address: 'Fixture address', type: 'Land',
++        title: 'Synthetic listing', description: 'Test-only property description',
++        price: 0, pricePeriod: 'Month', district: 'Colombo', city: 'Colombo',
++        contactNumber: '0000000000', bedrooms: 0, bathrooms: 0, landSize: 0, houseSize: 0,
++        latitude: 0, longitude: 0,
++      }));
++      result.current.setImages([photo]);
++      result.current.setVirtualTourFiles([tour]);
++      result.current.setVirtualTourMetadata(tourMetadata);
++    });
++    await submit(result);
++    expect(api.post).toHaveBeenCalledTimes(1);
++    const [path, body, options] = api.post.mock.calls[0];
++    expect(path).toBe('/properties');
++    expect(body).toBeInstanceOf(FormData);
++    expect(options).toEqual({ headers: { 'Content-Type': 'multipart/form-data' } });
++    expect(Object.fromEntries([...body.entries()].filter(([, value]) => typeof value === 'string'))).toEqual({
++      listingType: 'Rent', address: 'Fixture address', type: 'Land', title: 'Synthetic listing',
++      description: 'Test-only property description', price: '0', pricePeriod: 'Month',
++      district: 'Colombo', city: 'Colombo', contactNumber: '0000000000', bedrooms: '0',
++      bathrooms: '0', landSize: '0', houseSize: '0', latitude: '0', longitude: '0',
++      boundary: 'POLYGON((-0.0001 -0.0001, 0.0001 -0.0001, 0.0001 0.0001, -0.0001 0.0001, -0.0001 -0.0001))',
++      virtualTourMetadata: JSON.stringify(tourMetadata),
++    });
++    expect(body.getAll('images')).toEqual([photo]);
++    expect(body.getAll('virtualTours')).toEqual([tour]);
++    expect(payment.triggerPayment).toHaveBeenCalledExactlyOnceWith('saved-fixture-id');
++    expect(result.current.message.text).toBe('Property saved! Initiating payment gateway...');
++  });
++
++  test.each([
++    [[6, 79], [6, 80], [7, 80]],
++    [[6, 79], [6, 80], [7, 80], [6, 79]],
++  ])('boundary mode closes the polygon once and maps lat/lng to PostGIS lng/lat', async (...points) => {
++    const { result } = renderHook(() => usePropertyForm());
++    act(() => {
++      result.current.setImages([image()]);
++      result.current.setLocationMode('boundary');
++      result.current.setBoundaryCoordinates(points);
++    });
++    await submit(result);
++    const body = api.post.mock.calls[0][1];
++    expect(body.get('boundary')).toBe('POLYGON((79 6, 80 6, 80 7, 79 6))');
++    expect(body.get('latitude')).toBe('6');
++    expect(body.get('longitude')).toBe('79');
++    expect(body.has('virtualTourMetadata')).toBe(false);
++    expect(payment.triggerPayment).toHaveBeenCalledExactlyOnceWith('saved-fixture-id');
++  });
++
++  test('create failure surfaces server feedback and never reaches payment', async () => {
++    const error = { response: { data: { message: 'Fixture validation rejected' } } };
++    api.post.mockRejectedValueOnce(error);
++    vi.spyOn(console, 'error').mockImplementation(() => {});
++    const { result } = renderHook(() => usePropertyForm());
++    act(() => result.current.setImages([image()]));
++    await submit(result);
++    expect(result.current.message).toEqual({ type: 'error', text: 'Failed: Fixture validation rejected' });
++    expect(result.current.loading).toBe(false);
++    expect(payment.triggerPayment).not.toHaveBeenCalled();
++  });
++
++  test('retry after a payment-boundary failure reuses the saved draft without duplicate creation', async () => {
++    payment.triggerPayment.mockRejectedValueOnce(new Error('Controlled payment failure'));
++    vi.spyOn(console, 'error').mockImplementation(() => {});
++    const { result } = renderHook(() => usePropertyForm());
++    act(() => result.current.setImages([image()]));
++    await submit(result);
++    expect(result.current.message.type).toBe('error');
++    expect(result.current.loading).toBe(false);
++    await submit(result);
++    expect(api.post).toHaveBeenCalledTimes(1);
++    expect(payment.triggerPayment.mock.calls).toEqual([['saved-fixture-id'], ['saved-fixture-id']]);
++    expect(result.current.message.text).toBe('Resuming payment for existing draft...');
++  });
++});
+diff --git a/frontend-react/src/pages/MyProperties.integration.test.jsx b/frontend-react/src/pages/MyProperties.integration.test.jsx
+new file mode 100644
+index 0000000..dad51bc
+--- /dev/null
++++ b/frontend-react/src/pages/MyProperties.integration.test.jsx
+@@ -0,0 +1,153 @@
++import React from 'react';
++import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
++import { MemoryRouter, Route, Routes } from 'react-router-dom';
++import { Toaster, toast } from 'react-hot-toast';
++import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
++import MyProperties from './MyProperties';
++import { UserAuthProvider } from '../context/UserAuthContext';
++
++const api = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn(), delete: vi.fn() }));
++const payment = vi.hoisted(() => ({ triggerPayment: vi.fn() }));
++vi.mock('../context/api', () => ({ default: api }));
++vi.mock('../hooks/usePayhere', () => ({ usePayhere: () => payment }));
++vi.mock('../components/layout/Navbar', () => ({ default: () => null }));
++vi.mock('../components/layout/Footer', () => ({ default: () => null }));
++vi.mock('framer-motion', () => ({ m: { div: ({ children, className }) => <div className={className}>{children}</div> } }));
++
++const seller = { id: 'fixture-seller', name: 'Fixture seller', role: 'SELLER' };
++const property = (id, status = 'pending', paymentStatus = 'Paid') => ({
++  id, title: `Fixture ${id}`, seller_id: seller.id, status, payment_status: paymentStatus,
++  price: 1000, city: 'Colombo', district: 'Colombo', images: [],
++});
++const fixtures = [
++  property('unpaid-pending', 'pending', 'Unpaid'),
++  property('unpaid-approved', 'approved', 'Unpaid'),
++  property('paid-pending'),
++  property('paid-approved', 'approved'),
++  property('paid-rejected', 'rejected', 'paid'),
++];
++
++function show() {
++  return render(<MemoryRouter initialEntries={['/my-properties']}>
++    <UserAuthProvider>
++      <Toaster />
++      <Routes><Route path="/my-properties" element={<MyProperties />} /></Routes>
++    </UserAuthProvider>
++  </MemoryRouter>);
++}
++
++const card = (id) => within(screen.getByRole('heading', { name: `Fixture ${id}` }).closest('.group'));
++const listedTitles = () => screen.queryAllByRole('heading', { level: 3 }).map(node => node.textContent);
++
++beforeEach(() => {
++  vi.resetAllMocks();
++  vi.stubGlobal('matchMedia', vi.fn((media) => ({
++    matches: false, media, onchange: null,
++    addEventListener: vi.fn(), removeEventListener: vi.fn(),
++    addListener: vi.fn(), removeListener: vi.fn(), dispatchEvent: vi.fn(),
++  })));
++  vi.spyOn(window, 'confirm').mockReturnValue(false);
++  api.get.mockImplementation(async (path) => {
++    if (path === '/auth/me') return { data: { user: seller } };
++    if (path === '/properties/my-listings') return { data: { properties: fixtures } };
++    throw new Error(`Unexpected HTTP request: ${path}`);
++  });
++  api.delete.mockResolvedValue({ data: { message: 'Property deleted successfully' } });
++  payment.triggerPayment.mockResolvedValue(undefined);
++});
++
++afterEach(() => {
++  cleanup();
++  toast.remove();
++  vi.restoreAllMocks();
++  vi.unstubAllGlobals();
++});
++
++describe('Actual MyProperties with auth provider and controlled HTTP', () => {
++  test('loading does not prematurely display the empty state', async () => {
++    let finish;
++    api.get.mockImplementation((path) => path === '/auth/me'
++      ? Promise.resolve({ data: { user: seller } })
++      : new Promise(resolve => { finish = resolve; }));
++    const { container } = show();
++    await screen.findByRole('heading', { name: 'Manage My Listings' });
++    expect(container.querySelector('.animate-spin')).toBeInTheDocument();
++    expect(screen.queryByText('No listings found')).not.toBeInTheDocument();
++    await act(async () => finish({ data: { properties: [] } }));
++    expect(await screen.findByText('No listings found')).toBeInTheDocument();
++    expect(container.querySelector('.animate-spin')).not.toBeInTheDocument();
++  });
++
++  test('an empty response offers the first-listing action', async () => {
++    api.get.mockImplementation(async (path) => path === '/auth/me'
++      ? { data: { user: seller } } : { data: { properties: [] } });
++    show();
++    expect(await screen.findByText('No listings found')).toBeInTheDocument();
++    expect(screen.getByRole('button', { name: '+ Add Your First Property' })).toBeInTheDocument();
++  });
++
++  test('load failure displays feedback and does not invent listing cards', async () => {
++    vi.spyOn(console, 'error').mockImplementation(() => {});
++    api.get.mockImplementation(async (path) => {
++      if (path === '/auth/me') return { data: { user: seller } };
++      throw new Error('Controlled load failure');
++    });
++    show();
++    expect(await screen.findByText('Failed to load properties')).toBeInTheDocument();
++    expect(screen.getByText('No listings found')).toBeInTheDocument();
++    expect(screen.queryByRole('heading', { name: /^Fixture / })).not.toBeInTheDocument();
++  });
++
++  test('unpaid records are effective drafts while paid moderation states stay distinct', async () => {
++    show();
++    await screen.findByRole('heading', { name: 'Fixture paid-approved' });
++    expect(listedTitles()).toEqual(fixtures.map(item => item.title));
++    expect(card('unpaid-approved').getByText('Drafts (Unpaid)')).toBeInTheDocument();
++    expect(card('unpaid-approved').getByText('Payment Required to Submit')).toBeInTheDocument();
++    expect(card('paid-approved').queryByRole('button', { name: /Pay Rs/ })).not.toBeInTheDocument();
++    for (const [tab, titles] of [
++      ['Drafts (Unpaid)', ['Fixture unpaid-pending', 'Fixture unpaid-approved']],
++      ['Pending Review', ['Fixture paid-pending']],
++      ['Live & Approved', ['Fixture paid-approved']],
++      ['Needs Changes', ['Fixture paid-rejected']],
++      ['All Listings', fixtures.map(item => item.title)],
++    ]) {
++      fireEvent.click(screen.getByRole('button', { name: new RegExp(tab.replace(/[()]/g, '\\$&')) }));
++      expect(listedTitles()).toEqual(titles);
++    }
++    expect(payment.triggerPayment).not.toHaveBeenCalled();
++  });
++
++  test('canceling deletion leaves both API and listing untouched', async () => {
++    show();
++    await screen.findByRole('heading', { name: 'Fixture paid-pending' });
++    fireEvent.click(card('paid-pending').getByTitle('Delete Listing'));
++    expect(window.confirm).toHaveBeenCalledWith('Are you sure you want to delete this listing?');
++    expect(api.delete).not.toHaveBeenCalled();
++    expect(screen.getByRole('heading', { name: 'Fixture paid-pending' })).toBeInTheDocument();
++  });
++
++  test('successful deletion removes only the selected listing and updates the draft filter', async () => {
++    window.confirm.mockReturnValue(true);
++    show();
++    await screen.findByRole('heading', { name: 'Fixture unpaid-pending' });
++    fireEvent.click(card('unpaid-pending').getByTitle('Delete Listing'));
++    expect(await screen.findByText('Listing deleted successfully')).toBeInTheDocument();
++    expect(api.delete).toHaveBeenCalledExactlyOnceWith('/properties/my-listings/unpaid-pending');
++    expect(listedTitles()).toEqual(fixtures.filter(item => item.id !== 'unpaid-pending').map(item => item.title));
++    fireEvent.click(screen.getByRole('button', { name: /Drafts \(Unpaid\)/ }));
++    expect(listedTitles()).toEqual(['Fixture unpaid-approved']);
++  });
++
++  test('failed deletion retains the selected listing and shows server failure feedback', async () => {
++    window.confirm.mockReturnValue(true);
++    api.delete.mockRejectedValueOnce(new Error('Controlled delete failure'));
++    show();
++    await screen.findByRole('heading', { name: 'Fixture paid-approved' });
++    fireEvent.click(card('paid-approved').getByTitle('Delete Listing'));
++    expect(await screen.findByText('Failed to delete property.')).toBeInTheDocument();
++    expect(api.delete).toHaveBeenCalledExactlyOnceWith('/properties/my-listings/paid-approved');
++    expect(listedTitles()).toEqual(fixtures.map(item => item.title));
++    await waitFor(() => expect(screen.getByRole('heading', { name: 'Fixture paid-approved' })).toBeInTheDocument());
++  });
++});
+diff --git a/docs/superpowers/specs/2026-10-30-phase5-listings-design.md b/docs/superpowers/specs/2026-10-30-phase5-listings-design.md
+new file mode 100644
+index 0000000..d99c5bc
+--- /dev/null
++++ b/docs/superpowers/specs/2026-10-30-phase5-listings-design.md
+@@ -0,0 +1,54 @@
++# Phase 5 listings: proposed batch 2A
++
++Status: design approved by owner on 2026-10-30; implementation and evidence tracked in the matching plan/report.
++
++## Objective and inventory
++
++Verify the core listing lifecycle and ownership through the real local database, plus frontend submission/management integration with controlled HTTP/payment boundaries. Login/roles is the preceding completed local batch; the overall phase remains incomplete.
++
++Existing propertyPrivacy and propertyNumericValidation tests use mocked database/repository boundaries. listingApprovalAlerts tests mock adminRepository, saved-search coordination and email. PropertyDetails frontend tests cover loading/favorites/navigation with mocked authentication. No tests were found for usePropertyForm, MyProperties or admin ListingsPage.
++
++POST /api/properties permits SELLER/AGENT and creates pending/Unpaid rows using authenticated seller identity. Owner mutation routes use /my-listings/:id. Approved listings cannot be edited through the owner route. Public list/search filter status=approved; detail permits owner/admin access to non-approved rows. Admin moderation calls email and saved-search coordination. The frontend usePropertyForm requires an image and immediately calls triggerPayment after saving, retaining draftPropertyId for retry.
++
++## Approaches
++
++1. Recommended: reuse the existing guarded Jest/Supertest local DB harness and Vitest/Testing Library. First test core lifecycle without successful storage transfers or real payment; cover frontend boundaries with controlled responses. This requires no new dependencies/services.
++2. Include real Storage and complete AddProperty wizard in the first batch. This broadens local service/network/cleanup scope; establish a separate upload design and obtain any required environment permission first.
++3. Mock-only API tests. These are cheap but leave the repository/DB gap open, so they are insufficient for this roadmap batch.
++
++## Real API matrix
++
++- Authenticate synthetic SELLER and AGENT through real login; submit text fields/multipart without files. Assert persisted id, authenticated seller_id, numeric values including zeros, pending and Unpaid. Spoofed seller_id/status/payment_status must not override server-owned fields.
++- Assert anonymous writes are 401; BUYER, PENDING_AGENT, REJECTED_AGENT and ADMIN cannot create/edit/delete through consumer seller routes (403 with valid payloads); BANNED sessions remain rejected.
++- Invalid title/description/price/coordinates/numeric counts return validation 400 and create no rows. Disallowed MIME upload rejects before storage and creates no rows/objects.
++- Owner /my-listings includes own fixtures only; another seller/agent cannot see private detail or edit/delete those rows (404), and SQL snapshots confirm unchanged data after denied mutations.
++- Public list/search excludes pending/rejected fixtures; approved fixtures are public. Owner/admin can inspect private fixtures. Missing detail returns 404. Assert identities/fixture sets rather than ordering-only checks.
++- Owner updates pending/rejected fixture and returns it to pending; approved-owner edit returns 400 with unchanged data. Preserve payment status and seller identity; do not introduce permission rules.
++- Use directly seeded Paid fixtures to exercise admin moderation independently of checkout. ADMIN approve -> public visibility; repeated approval -> unchanged state/no duplicate notification coordination; reject -> stored reason/private public visibility; owner correction -> pending. Non-admin moderation requests return 403 without DB changes.
++- Owner deletes own disposable fixture; row absent and subsequent detail unavailable. Foreign-owner delete leaves the row intact. No payment_orders/receipts are attached to deletion fixtures.
++
++The text-only API fixture deliberately follows the existing API capability; it is not proof that the full image-required browser submission works. Valid WKT may be included to exercise actual PostGIS persistence; malformed geometry error semantics are outside the initial validation contract.
++
++## Frontend matrix
++
++Use the real usePropertyForm hook with synthetic File and controlled API responses; isolate usePayhere. Verify missing-image/boundary validation, multipart field mapping, returned draft ID handed to the payment boundary, create failure with no payment attempt and retry reusing the existing draft instead of creating a duplicate. No PayHere SDK/card/webhook executes.
++
++Use real MyProperties with real auth provider/router as practical and controlled HTTP. Verify loading/empty/error states, Unpaid displayed as Draft, Paid pending/approved/rejected tabs, delete cancellation, successful deletion and failed deletion retaining the row. Payment control is isolated. Map/photo sphere, layout/animation and external assets are not integration targets in 2A.
++
++## Isolation and changes
++
++Reuse exact stack-c guards, loopback ports, canonical checksums/ledger and approved retained DB/REST setup. Add a separate explicit listings command/config; keep the Login/roles command passing. Any shared test-tooling extraction must be small and regression-verified. No production behavior, dependencies, migrations or application .env changes.
++
++Only users/properties created for the run may be mutated or cleaned. Allocate UUIDs for seed rows before writes; for API-generated property IDs, record returned IDs and use the run-owned seller IDs to recover partially completed inserts if a response fails. Snapshot pre-existing users/properties and payment/order/outbox state. Cleanup exact run-owned properties first, then fixture users; verify restored starting state/ledger even after normal setup/assertion failure. Never reset volumes or broadly delete data.
++
++External delivery remains disabled: listing-status email and saved-search coordination are controlled boundary spies, with invocation assertions where relevant. This does not verify email delivery or saved-search matching, which belongs to the later flow. Existing receipt worker refusal, dotenv isolation and strict outbound port guard remain active. No real or sandbox checkout occurs in 2A.
++
++## Discovered rule question, kept outside behavior changes
++
++The admin list defaults/pending filter select Paid rows, but approveListingOnce does not itself check payment_status. Code inspection therefore suggests a direct admin request can approve an unpaid row; this has not been runtime-tested in this inventory. Do not silently turn a desired payment invariant into a production change or characterize it as a verified safe rule. Batch 2A moderation uses Paid synthetic fixtures; deciding/testing enforcement of unpaid approval belongs in a separately approved payment/authorization decision.
++
++Deletion with payment-order foreign keys, real Storage upload/removal and orphan rollback, full AddProperty wizard, browser maps, concurrent mutations and actual checkout remain unverified by 2A. A later listings 2B design must cover image upload success/failure and storage cleanup before declaring the whole listings flow complete.
++
++## Acceptance
++
++Run existing focused listing tests before edits. Run the new real DB suite twice with new fixtures and prove cleanup/state preservation. Run frontend focused integration twice, backend/frontend regressions, frontend lint/build sequentially to avoid the recorded Windows paging limit. Review changes for safety and spec compliance; record counts, failures and exclusions in a listings batch report. Keep all evidence/config/credentials untracked and unstaged. Owner alone performs git commit/push after the full phase.
+diff --git a/docs/superpowers/plans/2026-10-30-phase5-listings.md b/docs/superpowers/plans/2026-10-30-phase5-listings.md
+new file mode 100644
+index 0000000..b2a87b5
+--- /dev/null
++++ b/docs/superpowers/plans/2026-10-30-phase5-listings.md
+@@ -0,0 +1,57 @@
++# Phase 5 Listings 2A Implementation Plan
++
++**Goal:** Verify listing lifecycle/ownership through the real isolated database and frontend form/management boundaries.
++
++**Architecture:** Reuse existing stack-c safety/network guards. Extract only the shared launcher needed by explicit Login/roles and listings commands; keep setup specialization test-only. Use actual controllers/repositories and frontend hook/provider/components, with controlled email/saved-search/payment boundaries.
++
++**Tech stack:** Existing Jest, Supertest, pg, Supabase JS, Vitest, Testing Library, PowerShell and Docker. No new dependencies/services.
++
++## Global constraints
++
++- Owner alone commits/pushes, after full phase. No staging, branch creation or production behavior changes.
++- No live data, checkout, delivery, migrations, volume reset/removal or application .env edits.
++- Only checked stack-c DB/REST on 127.0.0.1:58322/58321; deny port 5000. Keep docs/evidence/ untracked.
++- Successful real Storage operations and full browser wizard are separate listings 2B; do not claim complete listings/Phase 5.
++- Run resource-heavy checks sequentially because of the observed Windows paging limit.
++
++## Task 1: Baseline
++
++- [ ] backend-node: `npm test -- --runInBand tests/propertyPrivacy.test.js tests/propertyNumericValidation.test.js tests/listingApprovalAlerts.test.js`.
++- [ ] frontend-react: `npm test -- --maxWorkers=1 src/pages/PropertyDetails.test.jsx`.
++- [ ] Inspect exact retained DB/REST configured bindings/project/image, then restart only those two containers and run the existing read-only preflight. Preserve originals/volumes.
++
++## Task 2: Shared guarded launcher and state checks
++
++Files: `backend-node/integration/run-local.cjs`, existing `run-login-roles.cjs`, new `run-listings.cjs`, `listings.jest.config.cjs`, `listings.setup.cjs`, test-only `database-state.cjs`, guard tests in `backend-node/tests/integrationState.test.js`.
++
++- [ ] Write tests for deterministic complete-table snapshots, unchanged-state assertion and mutation refusal for pre-existing records; observe missing helper before implementing.
++- [ ] Extract existing container/credential/preflight/child environment steps into shared runLocal({label,config,snapshotTables}); wrappers fix their own config paths/table allowlist, never accept caller URLs/config.
++- [ ] Snapshot full contents of users, properties, transactions, payment_orders and payment_receipt_outbox before/after listings, using deterministic SQL JSON aggregation. Check state after child failure as well as success; fail if different.
++- [ ] Keep Login/roles command behavior and allowlisted child environment unchanged. Listings setup reuses generic security setup and overrides only listing-status email and saved-search coordination with explicit boundary spies.
++- [ ] Verify pure guard tests and launcher-bypass refusal before DB fixture writes.
++
++## Task 3: Real API listing lifecycle
++
++File: `backend-node/integration/listings.integration.cjs`.
++
++- [ ] Allocate run-owned UUID users and seeded Paid moderation rows before writes; use bcrypt + real login for seller/agent/admin. Record API-generated IDs, recover partial inserts only under run-owned seller IDs. Cleanup exact run-owned properties before users in finally/afterAll.
++- [ ] Assert create defaults/server-owned fields and real PostGIS/numeric persistence; API no-file multipart creation deliberately excludes successful upload.
++- [ ] Assert anonymous writes401, disallowed roles403, banned sessions403, invalid input400 and disallowed MIME400 without additional properties.
++- [ ] Assert ownership/visibility/edit/delete matrix and SQL unchanged rows after denied operations; include missing detail404, approved edit400, zeros and rejected->pending correction.
++- [ ] Assert Paid admin moderation lifecycle, rejection reason and public visibility/search changes. Assert repeated approval has no duplicate boundary calls. Non-admin mutations403 leave data unchanged. Never approve unpaid fixtures.
++- [ ] Run new DB suite twice with fresh fixtures. Verify starting state for all five tables + canonical ledger after each run. Run Login/roles once after shared harness extraction.
++
++## Task 4: Frontend form and management integration
++
++Files: `frontend-react/src/hooks/usePropertyForm.integration.test.jsx`, `frontend-react/src/pages/MyProperties.integration.test.jsx`.
++
++- [ ] Hook tests use actual hook with synthetic File, mock HTTP/usePayhere only: missing image and boundary failure, exact FormData contract, correct returned ID passed to payment boundary, create failure no payment, retry no duplicate create.
++- [ ] Page tests use actual MyProperties/auth provider/router with controlled HTTP/payment boundaries. Assert loading/empty/load-failure, unpaid Draft versus Paid status filters and deletion cancel/success/failure preserving expected row state.
++- [ ] Run focused frontend suites twice and focused ESLint. No production fixes if tests expose unexpected current behavior; report to owner.
++
++## Task 5: Validation, review and handoff
++
++- [ ] Review API/frontend task diffs and resolve actionable safety/coverage findings without widening production scope.
++- [ ] Run backend full Jest, frontend full Vitest, frontend lint/build sequentially, plus appropriate syntax and pure tooling checks.
++- [ ] Document counts, repeatability, cleanup, initial failures and boundaries in `docs/phase5-listings.md`; update integration README with explicit command/prerequisites.
++- [ ] Check all new/modified non-evidence files for leaked credentials/whitespace, confirm index empty, stop only this batch's DB/REST services preserving all resources, and finish review. No commit/push.

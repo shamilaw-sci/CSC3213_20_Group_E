@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { m } from 'framer-motion';
 import { ArrowDown, Compass, Building2, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { newSearchEventId } from '../../utils/searchDemand';
 
 let hasSeenPreloader = false;
 
@@ -49,7 +50,9 @@ export default function DarkHero() {
 
     const handleSearchSubmit = (e) => {
         e.preventDefault();
-        navigate(`/map${searchQuery ? `?search=${encodeURIComponent(searchQuery)}` : ''}`);
+        navigate(`/map${searchQuery ? `?search=${encodeURIComponent(searchQuery)}` : ''}`, {
+            state: { searchSubmission: { id: newSearchEventId(), district: searchQuery.trim() } }
+        });
     };
 
     return (

@@ -31,17 +31,17 @@ jest.mock('../utils/emailService', () => ({
 }));
 
 const app = require('../server');
-const jwt = require('jsonwebtoken');
+const { issueSessionToken } = require('../utils/sessionToken');
 const {
     computeFeasibility,
     buildAmortizationSchedule,
 } = require('../controllers/feasibilityController');
 
 const TEST_USER_ID = '11111111-1111-1111-1111-111111111111';
-const authToken = () => jwt.sign({ id: TEST_USER_ID }, process.env.JWT_SECRET);
+const authToken = () => issueSessionToken({ id: TEST_USER_ID, password_hash: null });
 const mockLoggedInUser = (mockSupabase) => {
     mockSupabase.single.mockResolvedValueOnce({
-        data: { id: TEST_USER_ID, role: 'BUYER', name: 'Test Buyer', email: 'buyer@example.com' },
+        data: { id: TEST_USER_ID, role: 'BUYER', name: 'Test Buyer', email: 'buyer@example.com', password_hash: null },
         error: null,
     });
 };

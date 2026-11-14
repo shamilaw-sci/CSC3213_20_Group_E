@@ -15,10 +15,11 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-const sendEmail = async (to, subject, html) => {
+const sendEmail = async (to, subject, html, strict = false) => {
     try {
         if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
             logger.warn('Email not sent because EMAIL_USER or EMAIL_PASS is missing');
+            if (strict) throw new Error('Email credentials unavailable');
             return;
         }
 
@@ -48,10 +49,11 @@ const sendEmail = async (to, subject, html) => {
             attachments
         };
 
-        const info = await transporter.sendMail(mailOptions);
-        logger.info('Email sent', { to, subject, response: info.response });
+        await transporter.sendMail(mailOptions);
+        logger.info('email_sent');
     } catch (error) {
-        logger.error('Failed to send email', error);
+        logger.error('email_delivery_failed');
+        if (strict) throw error;
     }
 };
 
@@ -149,11 +151,11 @@ const sendPaymentReceipt = (email, propertyTitle, amount) => {
         <p style="color: #475569; margin-bottom: 10px;"><strong>What happens next?</strong></p>
         <p style="color: #64748b; font-size: 15px; margin-top: 0;">Your property is now pending administrative review. This usually takes less than 24 hours. We will notify you via email as soon as it goes live on the platform.</p>
     `;
-    return sendEmail(email, subject, getBaseHtmlTemplate("Payment Receipt", content));
+    return sendEmail(email, subject, getBaseHtmlTemplate("Payment Receipt", content), true);
 };
 
 const sendListingStatusEmail = (email, propertyTitle, status, reason = '') => {
-    const isApproved = status === 'Active';
+    const isApproved = ['active', 'approved'].includes(String(status).toLowerCase());
     const subject = `Your Property is ${isApproved ? 'Approved!' : 'Requires Attention'}`;
     const badgeColor = isApproved ? '#059669' : '#dc2626';
     const badgeBg = isApproved ? '#d1fae5' : '#fee2e2';
@@ -218,7 +220,20 @@ const sendSavedSearchAlertEmail = (email, searchTitle, property) => {
     return sendEmail(email, subject, getBaseHtmlTemplate("New Match Found", content));
 };
 
+const sendAgentRejectionEmail = (email, name, reason) => {
+    const escape = value => String(value ?? '').replace(/[&<>"']/g, character => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[character]);
+    const content = `<h1>Agent application rejected</h1>
+        <p>Hi ${escape(name)},</p>
+        <p>Your Agent application has been reviewed and rejected.</p>
+        <h2>Reason for rejection</h2><p style="white-space: pre-wrap">${escape(reason)}</p>
+        <p>You can also view this reason in your Thirasara profile.</p>`;
+    return sendEmail(email, 'Thirasara Agent application rejected', getBaseHtmlTemplate('Agent Application Decision', content), true);
+};
+
 module.exports = {
+    sendAgentRejectionEmail,
     sendEmail,
     sendWelcomeEmail,
     sendPaymentReceipt,

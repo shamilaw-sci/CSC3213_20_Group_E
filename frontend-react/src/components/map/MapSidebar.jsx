@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom';
 const MapSidebar = ({
     filteredProperties,
     activeMarkerId,
-    setActiveMarkerId,
     hoveredPropId,
     setHoveredPropId
 }) => {

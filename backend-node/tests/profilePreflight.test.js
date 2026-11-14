@@ -1,0 +1,19 @@
+jest.mock('../repositories/userRepository',()=>({findFullUserById:jest.fn(),findByEmail:jest.fn(),uploadAvatar:jest.fn(),updateProfile:jest.fn()}));
+jest.mock('../utils/emailService',()=>({}));
+jest.mock('../utils/emailVerification',()=>({enabled:()=>false}));
+jest.mock('bcryptjs',()=>({compare:jest.fn(),genSalt:jest.fn(),hash:jest.fn()}));
+const repo=require('../repositories/userRepository'),bcrypt=require('bcryptjs');
+const {updateProfile}=require('../controllers/authController');
+const png='data:image/png;base64,iVBORw0KGgo=';
+const user={id:'00000000-0000-4000-8000-000000000001',email:'test@example.test',role:'BUYER',password_hash:'synthetic'};
+const run=async body=>{const res={status:jest.fn().mockReturnThis(),json:jest.fn()},next=jest.fn();await updateProfile({body,user,headers:{}},res,next);return {res,next};};
+beforeEach(()=>{jest.resetAllMocks();repo.findFullUserById.mockResolvedValue(user);repo.uploadAvatar.mockResolvedValue('https://example.test/avatar.png');repo.updateProfile.mockImplementation(async(_id,v)=>({data:{...user,...v},error:null}));bcrypt.compare.mockResolvedValue(false);});
+test.each([{avatar_url:{}},{email:23},{email_notifications:'false'},{phone:[]},{theme_preference:'bad'},{name:' '},{password:[]},{avatar_url:'javascript:alert(1)'},{avatar_url:'data:image/png;base64,bm90LWFuLWltYWdl'},{avatar_url:'data:image/svg+xml;base64,PHN2Zz4='}])('rejects malformed profile %p before repository access',async body=>{
+ const {res,next}=await run(body);expect(res.status).toHaveBeenCalledWith(400);expect(next).not.toHaveBeenCalled();expect(repo.findFullUserById).not.toHaveBeenCalled();expect(repo.uploadAvatar).not.toHaveBeenCalled();expect(repo.updateProfile).not.toHaveBeenCalled();
+});
+test('wrong password cannot upload avatar',async()=>{const {res}=await run({avatar_url:png,password:'new-password',currentPassword:'wrong'});expect(res.status).toHaveBeenCalledWith(400);expect(repo.uploadAvatar).not.toHaveBeenCalled();});
+test('valid avatar gets random owned name and matching MIME',async()=>{const {res}=await run({avatar_url:png,email_notifications:false});expect(res.status).toHaveBeenCalledWith(200);expect(repo.uploadAvatar).toHaveBeenCalledWith(expect.stringMatching(new RegExp('^'+user.id+'_[0-9a-f-]{36}\\.png$')),expect.any(Buffer),'image/png');});
+test('upload failure stops writes and hides provider details',async()=>{repo.uploadAvatar.mockRejectedValue(new Error('private-provider'));const log=jest.spyOn(console,'error').mockImplementation(()=>{});try{const {res,next}=await run({avatar_url:png});expect(res.status).toHaveBeenCalledWith(503);expect(repo.updateProfile).not.toHaveBeenCalled();expect(next).not.toHaveBeenCalled();expect(JSON.stringify(log.mock.calls)).not.toContain('private-provider');}finally{log.mockRestore();}});
+test('later ambiguous write failure retains upload and logs bounded recovery',async()=>{repo.updateProfile.mockRejectedValue(new Error('private-db'));const log=jest.spyOn(console,'error').mockImplementation(()=>{});try{const {next}=await run({avatar_url:png});expect(next.mock.calls[0][0].message).toBe('Profile update unavailable.');expect(log).toHaveBeenCalledWith('profile_avatar_recovery',expect.objectContaining({userId:user.id}));expect(JSON.stringify(log.mock.calls)).not.toContain('private-db');}finally{log.mockRestore();}});
+test('legacy fallback discloses omitted avatar',async()=>{repo.updateProfile.mockResolvedValueOnce({error:{message:'column does not exist'}});const {res}=await run({avatar_url:png,name:'Name'});expect(res.json).toHaveBeenCalledWith(expect.objectContaining({partial:true,omittedFields:expect.arrayContaining(['avatar_url'])}));});
+test('normalizes Unicode name/email and ignores authority fields',async()=>{await run({name:'  සිංහල  ',email:' NEW@EXAMPLE.TEST ',role:'ADMIN',password_hash:'forged'});expect(repo.updateProfile).toHaveBeenCalledWith(user.id,{name:'සිංහල',email:'new@example.test'});});

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAdminAuth } from "../context/AdminAuthContext";
 import { fetchDashboardStats } from "../api/adminApi";
+import toast from "react-hot-toast";
 import { 
   LayoutDashboard, 
   List, 
@@ -27,9 +28,13 @@ const Sidebar = () => {
       .catch(() => setPendingListings(0));
   }, []);
 
-  const handleLogout = () => {
-    logout();
-    navigate("/admin/login");
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/admin/login");
+    } catch {
+      toast.error("Sign out failed. Please try again.");
+    }
   };
 
   const navItems = [
@@ -45,13 +50,16 @@ const Sidebar = () => {
     { path: "/admin/agent-approvals", icon: UserCheck, label: "Agent Approvals" },
     { path: "/admin/analytics", icon: BarChart3, label: "Analytics" },
     { path: "/admin/messages", icon: MessageSquare, label: "Messages" },
+    { path: "/admin/inquiries", icon: MessageSquare, label: "Inquiries" },
+    { path: "/admin/boosts", icon: List, label: "Featured Listings" },
+    { path: "/admin/reported", icon: ShieldAlert, label: "Reported Listings" },
     { path: "/admin/reports", icon: FileText, label: "Reports" },
     { path: "/admin/audit-logs", icon: ShieldAlert, label: "Audit Logs" },
     { path: "/admin/settings", icon: Settings, label: "Settings" },
   ];
 
   return (
-    <aside className="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800/90 flex flex-col h-screen fixed top-0 left-0 z-50 shadow-md dark:shadow-2xl transition-colors duration-200">
+    <aside className="admin-navigation w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800/90 flex flex-col h-screen fixed top-0 left-0 z-50 shadow-md dark:shadow-2xl transition-colors duration-200">
       
       {/* Brand & Logo */}
       <div className="h-20 px-6 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
@@ -69,7 +77,7 @@ const Sidebar = () => {
       {/* Navigation Links */}
       <nav className="flex-1 overflow-y-auto py-5 px-3 space-y-1.5 custom-scrollbar">
         <div className="px-3 pb-2 text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
-          Executive Menu
+          Workspace
         </div>
         
         {navItems.map(({ path, icon: Icon, label, badge, badgeColor }) => (

@@ -1,6 +1,31 @@
 import { m } from "framer-motion";
+import { useRef, useState } from 'react';
+import api from '../../context/api';
 
 export default function CinematicFooter() {
+    const [sending, setSending] = useState(false);
+    const [feedback, setFeedback] = useState(null);
+    const submitting = useRef(false);
+    const submitInquiry = async (event) => {
+        event.preventDefault();
+        if (submitting.current) return;
+        const form = event.currentTarget;
+        const values = new FormData(form);
+        const payload = Object.fromEntries(['firstName', 'lastName', 'email', 'message'].map(key => [key, String(values.get(key) || '').trim()]));
+        submitting.current = true;
+        setSending(true);
+        setFeedback(null);
+        try {
+            const { data } = await api.post('/inquiries', payload);
+            setFeedback({ success: true, message: data.message });
+            form.reset();
+        } catch (error) {
+            setFeedback({ success: false, message: error.response?.data?.message || 'Unable to send your inquiry. Please try again.' });
+        } finally {
+            submitting.current = false;
+            setSending(false);
+        }
+    };
     return (
         <section className="relative overflow-hidden bg-black text-white font-sans" id="contact">
             {/* Background Image with Gradient Overlay */}
@@ -47,7 +72,7 @@ export default function CinematicFooter() {
                                 transition={{ duration: 0.8, delay: 0.2 }}
                             >
                                 <p className="mt-6 text-base leading-relaxed text-white/70 max-w-sm">
-                                    A concept-stage preview. Share a note and the team will follow up with model details and next review materials.
+                                    Share a question with the Thirasara team. Your inquiry will be sent directly to our administrators.
                                 </p>
                             </m.div>
                             
@@ -72,12 +97,12 @@ export default function CinematicFooter() {
                             viewport={{ once: true }}
                             transition={{ duration: 0.8, delay: 0.2 }}
                         >
-                            <form className="grid gap-8">
+                            <form className="grid gap-8" onSubmit={submitInquiry}>
                                 <div className="grid gap-8 sm:grid-cols-2">
                                     <label className="grid gap-2">
                                         <span className="text-xs uppercase tracking-[0.2em] text-white/50">First name</span>
                                         <input 
-                                            type="text" 
+                                            type="text" name="firstName" maxLength={100} autoComplete="given-name"
                                             required 
                                             className="w-full border-0 border-b border-white/20 bg-transparent pb-2 pt-1 text-base text-white outline-none transition focus:border-white placeholder:text-white/30" 
                                         />
@@ -85,7 +110,7 @@ export default function CinematicFooter() {
                                     <label className="grid gap-2">
                                         <span className="text-xs uppercase tracking-[0.2em] text-white/50">Last name</span>
                                         <input 
-                                            type="text" 
+                                            type="text" name="lastName" maxLength={100} autoComplete="family-name"
                                             required 
                                             className="w-full border-0 border-b border-white/20 bg-transparent pb-2 pt-1 text-base text-white outline-none transition focus:border-white placeholder:text-white/30" 
                                         />
@@ -94,14 +119,14 @@ export default function CinematicFooter() {
                                 <label className="grid gap-2">
                                     <span className="text-xs uppercase tracking-[0.2em] text-white/50">Email</span>
                                     <input 
-                                        type="email" 
+                                        type="email" name="email" maxLength={254} autoComplete="email"
                                         required 
                                         className="w-full border-0 border-b border-white/20 bg-transparent pb-2 pt-1 text-base text-white outline-none transition focus:border-white placeholder:text-white/30" 
                                     />
                                 </label>
                                 <label className="grid gap-2">
                                     <span className="text-xs uppercase tracking-[0.2em] text-white/50">Message</span>
-                                    <textarea 
+                                    <textarea name="message" minLength={10} maxLength={5000}
                                         required 
                                         className="w-full border-0 border-b border-white/20 bg-transparent pb-2 pt-1 text-base text-white outline-none transition focus:border-white placeholder:text-white/30 min-h-[100px] resize-y" 
                                     ></textarea>
@@ -109,14 +134,15 @@ export default function CinematicFooter() {
                                 
                                 <div className="flex flex-wrap items-end justify-between gap-4 pt-4">
                                     <button 
-                                        type="submit" 
+                                        type="submit" disabled={sending}
                                         className="group inline-flex items-center gap-3 text-sm uppercase tracking-[0.2em] text-white font-medium hover:text-gray-300 transition-colors"
                                     >
-                                        <span>Send inquiry</span>
+                                        <span>{sending ? 'Sending…' : 'Send inquiry'}</span>
                                         <span className="transition-transform duration-500 group-hover:translate-x-2">&rarr;</span>
                                     </button>
-                                    <p className="text-xs text-white/50">Replies within two business days.</p>
+                                    <p className="text-xs text-white/50">Our team will reply to your email.</p>
                                 </div>
+                                {feedback && <p role={feedback.success ? 'status' : 'alert'} className={feedback.success ? 'text-emerald-300 text-sm' : 'text-red-300 text-sm'}>{feedback.message}</p>}
                             </form>
                         </m.div>
 

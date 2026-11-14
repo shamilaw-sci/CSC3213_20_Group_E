@@ -1,4 +1,7 @@
 const supabase = require('../config/supabase');
+const { decorateMessages } = require('../utils/messageReceipts');
+const { withSignedAttachments } = require('../utils/chatAttachmentDelivery');
+const { returnedMessageInsertError } = require('../utils/chatMessageFailure');
 
 const conversationRepository = {
     // 1. Get Conversation by ID
@@ -18,7 +21,7 @@ const conversationRepository = {
             .from('properties')
             .select('id, title, seller_id, status')
             .eq('id', propertyId)
-            .eq('status', 'approved')
+            .eq('status', 'approved').is('deleted_at', null)
             .single();
         return { data, error }; // Let controller handle error/missing
     },
@@ -125,13 +128,16 @@ const conversationRepository = {
     // 11. Batch get messages for multiple conversations
     getMessagesByConversationIds: async (conversationIds) => {
         if (!conversationIds || conversationIds.length === 0) return [];
-        const { data, error } = await supabase
-            .from('messages')
-            .select('*')
-            .in('conversation_id', conversationIds)
-            .order('created_at', { ascending: false });
-        if (error) throw error;
-        return data;
+        const messages = [];
+        for (let page = 0; ; page += 1000) {
+            const { data, error } = await supabase.from('messages').select('*')
+                .in('conversation_id', conversationIds)
+                .order('created_at', { ascending: false }).order('id').range(page, page + 999);
+            if (error) throw error;
+            messages.push(...(data || []));
+            if (!data || data.length < 1000) break;
+        }
+        return messages;
     },
 
     // 12. Get messages for single conversation
@@ -146,15 +152,36 @@ const conversationRepository = {
     },
 
     // 13. Mark messages as read
-    markMessagesAsRead: async (conversationId, userId) => {
-        const { error } = await supabase
-            .from('messages')
-            .update({ read_at: new Date() })
-            .eq('conversation_id', conversationId)
-            .neq('sender_id', userId)
-            .is('read_at', null);
-        if (error) throw error;
+    markMessagesAsRead: async (conversationId, userId, messages) => {
+        // Only acknowledge the messages actually delivered, not concurrent arrivals.
+        const incoming = messages.filter(m => m.conversation_id === conversationId && m.sender_id !== userId);
+        for (let offset = 0; offset < incoming.length; offset += 500) {
+            const { error } = await supabase.from('message_receipts').upsert(
+                incoming.slice(offset, offset + 500).map(m => ({ message_id: m.id, user_id: userId })),
+                { onConflict: 'message_id,user_id', ignoreDuplicates: true }
+            );
+            if (error) throw error;
+        }
     },
+
+    withReadReceipts: async (messages, userId, conversations = []) => {
+        const receipts = [];
+        for (let offset = 0; offset < messages.length; offset += 500) {
+            const ids = messages.slice(offset, offset + 500).map(m => m.id);
+            for (let page = 0; ; page += 1000) {
+                const { data, error } = await supabase.from('message_receipts')
+                    .select('message_id,user_id,read_at').in('message_id', ids)
+                    .order('message_id').order('user_id').range(page, page + 999);
+                if (error) throw error;
+                receipts.push(...(data || []));
+                if (!data || data.length < 1000) break;
+            }
+        }
+        return withSignedAttachments(supabase, decorateMessages(messages, receipts, userId, conversations), process.env.SUPABASE_URL);
+    },
+
+    // Only call after the controller has established conversation access.
+    withAttachmentUrls: messages => withSignedAttachments(supabase, messages, process.env.SUPABASE_URL),
 
     // 14. Upload attachment
     uploadAttachment: async (fileName, buffer, mimeType) => {
@@ -165,11 +192,18 @@ const conversationRepository = {
             });
         if (error) throw error;
 
-        const { data } = supabase.storage
-            .from('chat-attachments')
-            .getPublicUrl(fileName);
-        
-        return data.publicUrl;
+        return `chat-attachments/${fileName}`;
+    },
+
+    removeAttachment: async (conversationId, objectKey) => {
+        const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (typeof conversationId !== 'string' || !uuid.test(conversationId)
+            || typeof objectKey !== 'string' || !objectKey.startsWith(`${conversationId}/`)
+            || !/^\d+-[a-f0-9]{32}\.[a-z0-9]+$/.test(objectKey.slice(conversationId.length + 1))) {
+            throw new Error('Invalid chat cleanup key.');
+        }
+        const { error } = await supabase.storage.from('chat-attachments').remove([objectKey]);
+        if (error) throw error;
     },
 
     // 15. Create message
@@ -179,7 +213,7 @@ const conversationRepository = {
             .insert([insertData])
             .select()
             .single();
-        if (error) throw error;
+        if (error) throw returnedMessageInsertError(error);
         return data;
     },
 
@@ -219,15 +253,20 @@ const conversationRepository = {
 
     // 19. Get unread messages
     getUnreadMessagesForConversations: async (conversationIds, userId) => {
-        const { data, error } = await supabase
-            .from('messages')
-            .select('*, conversation:conversations(type)')
-            .in('conversation_id', conversationIds)
-            .is('read_at', null)
-            .neq('sender_id', userId)
-            .order('created_at', { ascending: false });
-        if (error) throw error;
-        return data;
+        if (!conversationIds.length) return [];
+        const unread = [];
+        for (let page = 0; ; page += 1000) {
+            const { data, error } = await supabase.from('messages')
+                .select('*, conversation:conversations(type)')
+                .in('conversation_id', conversationIds).neq('sender_id', userId)
+                .order('created_at', { ascending: false }).order('id')
+                .range(page, page + 999);
+            if (error) throw error;
+            const messages = await conversationRepository.withReadReceipts(data || [], userId);
+            unread.push(...messages.filter(m => !m.viewer_read_at));
+            if (!data || data.length < 1000) break;
+        }
+        return unread;
     }
 };
 

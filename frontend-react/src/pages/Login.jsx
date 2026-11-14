@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { logClientError } from '../utils/clientLog';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/UserAuthContext';
 import { useForm } from 'react-hook-form';
@@ -47,48 +48,14 @@ const Login = () => {
     const {
         register: registerReset,
         handleSubmit: handleSubmitReset,
-        watch: watchReset,
         formState: { errors: resetErrors, isValid: isResetValid }
     } = useForm({
         resolver: zodResolver(resetSchema),
         mode: 'onChange'
     });
     
-    const resetEmail = watchReset('email');
 
-    // Google Sign-In setup
-    useEffect(() => {
-        if (step !== 1) return;
-
-        const initGoogleAuth = () => {
-            if (window.google?.accounts?.id) {
-                window.google.accounts.id.initialize({
-                    client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-                    callback: handleGoogleResponse
-                });
-                
-                if (googleBtnRef.current) {
-                    window.google.accounts.id.renderButton(
-                        googleBtnRef.current,
-                        { theme: 'outline', size: 'large', width: 350, shape: 'pill' }
-                    );
-                }
-            }
-        };
-
-        if (window.google) {
-            initGoogleAuth();
-        } else {
-            const script = document.createElement('script');
-            script.src = 'https://accounts.google.com/gsi/client';
-            script.async = true;
-            script.defer = true;
-            script.onload = initGoogleAuth;
-            document.body.appendChild(script);
-        }
-    }, [step]);
-
-    const handleGoogleResponse = async (response) => {
+    const handleGoogleResponse = useCallback(async (response) => {
         try {
             const googleRes = await loginWithGoogle(response.credential);
             const loggedUser = googleRes?.user;
@@ -126,9 +93,53 @@ const Login = () => {
             } else {
                 toast.error(err.response?.data?.message || err.message || 'Google sign-in failed');
             }
-            console.error("Google sign-in failed:", err.response?.data?.message || err.message);
+            logClientError('google_signin_failed');
         }
-    };
+    }, [loginWithGoogle, location.state, navigate, from]);
+
+    // Google Sign-In setup
+    useEffect(() => {
+        if (step !== 1) return;
+
+        let cancelled = false;
+        let script;
+
+        const initGoogleAuth = () => {
+            if (cancelled) return;
+            if (window.google?.accounts?.id) {
+                window.google.accounts.id.initialize({
+                    client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+                    callback: handleGoogleResponse
+                });
+
+                if (googleBtnRef.current) {
+                    window.google.accounts.id.renderButton(
+                        googleBtnRef.current,
+                        { theme: 'outline', size: 'large', width: 350, shape: 'pill' }
+                    );
+                }
+            }
+        };
+
+        if (window.google) {
+            initGoogleAuth();
+        } else {
+            script = document.createElement('script');
+            script.src = 'https://accounts.google.com/gsi/client';
+            script.async = true;
+            script.defer = true;
+            script.onload = initGoogleAuth;
+            document.body.appendChild(script);
+        }
+
+        return () => {
+            cancelled = true;
+            if (script) {
+                script.onload = null;
+                script.remove();
+            }
+        };
+    }, [step, handleGoogleResponse]);
 
     const handleSocialLogin = (provider) => {
         toast.error(`${provider} login is not yet configured.`);
@@ -173,7 +184,7 @@ const Login = () => {
             } else {
                 toast.error(err.response?.data?.message || err.message || 'Failed to sign in');
             }
-            console.error("Sign-in failed:", err.response?.data?.message || err.message);
+            logClientError('password_signin_failed');
         } finally {
             setLoading(false);
         }
@@ -187,7 +198,7 @@ const Login = () => {
             toast.success('Reset link sent!');
         } catch (err) {
             toast.error(err.response?.data?.message || err.message || 'Failed to send reset link');
-            console.error("Reset link error:", err.response?.data?.message || err.message);
+            logClientError('password_reset_request_failed');
         } finally {
             setLoading(false);
         }
@@ -308,7 +319,9 @@ const Login = () => {
                                     Continue with Facebook
                                 </Button>
                                 <Button variant="outline" type="button" onClick={() => handleSocialLogin('Apple')} className="w-full max-w-[350px]">
-                                    <img src="https://www.svgrepo.com/show/511330/apple-173.svg" alt="Apple" className="h-4 w-4 mr-2 dark:invert" />
+                                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" className="mr-2 h-4 w-4">
+                                        <path d="M17.05 12.3c.03 3.02 2.65 4.02 2.68 4.03-.02.07-.42 1.44-1.38 2.85-.83 1.22-1.69 2.43-3.05 2.45-1.34.03-1.77-.79-3.3-.79s-2.01.77-3.28.82c-1.31.05-2.31-1.32-3.15-2.53-1.71-2.48-3.02-7-.99-10.06a4.72 4.72 0 0 1 4-2.42c1.29-.02 2.5.88 3.3.88.79 0 2.27-1.09 3.83-.93.65.03 2.47.26 3.64 1.97-.09.06-2.32 1.35-2.3 3.73ZM14.7 4.96c.7-.85 1.17-2.03 1.04-3.2-1.01.04-2.23.67-2.95 1.51-.64.74-1.2 1.94-1.05 3.09 1.12.08 2.26-.57 2.96-1.4Z" />
+                                    </svg>
                                     Continue with Apple
                                 </Button>
                             </div>

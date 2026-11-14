@@ -2,6 +2,7 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
+@import "./components/profile/profile-actions.css";
 
 @theme {
   --font-sans: 'Outfit', sans-serif;
