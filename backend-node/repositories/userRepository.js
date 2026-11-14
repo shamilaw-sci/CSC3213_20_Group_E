@@ -20,6 +20,14 @@ const findById = async (id) => {
     return data;
 };
 
+const getAgentApplication = async (id) => {
+    const { data, error } = await supabase.from('agent_profiles')
+        .select('agency_name, license_number, rejection_reason')
+        .eq('agent_id', id).maybeSingle();
+    if (error) throw error;
+    return data;
+};
+
 const findFullUserById = async (id) => {
     const { data, error } = await supabase
         .from('users')
@@ -93,6 +101,7 @@ module.exports = {
     getAgentsForAI,
     findByEmail,
     findById,
+    getAgentApplication,
     findFullUserById,
     createUser,
     createAgentProfile,

@@ -7,8 +7,10 @@ const registerSchema = z.object({
         email: z.string().email("Invalid email format"),
         password: z.string().refine(validNewPassword, newPasswordMessage),
         role: z.enum(['BUYER', 'SELLER', 'AGENT', 'ADMIN']).optional(),
-        agency_name: z.string().optional(),
-        license_number: z.string().optional(),
+        agency_name: z.string().trim().max(150).optional(),
+        license_number: z.string().trim().max(100).optional(),
+        agencyName: z.string().trim().max(150).optional(),
+        licenseNumber: z.string().trim().max(100).optional(),
     }),
 });
 

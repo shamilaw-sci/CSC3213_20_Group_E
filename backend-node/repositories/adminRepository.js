@@ -156,7 +156,7 @@ const adminRepository = {
         const { data, error } = await supabase
             .from('users')
             .select(`
-                id, name, email, role, created_at,
+                id, name, email, role, phone, avatar_url, created_at,
                 agent_profiles(agency_name, license_number, bio)
             `)
             .eq('role', 'PENDING_AGENT')

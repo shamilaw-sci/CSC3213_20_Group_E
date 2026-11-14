@@ -11,7 +11,19 @@ const SecuritySettings = ({ user, formData, handleChange, handleSubmit, loading,
             <div className="max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-8 transition-colors">
                 
                 {/* Agent Brand Hub Banner */}
-                {(user?.role === 'AGENT' || user?.role === 'PENDING_AGENT') && (
+                {user?.role === 'PENDING_AGENT' && (
+                    <div role="status" className="mb-8 rounded-2xl border border-amber-300 bg-amber-50 p-5 text-amber-950 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100">
+                        <h3 className="font-bold">Agent application pending</h3>
+                        <p>Your application is awaiting Admin review. Agent Hub access becomes available after approval.</p>
+                    </div>
+                )}
+                {user?.role === 'REJECTED_AGENT' && (
+                    <div role="status" className="mb-8 rounded-2xl border border-red-300 bg-red-50 p-5 text-red-950 dark:border-red-700 dark:bg-red-950 dark:text-red-100">
+                        <h3 className="font-bold">Agent application rejected</h3>
+                        <p className="mt-2 whitespace-pre-wrap">{user.agent_application?.rejection_reason || 'No rejection reason is available. Please contact support for details.'}</p>
+                    </div>
+                )}
+                {user?.role === 'AGENT' && (
                     <div className="mb-8 p-5 rounded-2xl bg-gradient-to-r from-blue-600/10 via-indigo-600/10 to-transparent border border-blue-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div>
                             <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5">

@@ -220,7 +220,20 @@ const sendSavedSearchAlertEmail = (email, searchTitle, property) => {
     return sendEmail(email, subject, getBaseHtmlTemplate("New Match Found", content));
 };
 
+const sendAgentRejectionEmail = (email, name, reason) => {
+    const escape = value => String(value ?? '').replace(/[&<>"']/g, character => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[character]);
+    const content = `<h1>Agent application rejected</h1>
+        <p>Hi ${escape(name)},</p>
+        <p>Your Agent application has been reviewed and rejected.</p>
+        <h2>Reason for rejection</h2><p style="white-space: pre-wrap">${escape(reason)}</p>
+        <p>You can also view this reason in your Thirasara profile.</p>`;
+    return sendEmail(email, 'Thirasara Agent application rejected', getBaseHtmlTemplate('Agent Application Decision', content), true);
+};
+
 module.exports = {
+    sendAgentRejectionEmail,
     sendEmail,
     sendWelcomeEmail,
     sendPaymentReceipt,

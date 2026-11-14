@@ -77,6 +77,8 @@ const AgentCustomizationStudioModal = ({ agent, profile, onClose, onProfileUpdat
     name: agent?.name || '',
     avatar_url: agent?.avatar_url || '',
     cover_image_url: profile?.cover_image_url || '',
+    cover_position_x: profile?.cover_position_x ?? 50,
+    cover_position_y: profile?.cover_position_y ?? 50,
     agency_name: profile?.agency_name || '',
     license_number: profile?.license_number || '',
     specialization: profile?.specialization || 'Both Sales & Rentals',
@@ -105,7 +107,7 @@ const AgentCustomizationStudioModal = ({ agent, profile, onClose, onProfileUpdat
       const file = e.target.files[0];
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, cover_image_url: reader.result }));
+        setFormData(prev => ({ ...prev, cover_image_url: reader.result, cover_position_x: 50, cover_position_y: 50 }));
         toast.success("Cover banner loaded! Click Save to publish.");
       };
       reader.readAsDataURL(file);
@@ -299,7 +301,7 @@ const AgentCustomizationStudioModal = ({ agent, profile, onClose, onProfileUpdat
                         <div className="space-y-2">
                           <div className="h-20 w-full rounded-2xl overflow-hidden bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 border border-slate-200 dark:border-slate-700 relative shadow-inner">
                             {formData.cover_image_url ? (
-                              <img src={formData.cover_image_url} alt="Cover Banner Preview" className="w-full h-full object-cover" />
+                              <img src={formData.cover_image_url} alt="Cover Banner Preview" className="w-full h-full object-cover" style={{ objectPosition: `${formData.cover_position_x}% ${formData.cover_position_y}%` }} />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-xs text-white/70 font-semibold">
                                 Executive Gradient (Default)
@@ -325,13 +327,22 @@ const AgentCustomizationStudioModal = ({ agent, profile, onClose, onProfileUpdat
                             {formData.cover_image_url && (
                               <button
                                 type="button"
-                                onClick={() => setFormData(prev => ({ ...prev, cover_image_url: '' }))}
+                                onClick={() => setFormData(prev => ({ ...prev, cover_image_url: '', cover_position_x: 50, cover_position_y: 50 }))}
                                 className="text-[11px] text-slate-500 hover:underline font-semibold"
                               >
                                 Use Gradient
                               </button>
                             )}
                           </div>
+                          {formData.cover_image_url && (
+                            <div className="space-y-3 pt-2 text-xs text-slate-700 dark:text-slate-300">
+                              <label className="block" htmlFor="cover-position-x">Horizontal cover position ({formData.cover_position_x}%)</label>
+                              <input id="cover-position-x" type="range" min="0" max="100" step="1" value={formData.cover_position_x} onChange={e => setFormData(prev => ({ ...prev, cover_position_x: Number(e.target.value) }))} className="w-full accent-blue-600" />
+                              <label className="block" htmlFor="cover-position-y">Vertical cover position ({formData.cover_position_y}%)</label>
+                              <input id="cover-position-y" type="range" min="0" max="100" step="1" value={formData.cover_position_y} onChange={e => setFormData(prev => ({ ...prev, cover_position_y: Number(e.target.value) }))} className="w-full accent-blue-600" />
+                              <button type="button" onClick={() => setFormData(prev => ({ ...prev, cover_position_x: 50, cover_position_y: 50 }))} className="font-semibold text-blue-600 dark:text-blue-400 hover:underline">Reset cover position</button>
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -347,7 +358,7 @@ const AgentCustomizationStudioModal = ({ agent, profile, onClose, onProfileUpdat
                           <button
                             key={i}
                             type="button"
-                            onClick={() => setFormData(prev => ({ ...prev, cover_image_url: preset.url }))}
+                            onClick={() => setFormData(prev => ({ ...prev, cover_image_url: preset.url, cover_position_x: 50, cover_position_y: 50 }))}
                             className={`h-14 rounded-xl overflow-hidden border-2 transition-all relative group cursor-pointer ${
                               formData.cover_image_url === preset.url
                                 ? 'border-blue-500 ring-2 ring-blue-500/30'

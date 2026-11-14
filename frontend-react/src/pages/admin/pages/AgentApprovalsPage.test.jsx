@@ -1,0 +1,30 @@
+import React from 'react';
+import { render, screen, fireEvent, cleanup, within } from '@testing-library/react';
+import { test, expect, vi, afterEach } from 'vitest';
+import AgentApprovalsPage from './AgentApprovalsPage';
+import * as api from '../api/adminApi';
+vi.mock('../api/adminApi', () => ({ fetchPendingAgents: vi.fn(), updateUserRole: vi.fn() }));
+afterEach(() => { cleanup(); vi.clearAllMocks(); });
+const applicant = { id: 'g1', name: 'Test Agent', email: 'agent@example.test', phone: '0771234567', role: 'PENDING_AGENT', agent_profiles: [{ agency_name: 'Test Agency', license_number: 'TEST-123', bio: 'Applicant biography' }] };
+test('nested profile displays supplied agency and details before approval', async () => {
+ api.fetchPendingAgents.mockResolvedValue({ agents: [applicant] }); render(<AgentApprovalsPage />);
+ expect(await screen.findByText('Test Agency')).toBeInTheDocument();
+ fireEvent.click(screen.getByRole('button', { name: /review application/i }));
+ const dialog = screen.getByRole('dialog', { name: /agent application details/i });
+ expect(within(dialog).getByText('0771234567')).toBeInTheDocument(); expect(within(dialog).getByText('Applicant biography')).toBeInTheDocument();
+ expect(api.updateUserRole).not.toHaveBeenCalled();
+ fireEvent.click(within(dialog).getByRole('button', { name: /^reject$/i }));
+ expect(screen.queryByRole('dialog', { name: /agent application details/i })).not.toBeInTheDocument();
+ fireEvent.click(screen.getByRole('button', { name: /^cancel$/i }));
+ expect(screen.getByRole('dialog', { name: /agent application details/i })).toBeInTheDocument();
+});
+test('persisted rejection email warning is visible and application is removed', async () => {
+ api.fetchPendingAgents.mockResolvedValue({ agents: [{ ...applicant, agent_profiles: applicant.agent_profiles[0] }] });
+ api.updateUserRole.mockResolvedValue({ warning: 'Application rejected, but email delivery failed.' }); render(<AgentApprovalsPage />);
+ fireEvent.click(await screen.findByRole('button', { name: /review application/i }));
+ fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^reject$/i }));
+ fireEvent.change(screen.getByLabelText('Reason for Rejection'), { target: { value: 'Missing license' } });
+ fireEvent.click(screen.getByRole('button', { name: /confirm rejection/i }));
+ expect(await screen.findByText('Application rejected, but email delivery failed.')).toBeInTheDocument();
+ expect(screen.queryByText('agent@example.test')).not.toBeInTheDocument();
+});

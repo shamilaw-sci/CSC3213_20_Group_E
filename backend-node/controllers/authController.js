@@ -25,6 +25,11 @@ const clearTokenCookie = res => res.clearCookie('token', {
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', path: '/'
 });
 
+const applicationFeedback = async user => {
+    if (!['PENDING_AGENT', 'REJECTED_AGENT'].includes(user.role)) return {};
+    return { agent_application: await userRepository.getAgentApplication(user.id) };
+};
+
 // 1. User Registration - Create new user account
 const registerUser = async(req, res, next) => {
     try {
@@ -58,7 +63,8 @@ const registerUser = async(req, res, next) => {
 
         // If registering as an agent, create an initial agent_profiles record
         if (safeRole === 'PENDING_AGENT' && newUser && newUser[0]) {
-            const { agency_name, license_number } = req.body;
+            const agency_name = req.body.agencyName ?? req.body.agency_name;
+            const license_number = req.body.licenseNumber ?? req.body.license_number;
             await userRepository.createAgentProfile({
                 agent_id: newUser[0].id,
                 agency_name: agency_name || 'Independent Agent',
@@ -135,6 +141,8 @@ const loginUser = async(req, res, next) => {
             return res.status(403).json({ message: 'Verify your email before signing in.' });
         }
 
+        const agentFeedback = await applicationFeedback(user);
+
         // Generate JWT token
         const token = issueSessionToken(user);
 
@@ -150,7 +158,8 @@ const loginUser = async(req, res, next) => {
                 phone: user.phone,
                 avatar_url: user.avatar_url,
                 theme_preference: user.theme_preference,
-                email_notifications: user.email_notifications
+                email_notifications: user.email_notifications,
+                ...agentFeedback
             }
         });
 
@@ -266,6 +275,9 @@ const getMe = async(req, res, next) => {
 
         if (!user) return res.status(404).json({ message: "User not found" });
 
+        // Application feedback belongs only to the authenticated applicant.
+        Object.assign(user, await applicationFeedback(user));
+
         res.status(200).json({ user });
     } catch (error) {
         res.status(401).json({ message: "Invalid or expired token" });
@@ -346,6 +358,10 @@ const updateProfile = async(req, res, next) => {
             updates.password_hash = await bcrypt.hash(password, salt);
         }
 
+        // Resolve read-only feedback before writes, so its failure cannot disguise
+        // an otherwise successful personal-details save.
+        const feedback = await applicationFeedback(user);
+
         if (parsed.avatar) {
             const key = `${req.user.id}_${randomUUID()}.${parsed.avatar.extension}`;
             try {
@@ -363,6 +379,7 @@ const updateProfile = async(req, res, next) => {
         const completeUpdate = (updated, message) => {
             if (updated?.id !== req.user.id) throw new Error('Profile update could not be confirmed.');
             const { password_hash, ...publicUser } = updated;
+            if (['PENDING_AGENT', 'REJECTED_AGENT'].includes(publicUser.role)) Object.assign(publicUser, feedback);
             const result = { message, user: publicUser, ...(omittedFields.length ? { partial: true, omittedFields } : {}) };
             if (updates.password_hash) {
                 const token = issueSessionToken({ ...user, ...updated, password_hash: updates.password_hash });

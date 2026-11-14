@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { fetchDashboardStats, fetchRoleRequests } from "../api/adminApi";
+import { fetchDashboardStats, fetchRoleRequests, fetchPendingAgents } from "../api/adminApi";
 import { useTheme } from "../../../context/ThemeProvider";
 import { Bell, Search, CheckCircle2, Clock, MessageSquare, ArrowRight, ShieldCheck, X, Sun, Moon } from "lucide-react";
 
@@ -22,7 +22,8 @@ const Topbar = () => {
   const { isDark, changeTheme } = useTheme();
   const [pendingCount, setPendingCount] = useState(0);
   const [roleCount, setRoleCount] = useState(0);
-  const actionCount = pendingCount + roleCount;
+  const [agentCount, setAgentCount] = useState(0);
+  const actionCount = pendingCount + roleCount + agentCount;
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const notifRef = useRef(null);
@@ -42,6 +43,9 @@ const Topbar = () => {
       .catch(() => setPendingCount(0));
     fetchRoleRequests('pending')
       .then(data => setRoleCount(data.requests?.length || 0))
+      .catch(() => {});
+    fetchPendingAgents()
+      .then(data => setAgentCount(data.agents?.length || 0))
       .catch(() => {});
   };
 
@@ -166,6 +170,12 @@ const Topbar = () => {
 
                     {/* Notification Items List */}
                     <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/80 p-2">
+                        {agentCount > 0 && (
+                            <button type="button" className="w-full p-3.5 text-left rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/70 text-sm font-bold text-blue-600 dark:text-blue-400"
+                                onClick={() => { setIsNotifOpen(false); navigate('/admin/agent-approvals'); }}>
+                                {agentCount} agent application{agentCount === 1 ? '' : 's'} awaiting review
+                            </button>
+                        )}
                         {roleCount > 0 && (
                             <button type="button" className="w-full p-3.5 text-left rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/70 text-sm font-bold text-amber-600 dark:text-amber-400"
                                 onClick={() => { setIsNotifOpen(false); navigate('/admin/users?section=requests'); }}>

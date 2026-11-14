@@ -1,4 +1,5 @@
 const adminRepository = require('../../repositories/adminRepository');
+const { sendAgentRejectionEmail } = require('../../utils/emailService');
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const validTarget = (req, res) => {
     if (typeof req.params.id === 'string' && uuid.test(req.params.id)) return true;
@@ -65,7 +66,23 @@ const updateUserRole = async(req, res, next) => {
             return res.status(400).json({ message: 'Invalid rejection reason.' });
         }
         const normalizedReason = typeof reason === 'string' ? reason.trim() || null : null;
+        if (role === 'REJECTED_AGENT' && !normalizedReason) {
+            return res.status(400).json({ message: 'A rejection reason is required.' });
+        }
         await adminRepository.updateUserRole(req.params.id, role, normalizedReason);
+        if (role === 'REJECTED_AGENT') {
+            try {
+                const applicant = await adminRepository.getUserById(req.params.id);
+                if (!applicant?.email) throw new Error('Applicant email unavailable');
+                await sendAgentRejectionEmail(applicant.email, applicant.name, normalizedReason);
+            } catch {
+                console.error('agent_rejection_email_failed');
+                return res.status(200).json({
+                    message: `User role updated to ${role}`,
+                    warning: 'Application rejected, but the rejection email could not be delivered. The applicant can view the reason in their profile.'
+                });
+            }
+        }
         res.status(200).json({ message: `User role updated to ${role}` });
     } catch (error) {
         console.error('admin_role_update_failed');

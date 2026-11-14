@@ -74,10 +74,9 @@ test.each([{}, [], 3, 'x'.repeat(2001)])('rejects invalid reason %p before DB', 
     const res = await run('updateUserRole', { role: 'REJECTED_AGENT', reason });
     expect(res.status).toHaveBeenCalledWith(400); expect(calls).toHaveLength(0);
 });
-test('blank reason preserves prior no-profile-write condition', async () => {
-    results.push({ data: { id, role: 'REJECTED_AGENT' }, error: null });
-    expect((await run('updateUserRole', { role: 'REJECTED_AGENT', reason: '  ' })).status).toHaveBeenCalledWith(200);
-    expect(calls).toHaveLength(1);
+test('blank rejection reason is rejected before any write', async () => {
+    expect((await run('updateUserRole', { role: 'REJECTED_AGENT', reason: '  ' })).status).toHaveBeenCalledWith(400);
+    expect(calls).toHaveLength(0);
 });
 test('repository returns confirmed row', async () => {
     const row = { id, role: 'BUYER' }; results.push({ data: row, error: null });

@@ -1,13 +1,13 @@
 jest.mock('../config/supabase', () => ({}));
-jest.mock('../repositories/adminRepository', () => ({ approveListingOnce: jest.fn(), getListingByIdWithTransactions: jest.fn(), updateListingStatus: jest.fn(), updateUserRole: jest.fn() }));
-jest.mock('../utils/emailService', () => ({ sendListingStatusEmail: jest.fn() }));
+jest.mock('../repositories/adminRepository', () => ({ approveListingOnce: jest.fn(), getListingByIdWithTransactions: jest.fn(), updateListingStatus: jest.fn(), updateUserRole: jest.fn(), getUserById: jest.fn() }));
+jest.mock('../utils/emailService', () => ({ sendListingStatusEmail: jest.fn(), sendAgentRejectionEmail: jest.fn() }));
 jest.mock('../controllers/savedSearchController', () => ({ checkSavedSearchMatches: jest.fn() }));
 const repo = require('../repositories/adminRepository');
 const { sendListingStatusEmail } = require('../utils/emailService');
 const { checkSavedSearchMatches } = require('../controllers/savedSearchController');
 const handlers = require('../controllers/adminController');
 const response = () => ({ status: jest.fn().mockReturnThis(), json: jest.fn() });
-beforeEach(() => { jest.resetAllMocks(); checkSavedSearchMatches.mockResolvedValue(); sendListingStatusEmail.mockResolvedValue(); });
+beforeEach(() => { jest.resetAllMocks(); repo.getUserById.mockResolvedValue({ name: 'Agent', email: 'agent@example.test' }); checkSavedSearchMatches.mockResolvedValue(); sendListingStatusEmail.mockResolvedValue(); });
 test('new approval starts alerts then awaits seller email before response', async () => {
  const row = { title: 'Home', seller: { email: 'seller@example.test' } }; repo.approveListingOnce.mockResolvedValue(row);
  let resolve; sendListingStatusEmail.mockImplementation(() => new Promise(done => { resolve = done; })); const res = response(); const pending = handlers.approveListing({ params: { id: 'p' } }, res, jest.fn()); await Promise.resolve();

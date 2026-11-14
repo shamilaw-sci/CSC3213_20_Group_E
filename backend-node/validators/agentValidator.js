@@ -28,6 +28,8 @@ const updateProfileSchema = z.object({
     name: z.string().min(2).max(100).optional(),
     avatar_url: z.string().url("Invalid avatar URL").optional().or(z.literal('')).or(z.null()),
     cover_image_url: z.string().url("Invalid cover image URL").optional().or(z.literal('')).or(z.null()),
+    cover_position_x: z.number().int().min(0).max(100).optional(),
+    cover_position_y: z.number().int().min(0).max(100).optional(),
     agency_name: z.string().max(150).optional(),
     license_number: z.string().max(100).optional(),
     bio: z.string().max(3000).optional(),

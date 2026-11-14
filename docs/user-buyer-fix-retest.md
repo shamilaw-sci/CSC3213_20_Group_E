@@ -21,7 +21,7 @@ Operator: user. Guide one case at a time in Sinhala with English UI terms; appen
 | 15 | Guest booking | Single disposable request reaches correct Agent without account binding | Verified signed-out submission and exact-note Agent contact-only handoff pass by user report, 2026-11-12 |
 | 16 | Booking CRM/chat | Distinct appointments retained; linked thread not duplicated or falsely confirmed; correct recipient | Duplicate representation and correct chat recipient pass by user report, 2026-11-12; new-booking confirmation label check pending |
 | 17 | Chat drafts | Draft stays with correct conversation through switches/send failure/account changes | Conversation-switch isolation and controlled offline send recovery pass by user report, 2026-11-12; account-change check pending |
-| 18 | Booking notification | Agent bell shows actual pending booking and opens exact dossier | Pending |
+| 18 | Booking notification | Agent bell shows actual pending booking and opens exact dossier | Pass by user report, 2026-11-14; bell notification opens matching booking dossier |
 
 Correct-password email verification was previously accepted by user and explicitly excluded from repeat testing.
 
