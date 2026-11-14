@@ -3,7 +3,7 @@
  * @description Map-based property search component allowing users to filter properties by drawing freehand polygons or selecting districts.
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polygon, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -21,6 +21,7 @@ import {
 import MapTopBar from '../components/map/MapTopBar';
 import MapSidebar from '../components/map/MapSidebar';
 import MapLayers from '../components/map/MapLayers';
+import HazardControls from '../components/map/HazardControls';
 
 // Fix for default Leaflet icon missing issues in React
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -104,8 +105,6 @@ const MapSearch = () => {
         setShowFloodZones,
         showLandslideZones,
         setShowLandslideZones,
-        floodData,
-        landslideData,
         filters,
         drawControlRef,
         handleBoundsChange,
@@ -117,6 +116,15 @@ const MapSearch = () => {
         isDrawMode,
         setIsDrawMode
     } = useMapSearch();
+
+    const [hazardStatus, setHazardStatus] = useState({ flood: 'idle', landslide: 'idle' });
+    const [hazardRetry, setHazardRetry] = useState({ flood: 0, landslide: 0 });
+    const handleHazardStatus = useCallback((kind, state) => {
+        setHazardStatus(previous => ({ ...previous, [kind]: state }));
+    }, []);
+    const handleHazardRetry = useCallback(kind => {
+        setHazardRetry(previous => ({ ...previous, [kind]: previous[kind] + 1 }));
+    }, []);
 
     const getMapboxStyleUrl = () => {
         const token = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
@@ -227,10 +235,10 @@ const MapSearch = () => {
                             selectedDistrict={selectedDistrict}
                             setSelectedDistrict={setSelectedDistrict}
                             clearBoundary={clearBoundary}
+                            onHazardStatus={handleHazardStatus}
+                            hazardRetry={hazardRetry}
                             showFloodZones={showFloodZones}
-                            floodData={floodData}
                             showLandslideZones={showLandslideZones}
-                            landslideData={landslideData}
                             isDrawMode={isDrawMode}
                         />
 
@@ -241,30 +249,11 @@ const MapSearch = () => {
                             isDrawMode={isDrawMode}
                             setIsDrawMode={setIsDrawMode}
                         >
-                            <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm p-4 rounded-xl shadow-lg border border-gray-200 dark:border-slate-700 transition-all hover:shadow-xl w-full">
-                                <h4 className="font-bold text-gray-800 dark:text-gray-100 mb-2 flex items-center gap-2 text-sm">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                    </svg>
-                                    Disaster Risk Map
-                                </h4>
-                                <div className="flex flex-col space-y-3 mt-3">
-                                    <label className="flex items-center gap-2 cursor-pointer group">
-                                        <input type="checkbox" checked={showFloodZones} onChange={(e) => { e.stopPropagation(); setShowFloodZones(e.target.checked); }} className="form-checkbox h-4 w-4 text-blue-500 rounded border-gray-300 dark:border-slate-600 dark:bg-slate-800 focus:ring-blue-500 transition duration-150 ease-in-out" />
-                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors flex items-center gap-2">
-                                            <div className="w-3 h-3 bg-blue-500 rounded-full shadow-sm"></div>
-                                            Flood Zones
-                                        </span>
-                                    </label>
-                                    <label className="flex items-center gap-2 cursor-pointer group">
-                                        <input type="checkbox" checked={showLandslideZones} onChange={(e) => { e.stopPropagation(); setShowLandslideZones(e.target.checked); }} className="form-checkbox h-4 w-4 text-red-500 rounded border-gray-300 dark:border-slate-600 dark:bg-slate-800 focus:ring-red-500 transition duration-150 ease-in-out" />
-                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors flex items-center gap-2">
-                                            <div className="w-3 h-3 bg-red-500 rounded-full shadow-sm"></div>
-                                            Landslide Zones
-                                        </span>
-                                    </label>
-                                </div>
-                            </div>
+                            <HazardControls
+                                showFloodZones={showFloodZones} setShowFloodZones={setShowFloodZones}
+                                showLandslideZones={showLandslideZones} setShowLandslideZones={setShowLandslideZones}
+                                status={hazardStatus} onRetry={handleHazardRetry}
+                            />
                         </FreehandDrawControl>
 
                         <MarkerClusterGroup

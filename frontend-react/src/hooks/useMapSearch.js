@@ -36,27 +36,6 @@ export const useMapSearch = () => {
     // Disaster Risk Map State
     const [showFloodZones, setShowFloodZones] = useState(false);
     const [showLandslideZones, setShowLandslideZones] = useState(false);
-    const [floodData, setFloodData] = useState(null);
-    const [landslideData, setLandslideData] = useState(null);
-
-    useEffect(() => {
-        if (showFloodZones && !floodData) {
-            fetch('/data/flood_zones.json')
-                .then(res => res.json())
-                .then(data => setFloodData(data))
-                .catch(() => logClientError('flood_data_load_failed'));
-        }
-    }, [showFloodZones, floodData]);
-
-    useEffect(() => {
-        if (showLandslideZones && !landslideData) {
-            fetch('/data/landslide_zones.json')
-                .then(res => res.json())
-                .then(data => setLandslideData(data))
-                .catch(() => logClientError('landslide_data_load_failed'));
-        }
-    }, [showLandslideZones, landslideData]);
-    
     const [filters, setFilters] = useState(() => restoreSavedSearchFilters(savedSearch, location.pathname, location.search));
 
     const drawControlRef = useRef(null);
@@ -246,8 +225,6 @@ export const useMapSearch = () => {
         setShowFloodZones,
         showLandslideZones,
         setShowLandslideZones,
-        floodData,
-        landslideData,
         filters,
         drawControlRef,
         handleBoundsChange,

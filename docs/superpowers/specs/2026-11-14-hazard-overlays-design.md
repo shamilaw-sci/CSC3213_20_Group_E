@@ -1,0 +1,5 @@
+# Verified Sri Lanka hazard overlays
+
+Approved approach: use published geography, show provenance and incomplete coverage, and remove unsupported statistics. Use the Sri Lanka NSDI Geo Scientific Information public map service, layer 6 (historical flood exposure) and layer 8 (landslide classes). Do not claim current NBRO certification or live disaster conditions. Source survey dates and licensing are not specified by the layer metadata; link to the publisher rather than redistribute its complete database.
+
+Render the service as transparent map tiles because its layers contain 31,937 and 145,145 features respectively. Apply blue flood styling and published Low/Moderate/High landslide categories with yellow/amber/red colors. Keep property markers and drawing controls usable. Remove the old unsourced polygon files and statistics. Show source links, unknown survey dates, coverage caveat, loading and failure feedback, and retry. Test geographic tile bounds, source layer selection, symbology, lifecycle cleanup, and visible error feedback. Run the frontend build and targeted tests.
