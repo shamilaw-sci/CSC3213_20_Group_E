@@ -51,7 +51,6 @@ const PropertyCard = ({ prop, handleMessageSeller }) => {
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
             style={{ perspective: 1000, transformStyle: "preserve-3d" }}
             onClick={() => navigate(`/property/${prop.id}`)}
-            className="bg-[#242423] backdrop-blur-xl rounded-3xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.4)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.6)] transition-all duration-500 group cursor-pointer flex flex-col border border-white/10 relative"
             className="bg-white/70 backdrop-blur-2xl rounded-3xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-[0_30px_60px_rgb(0,0,0,0.2)] transition-shadow duration-500 group cursor-pointer flex flex-col border border-white/60 relative"
         >
             <div className="h-64 w-full bg-gray-100 relative overflow-hidden flex items-center justify-center">
@@ -164,7 +163,6 @@ const PropertyCard = ({ prop, handleMessageSeller }) => {
                             e.stopPropagation();
                             handleMessageSeller(prop.id);
                         }}
-                        className="flex-1 bg-white/10 backdrop-blur-md hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 border border-white/20 hover:border-blue-600 hover:shadow-[0_10px_20px_rgba(37,99,235,0.2)]"
 
                         className="flex-1 bg-white/50 backdrop-blur-md hover:bg-blue-600 text-gray-700 hover:text-white font-bold py-3 px-4 rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 border border-gray-200/50 hover:border-blue-600 hover:shadow-[0_10px_20px_rgba(37,99,235,0.2)]"
                     >
