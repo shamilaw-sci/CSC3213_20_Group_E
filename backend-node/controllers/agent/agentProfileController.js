@@ -24,7 +24,7 @@ const updateAgentProfile = async (req, res, next) => {
         } = req.body;
         const agentId = req.user.id;
 
-        // Only approved AGENT role can update active public agent profiles (M9 fix)
+        // Only approved agents can update public agent profiles.
         if (req.user.role !== 'AGENT') {
             return res.status(403).json({ message: "Only verified and approved agents can update public agent profiles." });
         }

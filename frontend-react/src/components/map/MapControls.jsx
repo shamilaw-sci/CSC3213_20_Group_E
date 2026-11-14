@@ -113,10 +113,7 @@ export const MapEvents = ({ onBoundsChange, onMapClick, searchMode }) => {
     return null;
 };
 
-/**
- * 🚀 Freehand Draw Component
- * (Handles freehand drawing logic)
- */
+// Freehand polygon drawing control.
 export const FreehandDrawControl = ({ onPolygonComplete, onDrawDelete, controlRef, children, isDrawMode, setIsDrawMode }) => {
     const map = useMap();
     const drawnItemsRef = useRef(new L.FeatureGroup());

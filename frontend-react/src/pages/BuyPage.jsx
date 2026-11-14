@@ -91,9 +91,7 @@ const BuyPage = () => {
                     params.set('search_district', demand.district);
                 }
 
-                // Check property types (if only one is selected, pass it, else don't strictly filter or handle multiple in backend)
-                // For now, if exactly one is true, pass it. If multiple are true, we might need a different API approach,
-                // but we'll stick to basic filtering or handle it mostly on the frontend if the backend doesn't support array.
+                // Send a server-side type filter only for a single selection.
                 const activeTypes = Object.keys(filters.propTypes).filter(k => filters.propTypes[k]);
                 if (activeTypes.length === 1) {
                     params.append('type', activeTypes[0]);
@@ -128,7 +126,7 @@ const BuyPage = () => {
         setFilters(newFilters);
     };
 
-    // Filter by search term locally (since it's usually faster if we don't have a full text search endpoint)
+    // Apply the remaining search filters to the fetched properties.
     const filteredProperties = useMemo(() => {
         return properties.filter(prop => {
             // Search Term

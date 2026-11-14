@@ -1,17 +1,16 @@
 const supabase = require('../config/supabase');
-const aiController = require('./aiController'); // if we want to reuse the Gemini instance or we can just import the AI library directly
+const aiController = require('./aiController');
 
 exports.getPropertyHistory = async (req, res) => {
     try {
         const { assessmentNumber } = req.query;
-        // In a real app we'd fetch by coordinates or assessmentNumber
         
         let query = supabase.from('property_sales_history').select('*').order('sale_date', { ascending: true });
         
         if (assessmentNumber) {
             query = query.eq('assessment_number', assessmentNumber);
         } else {
-            // For demo purposes if no exact match, we return some dummy area data
+            // Requests without an assessment number return explicitly simulated history.
             return res.status(200).json({
                 success: true,
                 isSimulated: true,
@@ -38,8 +37,7 @@ exports.getAIPrediction = async (req, res) => {
     try {
         const { propertyData, areaAverage } = req.body;
         
-        // Mocking an AI response for speed and reliability in the demo.
-        // In reality, you would call Gemini API here.
+        // Rule-based comparison against the supplied area average; no model inference.
         const difference = propertyData.price - areaAverage;
         const percentDiff = (Math.abs(difference) / areaAverage) * 100;
         
