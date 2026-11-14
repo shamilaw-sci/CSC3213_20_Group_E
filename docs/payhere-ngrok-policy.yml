@@ -1,0 +1,8 @@
+# Expose only PayHere's POST callback, not the rest of the local backend.
+on_http_request:
+  - expressions:
+      - "req.method != 'POST' || req.url.path != '/api/payment/notify'"
+    actions:
+      - type: deny
+        config:
+          status_code: 404

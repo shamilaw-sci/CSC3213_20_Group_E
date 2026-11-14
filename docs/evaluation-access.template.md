@@ -25,7 +25,11 @@ Use the root README for setup. Local addresses in its quick start are frontend h
 | Approved Agent | TO COMPLETE | TO COMPLETE | TO VERIFY |
 | Admin | TO COMPLETE | TO COMPLETE | TO VERIFY |
 
-Admin entry point: `/admin/login`. Use dedicated synthetic accounts, not personal accounts. If MFA is enabled, document how the evaluator completes it privately; do not disable it or publish recovery codes merely to fill this form.
+Admin entry point: `/admin/login`. Use dedicated synthetic accounts, not personal accounts. For the documented controlled local evaluation, set `ADMIN_MFA_ENABLED=false` in `backend-node/.env` and restart the backend; supplied email/password are sufficient. This affects all Admin accounts on that backend and preserves existing enrollments. Restore `true` and restart for normal operation. If evaluation uses MFA instead, document access privately; never publish recovery codes.
+
+- Evaluation Admin login mode: TO COMPLETE — local password-only exception / MFA-enabled access.
+- Admin MFA enrollment status: TO COMPLETE — awaiting evaluator first enrollment / already enrolled.
+- Authorized MFA access arrangement: TO COMPLETE PRIVATELY. An already enrolled account cannot show its setup QR again through the current UI; changing credentials does not reset it. See the root README's evaluator Authenticator instructions.
 
 ## Private configuration package
 
@@ -36,6 +40,13 @@ Provide working configuration for independent execution, not only account logins
 - `frontend-react/.env`: public API/map URLs, current public payment callback and configured public provider identifiers. Never include server secrets.
 
 Record package delivery location: TO COMPLETE PRIVATELY.
+
+### PayHere Sandbox Merchant Dashboard access
+
+- Dashboard URL: https://sandbox.payhere.lk/merchant/
+- Login email: TO COMPLETE IN PRIVATE COPY ONLY
+- Login password: TO COMPLETE IN PRIVATE COPY ONLY
+- Scope: Inspect sandbox transaction records. Do not change merchant configuration or use live payments.
 
 Do not provide the Supabase dashboard owner's personal password. Privileged backend configuration belongs only in the private server setup package. Keep third-party evaluation keys scoped and valid for the evaluation window.
 

@@ -97,6 +97,56 @@ Hosted metadata supplied by the owner on 2026-11-14 confirms appointment ownersh
 
 For a new database, read [database setup](docs/database/setup.md). Its two-file baseline is for an isolated empty test environment and does not by itself certify the latest hosted additions. Never replay it against the hosted evaluation database. A complete fresh-database upgrade/seed package is separate from this hosted setup.
 
+## PayHere sandbox payment testing
+
+Payments for evaluation use **PayHere Sandbox**, which simulates transactions without moving real money. Use only the sandbox test cards below. Merchant ID and merchant secret are supplied in the private backend configuration; never publish the merchant secret.
+
+### Sandbox Merchant Dashboard
+
+Open the [PayHere Sandbox Merchant Dashboard](https://sandbox.payhere.lk/merchant/) to inspect sandbox payment records. The team supplies the dashboard login email and password through the private evaluation handoff; they are not stored in this repository. These credentials are separate from the Thirasara application accounts and from the backend merchant ID/secret. Dashboard access is for inspecting sandbox transactions, not changing merchant configuration or enabling live payments.
+
+### Start the public payment callback
+
+1. Install the [ngrok agent](https://ngrok.com/docs/start) and connect your own account using its dashboard setup instructions. Keep the ngrok authtoken private.
+2. Set `PAYHERE_MODE=sandbox`, `PAYHERE_MERCHANT_ID` and `PAYHERE_MERCHANT_SECRET` in `backend-node/.env` using matching sandbox credentials. Restart the backend and confirm `http://localhost:5000/health/ready` reports ready.
+3. From the repository root, open another terminal and run:
+
+   ```powershell
+   ngrok http 5000 --traffic-policy-file docs/payhere-ngrok-policy.yml
+   ```
+
+   Keep this terminal open. The supplied policy exposes only `POST /api/payment/notify`; other requests receive 404. This is important when the local evaluation backend has Admin MFA disabled. If ngrok rejects the policy, resolve the error before testing; do not replace it with an unrestricted tunnel. See [ngrok request variables](https://ngrok.com/docs/traffic-policy/variables/req) and [deny action](https://ngrok.com/docs/traffic-policy/actions/deny).
+
+4. Copy the HTTPS forwarding origin shown by ngrok and append `/api/payment/notify`. Set that complete URL in `frontend-react/.env`:
+
+   ```dotenv
+   VITE_API_URL=http://localhost:5000
+   VITE_PAYHERE_NOTIFY_URL=https://YOUR-NGROK-HOST/api/payment/notify
+   ```
+
+   Replace the example host with the actual active host. Keep normal browser API calls on localhost; the ngrok URL is for the server-to-server notification only. Restart Vite after this change. If the tunnel host changes, update this value and restart Vite again. A built frontend must be rebuilt after changing its build-time environment.
+
+5. Sign in with the evaluation Seller, use the designated test listing and open its listing-fee checkout. Use a card below. The amount/currency come from the backend checkout; do not edit the payment payload.
+6. Leave the backend and tunnel running until PayHere delivers its callback. Verify the listing/payment state in the app after refresh. A successful checkout dialog or browser return alone does not establish a Paid state: the backend must validate and settle the notification.
+
+Do not test the webhook by manually posting a success payload. Opening the callback in a browser sends GET and is deliberately blocked by the tunnel policy. If a real checkout remains pending, inspect the backend and ngrok request inspector (`http://localhost:4040`) for the POST callback, check the active URL and matching sandbox credentials, and inspect the existing order state before retrying. Do not publish callback bodies, signatures or inspector screenshots containing private data. Stop the tunnel with Ctrl+C after testing.
+
+### Sandbox cards
+
+The following numbers are public PayHere sandbox fixtures, not real card details. Use a valid-looking cardholder name, CVV and a future expiry date. Test one scenario at a time on designated fixtures.
+
+| Simulated outcome | Visa | MasterCard | AMEX |
+| --- | --- | --- | --- |
+| Success | `4916217501611292` | `5307732125531191` | `346781005510225` |
+| Insufficient funds | `4024007194349121` | `5459051433777487` | `370787711978928` |
+| Limit exceeded | `4929119799365646` | `5491182243178283` | `340701811823469` |
+| Do not honor | `4929768900837248` | `5388172137367973` | `374664175202812` |
+| Network error | `4024007120869333` | `5237980565185003` | `373433500205887` |
+
+PayHere documents other card numbers as unsuccessful sandbox cases. Failed/declined/cancelled attempts must not be treated as Paid. Source: [PayHere Sandbox & Testing](https://support.payhere.lk/sandbox-and-testing).
+
+Sandbox and Live are separate environments: a Sandbox account cannot be converted into a Live account. A real production launch requires a separate [Live merchant application](https://www.payhere.lk/merchant/sign-up) and a separately configured release. Live payments are outside this evaluation setup.
+
 ## Environment
 
 Backend:
@@ -205,6 +255,38 @@ go test ./...
 ```
 
 ## Admin Panel
+
+### Evaluator sign-in and Authenticator setup
+
+After starting the services, open `http://localhost:5173/admin/login` (or `/admin/login` on the supplied hosted frontend). Use the dedicated Admin credentials delivered through the private evaluation channel. These are application credentials, not a Supabase dashboard or Google/Microsoft account login.
+
+#### Local evaluation: email and password only
+
+For the local coursework evaluation, set the following in `backend-node/.env` before starting the backend:
+
+```dotenv
+ADMIN_MFA_ENABLED=false
+```
+
+If the backend is already running, stop and restart it. Sign in at `http://localhost:5173/admin/login` using the supplied evaluation Admin email and password. No authenticator setup or code is required in this mode. This setting applies to every Admin account served by that backend, not just the evaluation account. It does not remove existing MFA enrollments.
+
+Use this exception only for the controlled local evaluation. Normal Admin operation uses `ADMIN_MFA_ENABLED=true` and a valid private `ADMIN_MFA_ENCRYPTION_KEY`. Restore `true` and restart the backend after evaluation. Existing enrolled accounts then require their previously configured authenticator again. If a hosted evaluation is provided instead, the team controls the hosted backend setting; changing a local `.env` does not change that deployment.
+
+#### Normal operation: Authenticator verification
+
+When `ADMIN_MFA_ENABLED=true`, an Admin account with no enrolled authenticator receives a setup QR code and a manual setup key after entering valid credentials:
+
+1. Install Google Authenticator or Microsoft Authenticator on your phone.
+2. Add an account and scan the QR code displayed by Thirasara. In Microsoft Authenticator choose **Other account**. If scanning is unavailable, enter the displayed setup key as a time-based account.
+3. Enter the current six-digit code in Thirasara's **Authenticator or recovery code** field and select **Verify and continue**. Codes change every 30 seconds; keep the phone clock automatic.
+4. Save the recovery codes privately when shown. Each recovery code works once. They can be entered in the same login field if the authenticator is unavailable.
+5. For later logins, enter the Admin email/password, then the current code from your authenticator.
+
+Official app instructions: [Google Authenticator](https://support.google.com/accounts/answer/1066447) and [Microsoft Authenticator](https://support.microsoft.com/en-us/authenticator/how-to-add-your-accounts-to-microsoft-authenticator).
+
+**Already enrolled accounts:** Thirasara does not display the setup QR/key again at login. An account already linked to a team member's phone cannot be enrolled on another phone using only its email/password. Changing the email or password does not reset MFA. The team must provide a separate authorized evaluation Admin account whose first enrollment is left to the evaluator, or arrange access through the designated account owner. There is no self-service MFA reset/re-enrollment screen in this version. README instructions alone do not reset an existing enrollment.
+
+Before handoff, the team must privately state whether evaluation uses the local password-only exception above or MFA-enabled access. For MFA-enabled access, also state whether the supplied Admin account is awaiting first enrollment or already enrolled and how access is arranged. Never commit QR codes, setup keys or recovery codes. Keep the backend `ADMIN_MFA_ENCRYPTION_KEY` stable for existing enrollments and supply it only in the private backend configuration; it is not the authenticator setup key.
 
 Chat attachments now use short-lived signed delivery links in API responses. Actual privacy requires the separately reviewed [private chat Storage cutover](docs/phase7-chat-storage-cutover.md); application code alone does not make an existing public bucket private.
 
