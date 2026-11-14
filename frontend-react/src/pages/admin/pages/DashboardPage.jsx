@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { fetchDashboardStats, fetchRevenueData, fetchUserGrowth, fetchListings } from "../api/adminApi";
 import { useNavigate } from "react-router-dom";
 import { m } from "framer-motion";
+import { ResponsiveContainer, BarChart as RechartsBarChart, Bar, AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip } from "recharts";
 import { 
   Building2, 
   Clock, 
@@ -19,49 +20,32 @@ import {
   AlertCircle
 } from "lucide-react";
 
-// Modern Interactive Bar Chart with tooltips and glowing columns
-const BarChart = ({ data = [], colorClass = "from-blue-600 to-indigo-500", suffix = "" }) => {
-  if (!data || !data.length) {
-    return (
-      <div className="h-48 flex items-center justify-center text-xs text-slate-500 font-bold">
-        No transaction records in this interval.
-      </div>
-    );
-  }
-  const max = Math.max(...data.map((d) => Number(d.value ?? d.users ?? d.count ?? 0)), 1);
-
-  return (
-    <div className="flex items-end justify-between h-48 mt-4 gap-2.5 sm:gap-4 px-2">
-      {data.map((d, i) => {
-        const val = Number(d.value ?? d.users ?? d.count ?? 0);
-        const heightPct = Math.max((val / max) * 100, 10);
-
-        return (
-          <div key={i} className="flex flex-col items-center flex-1 group relative">
-            {/* Hover Tooltip */}
-            <div className="absolute -top-9 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-slate-800 text-white text-[11px] font-black py-1 px-2.5 rounded-lg shadow-xl whitespace-nowrap z-20 pointer-events-none -translate-y-1 group-hover:translate-y-0 border border-slate-700">
-              {suffix === "LKR" ? `LKR ${val.toLocaleString()}` : `${val.toLocaleString()} ${suffix}`}
-            </div>
-
-            {/* Bar Track Container */}
-            <div className="w-full relative flex items-end justify-center h-36 rounded-2xl bg-slate-800/60 p-1 overflow-hidden border border-slate-700/50">
-              <m.div
-                initial={{ height: 0 }}
-                animate={{ height: `${heightPct}%` }}
-                transition={{ duration: 0.8, ease: "easeOut", delay: i * 0.08 }}
-                className={`w-full bg-gradient-to-t ${colorClass} rounded-xl shadow-md opacity-90 group-hover:opacity-100 transition-opacity min-h-[8px]`}
-              />
-            </div>
-
-            {/* Month / Period Label */}
-            <span className="text-[10px] sm:text-xs font-bold text-slate-400 mt-2.5 uppercase tracking-wider">
-              {d.label}
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  );
+// Presentation only: both visualizations consume the existing monthly API rows.
+const BarChart = ({ data = [], suffix = "" }) => {
+  const chartId = React.useId().replace(/:/g, '');
+  if (!data.length) return <div className="admin-chart-empty">No records in this interval.</div>;
+  const rows = data.map(row => ({ ...row, amount: Number(row.value ?? row.users ?? row.count ?? 0) }));
+  const accounts = suffix === 'accounts';
+  const valueLabel = value => suffix === 'LKR' ? `LKR ${Number(value).toLocaleString()}` : `${Number(value).toLocaleString()} accounts`;
+  return <div className="admin-trend-chart" role="img" aria-label={accounts ? 'Cumulative registered accounts by month' : 'Recorded revenue by month'}>
+    <ResponsiveContainer width="100%" height={260}>
+      {accounts ? <AreaChart data={rows} margin={{ top: 20, right: 12, left: 0, bottom: 0 }}>
+        <defs><linearGradient id={chartId} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#278c86" stopOpacity={0.22}/><stop offset="100%" stopColor="#278c86" stopOpacity={0}/></linearGradient></defs>
+        <CartesianGrid vertical={false} stroke="var(--ap-border)" strokeDasharray="3 5"/>
+        <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: 'var(--ap-muted)', fontSize: 11 }} tickMargin={14}/>
+        <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={38} tick={{ fill: 'var(--ap-muted)', fontSize: 11 }}/>
+        <Tooltip formatter={valueLabel} contentStyle={{ background: 'var(--ap-surface)', border: '1px solid var(--ap-border)', borderRadius: 10, color: 'var(--ap-text)' }}/>
+        <Area type="monotone" dataKey="amount" name="Accounts" stroke="#278c86" strokeWidth={2.5} fill={`url(#${chartId})`} dot={{ r: 3, fill: '#278c86', strokeWidth: 2 }} isAnimationActive={false}/>
+      </AreaChart> : <RechartsBarChart data={rows} margin={{ top: 20, right: 12, left: 0, bottom: 0 }}>
+        <CartesianGrid vertical={false} stroke="var(--ap-border)" strokeDasharray="3 5"/>
+        <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: 'var(--ap-muted)', fontSize: 11 }} tickMargin={14}/>
+        <YAxis tickLine={false} axisLine={false} width={48} tick={{ fill: 'var(--ap-muted)', fontSize: 11 }} tickFormatter={value => value >= 1000 ? `${value / 1000}k` : value}/>
+        <Tooltip cursor={{ fill: 'var(--ap-hover)' }} formatter={valueLabel} contentStyle={{ background: 'var(--ap-surface)', border: '1px solid var(--ap-border)', borderRadius: 10, color: 'var(--ap-text)' }}/>
+        <Bar dataKey="amount" name="Revenue" fill="#4875de" radius={[5, 5, 0, 0]} maxBarSize={42} isAnimationActive={false}/>
+      </RechartsBarChart>}
+    </ResponsiveContainer>
+    <details className="admin-chart-data"><summary>View monthly figures</summary><table><thead><tr><th>Month</th><th>{accounts ? 'Accounts' : 'Revenue (LKR)'}</th></tr></thead><tbody>{rows.map(row => <tr key={row.label}><td>{row.label}</td><td>{row.amount.toLocaleString()}</td></tr>)}</tbody></table></details>
+  </div>;
 };
 
 const DashboardPage = () => {
@@ -170,7 +154,7 @@ const DashboardPage = () => {
   if (failedSections.includes('statistics')) return <p role="alert" className="text-amber-300 p-6">Dashboard statistics are unavailable. Reload to try again.</p>;
 
   return (
-    <div className="space-y-8 pb-12 font-sans text-slate-100">
+    <div className="admin-dashboard space-y-8 pb-12 font-sans text-slate-100">
       {failedSections.length > 0 && <p role="alert" className="text-amber-300">Unable to load {failedSections.join(', ')}. Reload to try again.</p>}
       
       {/* 1. High-Contrast Official Amber Moderation Banner */}
@@ -210,11 +194,11 @@ const DashboardPage = () => {
       )}
 
       {/* 2. Top Executive KPI Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="admin-kpi-strip grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {statCards.map((stat, idx) => {
           const Icon = stat.icon;
           return (
-            <m.div 
+            <m.button type="button"
               key={stat.title}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -242,13 +226,13 @@ const DashboardPage = () => {
                 </span>
                 <ChevronRight className="w-4 h-4 text-slate-500 group-hover:translate-x-1 group-hover:text-blue-400 transition-all" />
               </div>
-            </m.div>
+            </m.button>
           );
         })}
       </div>
 
       {/* 3. Deep Analytics Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="admin-dashboard-charts grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Revenue Overview Card */}
         <m.div 

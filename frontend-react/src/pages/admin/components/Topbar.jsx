@@ -87,7 +87,7 @@ const Topbar = () => {
   };
 
   return (
-    <header className="h-20 px-8 flex items-center justify-between bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl sticky top-0 z-40 border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors duration-200">
+    <header className="admin-workspace-topbar h-20 px-8 flex items-center justify-between bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl sticky top-0 z-40 border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors duration-200">
       
       {/* Left: Title & Subtitle */}
       <div>

@@ -59,7 +59,7 @@ const Sidebar = () => {
   ];
 
   return (
-    <aside className="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800/90 flex flex-col h-screen fixed top-0 left-0 z-50 shadow-md dark:shadow-2xl transition-colors duration-200">
+    <aside className="admin-navigation w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800/90 flex flex-col h-screen fixed top-0 left-0 z-50 shadow-md dark:shadow-2xl transition-colors duration-200">
       
       {/* Brand & Logo */}
       <div className="h-20 px-6 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
@@ -77,7 +77,7 @@ const Sidebar = () => {
       {/* Navigation Links */}
       <nav className="flex-1 overflow-y-auto py-5 px-3 space-y-1.5 custom-scrollbar">
         <div className="px-3 pb-2 text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
-          Executive Menu
+          Workspace
         </div>
         
         {navItems.map(({ path, icon: Icon, label, badge, badgeColor }) => (
