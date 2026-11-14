@@ -62,4 +62,3 @@ Subsequent frontend production build: user supplied full `npm.cmd run build` out
 - Go `go test ./...`: handlers, middleware, models, repository and routes passed; remaining listed packages reported no test files. No failures reported.
 
 These later checks supersede the earlier not-yet-rerun status for this separate checkout. They do not establish remote CI/main status. Build warnings and development-dependency audit findings remain recorded above.
-
