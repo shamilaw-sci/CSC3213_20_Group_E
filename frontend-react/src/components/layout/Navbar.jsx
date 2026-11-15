@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from '../../context/UserAuthContext';
 import { useTheme } from '../../context/ThemeProvider';
-import { Bell, MessageSquare, User, PlusCircle, Compass, Calendar, Sun, Moon } from "lucide-react";
+import { Bell, MessageSquare, User, PlusCircle, Compass, Calendar, Sun, Moon, Search } from "lucide-react";
 import usePoll from '../../hooks/usePoll';
 import "./Navbar.css";
 
@@ -303,6 +303,20 @@ const Navbar = ({ transparent = false, onUnreadCountChange }) => {
             >
               <Compass className="w-4 h-4 text-blue-400" />
               <span className="hidden sm:inline">Map Search</span>
+            </button>
+
+            {/* Smart Search Pill */}
+            <button
+              type="button"
+              onClick={() => navigate("/search")}
+              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer ${
+                transparent 
+                  ? 'text-white hover:bg-white/15 drop-shadow-xs' 
+                  : 'text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+              }`}
+            >
+              <Search className="w-4 h-4 text-blue-400" />
+              <span className="hidden sm:inline">Smart Search</span>
             </button>
 
             {user ? (
