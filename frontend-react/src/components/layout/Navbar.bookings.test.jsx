@@ -9,6 +9,12 @@ vi.mock('../../hooks/usePoll',()=>({default:(url,_interval,options)=>({data:opti
 function Location(){const location=useLocation();return <output>{location.pathname+location.search}</output>;}
 afterEach(cleanup);
 beforeEach(()=>{state.user={id:'agent',role:'AGENT',name:'Agent'};});
+test('Smart Search opens the search results route for guests', () => {
+  state.user = null;
+  render(<MemoryRouter><Navbar /><Location /></MemoryRouter>);
+  fireEvent.click(screen.getByRole('button', { name: 'Smart Search' }));
+  expect(screen.getByText('/search')).toBeInTheDocument();
+});
 test('Agent bell lists actual pending appointment and opens that booking',()=>{
  render(<MemoryRouter><Navbar/><Location/></MemoryRouter>);
  const bell=screen.getByRole('button',{name:'Notifications'});
