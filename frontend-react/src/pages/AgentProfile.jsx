@@ -1,3 +1,4 @@
+import OptionalVideo from '../components/privacy/OptionalVideo';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../context/api';
@@ -584,13 +585,13 @@ const AgentProfile = () => {
                   <span>Agent HD Video Tour & Agency Reel</span>
                 </h3>
                 <div className="aspect-video w-full rounded-2xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800 bg-black">
-                  <iframe
+                  <OptionalVideo><iframe
                     src={embedUrl}
                     title="Agent Introduction Video"
                     className="w-full h-full border-0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
-                  />
+                  /></OptionalVideo>
                 </div>
               </div>
             )}

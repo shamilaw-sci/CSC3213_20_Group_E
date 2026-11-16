@@ -1,3 +1,4 @@
+import { loadProviderScript } from '../components/privacy/providerScripts';
 import { logClientError, logClientWarning } from '../utils/clientLog';
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -8,6 +9,7 @@ import { canonicalPaymentAmount, parsePaymentConfig, parseLockedCheckout, paymen
 // The SDK owns global callback slots, so popup initiation is shared across hooks.
 let activeSdkAttempt = null;
 let latestAttemptToken = null;
+let sdkLoading = null;
 const unavailableConfig = status => ({ status, listingFee: null, merchantId: null, sandbox: null, currency: null });
 function neutralizeCallbacks(attempt) {
   for (const [name, callback] of Object.entries(attempt.callbacks)) {
@@ -29,9 +31,11 @@ export const usePayhere = (setMessage) => {
   const [checkoutBusy, setCheckoutBusy] = useState(false);
   const [reload, setReload] = useState(0);
   const mounted = useRef(false), attemptRef = useRef(null), busyRef = useRef(false), configGeneration = useRef(0);
+  const identity = useRef(null);
   const configRef = useRef(unavailableConfig('loading'));
 
   useEffect(() => {
+    identity.current = {};
     mounted.current = true; busyRef.current = false; setCheckoutBusy(false); setCheckoutQuote(null);
     return () => { mounted.current = false; disposeAttempt(attemptRef.current); attemptRef.current = null; busyRef.current = false; };
   }, [user?.id, user?.role]);
@@ -69,7 +73,7 @@ export const usePayhere = (setMessage) => {
 
   const triggerPayment = async (propertyId, expectedAmount) => {
     if (!mounted.current) return { status: 'unavailable' };
-    if (activeSdkAttempt || busyRef.current) {
+    if (activeSdkAttempt || sdkLoading || busyRef.current) {
       setMessage({ type: 'info', text: 'A checkout is already active. Complete or close it before retrying.' }); return { status: 'busy' };
     }
     const config = configRef.current;
@@ -77,7 +81,16 @@ export const usePayhere = (setMessage) => {
       setMessage({ type: 'error', text: 'Payment configuration is unavailable. Retry loading it before paying.' }); return { status: 'unavailable' };
     }
     let attempt;
+    const initiatingIdentity = identity.current;
+    const loadingToken = {};
+    sdkLoading = loadingToken;
+    busyRef.current = true;
+    setCheckoutBusy(true);
     try {
+      await loadProviderScript('payhere', 'https://www.payhere.lk/lib/payhere.js', () => typeof window.payhere?.startPayment === 'function');
+      if (!mounted.current || identity.current !== initiatingIdentity) return { status: 'cancelled' };
+      if (sdkLoading === loadingToken) sdkLoading = null;
+
       if (!paymentUuid(propertyId) || canonicalPaymentAmount(expectedAmount) !== expectedAmount || typeof window.payhere?.startPayment !== 'function') throw new Error('Checkout unavailable.');
       let notifyUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/payment/notify`;
       const explicitNotifyUrl = import.meta.env.VITE_PAYHERE_NOTIFY_URL;
@@ -141,8 +154,11 @@ export const usePayhere = (setMessage) => {
       if (attempt && !current(attempt)) return { status: 'cancelled' };
       logClientError('payment_initialization_failed');
       if (attempt) { release(attempt); disposeAttempt(attempt); attemptRef.current = null; }
-      if (mounted.current) setMessage({ type: 'error', text: 'Checkout could not be started. Check your listing status and refresh payment configuration before retrying.' });
+      if (mounted.current && identity.current === initiatingIdentity) setMessage({ type: 'error', text: 'Checkout could not be started. Check your listing status and refresh payment configuration before retrying.' });
       return { status: 'unavailable' };
+    } finally {
+      if (sdkLoading === loadingToken) sdkLoading = null;
+      if (!attempt && mounted.current && identity.current === initiatingIdentity) { busyRef.current = false; setCheckoutBusy(false); }
     }
   };
   return { paymentConfig, triggerPayment, retryPaymentConfig, checkoutQuote, checkoutBusy };

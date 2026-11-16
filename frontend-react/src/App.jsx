@@ -1,3 +1,4 @@
+import CookieConsent from './components/privacy/CookieConsent';
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import axios from 'axios';
@@ -83,6 +84,7 @@ function App() {
           <Router>
           <Toaster position="bottom-right" toastOptions={{ className: 'dark:bg-slate-800 dark:text-slate-200' }} />
           <FloatingAIChat />
+          <CookieConsent />
           <CompareActionBar />
           <CompareMatrixModal />
           <Suspense fallback={<PageLoader />}>

@@ -1,3 +1,5 @@
+import { useConsent, openCookieSettings } from '../components/privacy/consentStore';
+import { loadProviderScript } from '../components/privacy/providerScripts';
 import { logClientError } from '../utils/clientLog';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
@@ -22,6 +24,8 @@ const resetSchema = z.object({
 });
 
 const Login = () => {
+    const consent = useConsent();
+    const socialAllowed = consent?.social === true;
     const navigate = useNavigate();
     const location = useLocation();
     const { login, loginWithGoogle } = useAuth();
@@ -99,10 +103,10 @@ const Login = () => {
 
     // Google Sign-In setup
     useEffect(() => {
-        if (step !== 1) return;
+        if (step !== 1 || !socialAllowed) return;
 
         let cancelled = false;
-        let script;
+
 
         const initGoogleAuth = () => {
             if (cancelled) return;
@@ -121,25 +125,11 @@ const Login = () => {
             }
         };
 
-        if (window.google) {
-            initGoogleAuth();
-        } else {
-            script = document.createElement('script');
-            script.src = 'https://accounts.google.com/gsi/client';
-            script.async = true;
-            script.defer = true;
-            script.onload = initGoogleAuth;
-            document.body.appendChild(script);
-        }
-
-        return () => {
-            cancelled = true;
-            if (script) {
-                script.onload = null;
-                script.remove();
-            }
-        };
-    }, [step, handleGoogleResponse]);
+        loadProviderScript('google', 'https://accounts.google.com/gsi/client', () => Boolean(window.google?.accounts?.id))
+            .then(initGoogleAuth)
+            .catch(() => { if (!cancelled) toast.error('Google sign-in could not load. Try email and password or retry later.'); });
+        return () => { cancelled = true; };
+    }, [step, handleGoogleResponse, socialAllowed]);
 
     const handleSocialLogin = (provider) => {
         toast.error(`${provider} login is not yet configured.`);
@@ -312,7 +302,7 @@ const Login = () => {
 
                             <div className="space-y-2 flex flex-col items-center">
                                 {/* Google Sign In Button Container */}
-                                <div ref={googleBtnRef} className="w-full flex justify-center"></div>
+                                {socialAllowed ? <div ref={googleBtnRef} className="w-full flex justify-center"></div> : <button type="button" onClick={openCookieSettings} className="w-full rounded-full border border-slate-300 px-4 py-3 text-sm text-slate-700 dark:text-slate-200">Enable Google sign-in in privacy settings</button>}
 
                                 <Button variant="outline" type="button" onClick={() => handleSocialLogin('Facebook')} className="w-full max-w-[350px]">
                                     <svg className="w-4 h-4 mr-2.5 text-blue-600" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" /></svg>

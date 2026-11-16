@@ -41,7 +41,43 @@ test('fee mismatch updates property quote and requires another explicit click', 
 test.each([{ property_id: orderId }, { order_id: 'bad' }, { amount: {} }, { amount: '-1.00' }, { amount: '750.001' }, { hash: {} }, { hash: 'bad' }, { merchant_id: 'different' }, { sandbox: false }, { currency: 'USD' }])('malformed/mismatched locked result %p cannot reach SDK', async value => {
   api.post.mockResolvedValue({ data: { ...order, ...value } }); const view = await ready(); await start(view); expect(window.payhere.startPayment).not.toHaveBeenCalled(); expect(view.result.current.checkoutBusy).toBe(false);
 });
-test('SDK absence fails before creating an order', async () => { const view = await ready(); delete window.payhere; await start(view); expect(api.post).not.toHaveBeenCalled(); });
+test('SDK load failure blocks checkout and allows a retry', async () => {
+  const view = await ready();
+  delete window.payhere;
+  await act(async () => {
+    const checkout = view.result.current.triggerPayment(propertyId, '750.00');
+    document.querySelector('[data-provider="payhere"]').dispatchEvent(new Event('error'));
+    expect(await checkout).toMatchObject({ status: 'unavailable' });
+  });
+  expect(api.post).not.toHaveBeenCalled();
+  expect(view.result.current.checkoutBusy).toBe(false);
+
+  await act(async () => {
+    const checkout = view.result.current.triggerPayment(propertyId, '750.00');
+    window.payhere = { startPayment: vi.fn() };
+    document.querySelector('[data-provider="payhere"]').dispatchEvent(new Event('load'));
+    await checkout;
+  });
+  expect(window.payhere.startPayment).toHaveBeenCalledOnce();
+  document.querySelector('[data-provider="payhere"]').remove();
+});
+test('an account change during SDK load blocks order creation', async () => {
+  const view = await ready();
+  delete window.payhere;
+  let checkout;
+  act(() => { checkout = view.result.current.triggerPayment(propertyId, '750.00'); });
+  state.user = { id: 'another-owner', role: 'SELLER' };
+  view.rerender();
+  await act(async () => {
+    window.payhere = { startPayment: vi.fn() };
+    const script = document.querySelector('[data-provider="payhere"]');
+    script.dispatchEvent(new Event('load'));
+    expect(await checkout).toMatchObject({ status: 'cancelled' });
+    script.remove();
+  });
+  expect(api.post).not.toHaveBeenCalled();
+  expect(view.result.current.checkoutBusy).toBe(false);
+});
 test('concurrent initiations share one SDK owner, including two hook instances', async () => {
   const request = deferred(); api.post.mockReturnValue(request.promise); const a = await ready(), b = await ready();
   let first; act(() => { first = a.result.current.triggerPayment(propertyId, '750.00'); }); await act(async () => b.result.current.triggerPayment(propertyId, '750.00'));
